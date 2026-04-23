@@ -1,0 +1,4479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="images/cib-logo.png" type="image/png">  
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Closed Cases — Central Investigation Bureau</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --gold:#C9A84C;
+    --gold-light:#E8C97A;
+    --navy:#0A0F1E;
+    --navy-mid:#0D1526;
+    --navy-card:#111827;
+    --navy-border:#1E2D4A;
+    --white:#F0EDE4;
+    --muted:#8A95AA;
+    --red-alert:#C0392B;
+    --green:#27AE60;
+    --green-dim:rgba(39,174,96,0.08);
+    --red-dim:rgba(192,57,43,0.08);
+    --cid-accent:#4A90D9;
+    --grd-accent:#C9A84C;
+  }
+  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
+
+/* ── PAGE TRANSITIONS ── */
+body {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+body.page-visible {
+  opacity: 1;
+}
+
+  /* ══ NAV ══ */
+  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo img{height:40px;width:40px;object-fit:contain;}
+  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+  .nav-links{display:flex;gap:28px;list-style:none;}
+  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
+  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;}
+
+  /* ══ TICKER ══ */
+  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
+  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
+  .ticker-track{display:flex;animation:ticker 40s linear infinite;white-space:nowrap;}
+  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
+  .ticker-track span b{color:var(--gold-light);}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ══ PAGE HERO ══ */
+  .page-hero{position:relative;padding:72px 40px 60px;overflow:hidden;border-bottom:1px solid var(--navy-border);}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,#0D1A35 0%,var(--navy) 65%);z-index:0;}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
+  .hero-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:var(--gold);z-index:1;}
+  .hero-content{position:relative;z-index:2;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end;}
+  .breadcrumb{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
+  .breadcrumb span{color:var(--gold);}
+  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;opacity:0.8;}
+  .hero-content h1{font-family:'Oswald',sans-serif;font-size:clamp(28px,5vw,56px);font-weight:700;letter-spacing:6px;text-transform:uppercase;color:var(--white);line-height:1.1;margin-bottom:16px;}
+  .hero-line{width:80px;height:2px;background:var(--gold);margin-bottom:20px;}
+  .hero-desc{font-size:14px;color:var(--muted);max-width:560px;line-height:1.8;}
+
+  /* ══ STATS ROW ══ */
+  .stats-strip{background:var(--navy-mid);border-bottom:1px solid var(--navy-border);display:grid;grid-template-columns:repeat(4,1fr);}
+  .stat-cell{padding:20px 24px;text-align:center;border-right:1px solid var(--navy-border);}
+  .stat-cell:last-child{border-right:none;}
+  .stat-num{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:var(--gold);}
+  .stat-lbl{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px;}
+
+  /* ══ FILTER BAR ══ */
+  .filter-bar{background:var(--navy-mid);border-bottom:1px solid var(--navy-border);padding:0 40px;display:flex;align-items:center;gap:0;position:sticky;top:60px;z-index:80;}
+  .filter-btn{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding:15px 20px;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:color 0.2s,border-color 0.2s;white-space:nowrap;}
+  .filter-btn:hover{color:var(--white);}
+  .filter-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .filter-spacer{flex:1;}
+  .search-wrap{display:flex;align-items:center;gap:8px;border:1px solid var(--navy-border);padding:6px 14px;background:rgba(0,0,0,0.2);}
+  .search-wrap input{background:none;border:none;outline:none;font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--white);width:180px;}
+  .search-wrap input::placeholder{color:var(--muted);opacity:0.5;}
+  .search-icon{width:13px;height:13px;opacity:0.4;}
+
+  /* ══ MAIN LAYOUT ══ */
+  .cases-wrap{max-width:1200px;margin:0 auto;padding:48px 40px 80px;}
+
+  /* ══ SECTION HEADING ══ */
+  .cases-section-head{display:flex;align-items:center;gap:20px;margin-bottom:32px;margin-top:52px;}
+  .cases-section-head:first-child{margin-top:0;}
+  .csh-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .csh-line{flex:1;height:1px;background:var(--navy-border);}
+  .csh-title{font-family:'Oswald',sans-serif;font-size:22px;letter-spacing:4px;text-transform:uppercase;color:var(--white);}
+  .csh-count{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.5;margin-left:4px;}
+
+  /* ══════════════════════════════════════════
+     STANDARD CLOSED CASE CARD
+  ══════════════════════════════════════════ */
+  .cases-list{display:flex;flex-direction:column;gap:20px;}
+
+  .case-card{background:var(--navy-card);border:1px solid var(--navy-border);border-left:4px solid var(--green);position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.15s;}
+  .case-card:hover{transform:translateX(3px);border-color:rgba(39,174,96,0.5);}
+  .case-card::after{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-bottom:1px solid rgba(255,255,255,0.03);border-left:1px solid rgba(255,255,255,0.03);}
+
+  /* ── inner grid: left meta | centre body | right actions ── */
+  .case-inner{display:grid;grid-template-columns:220px 1fr 200px;gap:0;}
+
+  /* LEFT – meta panel */
+  .case-meta{padding:24px 20px;border-right:1px solid var(--navy-border);display:flex;flex-direction:column;gap:14px;background:rgba(0,0,0,0.12);}
+  .case-status-pill{display:inline-flex;align-items:center;gap:6px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
+  .case-status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .case-mdw{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--gold);font-weight:500;}
+  .case-meta-rows{display:flex;flex-direction:column;gap:8px;}
+  .meta-row{display:flex;flex-direction:column;gap:2px;}
+  .meta-lbl{font-family:'Roboto Mono',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);opacity:0.55;}
+  .meta-val{font-size:12px;color:var(--white);}
+  .meta-val.accent-cid{color:var(--cid-accent);}
+  .meta-val.accent-grd{color:var(--gold);}
+  .div-pip{display:inline-flex;align-items:center;gap:5px;font-size:11px;}
+  .div-pip-dot{width:5px;height:5px;border-radius:50%;}
+  .pip-cid .div-pip-dot{background:var(--cid-accent);}
+  .pip-grd .div-pip-dot{background:var(--gold);}
+  .pip-cid{color:var(--cid-accent);}
+  .pip-grd{color:var(--gold);}
+
+  /* CENTRE – case body */
+  .case-body{padding:24px 28px;display:flex;flex-direction:column;gap:0;}
+  .case-number{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);opacity:0.5;margin-bottom:6px;}
+  .case-title{font-family:'Oswald',sans-serif;font-size:20px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:14px;}
+  .case-debrief-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);opacity:0.5;margin-bottom:6px;}
+  .case-debrief{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:16px;}
+  .case-tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .case-tag{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--navy-border);color:var(--muted);}
+
+  /* RIGHT – action panel */
+  .case-actions{padding:24px 20px;border-left:1px solid var(--navy-border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(0,0,0,0.08);}
+  .btn-report{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;background:var(--green);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:12px 16px;text-decoration:none;font-weight:600;transition:background 0.2s;text-align:center;}
+  .btn-report:hover{background:#2ECC71;}
+  .btn-report-sub{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;opacity:0.7;}
+  .btn-report svg{width:16px;height:16px;fill:var(--navy);}
+  .case-closed-stamp{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);opacity:0.45;text-align:center;text-transform:uppercase;}
+
+  /* ══════════════════════════════════════════
+     RESTRICTED CASE CARD  (red tint variant)
+  ══════════════════════════════════════════ */
+  .case-card.restricted{border-left-color:var(--red-alert);}
+  .case-card.restricted:hover{border-color:rgba(192,57,43,0.5);}
+  .case-card.restricted .case-meta{background:rgba(192,57,43,0.04);}
+  .case-card.restricted .case-status-pill{color:var(--red-alert);}
+  .case-card.restricted .case-status-dot{background:var(--red-alert);}
+  .case-card.restricted .case-mdw{color:var(--red-alert);}
+  /* Redaction blur overlay on debrief */
+  .redacted-block{position:relative;overflow:hidden;}
+  .redacted-block::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(192,57,43,0.06) 0px,rgba(192,57,43,0.06) 2px,transparent 2px,transparent 6px);}
+  .redacted-text{font-size:13px;color:rgba(138,149,170,0.35);line-height:1.8;filter:blur(3.5px);user-select:none;}
+  .restricted-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:2;}
+  .restricted-stamp{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:6px;color:var(--red-alert);border:2px solid var(--red-alert);padding:4px 16px;opacity:0.85;}
+  .restricted-sub{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+
+  /* Restricted action panel */
+  .case-card.restricted .case-actions{justify-content:flex-start;padding-top:28px;}
+  .contact-detective-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--red-alert);margin-bottom:8px;opacity:0.8;}
+  .contact-det-name{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:4px;}
+  .contact-det-rank{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);}
+  .btn-contact{display:block;width:100%;margin-top:12px;background:transparent;color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:10px 14px;text-decoration:none;font-weight:600;border:1px solid var(--red-alert);text-align:center;transition:all 0.2s;}
+  .btn-contact:hover{background:var(--red-alert);color:#fff;}
+  .restricted-warning{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.4;text-align:center;margin-top:8px;line-height:1.6;}
+
+  /* ══ NO-RESULTS ══ */
+  .no-results{display:none;padding:60px;text-align:center;}
+  .no-results-icon{font-family:'Oswald',sans-serif;font-size:48px;letter-spacing:8px;color:var(--muted);opacity:0.2;margin-bottom:16px;}
+  .no-results-text{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+
+  /* ══ ANIMATIONS ══ */
+  .fade-in{opacity:0;transform:translateY(16px);animation:fadeIn 0.6s ease forwards;}
+  .fade-in-d1{animation-delay:0.05s;}
+  .fade-in-d2{animation-delay:0.1s;}
+  .fade-in-d3{animation-delay:0.15s;}
+  @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
+
+  /* ══ FOOTER ══ */
+  footer{background:#070B17;border-top:1px solid var(--navy-border);}
+  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;padding:48px 40px 40px;max-width:1400px;margin:0 auto;}
+  .footer-brand p{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin:12px 0 10px;}
+  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.8;}
+  .footer-brand img{height:44px;opacity:0.8;}
+  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--navy-border);}
+  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+  .footer-col a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:1px;transition:color 0.2s;}
+  .footer-col a:hover{color:var(--gold);}
+  .footer-bottom{border-top:1px solid var(--navy-border);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;}
+  .footer-bottom p{font-size:11px;color:var(--muted);letter-spacing:1px;}
+  .classified-stamp{border:1px solid rgba(192,57,43,0.5);color:var(--red-alert);font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;padding:4px 12px;}
+
+  /* ══ RESPONSIVE ══ */
+  @media(max-width:960px){
+    .case-inner{grid-template-columns:180px 1fr;}
+    .case-actions{display:none;}
+    nav{padding:0 20px;}
+    .cases-wrap{padding-left:20px;padding-right:20px;}
+    .filter-bar{padding:0 20px;}
+    .footer-top{grid-template-columns:1fr 1fr;}
+  }
+  @media(max-width:600px){
+    .case-inner{grid-template-columns:1fr;}
+    .case-meta{border-right:none;border-bottom:1px solid var(--navy-border);}
+    .nav-links{display:none;}
+    .stats-strip{grid-template-columns:1fr 1fr;}
+    .page-hero{padding-left:20px;padding-right:20px;}
+    .hero-content{grid-template-columns:1fr;}
+  }
+
+  /* ══════════════════════════════════════════════════
+     NEW IMPROVEMENTS — Cases Page
+  ══════════════════════════════════════════════════ */
+
+  /* MDT Reference box (replaces report button) */
+  .mdt-ref-box{
+    display:flex;flex-direction:column;align-items:center;
+    gap:6px;text-align:center;
+    background:#080C18;border:1px solid var(--navy-border);
+    padding:14px 12px;width:100%;
+  }
+  .mdt-ref-label{
+    font-family:'Roboto Mono',monospace;font-size:7px;
+    letter-spacing:3px;color:var(--muted);opacity:0.5;text-transform:uppercase;
+  }
+  .mdt-ref-num{
+    font-family:'Roboto Mono',monospace;font-size:10px;
+    letter-spacing:1px;color:var(--gold);font-weight:500;
+  }
+  .mdt-ref-note{
+    font-family:'Roboto Mono',monospace;font-size:7px;
+    letter-spacing:1px;color:var(--muted);opacity:0.4;
+    text-transform:uppercase;line-height:1.5;
+  }
+
+  /* ── VIEW TOGGLE ───────────────────────────────── */
+  .view-toggle{display:flex;gap:2px;border:1px solid var(--navy-border);padding:2px;}
+  .vt-btn{
+    background:transparent;border:none;cursor:pointer;
+    padding:7px 10px;display:flex;align-items:center;justify-content:center;
+    transition:background 0.15s;
+  }
+  .vt-btn svg{width:16px;height:16px;fill:var(--muted);}
+  .vt-btn.active{background:var(--navy-border);}
+  .vt-btn.active svg{fill:var(--gold);}
+  .vt-btn:hover svg{fill:var(--white);}
+
+  /* ── TIMELINE VIEW ─────────────────────────────── */
+  .view-timeline{display:none;flex-direction:column;gap:0;}
+  .view-timeline.active{display:flex;}
+  .view-list.hidden{display:none;}
+
+  /* Timeline month group */
+  .tl-month{margin-bottom:36px;}
+  .tl-month-label{
+    font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:4px;
+    text-transform:uppercase;color:var(--gold);
+    border-bottom:1px solid var(--navy-border);
+    padding-bottom:10px;margin-bottom:16px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .tl-month-count{
+    font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;
+    color:var(--muted);background:var(--navy-border);padding:2px 8px;
+  }
+
+  /* Timeline row */
+  .tl-row{
+    display:grid;grid-template-columns:90px 1px 1fr;
+    gap:0 20px;align-items:start;
+  }
+  .tl-date-col{
+    padding-top:14px;text-align:right;
+    font-family:'Roboto Mono',monospace;font-size:9px;
+    letter-spacing:1px;color:var(--muted);
+    white-space:nowrap;
+  }
+  .tl-date-col b{display:block;font-size:12px;color:var(--white);margin-bottom:2px;}
+  .tl-line-col{
+    display:flex;flex-direction:column;align-items:center;
+    padding-top:20px;
+  }
+  .tl-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--green);border:2px solid var(--navy);
+    flex-shrink:0;z-index:1;
+  }
+  .tl-vline{flex:1;width:1px;background:var(--navy-border);min-height:40px;}
+  .tl-card{
+    background:var(--navy-card);border:1px solid var(--navy-border);
+    border-left:3px solid var(--green);margin-bottom:14px;
+    padding:14px 18px;
+    display:grid;grid-template-columns:1fr auto;gap:12px;
+    align-items:start;
+    transition:transform 0.15s;cursor:default;
+  }
+  .tl-card:hover{transform:translateX(3px);}
+  .tl-card-mdt{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);opacity:0.5;margin-bottom:4px;}
+  .tl-card-title{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:6px;}
+  .tl-card-suspects{font-size:11px;color:var(--muted);line-height:1.5;}
+  .tl-card-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .tl-card-gang{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 8px;border:1px solid var(--navy-border);color:var(--muted);text-transform:uppercase;white-space:nowrap;}
+  .tl-card-status{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 8px;background:rgba(39,174,96,0.1);color:var(--green);border:1px solid rgba(39,174,96,0.25);text-transform:uppercase;}
+
+  /* ── TABLE VIEW ────────────────────────────────── */
+  .view-table{display:none;}
+  .view-table.active{display:block;}
+  .cases-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .cases-table thead tr{background:#080C18;border-bottom:2px solid var(--gold);}
+  .cases-table th{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+    text-transform:uppercase;color:var(--gold);
+    padding:12px 14px;text-align:left;white-space:nowrap;
+  }
+  .cases-table td{
+    padding:12px 14px;border-bottom:1px solid var(--navy-border);
+    vertical-align:top;color:var(--muted);
+    font-family:'Roboto',sans-serif;font-size:12px;
+  }
+  .cases-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .cases-table .td-mdt{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--gold);white-space:nowrap;}
+  .cases-table .td-title{color:var(--white);font-weight:500;max-width:280px;}
+  .cases-table .td-gang{font-family:'Roboto Mono',monospace;font-size:9px;}
+  .cases-table .td-date{font-family:'Roboto Mono',monospace;font-size:9px;white-space:nowrap;}
+  .cases-table .td-status span{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+    padding:2px 8px;background:rgba(39,174,96,0.1);color:var(--green);
+    border:1px solid rgba(39,174,96,0.25);text-transform:uppercase;
+  }
+  .cases-table .td-suspects{max-width:220px;line-height:1.6;font-size:11px;}
+
+  /* ── GANG FILTER PILLS ─────────────────────────── */
+  .gang-filter-wrap{
+    background:var(--navy-mid);border-bottom:1px solid var(--navy-border);
+    padding:10px 40px;display:flex;align-items:center;gap:8px;
+    flex-wrap:wrap;
+  }
+  .gang-filter-label{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+    color:var(--muted);text-transform:uppercase;margin-right:4px;white-space:nowrap;
+  }
+  .gang-pill{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+    padding:4px 10px;border:1px solid var(--navy-border);
+    color:var(--muted);cursor:pointer;text-transform:uppercase;
+    background:transparent;transition:all 0.15s;
+  }
+  .gang-pill:hover{border-color:var(--gold);color:var(--gold);}
+  .gang-pill.active{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+  .gang-pill-clear{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+    padding:4px 10px;border:1px solid rgba(192,57,43,0.3);
+    color:var(--red-alert);cursor:pointer;text-transform:uppercase;
+    background:transparent;transition:all 0.15s;margin-left:4px;
+  }
+  .gang-pill-clear:hover{background:var(--red-alert);color:#fff;}
+
+
+
+
+  /* ══ PAGINATION ══════════════════════════════════ */
+  .pagination-wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:28px 0 0;margin-top:8px;
+    border-top:1px solid var(--navy-border);
+    flex-wrap:wrap;gap:12px;
+  }
+  .pagination-info{
+    font-family:'Roboto Mono',monospace;font-size:9px;
+    letter-spacing:2px;color:var(--muted);opacity:0.6;text-transform:uppercase;
+  }
+  .pagination-controls{display:flex;align-items:center;gap:4px;}
+  .page-btn{
+    font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;
+    background:transparent;border:1px solid var(--navy-border);
+    color:var(--muted);padding:6px 12px;cursor:pointer;
+    transition:all 0.15s;min-width:36px;text-align:center;
+  }
+  .page-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .page-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700;}
+  .page-btn:disabled{opacity:0.25;cursor:not-allowed;}
+  .page-btn.nav{padding:6px 14px;}
+  .page-ellipsis{
+    font-family:'Roboto Mono',monospace;font-size:10px;
+    color:var(--muted);opacity:0.4;padding:0 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="nav-brand">Central Investigation Bureau</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="Page_About.html">About</a></li>
+    <li><a href="Page_Divisions.html">Divisions</a></li>
+    <li><a href="Page_Cases.html">Cases</a></li> 	
+    <li><a href="Page_Wanted.html">Most Wanted</a></li>
+    <li><a href="Page_Press.html">Press Room</a></li>
+    <li><a href="Page_Recruitment.html">Recruitment</a></li>
+  </ul>
+<a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
+</nav>
+
+<!-- ══════════════ TICKER ══════════════ -->
+<div class="ticker">
+  <div class="ticker-label">CASE LOG</div>
+  <div style="overflow:hidden;flex:1;">
+    <div class="ticker-track">
+      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
+      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos — residents advised to stay indoors</span>
+      <span><b>ALERT:</b> Lost MC chapter sighted near Paleto Bay — GRD surveillance deployed</span>
+      <span><b>PRESS RELEASE:</b> CIB Director commends joint task force for successful Operation Sandstorm</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE HERO ══════════════ -->
+<div class="page-hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-accent"></div>
+  <div class="hero-content">
+    <div>
+      <div class="breadcrumb fade-in">CIB &nbsp;/&nbsp; <span>Closed Cases</span></div>
+      <div class="hero-eyebrow fade-in fade-in-d1">Document Ref · CIB-REC-004</div>
+      <h1 class="fade-in fade-in-d1">Case Registry</h1>
+      <div class="hero-line fade-in fade-in-d1"></div>
+      <p class="hero-desc fade-in fade-in-d2">The following registry documents all cases formally closed by the Central Investigation Bureau. Each entry includes a case debrief, primary detective, handling division, date of closure, MDW reference number, and a link to the full investigation report where applicable. Restricted cases are subject to further access controls.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ STATS STRIP ══════════════ -->
+<div class="stats-strip" id="stats-strip">
+  <div class="stat-cell">
+    <div class="stat-num" id="stat-total">0</div>
+    <div class="stat-lbl">Total Closed Cases</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num" id="stat-open">0</div>
+    <div class="stat-lbl">Public Cases</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num" id="stat-restricted">0</div>
+    <div class="stat-lbl">Restricted Cases</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num" id="stat-divisions">2</div>
+    <div class="stat-lbl">Divisions</div>
+  </div>
+</div>
+
+<!-- ══════════════ FILTER BAR ══════════════ -->
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">All Cases</button>
+  <button class="filter-btn" data-filter="public">Public</button>
+  <button class="filter-btn" data-filter="restricted">Restricted</button>
+  <button class="filter-btn" data-filter="CID">CID</button>
+  <button class="filter-btn" data-filter="GRD">GRD</button>
+  <div class="filter-spacer"></div>
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search-input" placeholder="Search cases, suspect, gang…"/>
+  </div>
+  <!-- VIEW TOGGLE: Card / Timeline / Table -->
+  <div class="view-toggle" style="margin-left:16px;" title="Switch view">
+    <button class="vt-btn active" id="vt-card" onclick="setView('card')" title="Card View">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+    <button class="vt-btn" id="vt-timeline" onclick="setView('timeline')" title="Timeline View">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="6" r="2.5"/><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="18" r="2.5"/><line x1="12" y1="6" x2="19" y2="6" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="12" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="12" y1="18" x2="19" y2="18" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+    </button>
+    <button class="vt-btn" id="vt-table" onclick="setView('table')" title="Table View">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  CASES WRAPPER
+  ─────────────────────────────────────────────────────────────
+  HOW TO ADD A NEW CASE:
+  ① Copy one of the <div class="case-card"> blocks below
+  ② Paste it inside the <div class="cases-list"> section
+  ③ Fill in the fields (MDW number, title, debrief, detective, etc.)
+  ④ For a RESTRICTED case: add class="case-card restricted" and use
+     the restricted card template at the bottom of the file
+══════════════════════════════════════════════════════════════ -->
+<!-- ══ GANG FILTER BAR ══ -->
+<div class="gang-filter-wrap" id="gang-filter-bar">
+  <span class="gang-filter-label">Gang Filter:</span>
+  <button class="gang-pill" onclick="filterGang(this)" data-gang="N/A">N/A</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="BALLAS">BALLAS</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="Saint Hustle">Saint Hustle</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="LSR">LSR</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="VICI">VICI</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="Y2C">Y2C</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="Red Hustler">Red Hustler</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="APEX">APEX</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="45 Trench">45 Trench</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="666 Menace Steppaz">666 Menace Steppaz</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="BOA">BOA</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="ODF">ODF</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="58th Flock">58th Flock</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="Summer House">Summer House</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="TRG">TRG</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="B2B">B2B</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="IEMC">IEMC</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="41MurderBloc">41MurderBloc</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="ADF">ADF</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="NSN">NSN</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="Miltonbois">Miltonbois</button>
+    <button class="gang-pill" onclick="filterGang(this)" data-gang="Rich Paisas">Rich Paisas</button>
+  <button class="gang-pill-clear" onclick="clearGangFilter()">✕ Clear</button>
+</div>
+
+
+
+<div class="cases-wrap">
+
+  <!-- ══ SECTION: PUBLIC CLOSED CASES ══ -->
+  <div id="view-list" class="view-list">
+
+  <div class="cases-section-head" id="section-public">
+    <span class="csh-label">Registry · Public</span>
+    <div class="csh-line"></div>
+    <span class="csh-title">Closed Cases</span>
+    <span class="csh-count" id="count-public"></span>
+  </div>
+
+  <div class="cases-list" id="list-public">
+
+    <!-- ═══ CASE #24 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-024</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#24</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.15.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">TRG / APEX</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-024</div>
+          <div class="case-title">Illegal Street Fight Club & Fraud</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Marlo Wade, Jamien K Shen</div>
+          <div class="case-tags">
+            <span class="case-tag">TRG</span>
+            <span class="case-tag">APEX</span>
+            <span class="case-tag">Marlo Wade</span>
+            <span class="case-tag">Jamien K Shen</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-024</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #24 -->
+
+    <!-- ═══ CASE #42 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-042</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#42</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.16.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-042</div>
+          <div class="case-title">Tuner Dispute</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Carl Doja</div>
+          <div class="case-tags">
+            <span class="case-tag">Carl Doja</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-042</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #42 -->
+
+    <!-- ═══ CASE #51 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-051</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#51</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.16.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Red Hustler</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-051</div>
+          <div class="case-title">Aggravated Battery on Civilians</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Sneaky O'brion</div>
+          <div class="case-tags">
+            <span class="case-tag">Red Hustler</span>
+            <span class="case-tag">Sneaky O'brion</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-051</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #51 -->
+
+    <!-- ═══ CASE #68 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-068</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#68</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.17.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-068</div>
+          <div class="case-title">Attempted Murder</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">CECEN MYLES, Magen David, Carl Doja, Whois Kiplie, Navaro The Leonard, mbing el, Cretza Jountor</div>
+          <div class="case-tags">
+            <span class="case-tag">CECEN MYLES</span>
+            <span class="case-tag">Magen David</span>
+            <span class="case-tag">Carl Doja</span>
+            <span class="case-tag">+4 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-068</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #68 -->
+
+    <!-- ═══ CASE #73 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-073</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#73</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.18.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-073</div>
+          <div class="case-title">Stabbing a Civilian</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Carl Doja</div>
+          <div class="case-tags">
+            <span class="case-tag">Carl Doja</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-073</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #73 -->
+
+    <!-- ═══ CASE #79 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-079</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#79</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.18.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">45 Trench</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-079</div>
+          <div class="case-title">Attempted Murder of a LEO</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Acid Rasyid</div>
+          <div class="case-tags">
+            <span class="case-tag">45 Trench</span>
+            <span class="case-tag">Acid Rasyid</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-079</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #79 -->
+
+    <!-- ═══ CASE #89 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-089</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#89</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.19.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-089</div>
+          <div class="case-title">Crime Towards Deputy</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Julian Vargas Olivera</div>
+          <div class="case-tags">
+            <span class="case-tag">Julian Vargas Olivera</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-089</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #89 -->
+
+    <!-- ═══ CASE #104 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-104</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#104</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.20.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-104</div>
+          <div class="case-title">Attempted Murder</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Earl Enderson, Jenice Ong</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Earl Enderson</span>
+            <span class="case-tag">Jenice Ong</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-104</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #104 -->
+
+    <!-- ═══ CASE #122 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-122</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#122</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.21.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">666 Menace Steppaz</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-122</div>
+          <div class="case-title">Stabbing on Civilians | Roy Lowenstein Blvd</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Killon Duncan</div>
+          <div class="case-tags">
+            <span class="case-tag">666 Menace Steppaz</span>
+            <span class="case-tag">Killon Duncan</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-122</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #122 -->
+
+    <!-- ═══ CASE #131 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-131</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#131</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.22.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-131</div>
+          <div class="case-title">Stabbing SHERIFF Kevin Wesley</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Levi Rez</div>
+          <div class="case-tags">
+            <span class="case-tag">Levi Rez</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-131</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #131 -->
+
+    <!-- ═══ CASE #143 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-143</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#143</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.23.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Rich Paisas</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-143</div>
+          <div class="case-title">Shot Fired at Strawberry Avenue</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Darby Banks</div>
+          <div class="case-tags">
+            <span class="case-tag">Rich Paisas</span>
+            <span class="case-tag">Darby Banks</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-143</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #143 -->
+
+    <!-- ═══ CASE #149 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-149</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#149</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.23.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Y2C / LSR</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-149</div>
+          <div class="case-title">Shooting Incident — Cage Cockswood</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Adriel Dominik, Pharrel J-Rich, Iskandar Grass</div>
+          <div class="case-tags">
+            <span class="case-tag">Y2C</span>
+            <span class="case-tag">LSR</span>
+            <span class="case-tag">Adriel Dominik</span>
+            <span class="case-tag">Pharrel J-Rich</span>
+            <span class="case-tag">Iskandar Grass</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-149</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #149 -->
+
+    <!-- ═══ CASE #151 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-151</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#151</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.23.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">BALLAS</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-151</div>
+          <div class="case-title">Knuckle Money – Deputy Sheriff Stabbing</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Nelson Moss</div>
+          <div class="case-tags">
+            <span class="case-tag">BALLAS</span>
+            <span class="case-tag">Nelson Moss</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-151</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #151 -->
+
+    <!-- ═══ CASE #153 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-153</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#153</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.23.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-153</div>
+          <div class="case-title">Aggravated Battery Against Sheriff</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Bonnie Clyde Shin</div>
+          <div class="case-tags">
+            <span class="case-tag">Bonnie Clyde Shin</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-153</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #153 -->
+
+    <!-- ═══ CASE #167 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-167</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#167</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.25.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-167</div>
+          <div class="case-title">Aggravated Battery to Chief of Police</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Dorii G Wagon</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Dorii G Wagon</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-167</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #167 -->
+
+    <!-- ═══ CASE #169 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-169</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#169</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.25.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">B2B</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-169</div>
+          <div class="case-title">Criminal Sale of a Legalized Firearm</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Girda Gaviria</div>
+          <div class="case-tags">
+            <span class="case-tag">B2B</span>
+            <span class="case-tag">Girda Gaviria</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-169</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #169 -->
+
+    <!-- ═══ CASE #174 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-174</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#174</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.26.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">BALLAS</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-174</div>
+          <div class="case-title">Stolen Cannabis</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Jaleel O Brown, Miguel Santana, Frost Bennet, Nelson Moss, Santigo Salvator</div>
+          <div class="case-tags">
+            <span class="case-tag">BALLAS</span>
+            <span class="case-tag">Jaleel O Brown</span>
+            <span class="case-tag">Miguel Santana</span>
+            <span class="case-tag">Frost Bennet</span>
+            <span class="case-tag">+2 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-174</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #174 -->
+
+    <!-- ═══ CASE #176 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-176</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#176</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.26.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-176</div>
+          <div class="case-title">Battery on a Government Employee</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Dorii G Wagon, Earl Enderson, Andreas RataKiri</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Dorii G Wagon</span>
+            <span class="case-tag">Earl Enderson</span>
+            <span class="case-tag">Andreas RataKiri</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-176</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #176 -->
+
+    <!-- ═══ CASE #178 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-178</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#178</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.26.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">VICI</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-178</div>
+          <div class="case-title">Aggravated Battery Towards CIB</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Kyuki Grey, Laurel Martens</div>
+          <div class="case-tags">
+            <span class="case-tag">VICI</span>
+            <span class="case-tag">Kyuki Grey</span>
+            <span class="case-tag">Laurel Martens</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-178</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #178 -->
+
+    <!-- ═══ CASE #193 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-193</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#193</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.27.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">OY</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-193</div>
+          <div class="case-title">Criminal Sale of a Legalized Firearm</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Elbryan Carter</div>
+          <div class="case-tags">
+            <span class="case-tag">OY</span>
+            <span class="case-tag">Elbryan Carter</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-193</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #193 -->
+
+    <!-- ═══ CASE #202 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-202</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#202</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.28.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">LSR</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-202</div>
+          <div class="case-title">Shoot Fire to Detective</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Pharrel J-Rich, Magen David, Cinsko Nareswara, Zelda Valentina, Luh Jaylen, Beatrice Bethany J, Essan Grayson</div>
+          <div class="case-tags">
+            <span class="case-tag">LSR</span>
+            <span class="case-tag">Pharrel J-Rich</span>
+            <span class="case-tag">Magen David</span>
+            <span class="case-tag">Cinsko Nareswara</span>
+            <span class="case-tag">+4 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-202</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #202 -->
+
+    <!-- ═══ CASE #206 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-206</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#206</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.28.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">VICI</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-206</div>
+          <div class="case-title">Attempted Murder of Government Employee</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Merin Dukandya, Verlyn Zeirnsha Liu, Alegra Joyx</div>
+          <div class="case-tags">
+            <span class="case-tag">VICI</span>
+            <span class="case-tag">Merin Dukandya</span>
+            <span class="case-tag">Verlyn Zeirnsha Liu</span>
+            <span class="case-tag">Alegra Joyx</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-206</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #206 -->
+
+    <!-- ═══ CASE #207 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-207</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#207</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.28.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">VICI</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-207</div>
+          <div class="case-title">Attempted Murder of Government Employee by VICI</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Verlyn Zeirinsha Liu, Alegra Joyx Liu</div>
+          <div class="case-tags">
+            <span class="case-tag">VICI</span>
+            <span class="case-tag">Verlyn Zeirinsha Liu</span>
+            <span class="case-tag">Alegra Joyx Liu</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-207</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #207 -->
+
+    <!-- ═══ CASE #212 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-212</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#212</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">02.28.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">41MurderBloc</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-212</div>
+          <div class="case-title">Aggravated Battery at Amarillo Vista</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Julian Riza, Benedict Taylor, Aymory, HUIS LAZER, Dado uhuy</div>
+          <div class="case-tags">
+            <span class="case-tag">41MurderBloc</span>
+            <span class="case-tag">Julian Riza</span>
+            <span class="case-tag">Benedict Taylor</span>
+            <span class="case-tag">Aymory</span>
+            <span class="case-tag">+2 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-212</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #212 -->
+
+    <!-- ═══ CASE #224 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-224</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#224</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.01.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">LSR</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-224</div>
+          <div class="case-title">AMBUSH AT MARINA DRIVE</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Pharrel J-Rich, Cinsko Nareswara, Zelda Valentina, LUH JAYLEN, Beatrice Bethany J, Essan Grayson</div>
+          <div class="case-tags">
+            <span class="case-tag">LSR</span>
+            <span class="case-tag">Pharrel J-Rich</span>
+            <span class="case-tag">Cinsko Nareswara</span>
+            <span class="case-tag">Zelda Valentina</span>
+            <span class="case-tag">+3 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-224</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #224 -->
+
+    <!-- ═══ CASE #236 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-236</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#236</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.02.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-236</div>
+          <div class="case-title">Multiple Aggravated Battery Towards LEO</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Dorii G Wagon</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Dorii G Wagon</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-236</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #236 -->
+
+    <!-- ═══ CASE #266 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-266</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#266</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.04.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">666 Menace Steppaz</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-266</div>
+          <div class="case-title">Hostaging Situation at Hangar Way</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Owen Griffin, Ardana Cortuis, Bob Stoned Fugz</div>
+          <div class="case-tags">
+            <span class="case-tag">666 Menace Steppaz</span>
+            <span class="case-tag">Owen Griffin</span>
+            <span class="case-tag">Ardana Cortuis</span>
+            <span class="case-tag">Bob Stoned Fugz</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-266</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #266 -->
+
+    <!-- ═══ CASE #269 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-269</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#269</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.04.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Summer House</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-269</div>
+          <div class="case-title">Stabbing and Torturing | Dutch London Street</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Dave Bradley Parker, Harry ScootMilton, Rexy Jaegervale, Kamale K Jackson</div>
+          <div class="case-tags">
+            <span class="case-tag">Summer House</span>
+            <span class="case-tag">Dave Bradley Parker</span>
+            <span class="case-tag">Harry ScootMilton</span>
+            <span class="case-tag">Rexy Jaegervale</span>
+            <span class="case-tag">+1 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-269</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #269 -->
+
+    <!-- ═══ CASE #301 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-301</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#301</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.06.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">BALLAS</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-301</div>
+          <div class="case-title">Chief of Police Hostaging</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Jaleel O Brown, Don Whymean, Ernanda P, Frost Bennet, Nelson Moss, Draven Salazar, Gervonta Travis, Desmond Noah Cullen</div>
+          <div class="case-tags">
+            <span class="case-tag">BALLAS</span>
+            <span class="case-tag">Jaleel O Brown</span>
+            <span class="case-tag">Don Whymean</span>
+            <span class="case-tag">Ernanda P</span>
+            <span class="case-tag">+5 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-301</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #301 -->
+
+    <!-- ═══ CASE #304 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-304</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#304</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.06.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-304</div>
+          <div class="case-title">Civilian Stabbing</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">—</div>
+          <div class="case-tags">
+            <span class="case-tag">—</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-304</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #304 -->
+
+    <!-- ═══ CASE #312 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-312</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#312</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.07.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-312</div>
+          <div class="case-title">Stabbing on Officer | Sandy Shores Horny's</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Marco Crabelli, Wems Williams</div>
+          <div class="case-tags">
+            <span class="case-tag">Marco Crabelli</span>
+            <span class="case-tag">Wems Williams</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-312</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #312 -->
+
+    <!-- ═══ CASE #313 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-313</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#313</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.07.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-313</div>
+          <div class="case-title">Stabbing on 2 Civilians, 2 Peace Officers</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Not Found</div>
+          <div class="case-tags">
+            <span class="case-tag">Not Found</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-313</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #313 -->
+
+    <!-- ═══ CASE #321 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-321</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#321</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.08.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-321</div>
+          <div class="case-title">Stabbing of Peace Officer</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Bebi Hopekins</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Bebi Hopekins</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-321</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #321 -->
+
+    <!-- ═══ CASE #358 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-358</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#358</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.09.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">BOA</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-358</div>
+          <div class="case-title">Stabbing of Deputy</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Mbom Mbom</div>
+          <div class="case-tags">
+            <span class="case-tag">BOA</span>
+            <span class="case-tag">Mbom Mbom</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-358</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #358 -->
+
+    <!-- ═══ CASE #401 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-401</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#401</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.10.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">APEX</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-401</div>
+          <div class="case-title">Multiple Aggravated Battery</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Samuel Kevyn, Vita Ghoras, Jamien K Shen, Gabe Nelson, Nathan Arvus, Ino Chandler, Jarvis Wong, Berry Berton, Tyrell DeMarcus, Gee Fortuna</div>
+          <div class="case-tags">
+            <span class="case-tag">APEX</span>
+            <span class="case-tag">Samuel Kevyn</span>
+            <span class="case-tag">Vita Ghoras</span>
+            <span class="case-tag">Jamien K Shen</span>
+            <span class="case-tag">+7 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-401</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #401 -->
+
+    <!-- ═══ CASE #440 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-440</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#440</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.11.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">ODF</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-440</div>
+          <div class="case-title">Gang Related Shooting</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Kobra Kai</div>
+          <div class="case-tags">
+            <span class="case-tag">ODF</span>
+            <span class="case-tag">Kobra Kai</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-440</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #440 -->
+
+    <!-- ═══ CASE #448 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-448</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#448</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.12.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Y2C</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-448</div>
+          <div class="case-title">Gang Detective Kidnapping</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Adriel Dominik, Daquan Amberwo</div>
+          <div class="case-tags">
+            <span class="case-tag">Y2C</span>
+            <span class="case-tag">Adriel Dominik</span>
+            <span class="case-tag">Daquan Amberwo</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-448</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #448 -->
+
+    <!-- ═══ CASE #509 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-509</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#509</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.14.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">APEX</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-509</div>
+          <div class="case-title">Firearms Dealing</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Ni Kho Tin</div>
+          <div class="case-tags">
+            <span class="case-tag">APEX</span>
+            <span class="case-tag">Ni Kho Tin</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-509</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #509 -->
+
+    <!-- ═══ CASE #523 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-523</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#523</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.15.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">58th Flock</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-523</div>
+          <div class="case-title">Shoot at Officers</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Kai Akira, Alex Christopher, Juan Craig Skiler, Gustavo Castillio</div>
+          <div class="case-tags">
+            <span class="case-tag">58th Flock</span>
+            <span class="case-tag">Kai Akira</span>
+            <span class="case-tag">Alex Christopher</span>
+            <span class="case-tag">Juan Craig Skiler</span>
+            <span class="case-tag">+1 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-523</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #523 -->
+
+    <!-- ═══ CASE #537 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-537</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#537</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.15.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Red Hustler</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-537</div>
+          <div class="case-title">Stolen Police Badge – Armed Setup on Commander Diraj</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Tyrell Bradley, Sneaky O'brion</div>
+          <div class="case-tags">
+            <span class="case-tag">Red Hustler</span>
+            <span class="case-tag">Tyrell Bradley</span>
+            <span class="case-tag">Sneaky O'brion</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-537</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #537 -->
+
+    <!-- ═══ CASE #562 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-562</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#562</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.16.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-562</div>
+          <div class="case-title">Gang War at Vinewood BLVD</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Dejuna Densai, Shelby Young Tjhio, Evelyn Valkrye, Lylia Camilya, Yvette Laurent</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Dejuna Densai</span>
+            <span class="case-tag">Shelby Young Tjhio</span>
+            <span class="case-tag">Evelyn Valkrye</span>
+            <span class="case-tag">+2 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-562</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #562 -->
+
+    <!-- ═══ CASE #577 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-577</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#577</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.16.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-577</div>
+          <div class="case-title">Stabbing to Martin Kareem</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Dorii G Wagon</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Dorii G Wagon</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-577</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #577 -->
+
+    <!-- ═══ CASE #591 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-591</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#591</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.17.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">45th Trench</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-591</div>
+          <div class="case-title">Illegal Street Fight and Shooting at Officer</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Acid Rasyid, Verel Myers, Beby Z, Kieron Smith</div>
+          <div class="case-tags">
+            <span class="case-tag">45th Trench</span>
+            <span class="case-tag">Acid Rasyid</span>
+            <span class="case-tag">Verel Myers</span>
+            <span class="case-tag">Beby Z</span>
+            <span class="case-tag">+1 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-591</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #591 -->
+
+    <!-- ═══ CASE #593 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-593</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#593</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.17.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">BOA</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-593</div>
+          <div class="case-title">Gang War</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Barr Rock, Enzoo Tsunoda, Prince Ollie, Bento Wijaya</div>
+          <div class="case-tags">
+            <span class="case-tag">BOA</span>
+            <span class="case-tag">Barr Rock</span>
+            <span class="case-tag">Enzoo Tsunoda</span>
+            <span class="case-tag">Prince Ollie</span>
+            <span class="case-tag">+1 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-593</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #593 -->
+
+    <!-- ═══ CASE #601 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-601</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#601</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.17.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Red Hustler</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-601</div>
+          <div class="case-title">Gang War Situation</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Ja'Corey Ellan DeVaughn, Axel Van Ferraro, Melvin Bellic, Bby Can</div>
+          <div class="case-tags">
+            <span class="case-tag">Red Hustler</span>
+            <span class="case-tag">Ja'Corey Ellan DeVaughn</span>
+            <span class="case-tag">Axel Van Ferraro</span>
+            <span class="case-tag">Melvin Bellic</span>
+            <span class="case-tag">+1 more</span>
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-601</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #601 -->
+
+    <!-- ═══ CASE #610 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-610</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#610</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.18.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Y2C</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-610</div>
+          <div class="case-title">Gang Shooting to Verlyn</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Adriel Dominik, Louis Tokio</div>
+          <div class="case-tags">
+            <span class="case-tag">Y2C</span>
+            <span class="case-tag">Adriel Dominik</span>
+            <span class="case-tag">Louis Tokio</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-610</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #610 -->
+
+    <!-- ═══ CASE #615 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-615</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#615</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.18.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-615</div>
+          <div class="case-title">Aggravated Battery on LEO</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Bebi HopeKins, Emily Cooper</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Bebi HopeKins</span>
+            <span class="case-tag">Emily Cooper</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-615</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #615 -->
+
+    <!-- ═══ CASE #616 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-616</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#616</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.18.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Miltonbois</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-616</div>
+          <div class="case-title">Destruction of Government Property on LEO</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Max Toneller</div>
+          <div class="case-tags">
+            <span class="case-tag">Miltonbois</span>
+            <span class="case-tag">Max Toneller</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-616</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #616 -->
+
+    <!-- ═══ CASE #619 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-619</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#619</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.18.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Saint Hustle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-619</div>
+          <div class="case-title">Aggravated Battery on LEO</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Bebi HopeKins</div>
+          <div class="case-tags">
+            <span class="case-tag">Saint Hustle</span>
+            <span class="case-tag">Bebi HopeKins</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-619</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #619 -->
+
+    <!-- ═══ CASE #643 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-643</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#643</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.19.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">Red Hustler</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-643</div>
+          <div class="case-title">Gang Related Shooting at Little Seoul</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Theresia O'Brien, Cas Vie NhuQuynh, Kyuki Grey</div>
+          <div class="case-tags">
+            <span class="case-tag">Red Hustler</span>
+            <span class="case-tag">Theresia O'Brien</span>
+            <span class="case-tag">Cas Vie NhuQuynh</span>
+            <span class="case-tag">Kyuki Grey</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-643</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #643 -->
+
+    <!-- ═══ CASE #711 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d2" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-711</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#711</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.23.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">ADF</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-711</div>
+          <div class="case-title">Shot Fired at Vinewood</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Nex Luchien, Swin Wilde, Cassius Wong</div>
+          <div class="case-tags">
+            <span class="case-tag">ADF</span>
+            <span class="case-tag">Nex Luchien</span>
+            <span class="case-tag">Swin Wilde</span>
+            <span class="case-tag">Cassius Wong</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-711</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #711 -->
+
+    <!-- ═══ CASE #731 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d3" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-731</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#731</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.25.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">N/A</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-731</div>
+          <div class="case-title">Shot Fired at Magellan Avenue</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Naez Shiesty</div>
+          <div class="case-tags">
+            <span class="case-tag">Naez Shiesty</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-731</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #731 -->
+
+    <!-- ═══ CASE #732 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d0" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-732</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#732</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.25.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">58th Flock</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-732</div>
+          <div class="case-title">Shoot Fire at Spanish Ave</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Riko Angelo, Ahmed Carter</div>
+          <div class="case-tags">
+            <span class="case-tag">58th Flock</span>
+            <span class="case-tag">Riko Angelo</span>
+            <span class="case-tag">Ahmed Carter</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-732</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #732 -->
+
+    <!-- ═══ CASE #753 ═══════════════════════════════════════════════════ -->
+    <div class="case-card fade-in fade-in-d1" data-div="CID" data-type="public">
+      <div class="case-inner">
+
+        <!-- LEFT META -->
+        <div class="case-meta">
+          <div>
+            <div class="case-status-pill"><div class="case-status-dot"></div>Case Closed</div>
+          </div>
+          <div class="case-mdw">CIB-MDW-2026-753</div>
+          <div class="case-meta-rows">
+            <div class="meta-row">
+              <span class="meta-lbl">MDT No.</span>
+              <span class="meta-val">#753</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Date Filed</span>
+              <span class="meta-val">03.26.2026</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val">
+                <span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span>
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Gang Affil.</span>
+              <span class="meta-val">NSN</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-lbl">Outcome</span>
+              <span class="meta-val">Closed · Archived</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-MDW-2026-753</div>
+          <div class="case-title">Kidnapping Deputy Sheriff</div>
+          <div class="case-debrief-label">Suspects Involved</div>
+          <div class="case-debrief">Ezra Baratheon</div>
+          <div class="case-tags">
+            <span class="case-tag">NSN</span>
+            <span class="case-tag">Ezra Baratheon</span>
+            
+          </div>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="case-actions">
+
+          <div class="mdt-ref-box">
+            <div class="mdt-ref-label">MDT Reference</div>
+            <div class="mdt-ref-num">CIB-MDW-2026-753</div>
+            <div class="mdt-ref-note">No report link attached</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END CASE #753 -->
+
+  </div><!-- /list-public -->
+
+
+
+  <!-- ══ PAGINATION CONTROLS ══ -->
+  <div class="pagination-wrap" id="pagination-wrap">
+    <div class="pagination-info" id="pagination-info">Showing cases 1–10</div>
+    <div class="pagination-controls" id="pagination-controls"></div>
+  </div>
+
+  <!-- ══ SECTION: RESTRICTED CLOSED CASES ══ -->
+  <div class="cases-section-head" id="section-restricted">
+    <span class="csh-label">Registry · Restricted</span>
+    <div class="csh-line"></div>
+    <span class="csh-title">Restricted Cases</span>
+    <span class="csh-count" id="count-restricted"></span>
+  </div>
+
+  <div class="cases-list" id="list-restricted">
+
+    <!-- ═══════════════════════════════════════════════════════
+         CASE CARD — RESTRICTED
+         To add a restricted case: duplicate this block
+         Only MDW, case number, date closed, division, and
+         primary detective are visible. Debrief is redacted.
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="case-card restricted fade-in" data-div="CID" data-type="restricted">
+      <div class="case-inner">
+
+        <!-- LEFT META — limited fields only -->
+        <div class="case-meta">
+          <div><div class="case-status-pill"><div class="case-status-dot"></div>Closed · Restricted</div></div>
+          <div class="case-mdw">MDW-2026-00██</div>
+          <div class="case-meta-rows">
+            <div class="meta-row"><span class="meta-lbl">Date Closed</span><span class="meta-val">██.██.2026</span></div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val"><span class="div-pip pip-cid"><span class="div-pip-dot"></span>CID</span></span>
+            </div>
+            <div class="meta-row"><span class="meta-lbl">Primary Detective</span><span class="meta-val">Capt. Elias Makya</span></div>
+            <div class="meta-row"><span class="meta-lbl">Clearance Required</span><span class="meta-val" style="color:var(--red-alert);font-size:11px;">Division Commander+</span></div>
+          </div>
+        </div>
+
+        <!-- CENTRE BODY — redacted -->
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-2026-00██</div>
+          <div class="case-title">Restricted File</div>
+          <div class="case-debrief-label">Case Debrief</div>
+          <div class="redacted-block" style="position:relative;min-height:80px;">
+            <div class="redacted-text">
+              Details of this investigation are withheld under CIB Directive 7-Alpha. The nature of the operation, subjects involved, methods employed, and all evidentiary findings are classified. Access is restricted to Division Commander level and above pending further directive clearance. Unauthorized access constitutes a federal offense under the San Andreas Intelligence Protection Act. All inquiries must be directed to the primary detective through secure channels.
+            </div>
+            <div class="restricted-overlay">
+              <div class="restricted-stamp">RESTRICTED</div>
+              <div class="restricted-sub">Access controlled · Contact primary detective</div>
+            </div>
+          </div>
+          <div class="case-tags" style="margin-top:14px;">
+            <span class="case-tag">██████</span>
+            <span class="case-tag">Classified Operation</span>
+            <span class="case-tag">Directive 7-Alpha</span>
+          </div>
+        </div>
+
+        <!-- RIGHT — contact panel -->
+        <div class="case-actions" style="display:flex;">
+          <div class="contact-detective-label">To Access This File</div>
+          <div class="contact-det-name">Capt. Elias Makya</div>
+          <div class="contact-det-rank">Head of CID · Division Commander</div>
+          <!-- Replace # with contact URL, Discord tag, MDT link, etc. -->
+          <a class="btn-contact" href="#">Contact Detective</a>
+          <div class="restricted-warning">Unauthorized access to this file is a federal offense. All requests are logged.</div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END RESTRICTED CASE -->
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         CASE CARD — RESTRICTED (second example)
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="case-card restricted fade-in fade-in-d1" data-div="GRD" data-type="restricted">
+      <div class="case-inner">
+        <div class="case-meta">
+          <div><div class="case-status-pill"><div class="case-status-dot"></div>Closed · Restricted</div></div>
+          <div class="case-mdw">MDW-2025-00██</div>
+          <div class="case-meta-rows">
+            <div class="meta-row"><span class="meta-lbl">Date Closed</span><span class="meta-val">██.██.2025</span></div>
+            <div class="meta-row">
+              <span class="meta-lbl">Division</span>
+              <span class="meta-val"><span class="div-pip pip-grd"><span class="div-pip-dot"></span>GRD</span></span>
+            </div>
+            <div class="meta-row"><span class="meta-lbl">Primary Detective</span><span class="meta-val">Capt. Meifanny Lorenta</span></div>
+            <div class="meta-row"><span class="meta-lbl">Clearance Required</span><span class="meta-val" style="color:var(--red-alert);font-size:11px;">Commander Level · TS/SCI</span></div>
+          </div>
+        </div>
+        <div class="case-body">
+          <div class="case-number">CASE NO. CIB-2025-00██</div>
+          <div class="case-title">Restricted File</div>
+          <div class="case-debrief-label">Case Debrief</div>
+          <div class="redacted-block" style="position:relative;min-height:80px;">
+            <div class="redacted-text">
+              This operation involved long-term embedded intelligence collection. Subjects, locations, methods, and outcomes are classified under the CIB Special Operations Protocol. All findings have been secured and transferred to the Bureau Commander. The case is formally closed. No further details will be disclosed through public channels. This file is accessible only to personnel holding Top Secret/SCI clearance.
+            </div>
+            <div class="restricted-overlay">
+              <div class="restricted-stamp">RESTRICTED</div>
+              <div class="restricted-sub">TS/SCI Clearance Required</div>
+            </div>
+          </div>
+          <div class="case-tags" style="margin-top:14px;">
+            <span class="case-tag">██████</span>
+            <span class="case-tag">Special Operations</span>
+            <span class="case-tag">TS/SCI</span>
+          </div>
+        </div>
+        <div class="case-actions" style="display:flex;">
+          <div class="contact-detective-label">To Access This File</div>
+          <div class="contact-det-name">Capt. Meifanny Lorenta</div>
+          <div class="contact-det-rank">Head of GRD · Division Commander</div>
+          <a class="btn-contact" href="#">Contact Detective</a>
+          <div class="restricted-warning">Unauthorized access to this file is a federal offense. All requests are logged.</div>
+        </div>
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ END RESTRICTED CASE -->
+
+  </div><!-- /list-restricted -->
+
+  <div class="no-results" id="no-results">
+    <div class="no-results-icon">— — —</div>
+    <div class="no-results-text">No cases match your search or filter</div>
+  </div>
+
+</div><!-- /cases-wrap -->
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+      <p>Central Investigation Bureau</p>
+      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
+    </div>
+    <div class="footer-col">
+      <h4>Divisions</h4>
+      <ul>
+        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
+        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="Page_Press.html">Press Room</a></li>
+        <li><a href="Page_Cases.html">Cases</a></li>
+        <li><a href="Page_Recruitment.html">Recruitment</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="index.html">CIB Headquarters</a></li>
+        <li><a href="Page_Press.html">Tip Hotline</a></li>
+        <li><a href="Page_Login.html">Personnel Login</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
+    <div class="classified-stamp">EXECUTIVE RP</div>
+  </div>
+</footer>
+
+
+<!-- ══════════════ JS: Filter + Search + Stats ══════════════ -->
+<script>
+  // ── Count and display stats ─────────────────────────────────
+  function updateStats() {
+    const all   = document.querySelectorAll('.case-card');
+    const pub   = document.querySelectorAll('.case-card[data-type="public"]');
+    const restr = document.querySelectorAll('.case-card[data-type="restricted"]');
+    document.getElementById('stat-total').textContent      = all.length;
+    document.getElementById('stat-open').textContent       = pub.length;
+    document.getElementById('stat-restricted').textContent = restr.length;
+    document.getElementById('count-public').textContent    = `(${pub.length})`;
+    document.getElementById('count-restricted').textContent= `(${restr.length})`;
+  }
+  updateStats();
+
+  // ── Filter buttons ──────────────────────────────────────────
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  let currentFilter = 'all';
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      applyFilters();
+    });
+  });
+
+  // ── Search ──────────────────────────────────────────────────
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+
+  function applyFilters() {
+    const query  = document.getElementById('search-input').value.toLowerCase().trim();
+    const cards  = document.querySelectorAll('.case-card');
+    let anyVisible = false;
+
+    cards.forEach(card => {
+      const div    = card.dataset.div   || '';
+      const type   = card.dataset.type  || '';
+      const text   = card.innerText.toLowerCase();
+
+      const passFilter =
+        currentFilter === 'all'        ? true :
+        currentFilter === 'public'     ? type === 'public' :
+        currentFilter === 'restricted' ? type === 'restricted' :
+        currentFilter === 'CID'        ? div  === 'CID' :
+        currentFilter === 'GRD'        ? div  === 'GRD' : true;
+
+      const passSearch = query === '' || text.includes(query);
+
+      const show = passFilter && passSearch;
+      card.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
+
+    // show/hide section headings
+    ['public','restricted'].forEach(t => {
+      const list    = document.getElementById(`list-${t}`);
+      const heading = document.getElementById(`section-${t}`);
+      const visible = list && [...list.querySelectorAll('.case-card')].some(c => c.style.display !== 'none');
+      if (heading) heading.style.display = visible ? '' : 'none';
+      if (list)    list.style.display    = visible ? '' : 'none';
+    });
+
+    document.getElementById('no-results').style.display = anyVisible ? 'none' : 'block';
+  }
+</script>
+
+<script>
+  // ══ PAGE LOAD ══
+  window.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('page-visible');
+    updateCounts();
+    updateResultsCount();
+  });
+
+  // ══════════════════════════════════════════════════════
+  //  PAGINATION + FILTER + SEARCH — COMBINED ENGINE
+  //  10 cases per page, works with filter & search
+  // ══════════════════════════════════════════════════════
+  const PER_PAGE = 10;
+  let currentPage = 1;
+  let activeGang  = null;
+
+  // ── Stats ───────────────────────────────────────────
+  function updateCounts() {
+    const pub   = document.querySelectorAll('#list-public .case-card:not(.restricted)');
+    const restr = document.querySelectorAll('#list-restricted .case-card.restricted');
+    const total = pub.length + restr.length;
+    const el = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+    el('stat-total', total);
+    el('stat-open', pub.length);
+    el('stat-restricted', restr.length);
+    el('count-public', '(' + pub.length + ')');
+    el('count-restricted', '(' + restr.length + ')');
+  }
+
+  // ── Filter tabs ─────────────────────────────────────
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPage = 1;
+      applyFilters();
+    });
+  });
+
+  // ── Search ──────────────────────────────────────────
+  document.getElementById('search-input').addEventListener('input', () => {
+    currentPage = 1;
+    applyFilters();
+  });
+
+  // ── Gang filter ─────────────────────────────────────
+  function filterGang(btn) {
+    const gang = btn.dataset.gang;
+    if (activeGang === gang) { clearGangFilter(); return; }
+    activeGang = gang;
+    document.querySelectorAll('.gang-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    currentPage = 1;
+    applyFilters();
+  }
+  function clearGangFilter() {
+    activeGang = null;
+    document.querySelectorAll('.gang-pill').forEach(p => p.classList.remove('active'));
+    currentPage = 1;
+    applyFilters();
+  }
+
+  // ── Main filter + pagination logic ──────────────────
+  function applyFilters() {
+    const filterType = document.querySelector('.filter-btn[data-filter].active')?.dataset.filter || 'all';
+    const search     = document.getElementById('search-input').value.toLowerCase().trim();
+
+    // ── Public case cards (paginated) ──
+    const publicCards = [...document.querySelectorAll('#list-public .case-card')];
+    const matched = [];
+    publicCards.forEach(card => {
+      const type  = card.dataset.type || 'public';
+      const div   = card.dataset.div  || '';
+      const text  = card.innerText.toLowerCase();
+      const matchType   = filterType === 'all' || filterType === type || filterType === div;
+      const matchSearch = !search || text.includes(search);
+      const matchGang   = !activeGang || text.includes(activeGang.toLowerCase());
+      if (matchType && matchSearch && matchGang) {
+        matched.push(card);
+      }
+      card.style.display = 'none'; // hide all first
+    });
+
+    // Paginate the matched cards
+    const totalPages = Math.max(1, Math.ceil(matched.length / PER_PAGE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * PER_PAGE;
+    const end   = start + PER_PAGE;
+    matched.forEach((card, i) => {
+      card.style.display = (i >= start && i < end) ? '' : 'none';
+    });
+
+    // Show/hide public section heading
+    const pubHead = document.getElementById('section-public');
+    if (pubHead) pubHead.style.display = (filterType === 'restricted') ? 'none' : '';
+
+    // ── Restricted cards (shown all, no pagination) ──
+    const restrictedCards = [...document.querySelectorAll('#list-restricted .case-card.restricted')];
+    restrictedCards.forEach(card => {
+      const text = card.innerText.toLowerCase();
+      const div  = card.dataset.div || '';
+      const matchType   = filterType === 'all' || filterType === 'restricted' || filterType === div;
+      const matchSearch = !search || text.includes(search);
+      const matchGang   = !activeGang || text.includes(activeGang.toLowerCase());
+      card.style.display = (matchType && matchSearch && matchGang) ? '' : 'none';
+    });
+    const restHead = document.getElementById('section-restricted');
+    const restVisible = restrictedCards.some(c => c.style.display !== 'none');
+    if (restHead) restHead.style.display = restVisible ? '' : 'none';
+
+    // ── Timeline + Table views ──
+    document.querySelectorAll('.tl-card').forEach(card => {
+      const text = card.innerText.toLowerCase();
+      const gang = card.dataset.gang || '';
+      const matchSearch = !search || text.includes(search);
+      const matchGang   = !activeGang || gang.toLowerCase().includes(activeGang.toLowerCase());
+      const row = card.closest('.tl-row');
+      if (row) row.style.display = (matchSearch && matchGang) ? '' : 'none';
+    });
+    document.querySelectorAll('#table-body tr').forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const gang = row.dataset.gang || '';
+      const matchSearch = !search || text.includes(search);
+      const matchGang   = !activeGang || gang.toLowerCase().includes(activeGang.toLowerCase());
+      row.style.display = (matchSearch && matchGang) ? '' : 'none';
+    });
+
+    // ── No-results ──
+    const noRes = document.getElementById('no-results-msg');
+    if (noRes) noRes.style.display = (matched.length === 0 && !restVisible) ? 'block' : 'none';
+
+    // ── Render pagination ──
+    renderPagination(matched.length, totalPages);
+  }
+
+  // ── Render pagination controls ───────────────────────
+  function renderPagination(total, totalPages) {
+    const wrap     = document.getElementById('pagination-wrap');
+    const info     = document.getElementById('pagination-info');
+    const controls = document.getElementById('pagination-controls');
+    if (!wrap || !controls) return;
+
+    // Hide pagination if only 1 page
+    wrap.style.display = totalPages <= 1 ? 'none' : 'flex';
+    if (totalPages <= 1) return;
+
+    const start = Math.min((currentPage - 1) * PER_PAGE + 1, total);
+    const end   = Math.min(currentPage * PER_PAGE, total);
+    if (info) info.textContent = 'Showing ' + start + '–' + end + ' of ' + total + ' cases';
+
+    controls.innerHTML = '';
+
+    // Prev button
+    const prev = document.createElement('button');
+    prev.className = 'page-btn nav';
+    prev.textContent = '‹ Prev';
+    prev.disabled = currentPage === 1;
+    prev.onclick = () => { currentPage--; applyFilters(); scrollToCases(); };
+    controls.appendChild(prev);
+
+    // Page number buttons
+    const pageNums = getPageNumbers(currentPage, totalPages);
+    pageNums.forEach(p => {
+      if (p === '...') {
+        const el = document.createElement('span');
+        el.className = 'page-ellipsis';
+        el.textContent = '···';
+        controls.appendChild(el);
+      } else {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (p === currentPage ? ' active' : '');
+        btn.textContent = p;
+        btn.onclick = () => { currentPage = p; applyFilters(); scrollToCases(); };
+        controls.appendChild(btn);
+      }
+    });
+
+    // Next button
+    const next = document.createElement('button');
+    next.className = 'page-btn nav';
+    next.textContent = 'Next ›';
+    next.disabled = currentPage === totalPages;
+    next.onclick = () => { currentPage++; applyFilters(); scrollToCases(); };
+    controls.appendChild(next);
+  }
+
+  // ── Generate page number array with ellipsis ─────────
+  function getPageNumbers(current, total) {
+    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+    const pages = [];
+    if (current <= 4) {
+      pages.push(1,2,3,4,5,'...',total);
+    } else if (current >= total - 3) {
+      pages.push(1,'...',total-4,total-3,total-2,total-1,total);
+    } else {
+      pages.push(1,'...',current-1,current,current+1,'...',total);
+    }
+    return pages;
+  }
+
+  // ── Scroll to top of case list on page change ────────
+  function scrollToCases() {
+    const el = document.getElementById('view-list') || document.getElementById('list-public');
+    if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+
+
+
+  // ══ VIEW TOGGLE ══
+  function setView(view) {
+    const cardView     = document.getElementById('view-list');
+    const timelineView = document.getElementById('view-timeline');
+    const tableView    = document.getElementById('view-table');
+    const gangBar      = document.getElementById('gang-filter-bar');
+
+    [cardView, timelineView, tableView].forEach(el => { if(el) el.style.display = 'none'; });
+    document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
+
+    if (view === 'card')     { if(cardView) cardView.style.display=''; document.getElementById('vt-card').classList.add('active'); }
+    if (view === 'timeline') { if(timelineView) timelineView.style.display='flex'; document.getElementById('vt-timeline').classList.add('active'); }
+    if (view === 'table')    { if(tableView) tableView.style.display='block'; document.getElementById('vt-table').classList.add('active'); }
+  }
+</script>
+<script>
+  // Fade IN when page loads
+  window.addEventListener('DOMContentLoaded', () => {
+    requestAnimationFrame(() => {
+      document.body.classList.add('page-visible');
+    });
+  });
+
+  // Fade OUT before navigating away
+  document.querySelectorAll('a[href]').forEach(link => {
+    link.addEventListener('click', function (e) {
+      const href = this.getAttribute('href');
+
+      // Skip external links, anchors, and empty links
+      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
+
+      e.preventDefault();
+      document.body.classList.remove('page-visible');
+
+      setTimeout(() => {
+        window.location.href = href;
+      }, 400); // must match the transition duration above
+    });
+  });
+</script>
+
+</body>
+</html>

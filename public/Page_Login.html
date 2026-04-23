@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="images/cib-logo.png" type="image/png">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Personnel Login — CENTRAL INVESTIGATION BUREAU</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --gold:#C9A84C;
+    --gold-light:#E8C97A;
+    --navy:#0A0F1E;
+    --navy-mid:#0D1526;
+    --navy-card:#111827;
+    --navy-border:#1E2D4A;
+    --white:#F0EDE4;
+    --muted:#8A95AA;
+    --red-alert:#C0392B;
+  }
+  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
+
+/* ── PAGE TRANSITIONS ── */
+body {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+body.page-visible {
+  opacity: 1;
+}
+
+  /* ── NAV ── */
+  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo img{height:40px;width:40px;object-fit:contain;}
+  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+  .nav-links{display:flex;gap:28px;list-style:none;}
+  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
+  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;}
+
+  /* ── TICKER ── */
+  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
+  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
+  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
+  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
+  .ticker-track span b{color:var(--gold-light);}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  .construction-banner{background:#0D1A0A;border-bottom:2px solid #27AE60;padding:10px 40px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+  .construction-dot{width:8px;height:8px;border-radius:50%;background:#27AE60;animation:pulse 1.5s infinite;flex-shrink:0;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .construction-text{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:2px;color:#4CAF50;text-transform:uppercase;text-align:center;}
+  .construction-text b{color:#81C784;}
+
+  /* ── LOGIN WRAPPER ── */
+  .login-wrapper{min-height:calc(100vh - 92px);display:flex;align-items:center;justify-content:center;padding:60px 20px;position:relative;overflow:hidden;}
+  .login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#0D1A35 0%,var(--navy) 70%);z-index:0;}
+  .login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
+
+  /* ── LOGIN CARD ── */
+  .login-card{position:relative;z-index:2;width:100%;max-width:460px;}
+
+  /* top status bar */
+  .login-status-bar{background:var(--navy-mid);border:1px solid var(--navy-border);border-bottom:none;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;}
+  .login-status-left{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+  .login-status-right{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.6;}
+
+  /* card body */
+  .login-body{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);padding:40px 36px 36px;}
+
+  /* seal + heading */
+  .login-seal{width:72px;height:72px;margin:0 auto 20px;display:block;filter:drop-shadow(0 0 16px rgba(201,168,76,0.25));}
+  .login-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;text-align:center;margin-bottom:8px;opacity:0.8;}
+  .login-title{font-family:'Oswald',sans-serif;font-size:22px;letter-spacing:5px;text-transform:uppercase;color:var(--white);text-align:center;margin-bottom:6px;}
+  .login-subtitle{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;text-align:center;margin-bottom:8px;}
+  .login-divider{width:50px;height:1px;background:var(--gold);margin:16px auto 28px;opacity:0.5;}
+
+  /* ── DEV NOTICE inside card ── */
+  .dev-notice{background:#1A1008;border:1px solid rgba(201,168,76,0.35);border-left:3px solid var(--gold);padding:12px 16px;margin-bottom:28px;display:flex;align-items:flex-start;gap:12px;}
+  .dev-notice-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+  .dev-notice-text{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--gold-light);line-height:1.7;letter-spacing:0.5px;}
+  .dev-notice-text b{color:var(--gold);display:block;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+
+  /* ── FORM ── */
+  .form-group{margin-bottom:20px;}
+  .form-label{display:block;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;opacity:0.9;}
+  .form-input-wrap{position:relative;}
+  .form-input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:0.4;}
+  .form-input-icon svg{width:15px;height:15px;fill:var(--gold);}
+  .form-input{width:100%;background:#0A0F1E;border:1px solid var(--navy-border);color:var(--white);font-family:'Roboto Mono',monospace;font-size:13px;padding:12px 14px 12px 40px;letter-spacing:1px;outline:none;transition:border-color 0.2s;}
+  .form-input::placeholder{color:var(--muted);opacity:0.5;font-size:11px;letter-spacing:2px;}
+  .form-input:focus{border-color:var(--gold);}
+
+  /* badge number hint */
+  .form-hint{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:6px;opacity:0.6;}
+
+  /* submit button */
+  .login-btn{width:100%;background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:4px;padding:14px;text-transform:uppercase;cursor:pointer;border:none;font-weight:600;margin-top:8px;transition:background 0.2s;}
+  .login-btn:hover{background:var(--gold-light);}
+  .login-btn:disabled{opacity:0.6;cursor:not-allowed;}
+
+  /* ── FORGOT PASSWORD ── */
+  .forgot-section{margin-top:24px;border-top:1px solid var(--navy-border);padding-top:20px;text-align:center;}
+  .forgot-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;opacity:0.7;}
+  .forgot-card{background:var(--navy-mid);border:1px solid var(--navy-border);padding:14px 18px;display:inline-flex;align-items:center;gap:12px;width:100%;}
+  .forgot-card-icon{width:30px;height:30px;border-radius:50%;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .forgot-card-icon svg{width:14px;height:14px;fill:var(--gold);}
+  .forgot-card-text{text-align:left;}
+  .forgot-card-top{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;}
+  .forgot-card-name{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;}
+  .forgot-card-rank{font-size:11px;color:var(--muted);margin-top:1px;}
+
+  /* ── BOTTOM STATUS ── */
+  .login-footer-bar{background:var(--navy-mid);border:1px solid var(--navy-border);border-top:none;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;}
+  .login-footer-left{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.5;}
+  .login-secure-badge{display:flex;align-items:center;gap:6px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.5;}
+  .secure-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);opacity:0.5;}
+
+  /* ── FOOTER ── */
+  footer{background:var(--navy-mid);border-top:1px solid var(--gold);padding:40px 40px 24px;}
+  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
+  .footer-brand img{height:50px;width:50px;object-fit:contain;margin-bottom:12px;}
+  .footer-brand p{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
+  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.7;}
+  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .footer-col ul li a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
+  .footer-col ul li a:hover{color:var(--gold);}
+  .footer-bottom{border-top:1px solid var(--navy-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
+  .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
+  .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
+
+  /* ══════════════════════════════════════════════════
+     SURVEILLANCE WARNING OVERLAY
+  ══════════════════════════════════════════════════ */
+  #surv-overlay{
+    position:fixed;inset:0;z-index:9999;
+    background:rgba(4,6,14,0.97);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;overflow-y:auto;
+  }
+  #surv-overlay.surv-dismissed{display:none;}
+  #surv-overlay::before{
+    content:'';position:fixed;top:0;left:0;width:100%;height:3px;
+    background:linear-gradient(90deg,transparent,rgba(192,57,43,0.8),transparent);
+    animation:survScan 3.5s ease-in-out infinite;z-index:1;pointer-events:none;
+    will-change:transform;
+  }
+  @keyframes survScan{0%{transform:translateY(0);opacity:0;}5%{opacity:1;}95%{opacity:0.6;}100%{transform:translateY(100vh);opacity:0;}}
+  #surv-overlay::after{
+    content:'';position:fixed;
+    top:16px;left:16px;width:32px;height:32px;
+    border-top:2px solid rgba(192,57,43,0.5);
+    border-left:2px solid rgba(192,57,43,0.5);
+    pointer-events:none;
+  }
+  .surv-corner{position:fixed;width:32px;height:32px;pointer-events:none;}
+  .surv-corner-tr{top:16px;right:16px;border-top:2px solid rgba(192,57,43,0.5);border-right:2px solid rgba(192,57,43,0.5);}
+  .surv-corner-bl{bottom:16px;left:16px;border-bottom:2px solid rgba(192,57,43,0.5);border-left:2px solid rgba(192,57,43,0.5);}
+  .surv-corner-br{bottom:16px;right:16px;border-bottom:2px solid rgba(192,57,43,0.5);border-right:2px solid rgba(192,57,43,0.5);}
+
+  /* Box */
+  .surv-box{
+    background:#0A0C14;
+    border:1px solid rgba(192,57,43,0.5);
+    border-top:3px solid var(--red-alert);
+    width:100%;max-width:960px;
+    position:relative;z-index:2;
+    animation:survBoxIn 0.45s ease both;
+    will-change:transform,opacity;
+  }
+  @keyframes survBoxIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Topbar */
+  .surv-topbar{
+    background:rgba(192,57,43,0.12);
+    border-bottom:1px solid rgba(192,57,43,0.3);
+    padding:10px 20px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:3;
+  }
+  .surv-topbar-left{display:flex;align-items:center;gap:10px;}
+  .surv-topbar-dot{width:8px;height:8px;border-radius:50%;background:var(--red-alert);flex-shrink:0;animation:survDotBlink 1s step-end infinite;}
+  @keyframes survDotBlink{0%,100%{opacity:1;}50%{opacity:0.1;}}
+  .surv-topbar-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--red-alert);text-transform:uppercase;}
+  .surv-topbar-right{display:flex;align-items:center;gap:20px;}
+  .surv-topbar-ref{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(192,57,43,0.5);}
+  .surv-topbar-time{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(192,57,43,0.4);}
+
+  /* Body layout */
+  .surv-body{padding:24px 28px 20px;}
+  .surv-icon{
+    width:60px;height:60px;border:1px solid rgba(192,57,43,0.4);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;background:rgba(192,57,43,0.06);
+    animation:survIconPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes survIconPulse{0%,100%{opacity:1;}50%{opacity:0.55;}}
+  .surv-icon svg{width:28px;height:28px;fill:var(--red-alert);}
+  .surv-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:5px;color:var(--red-alert);text-transform:uppercase;text-align:center;margin-bottom:8px;opacity:0.85;}
+  .surv-title{font-family:'Oswald',sans-serif;font-size:clamp(18px,4vw,26px);font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--white);text-align:center;margin-bottom:6px;}
+  .surv-subtitle{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(192,57,43,0.6);text-transform:uppercase;text-align:center;margin-bottom:16px;}
+  .surv-div{height:1px;background:linear-gradient(90deg,transparent,rgba(192,57,43,0.3),transparent);margin-bottom:18px;}
+  .surv-tag{display:inline-block;background:rgba(192,57,43,0.15);border:1px solid rgba(192,57,43,0.3);font-size:8px;letter-spacing:2px;padding:1px 6px;color:var(--red-alert);margin-left:6px;vertical-align:middle;}
+  .surv-tag.green{background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#27AE60;}
+
+  /* ── MAIN COLS ── */
+  .surv-main-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;align-items:start;}
+
+  /* ── LEFT: DOWNLOAD / ACQUISITION PANEL ── */
+  .surv-acquire-panel{display:flex;flex-direction:column;gap:10px;}
+  .surv-acquire-header{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--red-alert);text-transform:uppercase;margin-bottom:4px;opacity:0.8;}
+
+  /* individual download item */
+  .dl-item{
+    background:rgba(192,57,43,0.04);
+    border:1px solid rgba(192,57,43,0.12);
+    border-left:3px solid rgba(192,57,43,0.35);
+    padding:9px 12px;
+  }
+  .dl-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .dl-item-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+  .dl-item-status{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--red-alert);text-transform:uppercase;}
+  .dl-item-status.done{color:#27AE60;}
+  /* progress bar track */
+  .dl-bar-track{height:3px;background:rgba(192,57,43,0.12);position:relative;overflow:hidden;}
+  .dl-bar-fill{height:100%;background:var(--red-alert);width:0%;transition:width 0.3s ease;}
+  .dl-bar-fill.done{background:#27AE60;}
+  /* shimmer sweep on active bars */
+  .dl-bar-fill.active::after{
+    content:'';position:absolute;top:0;right:0;width:30px;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
+    animation:dlShimmer 0.8s ease-in-out infinite;
+  }
+  @keyframes dlShimmer{0%{transform:translateX(20px);}100%{transform:translateX(-80px);}}
+  .dl-item-sub{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);margin-top:5px;opacity:0.5;min-height:11px;}
+
+  /* overall progress */
+  .surv-overall-progress{
+    background:rgba(192,57,43,0.06);
+    border:1px solid rgba(192,57,43,0.2);
+    padding:10px 12px;
+    margin-top:2px;
+  }
+  .surv-overall-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .surv-overall-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--red-alert);text-transform:uppercase;}
+  .surv-overall-pct{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--white);}
+  .surv-overall-bar-track{height:5px;background:rgba(192,57,43,0.1);position:relative;overflow:hidden;}
+  .surv-overall-bar-fill{height:100%;background:linear-gradient(90deg,rgba(192,57,43,0.7),var(--red-alert));width:0%;transition:width 0.4s ease;}
+  .surv-overall-bar-fill.done{background:linear-gradient(90deg,#1a7a40,#27AE60);}
+
+  /* packet stream */
+  .surv-packet-stream{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+    color:rgba(138,149,170,0.45);line-height:1.7;
+    height:52px;overflow:hidden;
+    background:rgba(0,0,0,0.3);border:1px solid rgba(192,57,43,0.08);
+    padding:5px 8px;margin-top:4px;
+    position:relative;
+  }
+  .surv-packet-stream::after{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:20px;
+    background:linear-gradient(transparent,#0A0C14);
+  }
+  #packet-log{display:flex;flex-direction:column;gap:0;}
+
+  /* ── RIGHT: WARNING PANEL ── */
+  .surv-warning{background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.25);padding:14px 16px;margin-bottom:0;}
+  .surv-warning-title{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--red-alert);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .surv-warning-title::before{content:'⚠';font-size:12px;}
+  .surv-warning-text{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);line-height:1.8;}
+  .surv-warning-text b{color:var(--white);}
+  .surv-consequences{display:grid;grid-template-columns:1fr;gap:5px;margin-top:10px;}
+  .surv-consequence{display:flex;align-items:flex-start;gap:8px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);line-height:1.5;}
+  .surv-consequence::before{content:'›';color:var(--red-alert);flex-shrink:0;}
+  .surv-consequence b{color:rgba(240,237,228,0.85);}
+
+  /* ── CHANNEL ENCRYPTION METER ── */
+  .surv-threat-meter{
+    background:rgba(52,152,219,0.04);border:1px solid rgba(52,152,219,0.2);
+    padding:10px 14px;margin-bottom:14px;
+  }
+  .surv-threat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .surv-threat-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+  .surv-threat-level{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:3px;color:#3498DB;text-transform:uppercase;transition:color 0.4s;}
+  .surv-threat-level.secured{color:#27AE60;}
+  .surv-threat-bars{display:flex;gap:3px;}
+  .surv-threat-bar{height:10px;flex:1;background:rgba(52,152,219,0.08);transition:background 0.3s;}
+  .surv-threat-bar.active{background:#3498DB;}
+  .surv-threat-bar.active.teal{background:#1ABC9C;}
+  .surv-threat-bar.active.secured{background:#27AE60;}
+
+  /* ── STATUS ROW (timestamp + status) ── */
+  .surv-status-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+  .surv-status-cell{
+    display:flex;align-items:flex-start;gap:10px;
+    background:rgba(192,57,43,0.04);border:1px solid rgba(192,57,43,0.12);
+    border-left:3px solid rgba(192,57,43,0.4);padding:9px 12px;
+  }
+  .surv-status-cell-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(192,57,43,0.6);text-transform:uppercase;width:72px;flex-shrink:0;padding-top:1px;}
+  .surv-status-cell-val{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--white);flex:1;line-height:1.5;}
+
+  /* Consent + button */
+  .surv-bottom-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:stretch;margin-bottom:0;}
+  .surv-consent{display:flex;align-items:flex-start;gap:12px;margin-bottom:0;padding:12px 14px;background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.15);cursor:pointer;transition:background 0.2s,border-color 0.2s;}
+  .surv-consent:hover{background:rgba(201,168,76,0.07);border-color:rgba(201,168,76,0.3);}
+  .surv-consent input[type=checkbox]{width:14px;height:14px;accent-color:var(--gold);flex-shrink:0;margin-top:1px;cursor:pointer;}
+  .surv-consent-text{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);line-height:1.7;user-select:none;}
+  .surv-consent-text b{color:var(--gold-light);}
+  .surv-btn{
+    background:var(--red-alert);color:#fff;
+    font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;
+    padding:0 28px;text-transform:uppercase;cursor:not-allowed;
+    border:none;font-weight:600;opacity:0.4;
+    transition:opacity 0.3s,background 0.2s;
+    white-space:nowrap;
+  }
+  .surv-btn.enabled{opacity:1;cursor:pointer;}
+  .surv-btn.enabled:hover{background:#a93226;}
+  .surv-legal{border-top:1px solid rgba(192,57,43,0.15);padding:10px 20px;font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(138,149,170,0.3);text-align:center;line-height:1.7;}
+  /* ── HIDDEN MODAL ── */
+  #secret-modal{position:fixed;inset:0;background:rgba(5,8,18,0.94);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px;}
+  #secret-modal.open{display:flex;}
+  .secret-modal-box{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);width:100%;max-width:440px;position:relative;}
+  .secret-modal-topbar{background:var(--navy-mid);border-bottom:1px solid var(--navy-border);padding:8px 18px;display:flex;align-items:center;justify-content:space-between;}
+  .secret-modal-topleft{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+  .secret-modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 4px;transition:color 0.15s;}
+  .secret-modal-close:hover{color:var(--white);}
+  .secret-modal-body{padding:28px 28px 24px;}
+  .secret-modal-eyebrow{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:4px;color:var(--red-alert);text-transform:uppercase;margin-bottom:10px;opacity:0.8;}
+  .secret-modal-title{font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:4px;text-transform:uppercase;color:var(--white);margin-bottom:4px;}
+  .secret-modal-sub{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:20px;}
+  .secret-modal-divider{height:1px;background:var(--navy-border);margin-bottom:20px;}
+
+  /* ── SECRET TRIGGER — the seal becomes subtly clickable ── */
+  .login-seal{cursor:default;} /* default so it doesn't hint */
+  .login-seal:active{filter:drop-shadow(0 0 20px rgba(201,168,76,0.6));}
+
+  @media(max-width:768px){
+    .surv-main-cols{grid-template-columns:1fr;}
+    nav{padding:0 16px;}
+    .nav-links{display:none;}
+    .construction-banner{padding:10px 16px;}
+    .login-wrapper{padding:40px 16px;}
+    .login-body{padding:28px 20px 24px;}
+    .footer-top{grid-template-columns:1fr;}
+    footer{padding:32px 20px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="nav-brand">Central Investigation Bureau</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="Page_About.html">About</a></li>
+    <li><a href="Page_OurMission.html">Our Mission</a></li>
+    <li><a href="Page_Divisions.html">Detectives</a></li>
+    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
+    <li><a href="Page_Wanted.html">Most Wanted</a></li>
+    <li><a href="Page_Press.html">Press Room</a></li>
+    <li><a href="Page_Recruitment.html">Recruitment</a></li>
+  </ul>
+  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-label">LIVE ALERT</div>
+  <div style="overflow:hidden;flex:1;">
+    <div class="ticker-track">
+      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
+      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
+      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
+      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
+      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
+      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
+    </div>  
+  </div>
+</div>
+
+
+<div class="construction-banner">
+  <div class="construction-dot"></div>
+  <div class="construction-text"><b>SYSTEM NOTICE</b> — CIB Personnel Portal is currently under development &nbsp;·&nbsp; Backend infrastructure in progress &nbsp;·&nbsp; Login functionality is not yet active</div>
+  <div class="construction-dot"></div>
+</div>
+
+
+<div class="login-wrapper">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+
+  <div class="login-card">
+
+    <!-- top status bar -->
+    <div class="login-status-bar">
+      <span class="login-status-left">CIB · SECURE PERSONNEL PORTAL</span>
+      <span class="login-status-right">SYS-AUTH v1.0 — SECURE CHANNEL ACTIVE</span>
+    </div>
+
+    <!-- card body -->
+    <div class="login-body">
+
+      <img class="login-seal" id="secretSeal" src="images/cib-logo.png" alt="CIB Seal"
+           onclick="handleSealClick()"
+           onerror="this.outerHTML='<div id=\'secretSeal\' onclick=\'handleSealClick()\' style=\'width:72px;height:72px;border:2px solid #C9A84C;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;cursor:default;\'><span style=\'font-family:Oswald,sans-serif;font-size:11px;letter-spacing:3px;color:#C9A84C;\'>CIB</span></div>'"/>
+
+      <div class="login-eyebrow">Central Investigation Bureau</div>
+      <div class="login-title">Detective Portal</div>
+      <div class="login-subtitle">Authorized Personnel Only</div>
+      <div class="login-divider"></div>
+
+      <!-- dev notice -->
+      <div class="dev-notice">
+        <div class="dev-notice-icon">⚠</div>
+        <div class="dev-notice-text">
+          <b>Portal Under Construction</b>
+          This page is currently non-functional. The backend authentication system is still under development. Login credentials will be processed once the system goes live. Please check back later.
+        </div>
+      </div>
+
+      <!-- Badge Number — disabled -->
+      <div class="form-group">
+        <label class="form-label" for="badge-fake">Badge Number</label>
+        <div class="form-input-wrap">
+          <span class="form-input-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
+          </span>
+          <input class="form-input" type="text" id="badge-fake" placeholder="e.g. CIB-VICE-01" autocomplete="off" disabled/>
+        </div>
+        <div class="form-hint">Enter your assigned CIB badge number</div>
+      </div>
+
+      <!-- Password — disabled -->
+      <div class="form-group">
+        <label class="form-label" for="password-fake">Password</label>
+        <div class="form-input-wrap">
+          <span class="form-input-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+          </span>
+          <input class="form-input" type="password" id="password-fake" placeholder="••••••••••••" autocomplete="off" disabled/>
+        </div>
+      </div>
+
+      <!-- Submit — disabled, shows not functional -->
+      <button class="login-btn" disabled style="opacity:0.55;cursor:not-allowed;position:relative;">
+        Access Portal
+        <span style="position:absolute;bottom:3px;right:10px;font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:1px;color:var(--navy);opacity:0.55;">[ NOT FUNCTIONAL ]</span>
+      </button>
+
+      <!-- Forgot Password -->
+      <div class="forgot-section">
+        <div class="forgot-label">Forgot your password?</div>
+        <div class="forgot-card">
+          <div class="forgot-card-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          </div>
+          <div class="forgot-card-text">
+            <div class="forgot-card-top">Contact!</div>
+            <div class="forgot-card-name">Capt. Elias Makya</div>
+            <div class="forgot-card-rank">Captain · CID Command Division</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /login-body -->
+
+
+    <div class="login-footer-bar">
+      <span class="login-footer-left">© 2026 CENTRAL INVESTIGATION BUREAU</span>
+      <span class="login-secure-badge"><span class="secure-dot"></span> ENCRYPTED CHANNEL</span>
+    </div>
+
+  </div>
+</div>
+<div id="surv-overlay">
+  <!-- Corner brackets -->
+  <div class="surv-corner surv-corner-tr"></div>
+  <div class="surv-corner surv-corner-bl"></div>
+  <div class="surv-corner surv-corner-br"></div>
+
+  <div class="surv-box">
+
+    <div class="surv-topbar">
+      <div class="surv-topbar-left">
+        <div class="surv-topbar-dot"></div>
+        <span class="surv-topbar-label">CIB · SURVEILLANCE ACTIVE</span>
+      </div>
+      <div class="surv-topbar-right">
+        <span class="surv-topbar-ref" id="surv-session-ref">SESSION: INITIALIZING...</span>
+        <span class="surv-topbar-time" id="surv-time">—</span>
+      </div>
+    </div>
+
+    <div class="surv-body">
+
+      <div class="surv-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1zm0 2.18l7 3.12V11c0 4.54-3.13 8.79-7 9.93C8.13 19.79 5 15.54 5 11V6.3l7-3.12zM11 7v2H9v2h2v2h2v-2h2V9h-2V7h-2z"/></svg>
+      </div>
+
+      <div class="surv-eyebrow">Restricted Access · CIB Secure Portal</div>
+      <div class="surv-title">You Are Being Monitored</div>
+      <div class="surv-subtitle">All activity on this portal is logged & traceable</div>
+      <div class="surv-div"></div>
+
+      <!-- CHANNEL ENCRYPTION METER -->
+      <div class="surv-threat-meter">
+        <div class="surv-threat-top">
+          <span class="surv-threat-label">Channel Encryption</span>
+          <span class="surv-threat-level" id="surv-threat-label">INITIALIZING...</span>
+        </div>
+        <div class="surv-threat-bars" id="surv-threat-bars">
+          <div class="surv-threat-bar" id="tb1"></div>
+          <div class="surv-threat-bar" id="tb2"></div>
+          <div class="surv-threat-bar" id="tb3"></div>
+          <div class="surv-threat-bar" id="tb4"></div>
+          <div class="surv-threat-bar" id="tb5"></div>
+          <div class="surv-threat-bar" id="tb6"></div>
+          <div class="surv-threat-bar" id="tb7"></div>
+          <div class="surv-threat-bar" id="tb8"></div>
+          <div class="surv-threat-bar" id="tb9"></div>
+          <div class="surv-threat-bar" id="tb10"></div>
+        </div>
+      </div>
+
+      <div class="surv-main-cols">
+
+        <!-- LEFT: Animated data acquisition / download panel -->
+        <div class="surv-acquire-panel">
+          <div class="surv-acquire-header">■ Acquiring Visitor Data — CIB INTEL SYSTEM</div>
+
+          <!-- Download item: Device Fingerprint -->
+          <div class="dl-item">
+            <div class="dl-item-top">
+              <span class="dl-item-label">Hardware Data</span>
+              <span class="dl-item-size" id="dl-size-0" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-status" id="dl-status-0">QUEUED</span>
+            </div>
+            <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-0"></div></div>
+            <div class="dl-item-sub" id="dl-sub-0"></div>
+          </div>
+
+          <!-- Download item: Browser Profile -->
+          <div class="dl-item">
+            <div class="dl-item-top">
+              <span class="dl-item-label">Browser Profile</span>
+              <span class="dl-item-size" id="dl-size-1" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-status" id="dl-status-1">QUEUED</span>
+            </div>
+            <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-1"></div></div>
+            <div class="dl-item-sub" id="dl-sub-1"></div>
+          </div>
+
+          <!-- Download item: Keystroke Pattern -->
+          <div class="dl-item">
+            <div class="dl-item-top">
+              <span class="dl-item-label">Keystroke Pattern</span>
+              <span class="dl-item-size" id="dl-size-2" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-status" id="dl-status-2">QUEUED</span>
+            </div>
+            <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-2"></div></div>
+            <div class="dl-item-sub" id="dl-sub-2"></div>
+          </div>
+
+          <!-- Download item: Session Metadata -->
+          <div class="dl-item">
+            <div class="dl-item-top">
+              <span class="dl-item-label">Session Metadata</span>
+              <span class="dl-item-size" id="dl-size-3" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-status" id="dl-status-3">QUEUED</span>
+            </div>
+            <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-3"></div></div>
+            <div class="dl-item-sub" id="dl-sub-3"></div>
+          </div>
+
+          <!-- Overall progress -->
+          <div class="surv-overall-progress">
+            <div class="surv-overall-top">
+              <span class="surv-overall-label" id="surv-overall-label">DATA ACQUISITION IN PROGRESS</span>
+              <span class="surv-overall-pct" id="surv-overall-pct">0%</span>
+            </div>
+            <div class="surv-overall-bar-track">
+              <div class="surv-overall-bar-fill" id="surv-overall-bar"></div>
+            </div>
+          </div>
+
+          <!-- Packet stream log -->
+          <div class="surv-packet-stream">
+            <div id="packet-log"></div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Warning + consequences -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+
+          <div class="surv-warning">
+            <div class="surv-warning-title">Unauthorized Access Warning</div>
+            <div class="surv-warning-text">
+              This portal is protected under <b>CIB Directive 7-Alpha</b> and San Andreas Digital Security Statutes. Any unauthorized attempt to gain access will be treated as a criminal offense.
+              <div class="surv-consequences">
+                <div class="surv-consequence"><b>Device fingerprint & browser profile</b> are being extracted and archived to CIB Intelligence in real time.</div>
+                <div class="surv-consequence"><b>Keystroke timing patterns</b> are recorded and used to build a behavioral biometric profile linked to your session.</div>
+                <div class="surv-consequence"><b>Brute-force attempts</b> are automatically detected and reported to CIB Command within 60 seconds.</div>
+                <div class="surv-consequence"><b>Session data and metadata</b> are forwarded to CIB Forensics for review, regardless of login outcome.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timestamp + Status cells -->
+          <div class="surv-status-row">
+            <div class="surv-status-cell">
+              <div class="surv-status-cell-label">Timestamp</div>
+              <div class="surv-status-cell-val" id="surv-time-cell">—</div>
+            </div>
+            <div class="surv-status-cell">
+              <div class="surv-status-cell-label">Status</div>
+              <div class="surv-status-cell-val"><span style="color:var(--red-alert);">● MONITORED</span><span class="surv-tag">LIVE</span></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- /surv-main-cols -->
+
+      <!-- Consent + button -->
+      <div class="surv-bottom-row">
+        <label class="surv-consent" for="surv-check">
+          <input type="checkbox" id="surv-check" onchange="survCheckChange()"/>
+          <div class="surv-consent-text">
+            I acknowledge that <b>I am being monitored</b>, my device data has been logged, and I understand that <b>any unauthorized access attempt is a prosecutable offense</b> under San Andreas law. I am an authorized CIB personnel member.
+          </div>
+        </label>
+        <button class="surv-btn" id="surv-btn" disabled onclick="survDismiss()">
+          I Understand —<br>Proceed to Portal
+        </button>
+      </div>
+
+    </div><!-- /surv-body -->
+
+    <!-- Legal strip -->
+    <div class="surv-legal">
+      CIB SECURE SYSTEM · SYS-AUTH v1.0 · ALL CONNECTIONS ARE ENCRYPTED AND LOGGED<br>
+      CENTRAL INVESTIGATION BUREAU · STATE OF SAN ANDREAS · EST. 2026
+    </div>
+
+  </div><!-- /surv-box -->
+</div><!-- /surv-overlay -->
+
+
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+      <p>Central Investigation Bureau</p>
+      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
+    </div>
+    <div class="footer-col">
+      <h4>Divisions</h4>
+      <ul>
+        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
+        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="Page_Press.html">Press Room</a></li>
+        <li><a href="Page_Recruitment.html">Recruitment</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="index.html">CIB Headquarters</a></li>
+        <li><a href="Page_Press.html">Tip Hotline</a></li>
+        <li><a href="Page_Login.html">Personnel Login</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
+    <div class="classified-stamp">EXECUTIVE RP</div>
+  </div>
+</footer>
+
+
+
+<div id="secret-modal">
+  <div class="secret-modal-box">
+
+    <div class="secret-modal-topbar">
+      <span class="secret-modal-topleft">CIB · SECURE ACCESS — AUTHORIZED ONLY</span>
+      <button class="secret-modal-close" onclick="closeSecretModal()">✕</button>
+    </div>
+
+    <div class="secret-modal-body">
+      <div class="secret-modal-eyebrow">Classified Channel · Do Not Share</div>
+      <div class="secret-modal-title">Personnel Access</div>
+      <div class="secret-modal-sub">Enter your credentials to access the portal</div>
+      <div class="secret-modal-divider"></div>
+
+      <!-- Badge Number -->
+      <div class="form-group">
+        <label class="form-label" for="badge">Name</label>
+        <div class="form-input-wrap">
+          <span class="form-input-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
+          </span>
+          <input class="form-input" type="text" id="badge" placeholder="e.g. Elias Makya" autocomplete="off"/>
+        </div>
+        <div class="form-hint">Enter your Name</div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="form-input-wrap">
+          <span class="form-input-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+          </span>
+          <input class="form-input" type="password" id="password" placeholder="••••••••••••" autocomplete="off"/>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button class="login-btn" id="loginBtn" onclick="handleLogin()">Access Portal</button>
+
+      <!-- Error box -->
+      <div id="loginError" style="display:none;margin-top:14px;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.4);border-left:3px solid var(--red-alert);padding:10px 14px;">
+        <div id="loginErrorMsg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  let sealClicks = 0;
+  let sealTimer  = null;
+
+  function handleSealClick() {
+    sealClicks++;
+    clearTimeout(sealTimer);
+
+    if (sealClicks >= 3) {
+      sealClicks = 0;
+      openSecretModal();
+      return;
+    }
+
+    sealTimer = setTimeout(() => { sealClicks = 0; }, 4000);
+  }
+
+  function openSecretModal() {
+    document.getElementById('secret-modal').classList.add('open');
+    document.getElementById('badge').focus();
+  }
+
+  function closeSecretModal() {
+    document.getElementById('secret-modal').classList.remove('open');
+    document.getElementById('badge').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('loginBtn').textContent = 'Access Portal';
+    document.getElementById('loginBtn').disabled = false;
+    document.getElementById('loginBtn').style.background = '';
+    document.getElementById('loginBtn').style.color = '';
+  }
+
+  document.getElementById('secret-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSecretModal();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSecretModal();
+    if (e.key === 'Enter' && document.getElementById('secret-modal').classList.contains('open')) {
+      handleLogin();
+    }
+  });
+</script>
+
+<script>
+  const CREDENTIALS = [
+    { b: '202ee495ca428d19b35c1bec9a9d2d279578884bf5430ffa2578e6aef961b3e4', p: '1b1c9ecab864dd9d744b52736133847ec035bf854a3a9444e3dafac23b1bb785' }, // Diraj Lakota
+    { b: '72e3339b84b9446114317f4afdd1f729d27dadccf3b29395367fbd54fe7ec194', p: '79200147aec2329be242de97f4f7db2cc5b94614bc67c6204be835c0d929d26e' }, // Elias Makya
+    { b: 'ceb7c9ba631cfec9616389aaeee5b22a4d05312cc618f4a3346445e812e5f6a0', p: '2981dbd570fc691faa7c184160faaaf7d29791dbab03a6dc49290e1ccebe7241' }, // CIB-VICE-01
+    { b: '109f38e9c804c18e3a0570f9f112dfd4d09beb967a67d26e750fd4cd85d05470', p: 'cc317be619b7a88a6fc2da9c69488e1128a1f84849b8aa28a5be385bdbb7b124' }, // CIB-VICE-02
+    { b: '32061a81c2810960f2dfb68c99b2c71f6f3e095fd7de887b9410ee528b1c2aee', p: '47a60b296ec454065d1a66ba84d02948b56a7166868ec8e31cfe6de699a9bcd6' }, // CIB-VICE-03
+    { b: '1fe338900f1c91bc7ac42a71f7ba76a0963be59edb7fb980a2cb508d592ff741', p: 'be1f15f241277e1cb434b41472c5200cfbabf0a20512089bc4e73fb6a184a251' }, // CIB-VICE-04
+    { b: '02bbf4edac68b44f63669b850ea8084d5171f5385aaf8faeb006773eb9036e44', p: '14f5f21b5a13ec7577ef039380dddb7f47e4a5da54ba2b274db72da14fe2af5e' }, // CIB-GEORGE-00
+    { b: '2804f25075d8e1a0715881e21a1d63678fc894d2b0df06e8e969c4b5269d8da5', p: 'b56e474b13ae077165f6359745c2da8086bf39cfab372ea4ea35c0c0b7174819' }, // CIB-GEORGE-01
+    { b: '26ef4912760b922e2eefa894a43bf390c29e121055a77509cbcadd7921e84ab6', p: 'd3f09e51208df62ad0686a23b8959025720c22153e6d8388b098f3f003f4dacc' }, // CIB-GEORGE-02
+    { b: 'a94926bd7e4e02c30be17392b33a65e19a97521445837ba01f2908614859797b', p: 'b88a5d234a1b3a7e26b6172739c7775bc6115b33a02c3e374822fd45ec5a13d8' }, // CIB-GEORGE-03
+    { b: '8eb344a249e6379e0c6aca02da2fb8d3901946990bbe228a9a4a150eca4867bb', p: '62dd2b6fbfcb0868568d55726595b4a80b1041a50acda5a7b2cae055f3612bcc' }, // CIB-GEORGE-04
+    { b: '7a0d6c840afee7fce1e6bd817e4768c6322ec3c4ad645038b15f996cf01fd360', p: '7aa5e104591557195a817e4dd31a1ea10dad2bbe228a9865141d366ad52fb3f3' }, // CIB-GEORGE-05
+    { b: '$argon2i$v=19$m=16,t=2,p=1$bU8waklia2JxS1dZZWxSdA$VbN+Qm7K33qax8Ea6faWDQ', p: '$argon2i$v=19$m=16,t=2,p=1$bU8waklia2JxS1dZZWxSdA$LaEXsoG2oIeHAR1ee0gYMQ' }, // CIB-GEORGE-05
+  ];
+
+  let failedAttempts = 0;
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS   = 5 * 60 * 1000; // 5 minutes
+
+  async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('loginError');
+    const txt = document.getElementById('loginErrorMsg');
+    box.style.display = 'block';
+    txt.textContent = msg;
+    // Shake the card
+    const card = document.querySelector('.login-body');
+    card.style.animation = 'none';
+    void card.offsetWidth;
+    card.style.animation = 'shake 0.4s ease';
+  }
+
+  function hideError() {
+    document.getElementById('loginError').style.display = 'none';
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = on;
+    btn.textContent = on ? 'Verifying...' : 'Access Portal';
+  }
+
+  async function handleLogin() {
+    hideError();
+
+    // Check lockout
+    const lockUntil = parseInt(sessionStorage.getItem('lockUntil') || '0');
+    if (Date.now() < lockUntil) {
+      const remaining = Math.ceil((lockUntil - Date.now()) / 60000);
+      showError('Account locked. Try again in ' + remaining + ' minute(s).');
+      return;
+    }
+
+    const badge    = document.getElementById('badge').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!badge || !password) {
+      showError('All fields are required.');
+      return;
+    }
+
+    setLoading(true);
+
+    // Small artificial delay — feels more realistic & slows brute force
+    await new Promise(r => setTimeout(r, 800));
+
+    const [bHash, pHash] = await Promise.all([sha256(badge), sha256(password)]);
+
+    const matched = CREDENTIALS.some(c => c.b === bHash && c.p === pHash);
+
+    if (matched) {
+      // ── SUCCESS ──
+      failedAttempts = 0;
+      sessionStorage.removeItem('lockUntil');
+
+      // Mark session as authenticated
+      sessionStorage.setItem('cib_auth', 'true');
+      sessionStorage.setItem('cib_badge', badge);
+
+      // Flash the button green
+      const btn = document.getElementById('loginBtn');
+      btn.style.background = '#27AE60';
+      btn.style.color = '#fff';
+      btn.textContent = 'Access Granted — Redirecting...';
+
+      // CHANGE THIS to redirect to your personnel dashboard page
+      setTimeout(() => { window.location.href = 'Page_Nexus.html'; }, 1200);
+
+    } else {
+      // ── FAILURE ──
+      failedAttempts++;
+      setLoading(false);
+
+      if (failedAttempts >= MAX_ATTEMPTS) {
+        const lockUntil = Date.now() + LOCKOUT_MS;
+        sessionStorage.setItem('lockUntil', lockUntil.toString());
+        showError('Too many failed attempts. Account locked for 5 minutes.');
+      } else {
+        const remaining = MAX_ATTEMPTS - failedAttempts;
+        showError('Invalid badge number or password. ' + remaining + ' attempt(s) remaining.');
+        // Shake badge + password fields
+        document.getElementById('badge').style.borderColor = 'var(--red-alert)';
+        document.getElementById('password').style.borderColor = 'var(--red-alert)';
+        setTimeout(() => {
+          document.getElementById('badge').style.borderColor = '';
+          document.getElementById('password').style.borderColor = '';
+        }, 1500);
+      }
+    }
+  }
+
+  // Allow pressing Enter to submit
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+
+<style>
+  @keyframes shake {
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-6px);}
+    40%{transform:translateX(6px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(4px);}
+  }
+</style>
+
+<script>
+  // Fade IN when page loads
+  window.addEventListener('DOMContentLoaded', () => {
+    requestAnimationFrame(() => {
+      document.body.classList.add('page-visible');
+    });
+  });
+
+  // Fade OUT before navigating away
+  document.querySelectorAll('a[href]').forEach(link => {
+    link.addEventListener('click', function (e) {
+      const href = this.getAttribute('href');
+
+      // Skip external links, anchors, and empty links
+      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
+
+      e.preventDefault();
+      document.body.classList.remove('page-visible');
+
+      setTimeout(() => {
+        window.location.href = href;
+      }, 400); // must match the transition duration above
+    });
+  });
+</script>
+
+<script>
+// ============================================================
+//  CIB LOGIN — Backend Version
+//  Sends credentials to /api/login (Vercel serverless function)
+//  Credentials are NEVER compared in the browser.
+//  The server checks against Supabase database.
+// ============================================================
+
+let failedAttempts = 0
+const MAX_ATTEMPTS = 5
+const LOCKOUT_MS   = 5 * 60 * 1000
+
+// SHA-256 (still hash on frontend too — so raw password never travels the network)
+async function sha256(message) {
+  const msgBuffer  = new TextEncoder().encode(message)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+  const hashArray  = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('')
+}
+
+function showError(msg) {
+  const box = document.getElementById('loginError')
+  const txt = document.getElementById('loginErrorMsg')
+  if (box) box.style.display = 'block'
+  if (txt) txt.textContent  = msg
+  document.getElementById('badge')?.style.setProperty('border-color','var(--red-alert)')
+  document.getElementById('password')?.style.setProperty('border-color','var(--red-alert)')
+  setTimeout(() => {
+    document.getElementById('badge')?.style.removeProperty('border-color')
+    document.getElementById('password')?.style.removeProperty('border-color')
+  }, 1500)
+}
+
+function hideError() {
+  const box = document.getElementById('loginError')
+  if (box) box.style.display = 'none'
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('loginBtn')
+  if (!btn) return
+  btn.disabled    = on
+  btn.textContent = on ? 'Verifying...' : 'Access Portal'
+}
+
+async function handleLogin() {
+  hideError()
+
+  // Check lockout
+  const lockUntil = parseInt(sessionStorage.getItem('lockUntil') || '0')
+  if (Date.now() < lockUntil) {
+    const remaining = Math.ceil((lockUntil - Date.now()) / 60000)
+    showError(`Account locked. Try again in ${remaining} minute(s).`)
+    return
+  }
+
+  const badge    = document.getElementById('badge')?.value.trim()
+  const password = document.getElementById('password')?.value
+
+  if (!badge || !password) { showError('All fields are required.'); return }
+
+  setLoading(true)
+
+  try {
+    // Hash password before sending — raw password never leaves browser
+    const passwordHash = await sha256(password)
+    const badgeUpper   = badge.toUpperCase()
+
+    // ── Send to Vercel backend ──────────────────────────────
+    const response = await fetch('/api/login', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        badge:    badgeUpper,
+        password: passwordHash
+      })
+    })
+
+    const result = await response.json()
+
+    if (response.ok && result.success) {
+      // ✅ SUCCESS — store session token
+      failedAttempts = 0
+      sessionStorage.removeItem('lockUntil')
+
+      // Store auth token (replaces old sessionStorage method)
+      sessionStorage.setItem('cib_auth',      'true')
+      sessionStorage.setItem('cib_token',     result.token)
+      sessionStorage.setItem('cib_badge',     result.user.badge)
+      sessionStorage.setItem('cib_name',      result.user.name)
+      sessionStorage.setItem('cib_rank',      result.user.rank)
+      sessionStorage.setItem('cib_division',  result.user.division)
+      sessionStorage.setItem('cib_expires',   result.expiresAt)
+
+      // Flash button green
+      const btn = document.getElementById('loginBtn')
+      if (btn) {
+        btn.style.background = '#27AE60'
+        btn.style.color      = '#fff'
+        btn.textContent      = 'Access Granted — Redirecting...'
+      }
+
+      setTimeout(() => { window.location.href = 'Page_Nexus.html' }, 1200)
+
+    } else {
+      // ❌ FAILED
+      failedAttempts++
+      setLoading(false)
+
+      if (failedAttempts >= MAX_ATTEMPTS) {
+        sessionStorage.setItem('lockUntil', String(Date.now() + LOCKOUT_MS))
+        showError('Too many failed attempts. Account locked for 5 minutes.')
+      } else {
+        const remaining = MAX_ATTEMPTS - failedAttempts
+        showError(`${result.error || 'Invalid credentials'}. ${remaining} attempt(s) remaining.`)
+      }
+    }
+
+  } catch (err) {
+    setLoading(false)
+    showError('Connection error. Check your internet and try again.')
+    console.error('Login fetch error:', err)
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin() })
+</script>
+</body>
+</html>

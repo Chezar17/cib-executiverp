@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="images/cib-logo.png" type="image/png">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Press Room — Central Investigation Bureau</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --gold:#C9A84C;
+    --gold-light:#E8C97A;
+    --navy:#0A0F1E;
+    --navy-mid:#0D1526;
+    --navy-card:#111827;
+    --navy-border:#1E2D4A;
+    --white:#F0EDE4;
+    --muted:#8A95AA;
+    --red-alert:#C0392B;
+  }
+  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
+
+/* ── PAGE TRANSITIONS ── */
+body {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+body.page-visible {
+  opacity: 1;
+}
+
+  /* NAV */
+  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo img{height:40px;width:40px;object-fit:contain;}
+  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+  .nav-links{display:flex;gap:28px;list-style:none;}
+  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
+  .nav-links a:hover{color:var(--gold);}
+  .nav-links a.active{color:var(--gold);border-bottom:2px solid var(--gold);padding-bottom:2px;}
+  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;cursor:pointer;}
+
+  /* TICKER */
+  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
+  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
+  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
+  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
+  .ticker-track span b{color:var(--gold-light);}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* PAGE HERO */
+  .page-hero{background:radial-gradient(ellipse at center,#0D1A35 0%,var(--navy) 70%);border-bottom:1px solid var(--navy-border);padding:72px 40px 60px;position:relative;overflow:hidden;}
+  .page-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:60px 60px;}
+  .page-hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;}
+  .page-hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;opacity:0.8;}
+  .page-hero h1{font-family:'Oswald',sans-serif;font-size:clamp(40px,7vw,80px);font-weight:700;letter-spacing:10px;text-transform:uppercase;color:var(--white);line-height:1.05;margin-bottom:12px;}
+  .page-hero-line{width:60px;height:2px;background:var(--gold);margin:20px auto;}
+  .page-hero-desc{font-size:14px;color:var(--muted);line-height:1.85;max-width:600px;margin:0 auto;}
+
+  /* LAYOUT */
+  .press-wrap{max-width:1300px;margin:0 auto;padding:56px 40px;}
+  .press-layout{display:grid;grid-template-columns:1fr 300px;gap:48px;}
+
+  /* SECTION LABELS */
+  .section-block{margin-bottom:64px;}
+  .section-label-bar{display:flex;align-items:center;gap:16px;margin-bottom:32px;}
+  .section-label-bar::after{content:'';flex:1;height:1px;background:var(--navy-border);}
+  .section-label{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .section-label-icon{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .main-icon{background:var(--red-alert);box-shadow:0 0 10px rgba(192,57,43,0.7);}
+  .sub-icon{background:var(--gold);box-shadow:0 0 8px rgba(201,168,76,0.4);}
+  .section-label-text{font-family:'Oswald',sans-serif;font-size:28px;letter-spacing:5px;text-transform:uppercase;color:var(--white);}
+  .section-label-sub{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+
+  /* SHARED CARD PARTS */
+  .pr-img-wrap{position:relative;background:#080D1A;border-bottom:1px solid var(--navy-border);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .pr-img-wrap img{width:100%;object-fit:cover;display:block;}
+  .pr-img-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;width:100%;}
+  .pr-img-placeholder svg{width:32px;height:32px;fill:var(--navy-border);}
+  .pr-img-placeholder span{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--navy-border);text-transform:uppercase;}
+  .pr-img-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:12px 18px;}
+  .pr-img-caption{font-family:'Roboto Mono',monospace;font-size:10px;color:rgba(240,237,228,0.5);letter-spacing:1px;}
+
+  .pr-meta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .pr-number{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.55;}
+  .pr-urgency{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:3px 10px;text-transform:uppercase;background:rgba(192,57,43,0.15);color:var(--red-alert);border:1px solid rgba(192,57,43,0.4);}
+  .pr-category{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:3px 10px;text-transform:uppercase;}
+  .cat-official{background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
+  .cat-operation{background:rgba(39,174,96,0.1);color:#27AE60;border:1px solid rgba(39,174,96,0.3);}
+  .cat-advisory{background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);}
+  .cat-personnel{background:rgba(52,152,219,0.1);color:#3498DB;border:1px solid rgba(52,152,219,0.3);}
+  .pr-date{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto;}
+  .pr-text{font-size:13px;color:var(--muted);line-height:1.9;}
+  .pr-text p{margin-bottom:10px;}
+  .pr-text p:last-child{margin-bottom:0;}
+  .pr-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:20px;padding-top:14px;border-top:1px solid var(--navy-border);}
+  .pr-division-tag{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;opacity:0.7;}
+  .pr-issued{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--muted);opacity:0.5;}
+
+  /* =====================================================
+     MAIN HEADLINE CARDS — Full width, high prominence
+     ===================================================== */
+  .main-pr-list{display:flex;flex-direction:column;gap:32px;}
+  .pr-card-main{background:var(--navy-card);border:1px solid var(--navy-border);border-left:4px solid var(--red-alert);overflow:hidden;}
+  .pr-card-main .pr-img-wrap{min-height:260px;}
+  .pr-card-main .pr-img-wrap img{height:280px;}
+  .pr-card-main .pr-body{padding:28px 32px;}
+  .pr-card-main .pr-title{font-family:'Oswald',sans-serif;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:12px;line-height:1.3;}
+  .pr-card-main .pr-divider{width:44px;height:2px;background:var(--red-alert);opacity:0.5;margin-bottom:16px;}
+
+  /* =====================================================
+     SUB HEADLINE CARDS — Compact 2-column grid
+     ===================================================== */
+  .sub-pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .pr-card-sub{background:var(--navy-card);border:1px solid var(--navy-border);border-left:3px solid var(--gold);overflow:hidden;}
+  .pr-card-sub .pr-img-wrap{min-height:160px;}
+  .pr-card-sub .pr-img-wrap img{height:170px;}
+  .pr-card-sub .pr-body{padding:20px 22px;}
+  .pr-card-sub .pr-title{font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:10px;line-height:1.35;}
+  .pr-card-sub .pr-divider{width:32px;height:1px;background:var(--gold);opacity:0.4;margin-bottom:12px;}
+  .pr-card-sub .pr-text{font-size:12px;}
+
+  /* SIDEBAR */
+  .sidebar{display:flex;flex-direction:column;gap:24px;padding-top:4px;}
+  .sidebar-card{background:var(--navy-card);border:1px solid var(--navy-border);padding:22px;}
+  .sidebar-title{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--navy-border);}
+  .contact-row{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;}
+  .contact-row span{color:var(--gold-light);}
+
+  /* FOOTER */
+  footer{background:var(--navy-mid);border-top:1px solid var(--gold);padding:40px 40px 24px;}
+  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
+  .footer-brand img{height:50px;width:50px;object-fit:contain;margin-bottom:12px;}
+  .footer-brand p{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
+  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.7;}
+  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .footer-col ul li a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
+  .footer-col ul li a:hover{color:var(--gold);}
+  .footer-bottom{border-top:1px solid var(--navy-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
+  .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
+  .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
+
+  @media(max-width:960px){
+    .press-layout{grid-template-columns:1fr;}
+    .sub-pr-grid{grid-template-columns:1fr;}
+    nav{padding:0 16px;}
+    .nav-links{display:none;}
+    .press-wrap{padding:40px 20px;}
+    .page-hero{padding:48px 20px 40px;}
+    footer{padding:32px 20px 20px;}
+    .footer-top{grid-template-columns:1fr;}
+    .pr-card-main .pr-body{padding:22px 20px;}
+    .section-label-text{font-size:22px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="nav-brand">Central Investigation Bureau</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="Page_About.html">About</a></li>
+    <li><a href="Page_OurMission.html">Our Mission</a></li>
+    <li><a href="Page_Divisions.html">Detectives</a></li>
+    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
+    <li><a href="Page_Wanted.html">Most Wanted</a></li>
+    <li><a href="Page_Press.html">Press Room</a></li>
+    <li><a href="Page_Recruitment.html">Recruitment</a></li>
+  </ul>
+  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-label">LIVE ALERT</div>
+  <div style="overflow:hidden;flex:1;">
+    <div class="ticker-track">
+      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
+      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
+      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
+      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
+      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
+      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
+    </div>  
+  </div>
+</div>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="page-hero-grid"></div>
+  <div class="page-hero-inner">
+    <div class="page-hero-eyebrow">Central Investigation Bureau · Official Communications</div>
+    <h1>Press Room</h1>
+    <div class="page-hero-line"></div>
+    <p class="page-hero-desc">Official press releases, public advisories, and statements issued by the Central Investigation Bureau and its sub-divisions. All communications are authorized by the Office of the CIB Director.</p>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="press-wrap">
+  <div class="press-layout">
+
+    <div>
+
+      <!-- ============================================================
+           MAIN HEADLINE SECTION
+           For high-priority information that the ENTIRE CITY must know.
+           Use for: threat advisories, major arrests, active dangers,
+           citywide warnings, significant operation outcomes.
+
+           HOW TO ADD A NEW MAIN HEADLINE:
+           1. Copy the block between "MAIN ENTRY START" and "MAIN ENTRY END"
+           2. Paste it at the TOP of .main-pr-list (newest release first)
+           3. Update: PR number, badge type, date, title, body, division, time
+
+           HOW TO ADD AN IMAGE:
+           Inside the <div class="pr-img-wrap">, delete the
+           <div class="pr-img-placeholder">...</div> block and replace with:
+              <img src="your-photo.jpg" alt="Brief description"/>
+           Optionally add a caption below it:
+              <div class="pr-img-label">
+                <div class="pr-img-caption">IMAGE: Your caption here</div>
+              </div>
+           Make sure the image file is in the same folder as this HTML.
+           Recommended image size: 1200 x 500px or wider.
+           ============================================================ -->
+
+      <div class="section-block">
+        <div class="section-label-bar">
+          <div class="section-label">
+            <span class="section-label-icon main-icon"></span>
+            <div>
+              <div class="section-label-text">Main Headline</div>
+              <div class="section-label-sub">High-priority — citywide awareness required</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="main-pr-list">
+
+          <!-- ======= MAIN ENTRY START ======= -->
+          <article class="pr-card-main">
+            <div class="pr-img-wrap">
+              <!-- REPLACE THIS WITH YOUR IMAGE (see instructions above) -->
+              <div class="pr-img-placeholder">
+              <img src="images/pa_1.jpg" alt="Brief description"/>
+              </div>
+            </div>
+            <div class="pr-body">
+              <div class="pr-meta-row">
+                <span class="pr-number">PR-2026-004</span>
+                <span class="pr-category cat-official">Official Statement</span>
+                <span class="pr-category cat-advisory">Public Advisory</span>
+                <span class="pr-date">April 20, 2026</span>
+              </div>
+              <div class="pr-title">Commander Diraj Lakota - "KITA HARUS LEBIH KERAS KE GANG YANG KERJAANNYA JUAL SENJATA MULU!"</div>
+              <div class="pr-divider"></div>
+              <div class="pr-text">
+                <p>The Central Investigation Bureau today reaffirmed its commitment to dismantling organized criminal networks involved in the illegal trafficking and distribution of firearms across the region.</p>
+                <p>Commander Diraj Lakota, Director of the Central Investigation Bureau, issued a strong statement regarding the growing threat posed by armed street gangs and weapon suppliers:</p>
+                <p>“We must be tougher on criminal gangs whose only business is selling weapons. These organizations fuel violence, intimidate communities, and profit from fear. The CIB will not allow them to operate freely. We are expanding investigations, increasing intelligence-led enforcement, and working with our law enforcement partners to identify, disrupt, and prosecute every individual involved in the illegal weapons trade.”</p>
+                <p>Under Commander Lakota leadership, the Bureau has prioritized gang suppression operations, long-term intelligence gathering, and coordinated enforcement actions targeting those responsible for supplying firearms to violent offenders.</p>
+                <p>The CIB emphasized that illegal weapons trafficking remains a direct threat to public safety, often linked to robberies, assaults, extortion, and gang-related shootings. The Bureau stated that future operations will focus not only on gang members, but also on financiers, smugglers, brokers, and anyone assisting criminal enterprises.</p>
+                <p>Commander Lakota concluded by assuring the public that the Bureau remains fully committed to protecting communities and restoring order through decisive action, professional investigations, and relentless enforcement.</p>
+              </div>
+              <div class="pr-footer">
+                <span class="pr-division-tag">Issued by: Office of the CIB Director</span>
+                <span class="pr-issued">RELEASED: 20 APR 2026 · 06:00 HRS</span>
+              </div>
+            </div>
+          </article>
+          <!-- ======= MAIN ENTRY END ======= -->
+
+        </div>
+      </div>
+      <!-- END MAIN HEADLINE SECTION -->
+
+
+      <!-- ============================================================
+           SUB HEADLINE SECTION
+           For lower-priority bureau information: personnel updates,
+           appointments, internal notices, procedural announcements,
+           and non-urgent public information.
+
+           HOW TO ADD A NEW SUB HEADLINE:
+           1. Copy the block between "SUB ENTRY START" and "SUB ENTRY END"
+           2. Paste it at the TOP of .sub-pr-grid (newest release first)
+           3. Update: PR number, category badge, date, title, body, division, time
+
+           HOW TO ADD AN IMAGE: same instructions as Main Headline above.
+           Recommended image size: 900 x 400px or wider.
+           ============================================================ -->
+
+      <div class="section-block">
+        <div class="section-label-bar">
+          <div class="section-label">
+            <span class="section-label-icon sub-icon"></span>
+            <div>
+              <div class="section-label-text">Sub Headline</div>
+              <div class="section-label-sub">General releases & internal bureau updates</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-pr-grid">
+
+          <!-- ======= SUB ENTRY START ======= -->
+          <article class="pr-card-sub">
+            <div class="pr-img-wrap">
+              <!-- REPLACE THIS WITH YOUR IMAGE (see instructions above) -->
+              <div class="pr-img-placeholder">
+                <img src="images/pa_2.jpg" alt="Brief description"/>
+              </div>
+            </div>
+            <div class="pr-body">
+              <div class="pr-meta-row">
+                <span class="pr-number">PR-2026-002</span>
+                <span class="pr-category cat-personnel">Personnel</span>
+                <span class="pr-date">March 30, 2026</span>
+              </div>
+              <div class="pr-title">Captain Elias Makya Congratulates Detective of the Month: Detective III Julian Flux</div>
+              <div class="pr-divider"></div>
+              <div class="pr-text">
+                <p>Captain Elias Makya, Head of the Central Investigation Division, congratulated Los Santos County Sheriff Detective II Julian Flux on being named Detective of the Month.</p>
+                <p><em>“Detective Julian Flux has shown outstanding dedication, professionalism, and commitment to justice. This recognition is well deserved, and I extend my sincere congratulations on this achievement.”</em></p>
+                <p>The Central Investigation Bureau commends Detective Flux for his service and wishes him continued success in future investigations.</p>
+              </div>
+              <div class="pr-footer">
+                <span class="pr-division-tag">Issued by: Office of the CID Command</span>
+                <span class="pr-issued">RELEASED: 05 MAR 2026 · 09:00 HRS</span>
+              </div>
+            </div>
+          </article>
+          <!-- ======= SUB ENTRY END ======= -->
+
+          <!-- ======= SUB ENTRY START ======= -->
+          <article class="pr-card-sub">
+            <div class="pr-img-wrap">
+              <div class="pr-img-placeholder">
+                <img src="images/pa_3.jpg" alt="Brief description"/>
+              </div>
+            </div>
+            <div class="pr-body">
+              <div class="pr-meta-row">
+                <span class="pr-number">PR-2026-001</span>
+                <span class="pr-category cat-personnel">Personnel</span>
+                <span class="pr-date">March 30, 2026</span>
+              </div>
+              <div class="pr-title">Captain Meifanny Lorenta Congratulates Detective of the Month: LSPD Detective II Tarsha Kim</div>
+              <div class="pr-divider"></div>
+              <div class="pr-text">
+                <p>Captain Meifanny Lorenta, Head of the Gang Recon Division, congratulated Los Santos Police Department Detective II Tarsha Kim on being named Detective of the Month.</p>
+                <p><em>“Detective Tarsha Kim has demonstrated exceptional dedication, professionalism, and commitment to protecting the community. This recognition is well deserved, and I extend my sincere congratulations on this achievement.”</em></p>
+                <p>The Central Investigation Bureau commends Detective Kim for her service and wishes her continued success in future investigations.</p>
+              </div>
+              <div class="pr-footer">
+                <span class="pr-division-tag">Issued by: SAPD Commissioner's Office</span>
+                <span class="pr-issued">RELEASED: 10 JAN 2026 · 08:00 HRS</span>
+              </div>
+            </div>
+          </article>
+          <!-- ======= SUB ENTRY END ======= -->
+
+        </div>
+      </div>
+      <!-- END SUB HEADLINE SECTION -->
+
+    </div>
+    <!-- END LEFT COLUMN -->
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">Media Contact</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;">For press inquiries, interview requests, or media credential applications, contact the CIB Public Affairs Office.</p>
+        <div class="contact-row">Office: <span>CIB PAO Associate</span></div>
+        <div class="contact-row">Hours: <span>Mon–Fri · 19:00–22:00</span></div>
+        <div class="contact-row">Location: <span>Sandy Shore Sherriff Office</span></div>
+        <div class="contact-row">Jurisdiction: <span>State of San Andreas</span></div>
+      </div>
+
+      <div class="sidebar-card" style="border-left:3px solid var(--red-alert);">
+        <div class="sidebar-title" style="color:var(--red-alert);">Anonymous Tip Line</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;">Have information about criminal activity in San Andreas? Contact the CIB tip line. All information is handled confidentially.</p>
+        <div style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--gold-light);letter-spacing:1px;">Available 24 / 7</div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">About This Page</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.75;"><strong style="color:var(--white);">Main Headlines</strong> contain critical information requiring immediate public awareness citywide.<br><br><strong style="color:var(--white);">Sub Headlines</strong> cover bureau appointments, procedural updates, and non-urgent public information.</p>
+      </div>
+
+    </aside>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+      <p>Central Investigation Bureau</p>
+      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
+    </div>
+    <div class="footer-col">
+      <h4>Divisions</h4>
+      <ul>
+        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
+        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="Page_Press.html">Press Room</a></li>
+        <li><a href="Page_Recruitment.html">Recruitment</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="index.html">CIB Headquarters</a></li>
+        <li><a href="Page_Press.html">Tip Hotline</a></li>
+        <li><a href="Page_Login.html">Personnel Login</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
+    <div class="classified-stamp">EXECUTIVE RP</div>
+  </div>
+</footer>
+
+<script>
+  // Fade IN when page loads
+  window.addEventListener('DOMContentLoaded', () => {
+    requestAnimationFrame(() => {
+      document.body.classList.add('page-visible');
+    });
+  });
+
+  // Fade OUT before navigating away
+  document.querySelectorAll('a[href]').forEach(link => {
+    link.addEventListener('click', function (e) {
+      const href = this.getAttribute('href');
+
+      // Skip external links, anchors, and empty links
+      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
+
+      e.preventDefault();
+      document.body.classList.remove('page-visible');
+
+      setTimeout(() => {
+        window.location.href = href;
+      }, 400); // must match the transition duration above
+    });
+  });
+</script>
+
+</body>
+</html>

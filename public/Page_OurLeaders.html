@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="images/cib-logo.png" type="image/png">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Our Leaders — Central Investigation Bureau</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --gold:#C9A84C;
+    --gold-light:#E8C97A;
+    --navy:#0A0F1E;
+    --navy-mid:#0D1526;
+    --navy-card:#111827;
+    --navy-border:#1E2D4A;
+    --white:#F0EDE4;
+    --muted:#8A95AA;
+    --red-alert:#C0392B;
+    --green:#27AE60;
+    /* Department accent colours */
+    --sast:#2E86C1;   /* State Trooper — blue */
+    --lcso:#8E6B23;   /* Sheriff — dark gold */
+    --lspd:#1A5276;   /* LSPD — deep navy-blue */
+  }
+  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;opacity:0;transition:opacity 0.4s ease;}
+  body.page-visible{opacity:1;}
+
+  /* ══ NAV ══ */
+  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo img{height:40px;width:40px;object-fit:contain;}
+  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+  .nav-links{display:flex;gap:28px;list-style:none;}
+  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
+  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;text-decoration:none;}
+
+  /* ══ TICKER ══ */
+  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
+  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
+  .ticker-track{display:flex;animation:ticker 38s linear infinite;white-space:nowrap;}
+  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
+  .ticker-track span b{color:var(--gold-light);}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ══ PAGE HERO ══ */
+  .page-hero{position:relative;padding:72px 40px 60px;overflow:hidden;border-bottom:1px solid var(--navy-border);}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,#0D1A35 0%,var(--navy) 65%);z-index:0;}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
+  .hero-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:var(--gold);z-index:1;}
+  .hero-inner{position:relative;z-index:2;max-width:1200px;margin:0 auto;}
+  .breadcrumb{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
+  .breadcrumb span{color:var(--gold);}
+  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;opacity:0.8;}
+  .hero-inner h1{font-family:'Oswald',sans-serif;font-size:clamp(28px,5vw,56px);font-weight:700;letter-spacing:6px;text-transform:uppercase;color:var(--white);line-height:1.1;margin-bottom:16px;}
+  .hero-line{width:80px;height:2px;background:var(--gold);margin-bottom:20px;}
+  .hero-desc{font-size:14px;color:var(--muted);max-width:580px;line-height:1.8;}
+
+  /* ══ PAGE WRAP ══ */
+  .page-wrap{max-width:1200px;margin:0 auto;padding:64px 40px 80px;}
+
+  /* ══ SECTION HEADER ══ */
+  .section-head{margin-bottom:48px;}
+  .section-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;opacity:0.8;}
+  .section-title{font-family:'Oswald',sans-serif;font-size:clamp(20px,3.5vw,32px);letter-spacing:4px;text-transform:uppercase;color:var(--white);}
+  .section-rule{width:60px;height:2px;background:var(--gold);margin-top:14px;}
+  .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--navy-border) 20%,var(--gold) 50%,var(--navy-border) 80%,transparent);margin:72px 0 0;}
+
+  /* ═══════════════════════════════════════════════════════
+     LEADER CARDS
+     3 cards across — large portrait + info below
+  ═══════════════════════════════════════════════════════ */
+  .leaders-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
+
+  .leader-card{background:var(--navy-card);border:1px solid var(--navy-border);overflow:hidden;position:relative;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;}
+  .leader-card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+
+  /* Gold top stripe */
+  .leader-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);z-index:3;}
+
+  /* ── Portrait ── */
+  .leader-portrait{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#080D1C;}
+
+  /* The photo — upload: replace src with your PNG, 1:1 crop, top-center focus */
+  .leader-portrait img.portrait-img{
+    display:block;width:100%;height:100%;
+    object-fit:cover;object-position:top center;
+  }
+
+  /* Initials fallback when no photo loaded */
+  .portrait-initials{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Oswald',sans-serif;font-size:64px;font-weight:700;
+    letter-spacing:4px;color:rgba(201,168,76,0.18);z-index:1;
+  }
+
+  /* Gold corner brackets over the photo */
+  .portrait-corner{position:absolute;width:18px;height:18px;z-index:4;}
+  .portrait-corner.tl{top:10px;left:10px;border-top:2px solid rgba(201,168,76,0.7);border-left:2px solid rgba(201,168,76,0.7);}
+  .portrait-corner.tr{top:10px;right:10px;border-top:2px solid rgba(201,168,76,0.7);border-right:2px solid rgba(201,168,76,0.7);}
+  .portrait-corner.bl{bottom:10px;left:10px;border-bottom:2px solid rgba(201,168,76,0.7);border-left:2px solid rgba(201,168,76,0.7);}
+  .portrait-corner.br{bottom:10px;right:10px;border-bottom:2px solid rgba(201,168,76,0.7);border-right:2px solid rgba(201,168,76,0.7);}
+
+  /* Active duty badge inside photo */
+  .portrait-status{
+    position:absolute;top:12px;right:12px;
+    display:inline-flex;align-items:center;gap:5px;
+    font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:2px;
+    color:var(--green);text-transform:uppercase;
+    background:rgba(8,13,28,0.8);border:1px solid rgba(39,174,96,0.35);
+    padding:3px 9px;z-index:4;
+  }
+  .status-pulse{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+
+  /* Gradient fade at bottom of portrait */
+  .portrait-fade{
+    position:absolute;bottom:0;left:0;right:0;height:90px;
+    background:linear-gradient(transparent,var(--navy-card));z-index:2;
+  }
+
+  /* Department badge bottom-left of portrait */
+  .portrait-dept{
+    position:absolute;bottom:12px;left:12px;
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--gold);opacity:0.7;z-index:4;
+  }
+
+  /* ── Leader info body ── */
+  .leader-body{padding:22px 22px 20px;display:flex;flex-direction:column;gap:0;}
+
+  .leader-rank-tag{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+    text-transform:uppercase;color:var(--gold);opacity:0.7;margin-bottom:6px;
+  }
+  .leader-name{
+    font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;
+    letter-spacing:2px;text-transform:uppercase;color:var(--white);
+    line-height:1.15;margin-bottom:4px;
+  }
+  .leader-title{
+    font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;
+    color:var(--muted);margin-bottom:16px;
+  }
+  .leader-divider{height:1px;background:var(--navy-border);margin-bottom:14px;}
+
+  .leader-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .leader-row{display:flex;gap:8px;align-items:flex-start;}
+  .leader-row-lbl{
+    font-family:'Roboto Mono',monospace;font-size:7.5px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--muted);opacity:0.55;
+    width:78px;flex-shrink:0;padding-top:2px;
+  }
+  .leader-row-val{font-size:12px;color:var(--white);line-height:1.5;}
+
+  .leader-badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  .leader-badge{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+    text-transform:uppercase;padding:3px 8px;
+    border:1px solid var(--navy-border);color:var(--muted);
+  }
+  .leader-badge.gold{border-color:rgba(201,168,76,0.4);color:var(--gold);}
+
+  /* ═══════════════════════════════════════════════════════
+     DEPARTMENT CARDS (click to expand)
+     Compact view → click → modal-style expanded overlay
+  ═══════════════════════════════════════════════════════ */
+  .dept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
+
+  /* Compact card */
+  .dept-card{
+    background:var(--navy-card);border:1px solid var(--navy-border);
+    overflow:hidden;cursor:pointer;position:relative;
+    transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;
+  }
+  .dept-card:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(0,0,0,0.45);}
+
+  /* Accent stripe driven by dept class */
+  .dept-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:2;}
+  .dept-sast .dept-card::before,.dept-sast.dept-card::before{background:var(--sast);}
+  .dept-lcso .dept-card::before,.dept-lcso.dept-card::before{background:var(--lcso);}
+  .dept-lspd .dept-card::before,.dept-lspd.dept-card::before{background:var(--lspd);}
+
+  /* Logo zone inside card */
+  .dept-logo-zone{
+    background:rgba(0,0,0,0.2);
+    border-bottom:1px solid var(--navy-border);
+    height:110px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .dept-logo-zone img.dept-logo{
+    max-width:80px;max-height:80px;object-fit:contain;
+  }
+  .dept-logo-initials{
+    font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;
+    letter-spacing:4px;opacity:0.25;
+  }
+  .dept-sast .dept-logo-initials{color:var(--sast);}
+  .dept-lcso .dept-logo-initials{color:var(--lcso);}
+  .dept-lspd .dept-logo-initials{color:var(--lspd);}
+
+  .dept-card-body{padding:20px 20px 18px;}
+  .dept-card-eyebrow{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+    text-transform:uppercase;margin-bottom:6px;opacity:0.7;
+  }
+  .dept-sast .dept-card-eyebrow{color:var(--sast);}
+  .dept-lcso .dept-card-eyebrow{color:var(--lcso);}
+  .dept-lspd .dept-card-eyebrow{color:var(--lspd);}
+
+  .dept-card-name{
+    font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--white);margin-bottom:10px;line-height:1.25;
+  }
+  .dept-card-desc{font-size:11.5px;color:var(--muted);line-height:1.7;margin-bottom:14px;}
+  .dept-view-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--gold);opacity:0.7;
+    transition:opacity 0.15s;
+  }
+  .dept-card:hover .dept-view-btn{opacity:1;}
+  .dept-view-btn svg{width:10px;height:10px;fill:var(--gold);transition:transform 0.2s;}
+  .dept-card:hover .dept-view-btn svg{transform:translateX(3px);}
+
+  /* ═══════════════════════════════════════════════════════
+     DEPARTMENT MODAL (full-screen overlay)
+  ═══════════════════════════════════════════════════════ */
+  #dept-modal{
+    position:fixed;inset:0;z-index:8000;
+    background:rgba(5,8,18,0.9);
+    display:none;align-items:center;justify-content:center;
+    padding:24px;backdrop-filter:blur(4px);
+    overflow-y:auto;
+  }
+  #dept-modal.open{display:flex;}
+
+  .dept-modal-box{
+    background:var(--navy-card);border:1px solid var(--navy-border);
+    width:100%;max-width:860px;
+    position:relative;overflow:hidden;
+    animation:modalIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes modalIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Modal top stripe driven by dept data attribute */
+  .dept-modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:3;}
+  .dept-modal-box[data-dept="sast"]::before{background:var(--sast);}
+  .dept-modal-box[data-dept="lcso"]::before{background:var(--lcso);}
+  .dept-modal-box[data-dept="lspd"]::before{background:var(--lspd);}
+
+  /* Modal header */
+  .dept-modal-header{
+    display:grid;grid-template-columns:140px 1fr auto;
+    gap:0;border-bottom:1px solid var(--navy-border);
+  }
+
+  /* Logo zone in modal */
+  .modal-logo-zone{
+    background:rgba(0,0,0,0.25);
+    border-right:1px solid var(--navy-border);
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:10px;padding:24px 16px;
+  }
+  .modal-logo-frame{
+    width:90px;height:90px;
+    border:1px solid var(--navy-border);
+    display:flex;align-items:center;justify-content:center;
+    background:#080C18;overflow:hidden;position:relative;
+  }
+  .modal-logo-frame img{max-width:70px;max-height:70px;object-fit:contain;}
+  .modal-logo-fallback{
+    font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;
+    letter-spacing:3px;opacity:0.3;
+  }
+  .modal-logo-label{
+    font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:2px;
+    color:var(--muted);text-transform:uppercase;opacity:0.45;text-align:center;
+  }
+
+  /* Modal title block */
+  .modal-title-block{padding:22px 24px;}
+  .modal-eyebrow{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+    text-transform:uppercase;margin-bottom:6px;opacity:0.7;
+  }
+  [data-dept="sast"] .modal-eyebrow{color:var(--sast);}
+  [data-dept="lcso"] .modal-eyebrow{color:var(--lcso);}
+  [data-dept="lspd"] .modal-eyebrow{color:var(--lspd);}
+  .modal-name{
+    font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;
+    letter-spacing:3px;text-transform:uppercase;color:var(--white);
+    line-height:1.15;margin-bottom:8px;
+  }
+  .modal-badges{display:flex;flex-wrap:wrap;gap:6px;}
+  .modal-badge{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+    text-transform:uppercase;padding:3px 9px;
+    border:1px solid var(--navy-border);color:var(--muted);
+  }
+
+  /* Close button */
+  .modal-close-btn{
+    padding:18px 20px;background:none;border:none;cursor:pointer;
+    color:var(--muted);font-size:20px;line-height:1;
+    transition:color 0.15s;align-self:flex-start;
+  }
+  .modal-close-btn:hover{color:var(--white);}
+
+  /* Modal office photo */
+  .modal-office-photo{
+    width:100%;height:200px;overflow:hidden;
+    border-bottom:1px solid var(--navy-border);
+    position:relative;background:#080C18;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal-office-photo img{
+    width:100%;height:100%;object-fit:cover;object-position:center;
+    display:block;
+  }
+  .office-photo-placeholder{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+  }
+  .office-photo-placeholder svg{width:36px;height:36px;fill:var(--muted);opacity:0.2;}
+  .office-photo-placeholder span{
+    font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;
+    color:var(--muted);opacity:0.35;text-transform:uppercase;
+  }
+  .modal-office-caption{
+    position:absolute;bottom:0;left:0;right:0;
+    background:linear-gradient(transparent,rgba(8,13,28,0.85));
+    padding:20px 20px 10px;
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;
+    color:var(--muted);text-transform:uppercase;opacity:0.7;
+  }
+
+  /* Modal body */
+  .modal-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  .modal-col{padding:24px 26px;border-right:1px solid var(--navy-border);}
+  .modal-col:last-child{border-right:none;}
+  .modal-col-title{
+    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+    text-transform:uppercase;color:var(--muted);opacity:0.5;
+    margin-bottom:14px;display:flex;align-items:center;gap:10px;
+  }
+  .modal-col-title::after{content:'';flex:1;height:1px;background:var(--navy-border);}
+  .modal-text{font-size:12.5px;color:var(--muted);line-height:1.8;margin-bottom:14px;}
+
+  /* Jurisdiction items */
+  .jur-list{display:flex;flex-direction:column;gap:8px;}
+  .jur-item{display:flex;align-items:flex-start;gap:10px;}
+  .jur-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:6px;}
+  .jur-text{font-size:12px;color:var(--muted);line-height:1.6;}
+  .jur-text strong{color:var(--white);font-weight:500;}
+
+  /* Info rows in modal */
+  .modal-info-rows{display:flex;flex-direction:column;gap:10px;}
+  .modal-info-row{display:flex;flex-direction:column;gap:2px;}
+  .modal-info-lbl{
+    font-family:'Roboto Mono',monospace;font-size:7.5px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--muted);opacity:0.5;
+  }
+  .modal-info-val{font-size:12px;color:var(--white);}
+
+  /* ══ ANIMATIONS ══ */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1);}
+  .reveal.in-view{opacity:1;transform:translateY(0);}
+  .reveal-d1{transition-delay:0.07s;}
+  .reveal-d2{transition-delay:0.14s;}
+  .reveal-d3{transition-delay:0.21s;}
+  .reveal-d4{transition-delay:0.28s;}
+
+  /* ══ FOOTER ══ */
+  footer{background:#070B17;border-top:1px solid var(--navy-border);}
+  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;padding:48px 40px 40px;max-width:1400px;margin:0 auto;}
+  .footer-brand p{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin:12px 0 10px;}
+  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.8;}
+  .footer-brand img{height:44px;opacity:0.8;}
+  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--navy-border);}
+  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+  .footer-col a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:1px;transition:color 0.2s;}
+  .footer-col a:hover{color:var(--gold);}
+  .footer-bottom{border-top:1px solid var(--navy-border);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;}
+  .footer-bottom p{font-size:11px;color:var(--muted);letter-spacing:1px;}
+  .classified-stamp{border:1px solid rgba(192,57,43,0.5);color:var(--red-alert);font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;padding:4px 12px;}
+
+  /* ══ RESPONSIVE ══ */
+  @media(max-width:960px){
+    .leaders-grid,.dept-grid{grid-template-columns:1fr 1fr;}
+    .modal-body{grid-template-columns:1fr;}
+    .modal-col{border-right:none;border-bottom:1px solid var(--navy-border);}
+    .dept-modal-header{grid-template-columns:100px 1fr auto;}
+    nav{padding:0 20px;}
+    .page-wrap,.page-hero{padding-left:20px;padding-right:20px;}
+    .footer-top{grid-template-columns:1fr 1fr;}
+  }
+  @media(max-width:600px){
+    .leaders-grid,.dept-grid{grid-template-columns:1fr;}
+    .nav-links{display:none;}
+    .dept-modal-header{grid-template-columns:1fr auto;}
+    .modal-logo-zone{display:none;}
+  }
+
+  /* ══ NEW: Commissioner Hero + Sub-grid + Bio Modal + Animations ══ */
+
+  /* Commissioner featured card — full width, horizontal */
+  .commissioner-wrap{margin-bottom:28px;}
+  .commissioner-card{position:relative;overflow:hidden;cursor:pointer;display:grid;grid-template-columns:400px 1fr;background:var(--navy-card);border:1px solid var(--navy-border);border-top:4px solid var(--gold);transition:box-shadow 0.35s,border-color 0.3s;}
+  .commissioner-card:hover{border-color:var(--gold);box-shadow:0 20px 60px rgba(201,168,76,0.12),0 0 0 1px rgba(201,168,76,0.18);}
+  .commissioner-card::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(201,168,76,0.04) 50%,transparent 70%);transform:translateX(-100%);transition:transform 0.7s ease;pointer-events:none;z-index:5;}
+  .commissioner-card:hover::after{transform:translateX(100%);}
+
+  .comm-photo{position:relative;overflow:hidden;background:#06090F;min-height:460px;}
+  .comm-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:block;filter:grayscale(10%);transition:transform 0.6s ease,filter 0.4s;}
+  .commissioner-card:hover .comm-photo img{transform:scale(1.04);filter:grayscale(0%);}
+  .comm-photo-initials{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:110px;font-weight:700;letter-spacing:6px;color:rgba(201,168,76,0.05);z-index:1;}
+  .comm-photo-fade{position:absolute;top:0;right:0;bottom:0;width:110px;background:linear-gradient(to right,transparent,var(--navy-card));z-index:2;}
+  .comm-photo-status{position:absolute;top:16px;left:16px;z-index:4;display:inline-flex;align-items:center;gap:6px;font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--green);text-transform:uppercase;background:rgba(6,9,15,0.9);border:1px solid rgba(39,174,96,0.35);padding:4px 10px;}
+  .comm-photo-corner{position:absolute;width:20px;height:20px;z-index:4;}
+  .comm-photo-corner.tl{top:12px;left:12px;border-top:2px solid rgba(201,168,76,0.7);border-left:2px solid rgba(201,168,76,0.7);}
+  .comm-photo-corner.bl{bottom:12px;left:12px;border-bottom:2px solid rgba(201,168,76,0.7);border-left:2px solid rgba(201,168,76,0.7);}
+
+  .comm-info{padding:48px 52px;display:flex;flex-direction:column;justify-content:center;position:relative;}
+  .comm-info::before{content:'';position:absolute;left:0;top:15%;bottom:15%;width:2px;background:linear-gradient(transparent,var(--gold) 30%,var(--gold) 70%,transparent);opacity:0.2;}
+  .comm-supreme-tag{display:inline-flex;align-items:center;gap:8px;font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(201,168,76,0.25);background:rgba(201,168,76,0.05);padding:5px 14px;margin-bottom:22px;align-self:flex-start;animation:tagBlink 3s ease-in-out infinite;}
+  @keyframes tagBlink{0%,100%{border-color:rgba(201,168,76,0.25);}50%{border-color:rgba(201,168,76,0.6);}}
+  .comm-supreme-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold);animation:sPulse 2s infinite;}
+  .comm-rank{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;opacity:0.8;}
+  .comm-name{font-family:'Oswald',sans-serif;font-size:clamp(36px,4vw,54px);font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--white);line-height:1;margin-bottom:8px;}
+  .comm-dept{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:30px;}
+  .comm-sep{height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.4),transparent);margin-bottom:26px;}
+  .comm-rows{display:flex;flex-direction:column;gap:12px;margin-bottom:26px;}
+  .comm-row{display:flex;align-items:flex-start;gap:18px;}
+  .comm-row-lbl{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);opacity:0.5;width:90px;flex-shrink:0;padding-top:2px;}
+  .comm-row-val{font-size:13px;color:var(--white);line-height:1.5;}
+  .comm-badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+  .comm-badge{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border:1px solid rgba(201,168,76,0.3);color:var(--gold);}
+  .comm-cta{display:inline-flex;align-items:center;gap:10px;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--navy);background:var(--gold);padding:11px 24px;border:none;cursor:pointer;transition:background 0.2s,transform 0.15s;align-self:flex-start;}
+  .comm-cta:hover{background:var(--gold-light);transform:translateX(3px);}
+  .comm-cta svg{width:14px;height:14px;}
+
+  /* Sub-leaders 2-column grid */
+  .sub-leaders-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+
+  /* Enhancements to leader-card */
+  .leader-card{cursor:pointer;}
+  .leader-portrait{aspect-ratio:4/3 !important;}
+  .leader-portrait img{transition:transform 0.5s ease;}
+  .leader-card:hover .portrait-img{transform:scale(1.05);}
+  .portrait-click-layer{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;background:rgba(10,15,30,0);transition:background 0.25s;}
+  .leader-card:hover .portrait-click-layer{background:rgba(10,15,30,0.35);}
+  .portrait-click-pill{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,0.5);padding:7px 18px;opacity:0;transform:translateY(6px);transition:opacity 0.25s,transform 0.25s;}
+  .leader-card:hover .portrait-click-pill{opacity:1;transform:translateY(0);}
+  .leader-cta-strip{display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;border-top:1px solid var(--navy-border);font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;opacity:0;transform:translateY(4px);transition:opacity 0.2s,transform 0.2s;margin-top:12px;}
+  .leader-card:hover .leader-cta-strip{opacity:1;transform:translateY(0);}
+  .leader-cta-strip svg{width:12px;height:12px;}
+
+  /* Biography Modal */
+  #bio-modal{position:fixed;inset:0;z-index:9000;background:rgba(4,6,14,0.93);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;backdrop-filter:blur(8px);}
+  #bio-modal.open{display:flex;}
+  .bio-box{background:var(--navy-card);border:1px solid var(--navy-border);width:100%;max-width:820px;position:relative;overflow:hidden;animation:bioIn 0.42s cubic-bezier(0.16,1,0.3,1) both;}
+  @keyframes bioIn{from{opacity:0;transform:scale(0.94) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+  .bio-box::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--gold);z-index:2;}
+  .bio-banner{position:relative;height:220px;overflow:hidden;background:#06090F;border-bottom:1px solid var(--navy-border);display:flex;align-items:center;justify-content:center;}
+  .bio-banner img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;filter:grayscale(25%) brightness(0.7);}
+  .bio-banner-initials{position:absolute;font-family:'Oswald',sans-serif;font-size:140px;font-weight:700;letter-spacing:6px;color:rgba(201,168,76,0.04);z-index:0;}
+  .bio-banner-fade{position:absolute;inset:0;background:linear-gradient(transparent 30%,var(--navy-card));z-index:1;}
+  .bio-banner-badge{position:absolute;top:18px;left:20px;z-index:3;font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;background:rgba(6,9,15,0.9);border:1px solid rgba(201,168,76,0.35);padding:4px 12px;}
+  .bio-banner-dept{position:absolute;bottom:16px;left:20px;z-index:3;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+  .bio-header{padding:24px 28px 20px;border-bottom:1px solid var(--navy-border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+  .bio-rank{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;opacity:0.8;margin-bottom:6px;}
+  .bio-name{font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;margin-bottom:6px;}
+  .bio-dept-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+  .bio-close{background:none;border:1px solid var(--navy-border);color:var(--muted);font-size:18px;cursor:pointer;padding:6px 13px;transition:all 0.15s;flex-shrink:0;margin-top:4px;}
+  .bio-close:hover{color:var(--white);border-color:var(--muted);}
+  .bio-body{display:grid;grid-template-columns:1fr 210px;gap:0;}
+  .bio-main{padding:26px 28px;border-right:1px solid var(--navy-border);}
+  .bio-side{padding:24px 20px;}
+  .bio-col-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);opacity:0.45;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .bio-col-label::after{content:'';flex:1;height:1px;background:var(--navy-border);}
+  .bio-p{font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:14px;}
+  .bio-service{display:flex;flex-direction:column;gap:12px;}
+  .bio-service-year{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--gold);opacity:0.7;margin-bottom:2px;text-transform:uppercase;}
+  .bio-service-role{font-size:12px;color:var(--white);line-height:1.5;}
+  .bio-info-row{margin-bottom:14px;}
+  .bio-info-lbl{font-family:'Roboto Mono',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);opacity:0.45;margin-bottom:3px;}
+  .bio-info-val{font-size:12px;color:var(--white);line-height:1.5;}
+
+  /* Particle animation */
+  .comm-particles{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .comm-particle{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(201,168,76,0.25);animation:floatUp linear infinite;}
+  @keyframes floatUp{0%{transform:translateY(100%);opacity:0;}10%{opacity:1;}90%{opacity:0.8;}100%{transform:translateY(-200%);opacity:0;}}
+
+  /* Entrance animations */
+  .comm-entrance{opacity:0;transform:translateY(40px);animation:commIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s forwards;}
+  @keyframes commIn{to{opacity:1;transform:translateY(0);}}
+  .sub-entrance-1{opacity:0;transform:translateY(28px);animation:commIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;}
+  .sub-entrance-2{opacity:0;transform:translateY(28px);animation:commIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.55s forwards;}
+
+  /* Section rule shimmer */
+  .section-rule{position:relative;overflow:hidden;}
+  .section-rule::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);animation:ruleShimmer 2.8s ease 1s infinite;}
+  @keyframes ruleShimmer{0%{transform:translateX(-100%);}100%{transform:translateX(200%);}}
+
+  /* ══ PHOTOGRAPHER CREDIT LABEL ══ */
+  .photo-credit{
+    position:absolute;
+    bottom:8px;right:10px;
+    z-index:5;
+    font-family:'Roboto Mono',monospace;
+    font-size:7px;letter-spacing:1.5px;
+    color:rgba(240,237,228,0.35);
+    text-transform:uppercase;
+    pointer-events:none;
+    transition:color 0.2s;
+  }
+  /* Slightly more visible on card hover */
+  .leader-card:hover .photo-credit,
+  .commissioner-card:hover .photo-credit{
+    color:rgba(240,237,228,0.55);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="nav-brand">Central Investigation Bureau</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="Page_About.html">About</a></li>
+    <li><a href="Page_OurMission.html">Our Mission</a></li>
+    <li><a href="Page_Divisions.html">Detectives</a></li>
+    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
+    <li><a href="Page_Wanted.html">Most Wanted</a></li>
+    <li><a href="Page_Press.html">Press Room</a></li>
+    <li><a href="Page_Recruitment.html">Recruitment</a></li>
+  </ul>
+  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
+</nav>
+
+<!-- ══════════════ TICKER ══════════════ -->
+<div class="ticker">
+  <div class="ticker-label">LEADERSHIP</div>
+  <div style="overflow:hidden;flex:1;">
+    <div class="ticker-track">
+      <span><b>LEO:</b> All divisions under joint command of SA law enforcement leadership &nbsp;|&nbsp; <b>LSPD:</b> Chief Osborne reaffirms zero-tolerance policy on organized crime &nbsp;|&nbsp; <b>LSCS:</b> Sheriff Wesley expands county patrol coverage in Blaine County &nbsp;|&nbsp; <b>SASP:</b> Commissioner Gunner presides over quarterly SAPD inter-agency briefing &nbsp;|&nbsp; <b>SAPD:</b> All divisions under joint command of SA law enforcement leadership &nbsp;|&nbsp; <b>LSPD:</b> Chief Osborne reaffirms zero-tolerance policy on organized crime &nbsp;|&nbsp; <b>LSCS:</b> Sheriff Wesley expands county patrol coverage in Blaine County &nbsp;|&nbsp; <b>SASP:</b> Commissioner Gunner presides over quarterly SAPD inter-agency briefing</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE HERO ══════════════ -->
+<div class="page-hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-accent"></div>
+  <div class="hero-inner">
+    <div class="breadcrumb reveal">CIB &nbsp;/&nbsp; <span>Our Leaders</span></div>
+    <div class="hero-eyebrow reveal">Document Ref · CIB-PUB-005</div>
+    <h1 class="reveal">Our Leaders</h1>
+    <div class="hero-line reveal"></div>
+    <p class="hero-desc reveal">The Central Investigation Bureau operates under the joint authority of San Andreas's three primary law enforcement bodies. The following profiles represent the commanding officers who provide strategic direction and operational mandate for law enforcement activities across the State of San Andreas.</p>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN CONTENT ══════════════ -->
+<div class="page-wrap">
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 1 — COMMAND LEADERSHIP
+  ══════════════════════════════════════════════ -->
+  <div class="section-head reveal">
+    <div class="section-eyebrow">Command Authority</div>
+    <div class="section-title">Commanding Officers</div>
+    <div class="section-rule"></div>
+  </div>
+
+  <!-- Commissioner — Featured Hero -->
+  <div class="commissioner-wrap comm-entrance">
+    <div class="commissioner-card" onclick="openBio('gunner')">
+      <div class="comm-particles" id="comm-particles"></div>
+      <div class="comm-photo">
+        <img src="images/SAST_Gunner.jpg" alt="Commissioner Andrew Gunner" onerror="this.style.display='none'"/>
+        <div class="comm-photo-initials">AG</div>
+        <div class="comm-photo-fade"></div>
+        <div class="comm-photo-status"><div class="s-pulse"></div>Active Duty</div>
+        <div class="comm-photo-corner tl"></div>
+        <div class="comm-photo-corner bl"></div>
+        <div class="photo-credit">📷 @agungisra</div>
+      </div>
+      <div class="comm-info">
+        <div class="comm-supreme-tag"><div class="comm-supreme-dot"></div>Supreme Command · State of San Andreas</div>
+        <div class="comm-rank">Commissioner · Highest Rank in San Andreas</div>
+        <div class="comm-name">Andrew Gunner</div>
+        <div class="comm-dept">San Andreas State Police · Statewide Jurisdiction</div>
+        <div class="comm-sep"></div>
+        <div class="comm-rows">
+          <div class="comm-row"><span class="comm-row-lbl">Department</span><span class="comm-row-val">San Andreas State Police</span></div>
+          <div class="comm-row"><span class="comm-row-lbl">Authority</span><span class="comm-row-val">Statewide — Supreme Command over all SA Law Enforcement</span></div>
+          <div class="comm-row"><span class="comm-row-lbl">Jurisdiction</span><span class="comm-row-val">Full Territorial Command — State of San Andreas</span></div>
+          <div class="comm-row"><span class="comm-row-lbl">CIB Relation</span><span class="comm-row-val">Direct Oversight · Strategic Mandate Authority</span></div>
+        </div>
+        <div class="comm-badges">
+          <span class="comm-badge">State Authority</span>
+          <span class="comm-badge">Supreme Command</span>
+          <span class="comm-badge">CIB Oversight</span>
+          <span class="comm-badge">SAPD Joint Command</span>
+          <span class="comm-badge">Federal Liaison</span>
+        </div>
+        <button class="comm-cta" onclick="openBio('gunner');event.stopPropagation();">
+          View Full Biography
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheriff + Chief — 2 card row -->
+  <div class="sub-leaders-grid">
+
+    <div class="leader-card sub-entrance-1" onclick="openBio('wesley')">
+      <div class="leader-portrait">
+        <img class="portrait-img" src="images/LSCS_Kevin.jpg" alt="Kevin Wesley" onerror="this.style.display='none'"/>
+
+        <div class="portrait-status"><div class="status-pulse"></div>Active Duty</div>
+        <div class="portrait-dept">LSCS</div>
+        <div class="portrait-corner tl"></div><div class="portrait-corner tr"></div>
+
+        <div class="portrait-fade"></div>
+        <div class="portrait-click-layer"><div class="portrait-click-pill">View Biography</div></div>
+        <div class="photo-credit">📷 @agungisra</div>
+      </div>
+      <div class="leader-body">
+        <div class="leader-rank-tag">Sheriff · County Commander</div>
+        <div class="leader-name">Kevin Wesley</div>
+        <div class="leader-title">Los Santos County Sheriff</div>
+        <div class="leader-divider"></div>
+        <div class="leader-rows">
+          <div class="leader-row"><span class="leader-row-lbl">Department</span><span class="leader-row-val">Los Santos County Sheriff</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Rank</span><span class="leader-row-val">Sheriff</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Authority</span><span class="leader-row-val">County-Wide · Civil Command</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Jurisdiction</span><span class="leader-row-val">Los Santos County · Blaine County</span></div>
+        </div>
+        <div class="leader-badge-row">
+          <span class="leader-badge gold">County Authority</span>
+          <span class="leader-badge">CID Partner</span>
+          <span class="leader-badge">Command</span>
+        </div>
+        <div class="leader-cta-strip">
+          <span>Click to view full biography</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="leader-card sub-entrance-2" onclick="openBio('osborne')">
+      <div class="leader-portrait">
+        <img class="portrait-img" src="images/LSPD_Luke.jpg" alt="Luke Osborne" onerror="this.style.display='none'"/>
+
+        <div class="portrait-status"><div class="status-pulse"></div>Active Duty</div>
+        <div class="portrait-dept">LSPD</div>
+        <div class="portrait-corner tl"></div><div class="portrait-corner tr"></div>
+        <div class="portrait-fade"></div>
+        <div class="portrait-click-layer"><div class="portrait-click-pill">View Biography</div></div>
+        <div class="photo-credit">📷 @agungisra</div>
+      </div>
+      <div class="leader-body">
+        <div class="leader-rank-tag">Chief of Police · City Command</div>
+        <div class="leader-name">Luke Osborne</div>
+        <div class="leader-title">Los Santos Police Department</div>
+        <div class="leader-divider"></div>
+        <div class="leader-rows">
+          <div class="leader-row"><span class="leader-row-lbl">Department</span><span class="leader-row-val">Los Santos Police Department</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Rank</span><span class="leader-row-val">Chief of Police</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Authority</span><span class="leader-row-val">Metropolitan · City Command</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Jurisdiction</span><span class="leader-row-val">City of Los Santos</span></div>
+        </div>
+        <div class="leader-badge-row">
+          <span class="leader-badge gold">City Authority</span>
+          <span class="leader-badge">CIB Partner</span>
+          <span class="leader-badge">Command</span>
+        </div>
+        <div class="leader-cta-strip">
+          <span>Click to view full biography</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sub-leaders-grid -->
+
+  <div class="section-divider"></div>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 2 — DEPARTMENTS
+  ══════════════════════════════════════════════ -->
+  <div class="section-head reveal" style="margin-top:72px;">
+    <div class="section-eyebrow">Law Enforcement Bodies</div>
+    <div class="section-title">Departments</div>
+    <div class="section-rule"></div>
+  </div>
+
+  <div class="dept-grid">
+
+    <!-- ════════════════════════════════
+         DEPT 1 — San Andreas State Trooper
+         onclick opens the modal with id "modal-sast"
+    ════════════════════════════════ -->
+    <div class="dept-card dept-sast reveal" onclick="openDept('sast')">
+      <div class="dept-logo-zone">
+        <!-- ░ UPLOAD: replace src with images/dept-sast-logo.png ░ -->
+        <img class="dept-logo"
+             src="images/SAST_Logo.png"
+             alt="SAST Logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+
+      </div>
+      <div class="dept-card-body">
+        <div class="dept-card-eyebrow">State Agency</div>
+        <div class="dept-card-name">San Andreas State Police</div>
+        <div class="dept-card-desc">The premier law enforcement agency of the State of San Andreas, responsible for statewide highway patrol, criminal investigation, and supreme command authority over all SAPD bodies.</div>
+        <div class="dept-view-btn">
+          View Full Profile
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         DEPT 2 — Los Santos County Sheriff
+    ════════════════════════════════ -->
+    <div class="dept-card dept-lcso reveal reveal-d1" onclick="openDept('lcso')">
+      <div class="dept-logo-zone">
+        <!-- ░ UPLOAD: replace src with images/dept-lcso-logo.png ░ -->
+        <img class="dept-logo"
+             src="images/LSCS_Logo.png"
+             alt="LCSO Logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+      </div>
+      <div class="dept-card-body">
+        <div class="dept-card-eyebrow">County Agency</div>
+        <div class="dept-card-name">Los Santos County Sheriff</div>
+        <div class="dept-card-desc">The primary law enforcement authority for Los Santos and Blaine County, responsible for county-wide patrol, correctional facilities, civil enforcement, and court security.</div>
+        <div class="dept-view-btn">
+          View Full Profile
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         DEPT 3 — Los Santos Police Department
+    ════════════════════════════════ -->
+    <div class="dept-card dept-lspd reveal reveal-d2" onclick="openDept('lspd')">
+      <div class="dept-logo-zone">
+        <!-- ░ UPLOAD: replace src with images/dept-lspd-logo.png ░ -->
+        <img class="dept-logo"
+             src="images/LSPD_Logo.png"
+             alt="LSPD Logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+      </div>
+      <div class="dept-card-body">
+        <div class="dept-card-eyebrow">Municipal Agency</div>
+        <div class="dept-card-name">Los Santos Police Department</div>
+        <div class="dept-card-desc">The municipal police force of the City of Los Santos, operating the largest patrol network in San Andreas and serving as the primary first-responder agency for urban crime and emergencies.</div>
+        <div class="dept-view-btn">
+          View Full Profile
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dept-grid -->
+
+</div><!-- /page-wrap -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     DEPARTMENT MODALS
+     Each modal contains: header (logo + name), office photo,
+     and two-column body (About + Jurisdiction).
+
+     HOW TO ADD OFFICE PHOTO:
+       1. Save your photo as images/dept-DEPT-office.jpg (or .png)
+       2. Set the src on the <img class="office-img"> inside that modal
+       3. The placeholder disappears automatically when the image loads
+
+     HOW TO EDIT CONTENT:
+       Each modal is clearly labelled. Edit text directly inside.
+══════════════════════════════════════════════════════════════ -->
+<div id="dept-modal" onclick="handleModalBackdrop(event)">
+  <div class="dept-modal-box" id="modal-box" data-dept="">
+
+    <!-- MODAL HEADER — populated by JS -->
+    <div class="dept-modal-header" id="modal-header">
+      <div class="modal-logo-zone" id="modal-logo-zone">
+        <div class="modal-logo-frame">
+          <img id="modal-logo-img" src="" alt="" onerror="this.style.display='none';document.getElementById('modal-logo-fallback').style.display='block';"/>
+          <div id="modal-logo-fallback" class="modal-logo-fallback" style="display:none;"></div>
+        </div>
+        <div class="modal-logo-label">Department Seal</div>
+      </div>
+      <div class="modal-title-block">
+        <div class="modal-eyebrow" id="modal-eyebrow"></div>
+        <div class="modal-name" id="modal-name"></div>
+        <div class="modal-badges" id="modal-badges"></div>
+      </div>
+      <button class="modal-close-btn" onclick="closeDept()">✕</button>
+    </div>
+
+    <!-- OFFICE PHOTO -->
+    <div class="modal-office-photo" id="modal-office-wrap">
+      <!-- Image is shown when src is valid; placeholder shown otherwise -->
+      <img id="modal-office-img" src="" alt="Department Office" style="display:none;" onerror="this.style.display='none';document.getElementById('modal-office-placeholder').style.display='flex';"/>
+      <div class="office-photo-placeholder" id="modal-office-placeholder">
+        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        <span>Upload Department Office Photo<br/><span style="opacity:0.5;">images/dept-DEPT-office.jpg</span></span>
+      </div>
+      <div class="modal-office-caption" id="modal-office-caption"></div>
+    </div>
+
+    <!-- TWO-COLUMN BODY -->
+    <div class="modal-body" id="modal-body">
+      <!-- left col -->
+      <div class="modal-col">
+        <div class="modal-col-title">About</div>
+        <div id="modal-about-text" class="modal-text"></div>
+        <div class="modal-info-rows" id="modal-info-rows"></div>
+      </div>
+      <!-- right col -->
+      <div class="modal-col">
+        <div class="modal-col-title">Jurisdiction &amp; Authority</div>
+        <div class="jur-list" id="modal-jur-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+      <p>Central Investigation Bureau</p>
+      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
+    </div>
+    <div class="footer-col">
+      <h4>Divisions</h4>
+      <ul>
+        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
+        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="Page_Press.html">Press Room</a></li>
+        <li><a href="Page_Cases.html">Cases</a></li>
+        <li><a href="Page_Recruitment.html">Recruitment</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="index.html">CIB Headquarters</a></li>
+        <li><a href="Page_Press.html">Tip Hotline</a></li>
+        <li><a href="Page_Login.html">Personnel Login</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
+    <div class="classified-stamp">EXECUTIVE RP</div>
+  </div>
+</footer>
+
+
+<script>
+  // ══════════════════════════════════════════════════════════════
+  //  DEPARTMENT DATA
+  //  Edit any field here to update what appears in the modal.
+  //  logo:  path to the department logo image
+  //  office: path to the office/HQ photo
+  // ══════════════════════════════════════════════════════════════
+  const DEPTS = {
+    sast: {
+      eyebrow:  'State Agency · San Andreas',
+      name:     'San Andreas State Trooper',
+      abbr:     'SAST',
+      logo:     'images/SAST_Logo.png',
+      office:   'images/SAST_Logo.png',
+      caption:  'SAST State Headquarters — San Andreas',
+      badges:   ['State Authority','Statewide Patrol','Highway Division','Criminal Investigation'],
+      about:    'The San Andreas State Police (SASP) is the premier statewide law enforcement body, established under executive authority of the Governor of San Andreas. The agency holds supreme command authority over all SAPD-affiliated departments and maintains jurisdiction across every county, municipality, and unincorporated territory within state borders. SAST is responsible for statewide highway patrol, criminal investigations of federal and interstate nature, and command-level coordination during major incidents or civil emergencies.',
+      info: [
+        { lbl: 'Founded',       val: 'San Andreas State Legislature' },
+        { lbl: 'Commanding',    val: 'Commissioner Andrew Gunner' },
+        { lbl: 'Personnel',     val: 'Statewide Deployment' },
+        { lbl: 'HQ',            val: 'San Andreas State Capital' },
+        { lbl: 'Oversight',     val: 'Governor of San Andreas' },
+      ],
+      jur: [
+        { strong: 'Statewide Jurisdiction', text: ' — Full authority across all counties, municipalities, and territories within the State of San Andreas.' },
+        { strong: 'Highway Patrol',         text: ' — Primary authority over all state highways, interstates, and rural road networks.' },
+        { strong: 'Criminal Investigation', text: ' — Conducts state-level investigations into organized crime, corruption, and cross-jurisdictional offenses.' },
+        { strong: 'Command Authority',      text: ' — Holds supreme operational authority over LSPD and LCSO in joint operations and state emergencies.' },
+        { strong: 'CIB Oversight',          text: ' — The Commissioner serves as the highest authority overseeing CIB operations and strategic direction.' },
+        { strong: 'Federal Coordination',   text: ' — Acts as the state liaison for federal law enforcement agencies operating within San Andreas.' },
+      ],
+    },
+    lcso: {
+      eyebrow:  'County Agency · Los Santos',
+      name:     'Los Santos County Sheriff',
+      abbr:     'LCSO',
+      logo:     'images/LSCS_Logo.png',
+      office:   'images/LSCS_Logo.png',
+      caption:  'LCSO County Sheriff Headquarters — Los Santos',
+      badges:   ['County Authority','Civil Enforcement','Corrections','Court Security'],
+      about:    'The Los Santos County Sheriff\'s Department (LCSO) is the primary law enforcement authority for Los Santos County and Blaine County. Headed by the elected Sheriff, the department operates patrol divisions across both urban and rural county territories, manages the county correctional system, and provides court security and civil enforcement services. LSCS plays a critical role in CIB operations as a significant source of detective personnel and maintains concurrent jurisdiction with LSPD in overlapping areas.',
+      info: [
+        { lbl: 'Founded',       val: 'Los Santos County Government' },
+        { lbl: 'Commanding',    val: 'Sheriff Kevin Wesley' },
+        { lbl: 'Personnel',     val: 'County-Wide Deployment' },
+        { lbl: 'HQ',            val: 'Los Santos County Sheriff\'s Office' },
+        { lbl: 'Oversight',     val: 'Los Santos County Board of Supervisors' },
+      ],
+      jur: [
+        { strong: 'Los Santos County',  text: ' — Full patrol and investigative authority across all unincorporated areas of Los Santos County.' },
+        { strong: 'Blaine County',      text: ' — Primary law enforcement jurisdiction for the rural Blaine County area including Sandy Shores and Paleto Bay.' },
+        { strong: 'Concurrent City',    text: ' — May operate within the City of Los Santos in coordination with or in the absence of LSPD personnel.' },
+        { strong: 'Corrections',        text: ' — Operates and manages the county jail and detention facilities for all arrested individuals awaiting trial.' },
+        { strong: 'Court Security',     text: ' — Responsible for security of county court facilities and execution of civil court orders.' },
+        { strong: 'CIB Contribution',   text: ' — A primary source of CIB detective personnel; multiple LSCS deputies hold active CIB assignments.' },
+      ],
+    },
+    lspd: {
+      eyebrow:  'Municipal Agency · City of Los Santos',
+      name:     'Los Santos Police Department',
+      abbr:     'LSPD',
+      logo:     'images/LSPD_Logo.png',
+      office:   'images/LSPD_Logo.png',
+      caption:  'LSPD Mission Row Headquarters — Los Santos',
+      badges:   ['City Authority','Urban Patrol','Homicide','Narcotics','SWAT'],
+      about:    'The Los Santos Police Department (LSPD) is the municipal police force of the City of Los Santos and the largest single law enforcement agency in San Andreas by personnel count. Operating from Mission Row headquarters and multiple district stations, LSPD provides 24-hour urban patrol coverage, homicide investigation, narcotics enforcement, and specialized units including SWAT and K-9. The department contributes the largest proportion of personnel to CIB operations and maintains a close operational relationship with both the Bureau and the County Sheriff.',
+      info: [
+        { lbl: 'Founded',       val: 'City of Los Santos Municipal Authority' },
+        { lbl: 'Commanding',    val: 'Chief of Police Luke Osborne' },
+        { lbl: 'Personnel',     val: 'Largest Dept in San Andreas' },
+        { lbl: 'HQ',            val: 'Mission Row, Los Santos' },
+        { lbl: 'Oversight',     val: 'Los Santos City Council' },
+      ],
+      jur: [
+        { strong: 'City of Los Santos',   text: ' — Primary jurisdiction over all criminal activity within the incorporated boundaries of Los Santos.' },
+        { strong: 'Urban Districts',      text: ' — Operates multiple precinct stations covering Vinewood, East LS, South LS, Davis, Strawberry, and all other city districts.' },
+        { strong: 'Special Operations',   text: ' — Deploys SWAT, K-9, Air Support, and Undercover Units for high-risk and specialized operations.' },
+        { strong: 'Narcotics Division',   text: ' — Operates a dedicated narcotics enforcement unit with authority to conduct undercover buy operations and raids.' },
+        { strong: 'Homicide & Major Crimes', text: ' — Investigates all homicides and serious felonies occurring within city limits.' },
+        { strong: 'CIB Contribution',     text: ' — LSPD is the primary source of sworn CIB detective personnel across both GRD and CID divisions.' },
+      ],
+    },
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  //  OPEN / CLOSE MODAL
+  // ══════════════════════════════════════════════════════════════
+  function openDept(key) {
+    const d = DEPTS[key];
+    if (!d) return;
+
+    const box = document.getElementById('modal-box');
+    box.dataset.dept = key;
+
+    // Header
+    document.getElementById('modal-eyebrow').textContent = d.eyebrow;
+    document.getElementById('modal-name').textContent    = d.name;
+
+    // Badges
+    const badgeContainer = document.getElementById('modal-badges');
+    badgeContainer.innerHTML = d.badges.map(b => `<span class="modal-badge">${b}</span>`).join('');
+
+    // Logo
+    const logoImg = document.getElementById('modal-logo-img');
+    const logoFb  = document.getElementById('modal-logo-fallback');
+    logoImg.src = d.logo;
+    logoImg.alt = d.name;
+    logoFb.textContent = d.abbr;
+    logoImg.style.display = 'block';
+    logoFb.style.display = 'none';
+
+    // Office photo
+    const offImg = document.getElementById('modal-office-img');
+    const offPh  = document.getElementById('modal-office-placeholder');
+    offImg.src = d.office;
+    offImg.style.display = 'block';
+    offPh.style.display  = 'none';
+    document.getElementById('modal-office-caption').textContent = d.caption;
+
+    // About text
+    document.getElementById('modal-about-text').textContent = d.about;
+
+    // Info rows
+    document.getElementById('modal-info-rows').innerHTML = d.info.map(r =>
+      `<div class="modal-info-row">
+        <div class="modal-info-lbl">${r.lbl}</div>
+        <div class="modal-info-val">${r.val}</div>
+      </div>`
+    ).join('');
+
+    // Jurisdiction list
+    document.getElementById('modal-jur-list').innerHTML = d.jur.map(j =>
+      `<div class="jur-item">
+        <div class="jur-dot"></div>
+        <div class="jur-text"><strong>${j.strong}</strong>${j.text}</div>
+      </div>`
+    ).join('');
+
+    // Open
+    document.getElementById('dept-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDept() {
+    document.getElementById('dept-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleModalBackdrop(e) {
+    if (e.target === document.getElementById('dept-modal')) closeDept();
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDept(); });
+
+  // ══════════════════════════════════════════════════════════════
+  //  SCROLL-TRIGGERED REVEAL
+  // ══════════════════════════════════════════════════════════════
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+    requestAnimationFrame(() => document.body.classList.add('page-visible'));
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  //  PAGE TRANSITIONS
+  // ══════════════════════════════════════════════════════════════
+  document.querySelectorAll('a[href]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
+      e.preventDefault();
+      document.body.classList.remove('page-visible');
+      setTimeout(() => { window.location.href = href; }, 400);
+    });
+  });
+</script>
+
+
+<!-- Biography Modal -->
+<div id="bio-modal" onclick="if(event.target===this)closeBio()">
+  <div class="bio-box">
+    <div class="bio-banner">
+      <img id="bio-banner-img" src="" alt="" style="display:none"/>
+      <div class="bio-banner-initials" id="bio-banner-initials"></div>
+      <div class="bio-banner-fade"></div>
+      <div class="bio-banner-badge" id="bio-banner-badge"></div>
+      <div class="bio-banner-dept" id="bio-banner-dept"></div>
+    </div>
+    <div class="bio-header">
+      <div>
+        <div class="bio-rank" id="bio-rank"></div>
+        <div class="bio-name" id="bio-name"></div>
+        <div class="bio-dept-label" id="bio-dept-label"></div>
+      </div>
+      <button class="bio-close" onclick="closeBio()">✕</button>
+    </div>
+    <div class="bio-body">
+      <div class="bio-main">
+        <div class="bio-col-label">Biography</div>
+        <div class="bio-p" id="bio-p1"></div>
+        <div class="bio-p" id="bio-p2"></div>
+        <div class="bio-col-label" style="margin-top:6px;">Service Record</div>
+        <div class="bio-service" id="bio-service"></div>
+      </div>
+      <div class="bio-side">
+        <div class="bio-col-label">Profile</div>
+        <div id="bio-info"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── BIOGRAPHY DATA — Edit text here ───────────────────────────────
+const BIOS = {
+  gunner:{
+    rank:'Commissioner · Highest Rank',name:'Andrew Gunner',dept:'San Andreas State Trooper',
+    badge:'SAST · Commissioner',initials:'AG',img:'images/SAST_Gunner1.jpg',
+    bio1:'Commissioner Andrew Gunner serves as the supreme commanding officer of all law enforcement agencies operating within the State of San Andreas, including the San Andreas State Trooper, the Los Santos County Sheriff\'s Office, and the Los Santos Police Department. He holds ultimate strategic authority over the Central Investigation Bureau and its sub-divisions.',
+    bio2:'Commissioner Gunner is known for his uncompromising stance on organized crime and his instrumental role in the formation of the CIB as a dedicated intelligence and investigation division within the SAPD structure. Under his directive, the Bureau has significantly expanded its operational capacity since its founding in 2026.',
+    service:[{year:'2026 – Present',role:'Commissioner, San Andreas State Trooper'},{year:'2024 – 2026',role:'Deputy Commissioner, SAST'},{year:'2020 – 2024',role:'Director of State Law Enforcement Operations'},{year:'2015 – 2020',role:'Senior Commander, SAST Northern Division'}],
+    info:[{lbl:'Full Name',val:'Andrew Gunner'},{lbl:'Rank',val:'Commissioner'},{lbl:'Department',val:'San Andreas State Trooper'},{lbl:'Authority',val:'Statewide — Supreme Command'},{lbl:'Jurisdiction',val:'State of San Andreas'},{lbl:'CIB Relation',val:'Direct Oversight'},{lbl:'Status',val:'Active Duty'}]
+  },
+  wesley:{
+    rank:'Sheriff · County Commander',name:'Kevin Wesley',dept:'Los Santos County Sheriff\'s Office',
+    badge:'LCSO · Sheriff',initials:'KW',img:'images/LSCS_Kevin1.jpg',
+    bio1:'Sheriff Kevin Wesley commands the Los Santos County Sheriff\'s Office, overseeing law enforcement operations across Los Santos County and Blaine County. He is responsible for county-wide civil authority, rural law enforcement, and coordination with state and city departments on joint operations.',
+    bio2:'Sheriff Wesley has been a longstanding partner of the Central Investigation Bureau, providing jurisdictional support across Blaine County regions and rural San Andreas — areas critical to CIB Gang Recon Division field operations targeting narcotics routes and gang activity outside city limits.',
+    service:[{year:'2023 – Present',role:'Sheriff, Los Santos County Sheriff\'s Office'},{year:'2019 – 2023',role:'Undersheriff, LCSO'},{year:'2014 – 2019',role:'Captain, LCSO Blaine County Division'},{year:'2009 – 2014',role:'Lieutenant, LCSO Patrol Division'}],
+    info:[{lbl:'Full Name',val:'Kevin Wesley'},{lbl:'Rank',val:'Sheriff'},{lbl:'Department',val:'Los Santos County Sheriff'},{lbl:'Authority',val:'County-Wide · Civil Command'},{lbl:'Jurisdiction',val:'LS County · Blaine County'},{lbl:'CIB Relation',val:'CID Partner · Field Support'},{lbl:'Status',val:'Active Duty'}]
+  },
+  osborne:{
+    rank:'Chief of Police · City Command',name:'Luke Osborne',dept:'Los Santos Police Department',
+    badge:'LSPD · Chief of Police',initials:'LO',img:'images/LSPD_Luke1.jpg',
+    bio1:'Chief of Police Luke Osborne commands the Los Santos Police Department, the primary metropolitan law enforcement body for the City of Los Santos. His jurisdiction encompasses all LSPD precincts, specialized units, and tactical divisions operating within city limits, including SWAT, Narcotics, and the Homicide Division.',
+    bio2:'Chief Osborne has been a strong institutional supporter of the CIB since its establishment, facilitating inter-agency cooperation between LSPD units and CIB detectives during joint investigations and emergency response situations. He has publicly championed intelligence-led policing as the future of urban law enforcement in San Andreas.',
+    service:[{year:'2022 – Present',role:'Chief of Police, LSPD'},{year:'2018 – 2022',role:'Assistant Chief, LSPD'},{year:'2013 – 2018',role:'Commander, LSPD Organized Crime Division'},{year:'2007 – 2013',role:'Captain, LSPD Central Division'}],
+    info:[{lbl:'Full Name',val:'Luke Osborne'},{lbl:'Rank',val:'Chief of Police'},{lbl:'Department',val:'Los Santos Police Department'},{lbl:'Authority',val:'Metropolitan · City Command'},{lbl:'Jurisdiction',val:'City of Los Santos'},{lbl:'CIB Relation',val:'CIB Partner · Joint Operations'},{lbl:'Status',val:'Active Duty'}]
+  }
+};
+
+function openBio(key){
+  const d=BIOS[key];if(!d)return;
+  const img=document.getElementById('bio-banner-img');
+  img.src=d.img;img.style.display='block';img.onerror=()=>{img.style.display='none';};
+  document.getElementById('bio-banner-initials').textContent=d.initials;
+  document.getElementById('bio-banner-badge').textContent=d.badge;
+  document.getElementById('bio-banner-dept').textContent=d.dept;
+  document.getElementById('bio-rank').textContent=d.rank;
+  document.getElementById('bio-name').textContent=d.name;
+  document.getElementById('bio-dept-label').textContent=d.dept;
+  document.getElementById('bio-p1').textContent=d.bio1;
+  document.getElementById('bio-p2').textContent=d.bio2;
+  document.getElementById('bio-service').innerHTML=d.service.map(s=>`<div><div class="bio-service-year">${s.year}</div><div class="bio-service-role">${s.role}</div></div>`).join('');
+  document.getElementById('bio-info').innerHTML=d.info.map(r=>`<div class="bio-info-row"><div class="bio-info-lbl">${r.lbl}</div><div class="bio-info-val">${r.val}</div></div>`).join('');
+  document.getElementById('bio-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeBio(){document.getElementById('bio-modal').classList.remove('open');document.body.style.overflow='';}
+
+// Floating particles
+function spawnParticles(){
+  const c=document.getElementById('comm-particles');if(!c)return;
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');p.className='comm-particle';
+    p.style.left=Math.random()*100+'%';p.style.bottom='-8px';
+    p.style.width=(Math.random()*2+1)+'px';p.style.height=p.style.width;
+    p.style.animationDuration=(Math.random()*8+5)+'s';
+    p.style.animationDelay=(Math.random()*6)+'s';
+    p.style.opacity=Math.random()*0.35+0.1;
+    c.appendChild(p);
+  }
+}
+
+// Keydown
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeBio();}});
+
+// Init
+window.addEventListener('DOMContentLoaded',()=>{ spawnParticles(); });
+</script>
+
+</body>
+</html>

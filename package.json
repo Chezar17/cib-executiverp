@@ -1,0 +1,12 @@
+{
+  "name": "cib-website",
+  "version": "1.0.0",
+  "description": "Central Investigation Bureau — CIB Web Portal",
+  "type": "module",
+  "scripts": {
+    "seed": "node scripts/seed-users.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
