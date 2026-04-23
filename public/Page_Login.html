@@ -320,7 +320,7 @@ body.page-visible {
   /* ── HIDDEN MODAL ── */
   #secret-modal{position:fixed;inset:0;background:rgba(5,8,18,0.94);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px;}
   #secret-modal.open{display:flex;}
-  .secret-modal-box{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);width:100%;max-width:440px;position:relative;}
+  .secret-modal-box{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);width:100%;max-width:440px;position:relative;overflow:hidden;}
   .secret-modal-topbar{background:var(--navy-mid);border-bottom:1px solid var(--navy-border);padding:8px 18px;display:flex;align-items:center;justify-content:space-between;}
   .secret-modal-topleft{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
   .secret-modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 4px;transition:color 0.15s;}
@@ -408,36 +408,40 @@ body.page-visible {
       <div class="login-subtitle">Authorized Personnel Only</div>
       <div class="login-divider"></div>
 
+      <!-- DEV NOTICE -->
+      <div class="dev-notice">
+        <span class="dev-notice-icon">⚠</span>
+        <div class="dev-notice-text">
+          <b>Portal Under Development</b>
+          This login portal is currently not functional and is still under active development. Authentication is temporarily disabled. Authorized personnel should use the <span style="color:var(--gold);font-weight:bold;">classified access channel</span> to log in.
+        </div>
+      </div>
+
       <!-- Badge Number -->
-      <div class="form-group">
-        <label class="form-label" for="badge">CIB Credentials</label>
+      <div class="form-group" style="opacity:0.45;pointer-events:none;">
+        <label class="form-label" for="badge-main">CIB Credentials</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
           </span>
-          <input class="form-input" type="text" id="badge" placeholder="e.g. executiverp@cib.com" autocomplete="off"/>
+          <input class="form-input" type="text" id="badge-main" placeholder="Portal login is currently disabled" autocomplete="off" disabled tabindex="-1"/>
         </div>
-        <div class="form-hint">Enter your assigned CIB Credentials</div>
+        <div class="form-hint">Login via this form is currently disabled</div>
       </div>
 
       <!-- Password -->
-      <div class="form-group">
-        <label class="form-label" for="password">Password</label>
+      <div class="form-group" style="opacity:0.45;pointer-events:none;">
+        <label class="form-label" for="password-main">Password</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
           </span>
-          <input class="form-input" type="password" id="password" placeholder="••••••••••••" autocomplete="off"/>
+          <input class="form-input" type="password" id="password-main" placeholder="••••••••••••" autocomplete="off" disabled tabindex="-1"/>
         </div>
       </div>
 
-      <!-- Error box -->
-      <div id="loginError" style="display:none;margin-bottom:12px;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.4);border-left:3px solid var(--red-alert);padding:10px 14px;">
-        <div id="loginErrorMsg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
-      </div>
-
-      <!-- Submit -->
-      <button class="login-btn" id="loginBtn" onclick="handleLogin()">Access Portal</button>
+      <!-- Submit (disabled) -->
+      <button class="login-btn" id="loginBtnMain" disabled style="opacity:0.35;cursor:not-allowed;" title="Portal login is currently under development">Portal Under Development</button>
 
       <!-- Forgot Password -->
       <div class="forgot-section">
@@ -693,33 +697,48 @@ body.page-visible {
 
       <!-- Badge Number -->
       <div class="form-group">
-        <label class="form-label" for="badge">Name</label>
+        <label class="form-label" for="s-badge">Name</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
           </span>
-          <input class="form-input" type="text" id="badge" placeholder="e.g. Elias Makya" autocomplete="off"/>
+          <input class="form-input" type="text" id="s-badge" placeholder="e.g. Elias Makya" autocomplete="off"/>
         </div>
         <div class="form-hint">Enter your Name</div>
       </div>
 
       <!-- Password -->
       <div class="form-group">
-        <label class="form-label" for="password">Password</label>
+        <label class="form-label" for="s-password">Password</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
           </span>
-          <input class="form-input" type="password" id="password" placeholder="••••••••••••" autocomplete="off"/>
+          <input class="form-input" type="password" id="s-password" placeholder="••••••••••••" autocomplete="off"/>
         </div>
       </div>
 
+      <!-- Attempt counter display -->
+      <div id="s-attempts-display" style="display:none;margin-bottom:10px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-align:right;text-transform:uppercase;"></div>
+
       <!-- Submit -->
-      <button class="login-btn" id="loginBtn" onclick="handleLogin()">Access Portal</button>
+      <button class="login-btn" id="s-loginBtn" onclick="handleSecretLogin()">Access Portal</button>
 
       <!-- Error box -->
-      <div id="loginError" style="display:none;margin-top:14px;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.4);border-left:3px solid var(--red-alert);padding:10px 14px;">
-        <div id="loginErrorMsg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
+      <div id="s-loginError" style="display:none;margin-top:14px;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.4);border-left:3px solid var(--red-alert);padding:10px 14px;">
+        <div id="s-loginErrorMsg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
+      </div>
+
+      <!-- Success overlay (hidden) -->
+      <div id="s-success-overlay" style="display:none;position:absolute;inset:0;background:rgba(10,15,30,0.97);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:16px;border-top:3px solid #27AE60;">
+        <div id="s-success-icon" style="width:64px;height:64px;border:2px solid #27AE60;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:successPulse 0.6s ease forwards;">
+          <svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:#27AE60;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:5px;color:#27AE60;text-transform:uppercase;text-align:center;">Access Granted</div>
+        <div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;">Redirecting to portal...</div>
+        <div style="width:200px;height:3px;background:rgba(39,174,96,0.15);position:relative;overflow:hidden;">
+          <div id="s-redirect-bar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:#27AE60;transition:width 1.2s linear;"></div>
+        </div>
       </div>
 
     </div>
@@ -745,18 +764,20 @@ body.page-visible {
 
   function openSecretModal() {
     document.getElementById('secret-modal').classList.add('open');
-    document.getElementById('badge').focus();
+    setTimeout(()=>document.getElementById('s-badge').focus(), 80);
   }
 
   function closeSecretModal() {
-    document.getElementById('secret-modal').classList.remove('open');
-    document.getElementById('badge').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('loginError').style.display = 'none';
-    document.getElementById('loginBtn').textContent = 'Access Portal';
-    document.getElementById('loginBtn').disabled = false;
-    document.getElementById('loginBtn').style.background = '';
-    document.getElementById('loginBtn').style.color = '';
+    const modal = document.getElementById('secret-modal');
+    modal.classList.remove('open');
+    document.getElementById('s-badge').value = '';
+    document.getElementById('s-password').value = '';
+    document.getElementById('s-loginError').style.display = 'none';
+    document.getElementById('s-loginBtn').textContent = 'Access Portal';
+    document.getElementById('s-loginBtn').disabled = false;
+    document.getElementById('s-loginBtn').style.background = '';
+    document.getElementById('s-loginBtn').style.color = '';
+    document.getElementById('s-success-overlay').style.display = 'none';
   }
 
   document.getElementById('secret-modal').addEventListener('click', function(e) {
@@ -766,9 +787,153 @@ body.page-visible {
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeSecretModal();
     if (e.key === 'Enter' && document.getElementById('secret-modal').classList.contains('open')) {
-      handleLogin();
+      handleSecretLogin();
     }
   });
+
+  /* ── Button ripple effect ── */
+  document.getElementById('s-loginBtn').addEventListener('click', function(e) {
+    const ripple = document.createElement('span');
+    ripple.classList.add('login-btn-ripple');
+    const rect = this.getBoundingClientRect();
+    ripple.style.left = (e.clientX - rect.left) + 'px';
+    ripple.style.top  = (e.clientY - rect.top)  + 'px';
+    this.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+</script>
+
+<script>
+  /* ── SECRET LOGIN — 5 attempt lockout ── */
+  let secretFailedAttempts = 0;
+  const SECRET_MAX_ATTEMPTS = 5;
+  const SECRET_LOCKOUT_MS   = 5 * 60 * 1000;
+
+  async function sha256(message) {
+    const msgBuffer  = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray  = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function sShowError(msg) {
+    const box = document.getElementById('s-loginError');
+    const txt = document.getElementById('s-loginErrorMsg');
+    if (box) { box.style.display = 'block'; box.style.animation = 'none'; void box.offsetWidth; box.style.animation = 'shake 0.4s ease'; }
+    if (txt) txt.textContent = msg;
+    ['s-badge','s-password'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.borderColor = 'var(--red-alert)';
+        setTimeout(() => el.style.borderColor = '', 1400);
+      }
+    });
+    // shake the modal box
+    const box2 = document.querySelector('.secret-modal-box');
+    if (box2) { box2.style.animation='none'; void box2.offsetWidth; box2.style.animation='shake 0.4s ease'; }
+  }
+
+  function sHideError() {
+    const box = document.getElementById('s-loginError');
+    if (box) box.style.display = 'none';
+  }
+
+  function sSetLoading(on) {
+    const btn = document.getElementById('s-loginBtn');
+    if (!btn) return;
+    btn.disabled    = on;
+    btn.textContent = on ? 'Verifying...' : 'Access Portal';
+  }
+
+  function updateAttemptsDisplay() {
+    const el = document.getElementById('s-attempts-display');
+    if (!el) return;
+    if (secretFailedAttempts > 0) {
+      const remaining = SECRET_MAX_ATTEMPTS - secretFailedAttempts;
+      el.style.display = 'block';
+      el.textContent = `Attempts remaining: ${remaining} / ${SECRET_MAX_ATTEMPTS}`;
+      el.style.color = remaining <= 2 ? 'var(--red-alert)' : 'var(--muted)';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  async function handleSecretLogin() {
+    sHideError();
+
+    // Check lockout
+    const lockUntil = parseInt(sessionStorage.getItem('secretLockUntil') || '0');
+    if (Date.now() < lockUntil) {
+      const remaining = Math.ceil((lockUntil - Date.now()) / 60000);
+      sShowError(`Account locked. Try again in ${remaining} minute(s).`);
+      return;
+    }
+
+    const badge    = document.getElementById('s-badge')?.value.trim();
+    const password = document.getElementById('s-password')?.value;
+
+    if (!badge || !password) { sShowError('All fields are required.'); return; }
+
+    sSetLoading(true);
+
+    try {
+      const passwordHash = await sha256(password);
+
+      const response = await fetch('/api/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ badge: badge, password: passwordHash })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        secretFailedAttempts = 0;
+        sessionStorage.removeItem('secretLockUntil');
+        sessionStorage.setItem('cib_auth',     'true');
+        sessionStorage.setItem('cib_token',    result.token);
+        sessionStorage.setItem('cib_badge',    result.user.badge);
+        sessionStorage.setItem('cib_name',     result.user.name);
+        sessionStorage.setItem('cib_rank',     result.user.rank);
+        sessionStorage.setItem('cib_division', result.user.division);
+        sessionStorage.setItem('cib_expires',  result.expiresAt);
+
+        showSecretSuccess();
+
+      } else {
+        secretFailedAttempts++;
+        sSetLoading(false);
+        updateAttemptsDisplay();
+
+        if (secretFailedAttempts >= SECRET_MAX_ATTEMPTS) {
+          sessionStorage.setItem('secretLockUntil', String(Date.now() + SECRET_LOCKOUT_MS));
+          sShowError('Too many failed attempts. Try again in 5 minutes.');
+          const btn = document.getElementById('s-loginBtn');
+          if (btn) { btn.disabled = true; btn.textContent = 'Locked — Try Later'; }
+        } else {
+          const remaining = SECRET_MAX_ATTEMPTS - secretFailedAttempts;
+          sShowError(`${result.error || 'Invalid credentials'}. ${remaining} attempt(s) remaining.`);
+        }
+      }
+
+    } catch (err) {
+      sSetLoading(false);
+      sShowError('Connection error. Check your network and try again.');
+      console.error('Secret login error:', err);
+    }
+  }
+
+  function showSecretSuccess() {
+    const overlay = document.getElementById('s-success-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    // Trigger redirect bar fill
+    setTimeout(() => {
+      const bar = document.getElementById('s-redirect-bar');
+      if (bar) bar.style.width = '100%';
+    }, 50);
+    setTimeout(() => { window.location.href = 'Page_Nexus.html'; }, 1400);
+  }
 </script>
 
 <style>
@@ -779,6 +944,22 @@ body.page-visible {
     60%{transform:translateX(-4px);}
     80%{transform:translateX(4px);}
   }
+  @keyframes successPulse {
+    0%{transform:scale(0.5);opacity:0;}
+    60%{transform:scale(1.15);opacity:1;}
+    100%{transform:scale(1);opacity:1;}
+  }
+  @keyframes btnRipple {
+    0%{transform:scale(0);opacity:0.5;}
+    100%{transform:scale(4);opacity:0;}
+  }
+  .login-btn-ripple {
+    position:absolute;border-radius:50%;background:rgba(255,255,255,0.35);
+    width:60px;height:60px;pointer-events:none;
+    animation:btnRipple 0.55s ease-out forwards;
+    transform:translate(-50%,-50%);
+  }
+  #s-loginBtn { position:relative; overflow:hidden; }
 </style>
 
 <script>
@@ -1046,122 +1227,6 @@ document.querySelectorAll('a[href]').forEach(link=>{
 });
 </script>
 
-<script>
 
-let failedAttempts = 0
-const MAX_ATTEMPTS = 5
-const LOCKOUT_MS   = 5 * 60 * 1000
-
-async function sha256(message) {
-  const msgBuffer  = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-  const hashArray  = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('')
-}
-
-function showError(msg) {
-  const box = document.getElementById('loginError')
-  const txt = document.getElementById('loginErrorMsg')
-  if (box) box.style.display = 'block'
-  if (txt) txt.textContent  = msg
-  document.getElementById('badge')?.style.setProperty('border-color','var(--red-alert)')
-  document.getElementById('password')?.style.setProperty('border-color','var(--red-alert)')
-  setTimeout(() => {
-    document.getElementById('badge')?.style.removeProperty('border-color')
-    document.getElementById('password')?.style.removeProperty('border-color')
-  }, 1500)
-}
-
-function hideError() {
-  const box = document.getElementById('loginError')
-  if (box) box.style.display = 'none'
-}
-
-function setLoading(on) {
-  const btn = document.getElementById('loginBtn')
-  if (!btn) return
-  btn.disabled    = on
-  btn.textContent = on ? 'Verifying...' : 'Access Portal'
-}
-
-async function handleLogin() {
-  hideError()
-
-  // Check lockout
-  const lockUntil = parseInt(sessionStorage.getItem('lockUntil') || '0')
-  if (Date.now() < lockUntil) {
-    const remaining = Math.ceil((lockUntil - Date.now()) / 60000)
-    showError(`Account locked. Try again in ${remaining} minute(s).`)
-    return
-  }
-
-  const badge    = document.getElementById('badge')?.value.trim()
-  const password = document.getElementById('password')?.value
-
-  if (!badge || !password) { showError('All fields are required.'); return }
-
-  setLoading(true)
-
-  try {
-    const passwordHash = await sha256(password)
-    const badgeTrimmed = badge.trim()
-
-    const response = await fetch('/api/login', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        badge:    badgeTrimmed,
-        password: passwordHash
-      })
-    })
-
-    const result = await response.json()
-
-    if (response.ok && result.success) {
-
-      failedAttempts = 0
-      sessionStorage.removeItem('lockUntil')
-      sessionStorage.setItem('cib_auth',      'true')
-      sessionStorage.setItem('cib_token',     result.token)
-      sessionStorage.setItem('cib_badge',     result.user.badge)
-      sessionStorage.setItem('cib_name',      result.user.name)
-      sessionStorage.setItem('cib_rank',      result.user.rank)
-      sessionStorage.setItem('cib_division',  result.user.division)
-      sessionStorage.setItem('cib_expires',   result.expiresAt)
-
-      // Flash button green
-      const btn = document.getElementById('loginBtn')
-      if (btn) {
-        btn.style.background = '#27AE60'
-        btn.style.color      = '#fff'
-        btn.textContent      = 'Access Granted — Redirecting...'
-      }
-
-      setTimeout(() => { window.location.href = 'Page_Nexus.html' }, 1200)
-
-    } else {
-      // ❌ FAILED
-      failedAttempts++
-      setLoading(false)
-
-      if (failedAttempts >= MAX_ATTEMPTS) {
-        sessionStorage.setItem('lockUntil', String(Date.now() + LOCKOUT_MS))
-        showError('Too many failed attempts. Account locked for 5 minutes.')
-      } else {
-        const remaining = MAX_ATTEMPTS - failedAttempts
-        showError(`${result.error || 'Invalid credentials'}. ${remaining} attempt(s) remaining.`)
-      }
-    }
-
-  } catch (err) {
-    setLoading(false)
-    showError('Connection error. Check your internet and try again.')
-    console.error('Login fetch error:', err)
-  }
-}
-
-// Enter key support
-document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin() })
-</script>
 </body>
 </html>
