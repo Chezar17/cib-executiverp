@@ -1078,9 +1078,8 @@ body.page-visible {
 
   // ══════════════════════════════════════════════════════════════
   //  CIB INFORMANT REGISTRY — FULL CRUD ENGINE
-  //  Storage: localStorage key "cib_informants"
-  //  Data loaded from embedded HTML on first visit,
-  //  then persisted entirely in localStorage.
+  //  Storage: Supabase database via /api/informants
+  //  All changes are saved to the real database instantly.
   // ══════════════════════════════════════════════════════════════
 
   // ── Helpers ────────────────────────────────────────────────
@@ -1113,52 +1112,31 @@ body.page-visible {
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 2800);
   }
 
-  // ── LocalStorage ─────────────────────────────────────────
-  const LS_KEY = 'cib_informants';
-
-  function loadData() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch(e) {}
-    return null;
-  }
-
-  function saveData(records) {
-    localStorage.setItem(LS_KEY, JSON.stringify(records));
-  }
-
-  // ── Scrape initial cards from the DOM (first visit) ───────
-  function scrapeFromDOM() {
-    const records = [];
-    document.querySelectorAll('#informant-grid .informant-card').forEach((card, i) => {
-      const id       = card.dataset.infId || String(Date.now() + i);
-      const name     = card.querySelector('.informant-codename')?.textContent.trim() || '';
-      const infId    = card.querySelector('.informant-id')?.textContent.replace('INF-ID:','').trim() || '';
-      const code     = infId.replace('CIB-INF-','').trim();
-      const status   = card.dataset.status || 'inactive';
-      const rows     = card.querySelectorAll('.informant-row');
-      let handler='', gang='', task='', notes='';
-      rows.forEach(row => {
-        const lbl = row.querySelector('.informant-row-label')?.textContent.trim().toLowerCase() || '';
-        const val = row.querySelector('.informant-row-value')?.textContent.trim() || '';
-        if (lbl === 'handler')     handler = val;
-        if (lbl === 'affiliation') gang    = val;
-        if (lbl === 'current task') task   = val;
-        if (lbl === 'notes')       notes   = val;
-      });
-      records.push({ id, code, name, status: status.charAt(0).toUpperCase()+status.slice(1), handler, gang, task, notes });
-    });
-    return records;
+  // ── API helper — sends requests to your Vercel backend ────
+  async function apiCall(method, body, queryId) {
+    const token = sessionStorage.getItem('cib_token') || '';
+    const url   = queryId ? `/api/informants?id=${queryId}` : '/api/informants';
+    const opts  = {
+      method,
+      headers: {
+        'Content-Type':    'application/json',
+        'x-session-token': token
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res  = await fetch(url, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
+    return data;
   }
 
   // ── Render a single card element ──────────────────────────
   function buildCard(r) {
     const div = document.createElement('div');
     div.className = 'informant-card';
-    div.dataset.status = (r.status||'').toLowerCase();
+    div.dataset.status  = (r.status||'').toLowerCase();
     div.dataset.handler = (r.handler||'').replace(/\s+/g,'_').toLowerCase();
-    div.dataset.infId = r.id;
+    div.dataset.infId   = r.id;
     div.style.borderTopColor = topColor(r.status);
 
     let rowsHtml = '';
@@ -1203,16 +1181,13 @@ body.page-visible {
     const inactive = records.filter(r => (r.status||'').toLowerCase() === 'inactive').length;
     const burned   = records.filter(r => (r.status||'').toLowerCase() === 'burned').length;
     const els = document.querySelectorAll('.inf-stat-num');
-    // three stat cells in order: active, inactive, burned
     if (els[0]) els[0].textContent = active;
     if (els[1]) els[1].textContent = inactive;
     if (els[2]) els[2].textContent = burned;
-    // update section sub text count
     const sub = document.querySelector('.nx-section-sub');
     if (sub && sub.textContent.includes('registered')) {
       sub.textContent = sub.textContent.replace(/Total: \d+ registered/, `Total: ${records.length} registered`);
     }
-    // update filter button labels
     document.querySelectorAll('.inf-filter-btn').forEach(b => {
       const f = b.dataset.filter;
       if (f === 'all')      b.textContent = `All (${records.length})`;
@@ -1221,22 +1196,18 @@ body.page-visible {
     });
   }
 
-  // ── Init ──────────────────────────────────────────────────
+  // ── Init — load from Supabase via API ─────────────────────
   let RECORDS = [];
 
   window.addEventListener('DOMContentLoaded', () => {
-    // small delay to let auth gate run first
-    setTimeout(() => {
-      const saved = loadData();
-      if (saved && saved.length > 0) {
-        RECORDS = saved;
+    setTimeout(async () => {
+      try {
+        const result = await apiCall('GET');
+        RECORDS = result.data || [];
         renderAll(RECORDS);
-      } else {
-        // First visit — scrape from static DOM
-        RECORDS = scrapeFromDOM();
-        saveData(RECORDS);
-        // Re-render so every card gets the CRUD buttons
-        renderAll(RECORDS);
+      } catch (err) {
+        console.error('Failed to load informants:', err);
+        showToast('Failed to load data from server', 'delete');
       }
       initFilters();
     }, 950);
@@ -1296,7 +1267,7 @@ body.page-visible {
   }
 
   // ── SAVE (Create or Update) ───────────────────────────────
-  function saveInformant() {
+  async function saveInformant() {
     const code   = document.getElementById('inf-f-code').value.trim();
     const name   = document.getElementById('inf-f-name').value.trim();
     const status = document.getElementById('inf-f-status').value;
@@ -1306,7 +1277,6 @@ body.page-visible {
 
     const editId = document.getElementById('inf-edit-id').value;
     const record = {
-      id:      editId || String(Date.now()),
       code, name, status,
       handler: document.getElementById('inf-f-handler').value.trim(),
       gang:    document.getElementById('inf-f-gang').value.trim(),
@@ -1314,19 +1284,26 @@ body.page-visible {
       notes:   document.getElementById('inf-f-notes').value.trim(),
     };
 
-    if (editId) {
-      const idx = RECORDS.findIndex(r => r.id === editId);
-      if (idx > -1) RECORDS[idx] = record;
-      showToast('Record updated — ' + name, 'edit');
-    } else {
-      RECORDS.push(record);
-      showToast('New informant registered — ' + name, 'success');
+    try {
+      if (editId) {
+        // UPDATE existing record in Supabase
+        const result = await apiCall('PUT', { id: editId, ...record });
+        const idx = RECORDS.findIndex(r => r.id === editId);
+        if (idx > -1) RECORDS[idx] = result.data;
+        showToast('Record updated — ' + name, 'edit');
+      } else {
+        // CREATE new record in Supabase
+        const result = await apiCall('POST', record);
+        RECORDS.push(result.data);
+        showToast('New informant registered — ' + name, 'success');
+      }
+      renderAll(RECORDS);
+      closeInfModal();
+      initFilters();
+    } catch (err) {
+      console.error('Save error:', err);
+      showToast('Failed to save — check console', 'delete');
     }
-
-    saveData(RECORDS);
-    renderAll(RECORDS);
-    closeInfModal();
-    initFilters();
   }
 
   // ── EDIT — populate modal from card ──────────────────────
@@ -1351,15 +1328,21 @@ body.page-visible {
     document.getElementById('inf-del-modal').classList.remove('open');
     _pendingDeleteId = null;
   }
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!_pendingDeleteId) return;
     const rec = RECORDS.find(r => r.id === _pendingDeleteId);
-    RECORDS = RECORDS.filter(r => r.id !== _pendingDeleteId);
-    saveData(RECORDS);
-    renderAll(RECORDS);
-    closeDelModal();
-    initFilters();
-    showToast('Record deleted — ' + (rec?.name || ''), 'delete');
+    try {
+      await apiCall('DELETE', null, _pendingDeleteId);
+      RECORDS = RECORDS.filter(r => r.id !== _pendingDeleteId);
+      renderAll(RECORDS);
+      closeDelModal();
+      initFilters();
+      showToast('Record deleted — ' + (rec?.name || ''), 'delete');
+    } catch (err) {
+      console.error('Delete error:', err);
+      showToast('Failed to delete — check console', 'delete');
+      closeDelModal();
+    }
   }
 
   // Close modals on backdrop click
