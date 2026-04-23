@@ -14,20 +14,18 @@
 // ============================================================
 
 import { createClient } from '@supabase/supabase-js'
-import crypto from 'crypto'
-
 // ── These come from your Vercel Environment Variables ──────
 //    You set these in the Vercel dashboard — never hardcode them
 const SUPABASE_URL    = process.env.SUPABASE_URL
 const SUPABASE_KEY    = process.env.SUPABASE_ANON_KEY
 const SESSION_SECRET  = process.env.SESSION_SECRET   // any long random string you choose
 
-// ── SHA-256 hash function (same as what the login page uses) ──
+import crypto from 'crypto'
+
+// ── Generate a simple session token ──────────────────────────
 function sha256(text) {
   return crypto.createHash('sha256').update(text).digest('hex')
 }
-
-// ── Generate a simple session token ──────────────────────────
 function generateToken(badge) {
   const payload = `${badge}:${Date.now()}:${SESSION_SECRET}`
   return sha256(payload)
@@ -56,8 +54,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid input' })
     }
 
-    // Hash the password (same algorithm as the frontend)
-    const passwordHash = sha256(password)
+    // ⚠️ PASSWORD IS ALREADY HASHED BY THE FRONTEND
+    // Do NOT hash again — just use it directly
+    const passwordHash = password   // already SHA-256 from browser
     const badgeTrimmed = badge.trim()
 
     // Connect to Supabase
