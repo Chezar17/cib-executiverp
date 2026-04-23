@@ -132,9 +132,6 @@ body.page-visible {
   .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
   .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
 
-  /* ══════════════════════════════════════════════════
-     SURVEILLANCE WARNING OVERLAY
-  ══════════════════════════════════════════════════ */
   #surv-overlay{
     position:fixed;inset:0;z-index:9999;
     background:rgba(4,6,14,0.97);
@@ -386,12 +383,6 @@ body.page-visible {
 </div>
 
 
-<div class="construction-banner">
-  <div class="construction-dot"></div>
-  <div class="construction-text"><b>SYSTEM NOTICE</b> — CIB Personnel Portal is currently under development &nbsp;·&nbsp; Backend infrastructure in progress &nbsp;·&nbsp; Login functionality is not yet active</div>
-  <div class="construction-dot"></div>
-</div>
-
 
 <div class="login-wrapper">
   <div class="login-bg"></div>
@@ -417,43 +408,36 @@ body.page-visible {
       <div class="login-subtitle">Authorized Personnel Only</div>
       <div class="login-divider"></div>
 
-      <!-- dev notice -->
-      <div class="dev-notice">
-        <div class="dev-notice-icon">⚠</div>
-        <div class="dev-notice-text">
-          <b>Portal Under Construction</b>
-          This page is currently non-functional. The backend authentication system is still under development. Login credentials will be processed once the system goes live. Please check back later.
-        </div>
-      </div>
-
-      <!-- Badge Number — disabled -->
+      <!-- Badge Number -->
       <div class="form-group">
-        <label class="form-label" for="badge-fake">Badge Number</label>
+        <label class="form-label" for="badge">Badge Number</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
           </span>
-          <input class="form-input" type="text" id="badge-fake" placeholder="e.g. CIB-VICE-01" autocomplete="off" disabled/>
+          <input class="form-input" type="text" id="badge" placeholder="e.g. CIB-VICE-01" autocomplete="off"/>
         </div>
         <div class="form-hint">Enter your assigned CIB badge number</div>
       </div>
 
-      <!-- Password — disabled -->
+      <!-- Password -->
       <div class="form-group">
-        <label class="form-label" for="password-fake">Password</label>
+        <label class="form-label" for="password">Password</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
           </span>
-          <input class="form-input" type="password" id="password-fake" placeholder="••••••••••••" autocomplete="off" disabled/>
+          <input class="form-input" type="password" id="password" placeholder="••••••••••••" autocomplete="off"/>
         </div>
       </div>
 
-      <!-- Submit — disabled, shows not functional -->
-      <button class="login-btn" disabled style="opacity:0.55;cursor:not-allowed;position:relative;">
-        Access Portal
-        <span style="position:absolute;bottom:3px;right:10px;font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:1px;color:var(--navy);opacity:0.55;">[ NOT FUNCTIONAL ]</span>
-      </button>
+      <!-- Error box -->
+      <div id="loginError" style="display:none;margin-bottom:12px;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.4);border-left:3px solid var(--red-alert);padding:10px 14px;">
+        <div id="loginErrorMsg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
+      </div>
+
+      <!-- Submit -->
+      <button class="login-btn" id="loginBtn" onclick="handleLogin()">Access Portal</button>
 
       <!-- Forgot Password -->
       <div class="forgot-section">
@@ -787,131 +771,6 @@ body.page-visible {
   });
 </script>
 
-<script>
-  const CREDENTIALS = [
-    { b: '202ee495ca428d19b35c1bec9a9d2d279578884bf5430ffa2578e6aef961b3e4', p: '1b1c9ecab864dd9d744b52736133847ec035bf854a3a9444e3dafac23b1bb785' }, // Diraj Lakota
-    { b: '72e3339b84b9446114317f4afdd1f729d27dadccf3b29395367fbd54fe7ec194', p: '79200147aec2329be242de97f4f7db2cc5b94614bc67c6204be835c0d929d26e' }, // Elias Makya
-    { b: 'ceb7c9ba631cfec9616389aaeee5b22a4d05312cc618f4a3346445e812e5f6a0', p: '2981dbd570fc691faa7c184160faaaf7d29791dbab03a6dc49290e1ccebe7241' }, // CIB-VICE-01
-    { b: '109f38e9c804c18e3a0570f9f112dfd4d09beb967a67d26e750fd4cd85d05470', p: 'cc317be619b7a88a6fc2da9c69488e1128a1f84849b8aa28a5be385bdbb7b124' }, // CIB-VICE-02
-    { b: '32061a81c2810960f2dfb68c99b2c71f6f3e095fd7de887b9410ee528b1c2aee', p: '47a60b296ec454065d1a66ba84d02948b56a7166868ec8e31cfe6de699a9bcd6' }, // CIB-VICE-03
-    { b: '1fe338900f1c91bc7ac42a71f7ba76a0963be59edb7fb980a2cb508d592ff741', p: 'be1f15f241277e1cb434b41472c5200cfbabf0a20512089bc4e73fb6a184a251' }, // CIB-VICE-04
-    { b: '02bbf4edac68b44f63669b850ea8084d5171f5385aaf8faeb006773eb9036e44', p: '14f5f21b5a13ec7577ef039380dddb7f47e4a5da54ba2b274db72da14fe2af5e' }, // CIB-GEORGE-00
-    { b: '2804f25075d8e1a0715881e21a1d63678fc894d2b0df06e8e969c4b5269d8da5', p: 'b56e474b13ae077165f6359745c2da8086bf39cfab372ea4ea35c0c0b7174819' }, // CIB-GEORGE-01
-    { b: '26ef4912760b922e2eefa894a43bf390c29e121055a77509cbcadd7921e84ab6', p: 'd3f09e51208df62ad0686a23b8959025720c22153e6d8388b098f3f003f4dacc' }, // CIB-GEORGE-02
-    { b: 'a94926bd7e4e02c30be17392b33a65e19a97521445837ba01f2908614859797b', p: 'b88a5d234a1b3a7e26b6172739c7775bc6115b33a02c3e374822fd45ec5a13d8' }, // CIB-GEORGE-03
-    { b: '8eb344a249e6379e0c6aca02da2fb8d3901946990bbe228a9a4a150eca4867bb', p: '62dd2b6fbfcb0868568d55726595b4a80b1041a50acda5a7b2cae055f3612bcc' }, // CIB-GEORGE-04
-    { b: '7a0d6c840afee7fce1e6bd817e4768c6322ec3c4ad645038b15f996cf01fd360', p: '7aa5e104591557195a817e4dd31a1ea10dad2bbe228a9865141d366ad52fb3f3' }, // CIB-GEORGE-05
-    { b: '$argon2i$v=19$m=16,t=2,p=1$bU8waklia2JxS1dZZWxSdA$VbN+Qm7K33qax8Ea6faWDQ', p: '$argon2i$v=19$m=16,t=2,p=1$bU8waklia2JxS1dZZWxSdA$LaEXsoG2oIeHAR1ee0gYMQ' }, // CIB-GEORGE-05
-  ];
-
-  let failedAttempts = 0;
-  const MAX_ATTEMPTS = 5;
-  const LOCKOUT_MS   = 5 * 60 * 1000; // 5 minutes
-
-  async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  function showError(msg) {
-    const box = document.getElementById('loginError');
-    const txt = document.getElementById('loginErrorMsg');
-    box.style.display = 'block';
-    txt.textContent = msg;
-    // Shake the card
-    const card = document.querySelector('.login-body');
-    card.style.animation = 'none';
-    void card.offsetWidth;
-    card.style.animation = 'shake 0.4s ease';
-  }
-
-  function hideError() {
-    document.getElementById('loginError').style.display = 'none';
-  }
-
-  function setLoading(on) {
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = on;
-    btn.textContent = on ? 'Verifying...' : 'Access Portal';
-  }
-
-  async function handleLogin() {
-    hideError();
-
-    // Check lockout
-    const lockUntil = parseInt(sessionStorage.getItem('lockUntil') || '0');
-    if (Date.now() < lockUntil) {
-      const remaining = Math.ceil((lockUntil - Date.now()) / 60000);
-      showError('Account locked. Try again in ' + remaining + ' minute(s).');
-      return;
-    }
-
-    const badge    = document.getElementById('badge').value.trim();
-    const password = document.getElementById('password').value;
-
-    if (!badge || !password) {
-      showError('All fields are required.');
-      return;
-    }
-
-    setLoading(true);
-
-    // Small artificial delay — feels more realistic & slows brute force
-    await new Promise(r => setTimeout(r, 800));
-
-    const [bHash, pHash] = await Promise.all([sha256(badge), sha256(password)]);
-
-    const matched = CREDENTIALS.some(c => c.b === bHash && c.p === pHash);
-
-    if (matched) {
-      // ── SUCCESS ──
-      failedAttempts = 0;
-      sessionStorage.removeItem('lockUntil');
-
-      // Mark session as authenticated
-      sessionStorage.setItem('cib_auth', 'true');
-      sessionStorage.setItem('cib_badge', badge);
-
-      // Flash the button green
-      const btn = document.getElementById('loginBtn');
-      btn.style.background = '#27AE60';
-      btn.style.color = '#fff';
-      btn.textContent = 'Access Granted — Redirecting...';
-
-      // CHANGE THIS to redirect to your personnel dashboard page
-      setTimeout(() => { window.location.href = 'Page_Nexus.html'; }, 1200);
-
-    } else {
-      // ── FAILURE ──
-      failedAttempts++;
-      setLoading(false);
-
-      if (failedAttempts >= MAX_ATTEMPTS) {
-        const lockUntil = Date.now() + LOCKOUT_MS;
-        sessionStorage.setItem('lockUntil', lockUntil.toString());
-        showError('Too many failed attempts. Account locked for 5 minutes.');
-      } else {
-        const remaining = MAX_ATTEMPTS - failedAttempts;
-        showError('Invalid badge number or password. ' + remaining + ' attempt(s) remaining.');
-        // Shake badge + password fields
-        document.getElementById('badge').style.borderColor = 'var(--red-alert)';
-        document.getElementById('password').style.borderColor = 'var(--red-alert)';
-        setTimeout(() => {
-          document.getElementById('badge').style.borderColor = '';
-          document.getElementById('password').style.borderColor = '';
-        }, 1500);
-      }
-    }
-  }
-
-  // Allow pressing Enter to submit
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleLogin();
-  });
-</script>
-
 <style>
   @keyframes shake {
     0%,100%{transform:translateX(0);}
@@ -923,38 +782,271 @@ body.page-visible {
 </style>
 
 <script>
-  // Fade IN when page loads
-  window.addEventListener('DOMContentLoaded', () => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('page-visible');
-    });
+  
+/* ── helpers ── */
+function rand(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ── Session ref ── */
+function genSessionRef(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let r='SES-';
+  for(let i=0;i<12;i++){if(i===4||i===8)r+='-';r+=c[rand(0,c.length-1)];}
+  return r;
+}
+
+/* ── Live clock (topbar + timestamp cell) ── */
+function startClock(){
+  function tick(){
+    const n=new Date(),p=v=>String(v).padStart(2,'0');
+    const s=`${n.getFullYear()}.${p(n.getMonth()+1)}.${p(n.getDate())} · ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())} HRS`;
+    const t1=document.getElementById('surv-time');
+    const t2=document.getElementById('surv-time-cell');
+    if(t1)t1.textContent=s;
+    if(t2)t2.textContent=s;
+  }
+  tick();setInterval(tick,1000);
+}
+
+/* ── CHANNEL ENCRYPTION animated fill ── */
+async function animateEncryption(){
+  const lbl=document.getElementById('surv-threat-label');
+  const bars=['tb1','tb2','tb3','tb4','tb5','tb6','tb7','tb8','tb9','tb10'];
+  const phases=[
+    {text:'INITIALIZING...',  color:'#3498DB', count:0,  delay:400},
+    {text:'HANDSHAKING...',   color:'#3498DB', count:3,  delay:350},
+    {text:'ENCRYPTING...',    color:'#1ABC9C', count:6,  delay:350},
+    {text:'VERIFYING...',     color:'#1ABC9C', count:8,  delay:400},
+    {text:'SECURED',          color:'#27AE60', count:10, delay:0},
+  ];
+  for(const phase of phases){
+    if(lbl){lbl.textContent=phase.text;lbl.style.color=phase.color;}
+    for(let i=0;i<bars.length;i++){
+      const el=document.getElementById(bars[i]);
+      if(!el)continue;
+      if(i<phase.count){
+        el.classList.add('active');
+        if(phase.count===10) el.classList.add('secured');
+        else if(phase.count>=6) el.classList.add('teal');
+      } else {
+        el.classList.remove('active','teal','secured');
+      }
+    }
+    if(phase.delay>0) await sleep(phase.delay);
+  }
+  if(lbl){lbl.classList.add('secured');}
+}
+
+/* ── PACKET STREAM log ── */
+const PKT_LINES=[
+  'SYN > 192.168.0.1:443','ACK received','TLS 1.3 handshake OK',
+  'Fingerprint hash: 0xA4F2...','Sending visitor token','Extracting canvas data',
+  'UA string captured','WebGL vendor read','CPU cores: '+navigator.hardwareConcurrency,
+  'Timezone: '+Intl.DateTimeFormat().resolvedOptions().timeZone,
+  'Lang: '+navigator.language,'Screen: '+screen.width+'×'+screen.height,
+  'Cookie policy scan','Storage probe OK','Beacon sent to CIB-INTEL',
+  'Plugin enum complete','Font fingerprint logged','Net RTT measured',
+];
+let pktIdx=0;
+async function runPacketStream(){
+  const log=document.getElementById('packet-log');
+  if(!log)return;
+  while(pktIdx<PKT_LINES.length){
+    const div=document.createElement('div');
+    div.textContent='['+new Date().toLocaleTimeString('en-GB',{hour12:false})+'] '+PKT_LINES[pktIdx];
+    log.appendChild(div);
+    // keep only last 6 lines visible
+    while(log.children.length>6)log.removeChild(log.firstChild);
+    pktIdx++;
+    await sleep(rand(180,420));
+  }
+  // loop short random lines after
+  const extras=['Heartbeat OK','Polling CIB server...','Token refreshed','Data persisted'];
+  let ei=0;
+  setInterval(()=>{
+    const div=document.createElement('div');
+    div.textContent='['+new Date().toLocaleTimeString('en-GB',{hour12:false})+'] '+extras[ei%extras.length];
+    log.appendChild(div);
+    while(log.children.length>6)log.removeChild(log.firstChild);
+    ei++;
+  },2200);
+}
+
+/* ── PER-ITEM FAKE DOWNLOADS ── */
+const DL_ITEMS=[
+  {label:'Hardware Data',    subs:['CPU model detected','GPU vendor read','RAM size probed']},
+  {label:'Browser Profile',  subs:['UA string captured','Plugin list extracted','Locale logged']},
+  {label:'Keystroke Pattern',subs:['Timing buffer started','Biometric hash built','Pattern archived']},
+  {label:'Session Metadata', subs:['Cookie IDs scanned','Storage fingerprinted','Session token sent']},
+];
+
+async function runDownloads(){
+  // Assign random target KB for each item
+  const targets=DL_ITEMS.map(()=>rand(120,980));
+
+  const overallBar=document.getElementById('surv-overall-bar');
+  const overallPct=document.getElementById('surv-overall-pct');
+  const overallLbl=document.getElementById('surv-overall-label');
+  let completedCount=0;
+
+  for(let i=0;i<DL_ITEMS.length;i++){
+    const totalKB=targets[i];
+    const sizeEl=document.getElementById('dl-size-'+i);
+    const statusEl=document.getElementById('dl-status-'+i);
+    const barEl=document.getElementById('dl-bar-'+i);
+    const subEl=document.getElementById('dl-sub-'+i);
+
+    // Show total, mark LOADING
+    if(sizeEl) sizeEl.textContent=`0 KB / ${totalKB} KB`;
+    if(statusEl){statusEl.textContent='LOADING';statusEl.classList.remove('done');}
+    if(barEl){barEl.classList.add('active');}
+
+    // Animate fill
+    const steps=rand(18,28);
+    const stepDelay=rand(60,110);
+    for(let s=1;s<=steps;s++){
+      await sleep(stepDelay);
+      const pct=Math.min(100,Math.round((s/steps)*100));
+      const kb=Math.round((pct/100)*totalKB);
+      if(barEl) barEl.style.width=pct+'%';
+      if(sizeEl) sizeEl.textContent=`${kb} KB / ${totalKB} KB`;
+      // Show sub-label at 50%
+      if(s===Math.floor(steps/2) && subEl){
+        subEl.textContent=DL_ITEMS[i].subs[rand(0,DL_ITEMS[i].subs.length-1)];
+      }
+    }
+
+    // Mark DONE
+    if(barEl){barEl.style.width='100%';barEl.classList.remove('active');barEl.classList.add('done');}
+    if(statusEl){statusEl.textContent='DONE';statusEl.classList.add('done');}
+    if(sizeEl) sizeEl.textContent=`${totalKB} KB / ${totalKB} KB`;
+    if(subEl) subEl.textContent=DL_ITEMS[i].subs[DL_ITEMS[i].subs.length-1]+' ✓';
+
+    completedCount++;
+    const overall=Math.round((completedCount/DL_ITEMS.length)*100);
+    if(overallBar) overallBar.style.width=overall+'%';
+    if(overallPct) overallPct.textContent=overall+'%';
+
+    if(completedCount===DL_ITEMS.length){
+      if(overallBar) overallBar.classList.add('done');
+      if(overallLbl) overallLbl.textContent='DATA ACQUISITION COMPLETE';
+      if(overallPct) overallPct.style.color='#27AE60';
+    }
+
+    // Small gap before next item
+    await sleep(rand(200,500));
+  }
+}
+
+/* ── GEO DATA via JSONP + fallback fetch ── */
+function fetchGeoData(){
+  function setIp(ip){
+    const el=document.getElementById('surv-ip');
+    if(!el)return;
+    el.innerHTML=`<strong style="color:#F0EDE4;font-size:13px;letter-spacing:2px;">${ip}</strong>`
+      +`<span class="surv-tag">LIVE</span>`
+      +`<span class="surv-tag" style="background:rgba(192,57,43,0.25);border-color:rgba(192,57,43,0.6);">LOGGED</span>`;
+  }
+  function setField(id,html){
+    const el=document.getElementById(id);if(!el)return;
+    el.classList.remove('loading');el.innerHTML=html;
+  }
+  function bold(v){return`<strong style="color:#F0EDE4;">${v||'—'}</strong>`;}
+  function render(d){
+    if(d.query)setIp(d.query);
+    const city=d.city||'—',country=d.country||'—';
+    const lat=d.lat!=null?parseFloat(d.lat).toFixed(4):'—';
+    const lon=d.lon!=null?parseFloat(d.lon).toFixed(4):'—';
+    setField('surv-location',`${bold(city+', '+country)}&nbsp;<span style="color:var(--muted);font-size:9px;">[${lat}, ${lon}]</span>`);
+    setField('surv-region',`${bold(d.regionName)}<span style="color:var(--muted);"> · ${country}</span>`);
+    setField('surv-isp',bold(d.isp||d.org||d.as));
+  }
+
+  let done=false;
+  const cb='_cibGeo'+Date.now();
+  const timer=setTimeout(()=>{if(!done){done=true;fallback();}},7000);
+
+  window[cb]=function(d){
+    clearTimeout(timer);if(done)return;done=true;
+    delete window[cb];
+    const s=document.getElementById('_geoScript');if(s)s.remove();
+    if(d&&d.status==='success')render(d);else fallback();
+  };
+
+  const script=document.createElement('script');
+  script.id='_geoScript';
+  script.src=`http://ip-api.com/json/?fields=status,query,country,regionName,city,lat,lon,isp,org,as&callback=${cb}`;
+  script.onerror=()=>{clearTimeout(timer);if(!done){done=true;delete window[cb];fallback();}};
+  document.head.appendChild(script);
+
+  function fallback(){
+    const apis=[
+      {url:'https://ipwho.is/',parse:d=>({status:d.success?'success':'fail',query:d.ip,city:d.city,country:d.country,regionName:d.region,lat:d.latitude,lon:d.longitude,isp:d.connection&&d.connection.isp,org:d.connection&&d.connection.org})},
+      {url:'https://freeipapi.com/api/json',parse:d=>({status:'success',query:d.ipAddress,city:d.cityName,country:d.countryName,regionName:d.regionName,lat:d.latitude,lon:d.longitude,isp:null})}
+    ];
+    let t=0;
+    function next(){
+      if(t>=apis.length){
+        setField('surv-location','<span style="color:#8A95AA;">Unavailable</span>');
+        setField('surv-region','<span style="color:#8A95AA;">Unavailable</span>');
+        setField('surv-isp','<span style="color:#8A95AA;">Unavailable</span>');
+        return;
+      }
+      const api=apis[t++];
+      fetch(api.url).then(r=>r.json()).then(raw=>{const d=api.parse(raw);if(d.status==='success')render(d);else next();}).catch(next);
+    }
+    next();
+  }
+}
+
+/* ── CHECKBOX gate ── */
+function survCheckChange(){
+  const cb=document.getElementById('surv-check');
+  const btn=document.getElementById('surv-btn');
+  if(!cb||!btn)return;
+  if(cb.checked){btn.disabled=false;btn.classList.add('enabled');}
+  else{btn.disabled=true;btn.classList.remove('enabled');}
+}
+
+/* ── DISMISS overlay ── */
+function survDismiss(){
+  const o=document.getElementById('surv-overlay');if(!o)return;
+  o.style.opacity='0';o.style.transition='opacity 0.5s ease';
+  setTimeout(()=>{o.classList.add('surv-dismissed');o.style.opacity='';o.style.transition='';},500);
+}
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded',()=>{
+  requestAnimationFrame(()=>document.body.classList.add('page-visible'));
+
+  const refEl=document.getElementById('surv-session-ref');
+  if(refEl)refEl.textContent='SESSION: '+genSessionRef();
+
+  startClock();
+
+  // Stagger the animations so they feel sequential
+  animateEncryption();               // starts immediately
+  setTimeout(runPacketStream, 600);  // packet log shortly after
+  setTimeout(runDownloads, 800);     // downloads start a bit later
+  setTimeout(fetchGeoData, 1000);    // geo last
+
+  // Block Escape closing the popup
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')e.preventDefault();});
+});
+
+/* ── PAGE TRANSITIONS ── */
+document.querySelectorAll('a[href]').forEach(link=>{
+  link.addEventListener('click',function(e){
+    const href=this.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('#')||href.startsWith('mailto'))return;
+    e.preventDefault();
+    document.body.classList.remove('page-visible');
+    setTimeout(()=>{window.location.href=href;},400);
   });
-
-  // Fade OUT before navigating away
-  document.querySelectorAll('a[href]').forEach(link => {
-    link.addEventListener('click', function (e) {
-      const href = this.getAttribute('href');
-
-      // Skip external links, anchors, and empty links
-      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
-
-      e.preventDefault();
-      document.body.classList.remove('page-visible');
-
-      setTimeout(() => {
-        window.location.href = href;
-      }, 400); // must match the transition duration above
-    });
-  });
+});
 </script>
 
 <script>
-// ============================================================
-//  CIB LOGIN — Backend Version
-//  Sends credentials to /api/login (Vercel serverless function)
-//  Credentials are NEVER compared in the browser.
-//  The server checks against Supabase database.
-// ============================================================
 
 let failedAttempts = 0
 const MAX_ATTEMPTS = 5
@@ -1014,14 +1106,14 @@ async function handleLogin() {
   try {
     // Hash password before sending — raw password never leaves browser
     const passwordHash = await sha256(password)
-    const badgeUpper   = badge.toUpperCase()
+    const badgeTrimmed = badge.trim()
 
     // ── Send to Vercel backend ──────────────────────────────
     const response = await fetch('/api/login', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
-        badge:    badgeUpper,
+        badge:    badgeTrimmed,
         password: passwordHash
       })
     })
