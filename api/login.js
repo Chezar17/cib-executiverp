@@ -58,7 +58,7 @@ export default async function handler(req, res) {
 
     // Hash the password (same algorithm as the frontend)
     const passwordHash = sha256(password)
-    const badgeUpper   = badge.trim().toUpperCase()
+    const badgeTrimmed = badge.trim()
 
     // Connect to Supabase
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     const { data, error } = await supabase
       .from('users')
       .select('id, badge, name, rank, division')
-      .eq('badge', badgeUpper)
+      .eq('badge', badgeTrimmed)
       .eq('password', passwordHash)
       .single()
 
