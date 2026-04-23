@@ -410,14 +410,14 @@ body.page-visible {
 
       <!-- Badge Number -->
       <div class="form-group">
-        <label class="form-label" for="badge">Badge Number</label>
+        <label class="form-label" for="badge">CIB Credentials</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
           </span>
-          <input class="form-input" type="text" id="badge" placeholder="e.g. CIB-VICE-01" autocomplete="off"/>
+          <input class="form-input" type="text" id="badge" placeholder="e.g. executiverp@cib.com" autocomplete="off"/>
         </div>
-        <div class="form-hint">Enter your assigned CIB badge number</div>
+        <div class="form-hint">Enter your assigned CIB Credentials</div>
       </div>
 
       <!-- Password -->
@@ -1052,7 +1052,6 @@ let failedAttempts = 0
 const MAX_ATTEMPTS = 5
 const LOCKOUT_MS   = 5 * 60 * 1000
 
-// SHA-256 (still hash on frontend too — so raw password never travels the network)
 async function sha256(message) {
   const msgBuffer  = new TextEncoder().encode(message)
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
@@ -1104,11 +1103,9 @@ async function handleLogin() {
   setLoading(true)
 
   try {
-    // Hash password before sending — raw password never leaves browser
     const passwordHash = await sha256(password)
     const badgeTrimmed = badge.trim()
 
-    // ── Send to Vercel backend ──────────────────────────────
     const response = await fetch('/api/login', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1121,11 +1118,9 @@ async function handleLogin() {
     const result = await response.json()
 
     if (response.ok && result.success) {
-      // ✅ SUCCESS — store session token
+
       failedAttempts = 0
       sessionStorage.removeItem('lockUntil')
-
-      // Store auth token (replaces old sessionStorage method)
       sessionStorage.setItem('cib_auth',      'true')
       sessionStorage.setItem('cib_token',     result.token)
       sessionStorage.setItem('cib_badge',     result.user.badge)
