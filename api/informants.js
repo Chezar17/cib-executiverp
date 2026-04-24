@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
     // ── POST: Create new informant ───────────────────────────
     if (req.method === 'POST') {
-      const { code, name, status, handler, gang, task, notes } = req.body
+      const { code, name, status, handler, gang, task, notes, created_by } = req.body
 
       if (!code || !name) {
         return res.status(400).json({ error: 'Code and name are required' })
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
 
       const { data, error } = await supabase
         .from('informants')
-        .insert([{ code, name, status, handler, gang, task, notes }])
+        .insert([{ code, name, status, handler, gang, task, notes, created_by }])
         .select()
         .single()
 
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
 
     // ── PUT: Update existing informant ───────────────────────
     if (req.method === 'PUT') {
-      const { id, code, name, status, handler, gang, task, notes } = req.body
+      const { id, code, name, status, handler, gang, task, notes, edited_by } = req.body
 
       if (!id) {
         return res.status(400).json({ error: 'ID is required for update' })
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
       const { data, error } = await supabase
         .from('informants')
-        .update({ code, name, status, handler, gang, task, notes })
+        .update({ code, name, status, handler, gang, task, notes, edited_by })
         .eq('id', id)
         .select()
         .single()
@@ -87,9 +87,18 @@ export default async function handler(req, res) {
     // ── DELETE: Remove an informant ──────────────────────────
     if (req.method === 'DELETE') {
       const { id } = req.query
+      const { deleted_by } = req.body || {}
 
       if (!id) {
         return res.status(400).json({ error: 'ID is required for delete' })
+      }
+
+      // Log who deleted it before removing the row
+      if (deleted_by) {
+        await supabase
+          .from('informants')
+          .update({ deleted_by })
+          .eq('id', id)
       }
 
       const { error } = await supabase
