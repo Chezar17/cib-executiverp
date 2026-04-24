@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>High Value Criminals — CIB NEXUS</title>
-<link rel="icon" href="/public/images/cib-logo.png" type="image/png">
+<link rel="icon" href="/images/cib-logo.png" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -123,8 +123,18 @@
   .hvc-card[data-threat="medium"]{border-top-color:var(--threat-medium);}
   .hvc-card[data-threat="low"]{border-top-color:var(--threat-low);}
 
-  /* Photo strip */
-  .hvc-photo-strip{height:160px;background:#080C18;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--navy-border);}
+  /* Photo strip — 1:1 square */
+  .hvc-photo-strip{
+    aspect-ratio:1 / 1;
+    width:100%;
+    background:#080C18;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-bottom:1px solid var(--navy-border);
+  }
   .hvc-photo-strip img{width:100%;height:100%;object-fit:cover;object-position:top center;}
   .hvc-photo-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;}
   .hvc-photo-placeholder svg{width:40px;height:40px;fill:var(--navy-border);}
@@ -325,7 +335,7 @@
 <!-- ACCESS GATE -->
 <div id="access-gate">
   <div class="gate-logo">
-    <img src="/public/images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
+    <img src="/images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
   </div>
   <div class="gate-text">Verifying Clearance...</div>
   <div class="gate-bar"><div class="gate-progress"></div></div>
@@ -334,7 +344,7 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
-    <img class="topbar-logo" src="/public/images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <img class="topbar-logo" src="/images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
     <span class="topbar-brand">NEXUS</span>
     <div class="topbar-divider"></div>
     <span class="topbar-sub">CIB Internal Intelligence Portal</span>
@@ -714,7 +724,10 @@
   }
 
   // ── Build Card DOM element ─────────────────────────────────────
-  function buildCard(r) {
+  function buildCard(r, seqNum) {
+    const seqStr = String(seqNum || 0).padStart(3, '0');
+    const hvcIdLabel = `CIB-HVC-${seqStr}`;
+
     const div = document.createElement('div');
     div.className = 'hvc-card';
     div.dataset.threat = (r.threat||'').toLowerCase();
@@ -737,7 +750,7 @@
       </div>
       <div class="hvc-card-body">
         <div class="hvc-card-name">${esc(r.name)}</div>
-        <div class="hvc-card-id">HVC-ID: CIB-HVC-${esc(r.id?.toString().slice(-6)||'??????')}</div>
+        <div class="hvc-card-id">HVC-ID: ${hvcIdLabel}</div>
         ${r.bio ? `<div class="hvc-card-bio">${esc(r.bio)}</div>` : ''}
         <div class="hvc-card-rows">
           ${r.affiliation ? `<div class="hvc-card-row"><div class="hvc-card-row-label">Affiliation</div><div class="hvc-card-row-value">${esc(r.affiliation)}</div></div>` : ''}
@@ -766,7 +779,19 @@
   function renderAll(records) {
     const grid = document.getElementById('hvc-grid');
     grid.innerHTML = '';
-    records.forEach(r => grid.appendChild(buildCard(r)));
+
+    // Sort ALL records by created_at ascending so IDs are stable
+    // even when filters show a subset
+    const allSorted = [...RECORDS].sort((a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return ta - tb;
+    });
+    // Map each record's real UUID → its permanent display number
+    const seqMap = {};
+    allSorted.forEach((r, i) => { seqMap[r.id] = i + 1; });
+
+    records.forEach(r => grid.appendChild(buildCard(r, seqMap[r.id] || 0)));
     updateStats(records);
   }
 
@@ -1019,8 +1044,17 @@
     const r = RECORDS.find(x => x.id === id);
     if (!r) return;
 
+    // Calculate the same sequential number as renderAll
+    const allSorted = [...RECORDS].sort((a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return ta - tb;
+    });
+    const seqNum = allSorted.findIndex(x => x.id === id) + 1;
+    const hvcIdLabel = `CIB-HVC-${String(seqNum).padStart(3, '0')}`;
+
     document.getElementById('view-eyebrow').textContent =
-      `HIGH VALUE TARGET · THREAT: ${(r.threat||'').toUpperCase()} · ${warrantyLabel(r.warrant_status).toUpperCase()}`;
+      `${hvcIdLabel} · THREAT: ${(r.threat||'').toUpperCase()} · ${warrantyLabel(r.warrant_status).toUpperCase()}`;
     document.getElementById('view-name').textContent = r.name || '—';
 
     const photoWrap = document.getElementById('view-photo-wrap');
