@@ -408,22 +408,42 @@ body.page-visible {
   // ── AUTH GATE ──────────────────────────────────────────────
   // If the user didn't come through the login page, kick them out.
   window.addEventListener('DOMContentLoaded', () => {
-    const auth = sessionStorage.getItem('cib_auth');
-    const badge = sessionStorage.getItem('cib_badge');
+    const token = sessionStorage.getItem('cib_token');
 
-    setTimeout(() => {
-      if (auth !== 'true') {
-        // Not authenticated — redirect to login
-        window.location.href = 'Page_Login.html';
-      } else {
-        // Authenticated — show the page
+    // No token at all — go to login immediately
+    if (!token) {
+      window.location.href = 'Page_Login.html';
+      return;
+    }
+
+    setTimeout(async () => {
+      try {
+        // Ask the SERVER if this token is real and not expired
+        const res = await fetch('/api/verify-token', {
+          method: 'GET',
+          headers: { 'x-session-token': token }
+        });
+
+        if (!res.ok) {
+          // Server said no — token is fake, expired, or not in DB
+          sessionStorage.clear();
+          window.location.href = 'Page_Login.html';
+          return;
+        }
+
+        // ✅ Server confirmed — show the page
         document.getElementById('access-gate').classList.add('hidden');
-        // Show badge in topbar
+        const badge = sessionStorage.getItem('cib_badge');
         if (badge) {
           document.getElementById('badgeDisplay').textContent = badge;
         }
+
+      } catch (err) {
+        // Network error — fail safe, redirect to login
+        sessionStorage.clear();
+        window.location.href = 'Page_Login.html';
       }
-    }, 900); // Small delay for the gate animation
+    }, 900);
   });
 
   // ── LIVE CLOCK ─────────────────────────────────────────────
@@ -443,16 +463,21 @@ body.page-visible {
   function resetTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
-      sessionStorage.clear();
-      alert('Session expired due to inactivity. You will be redirected to the login page.');
-      window.location.href = 'Page_Login.html';
+      logout(); // calls the real server logout below
     }, 30 * 60 * 1000);
   }
   ['mousemove','keydown','click','scroll'].forEach(e => document.addEventListener(e, resetTimer));
   resetTimer();
 
-  // ── LOGOUT ─────────────────────────────────────────────────
-  function logout() {
+  // ── LOGOUT (server-side — deletes token from database) ──────
+  async function logout() {
+    const token = sessionStorage.getItem('cib_token');
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'x-session-token': token || '' }
+      });
+    } catch (e) { /* still clear locally even if server unreachable */ }
     sessionStorage.clear();
     window.location.href = 'Page_Login.html';
   }
