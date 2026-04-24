@@ -416,7 +416,7 @@ body.page-visible {
 
     // No token at all — go to login immediately
     if (!token) {
-      window.location.href = 'Page_Login.html';
+      window.location.href = '/Page_Login.html';
       return;
     }
 
@@ -431,7 +431,7 @@ body.page-visible {
         if (!res.ok) {
           // Server said no — token is fake, expired, or not in DB
           sessionStorage.clear();
-          window.location.href = 'Page_Login.html';
+          window.location.href = '/Page_Login.html';
           return;
         }
 
@@ -445,7 +445,7 @@ body.page-visible {
       } catch (err) {
         // Network error — fail safe, redirect to login
         sessionStorage.clear();
-        window.location.href = 'Page_Login.html';
+        window.location.href = '/Page_Login.html';
       }
     }, 900);
   });
@@ -483,7 +483,7 @@ body.page-visible {
       });
     } catch (e) { /* still clear locally even if server unreachable */ }
     sessionStorage.clear();
-    window.location.href = 'Page_Login.html';
+    window.location.href = '/Page_Login.html';
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -541,11 +541,11 @@ body.page-visible {
   }
 
   // ── Render a single card element ──────────────────────────
-  function buildCard(r) {
+function buildCard(r) {
     const div = document.createElement('div');
     div.className = 'informant-card';
     div.dataset.status  = (r.status||'').toLowerCase();
-    div.dataset.handler = (r.handler||'').replace(/\s+/g,'_').toLowerCase();
+    div.dataset.handler = (r.handler||'').replace(/\\s+/g,'_').toLowerCase();
     div.dataset.infId   = r.id;
     div.style.borderTopColor = topColor(r.status);
 
@@ -554,6 +554,17 @@ body.page-visible {
     if (r.gang)    rowsHtml += `<div class="informant-row"><div class="informant-row-label">Affiliation</div><div class="informant-row-value">${esc(r.gang)}</div></div>`;
     if (r.task)    rowsHtml += `<div class="informant-row"><div class="informant-row-label">Current Task</div><div class="informant-row-value">${esc(r.task)}</div></div>`;
     if (r.notes)   rowsHtml += `<div class="informant-row"><div class="informant-row-label">Notes</div><div class="informant-row-value" style="color:var(--gold-light);font-size:10px;font-style:italic;">${esc(r.notes)}</div></div>`;
+
+    // ── Audit trail ───────────────────────────────────────────
+    let auditHtml = '';
+    if (r.created_by) auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Created by</div><div class="informant-row-value" style="color:#5a6a8b;font-size:9px;letter-spacing:1px;">${esc(r.created_by)}</div></div>`;
+    if (r.edited_by)  auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Last edited by</div><div class="informant-row-value" style="color:#5a6a8b;font-size:9px;letter-spacing:1px;">${esc(r.edited_by)}</div></div>`;
+
+    // ── Delete button: hidden for Active status ───────────────
+    const canDelete = (r.status||'').toLowerCase() !== 'active';
+    const deleteBtn = canDelete
+      ? `<button class="inf-del-btn" onclick="deleteInformant(this)">✕ Delete</button>`
+      : `<button class="inf-del-btn" disabled title="Set status to Inactive or Burned to delete" style="opacity:0.25;cursor:not-allowed;pointer-events:none;">✕ Delete</button>`;
 
     const sc = statusClass(r.status);
     div.innerHTML = `
@@ -565,14 +576,11 @@ body.page-visible {
         </div>
       </div>
       <div class="informant-rows">${rowsHtml}</div>
+      ${auditHtml ? `<div class="informant-rows" style="margin-top:8px;padding-top:8px;border-top:1px solid #0f1d35;">${auditHtml}</div>` : ''}
       <div class="informant-status ${sc}"><div class="status-dot"></div> ${esc(r.status)}</div>
       <div class="inf-card-actions">
         <button class="inf-edit-btn" onclick="editInformant(this)">✎ Edit</button>
-        ${(r.status||'').toLowerCase() !== 'active'
-          ? `<button class="inf-del-btn" onclick="deleteInformant(this)">✕ Delete</button>`
-          : `<button class="inf-del-btn" disabled title="Cannot delete an active informant"
-               style="opacity:0.25;cursor:not-allowed;pointer-events:none;">✕ Delete</button>`
-        }
+        ${deleteBtn}
       </div>`;
     return div;
   }
@@ -714,7 +722,8 @@ body.page-visible {
     if (!code) { document.getElementById('inf-f-code').focus(); return; }
     if (!name) { document.getElementById('inf-f-name').focus(); return; }
 
-    const editId = document.getElementById('inf-edit-id').value;
+    const editId  = document.getElementById('inf-edit-id').value;
+    const myBadge = sessionStorage.getItem('cib_badge') || 'Unknown';
     const record = {
       code, name, status,
       handler: document.getElementById('inf-f-handler').value.trim(),
@@ -725,14 +734,14 @@ body.page-visible {
 
     try {
       if (editId) {
-        // UPDATE existing record in Supabase
-        const result = await apiCall('PUT', { id: editId, ...record });
+        // UPDATE — log who edited it
+        const result = await apiCall('PUT', { id: editId, ...record, edited_by: myBadge });
         const idx = RECORDS.findIndex(r => r.id === editId);
         if (idx > -1) RECORDS[idx] = result.data;
         showToast('Record updated — ' + name, 'edit');
       } else {
-        // CREATE new record in Supabase
-        const result = await apiCall('POST', record);
+        // CREATE — log who created it
+        const result = await apiCall('POST', { ...record, created_by: myBadge });
         RECORDS.push(result.data);
         showToast('New informant registered — ' + name, 'success');
       }
