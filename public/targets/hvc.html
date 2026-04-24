@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>High Value Criminals — CIB NEXUS</title>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
+<link rel="icon" href="/public/images/cib-logo.png" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -123,8 +123,18 @@
   .hvc-card[data-threat="medium"]{border-top-color:var(--threat-medium);}
   .hvc-card[data-threat="low"]{border-top-color:var(--threat-low);}
 
-  /* Photo strip */
-  .hvc-photo-strip{height:160px;background:#080C18;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--navy-border);}
+  /* Photo strip — strict 1:1 square */
+  .hvc-photo-strip{
+    aspect-ratio:1 / 1;
+    width:100%;
+    background:#080C18;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-bottom:1px solid var(--navy-border);
+  }
   .hvc-photo-strip img{width:100%;height:100%;object-fit:cover;object-position:top center;}
   .hvc-photo-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;}
   .hvc-photo-placeholder svg{width:40px;height:40px;fill:var(--navy-border);}
@@ -203,7 +213,7 @@
   .hvc-photo-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
   .hvc-photo-upload-icon{width:32px;height:32px;margin:0 auto 8px;fill:var(--muted);}
   .hvc-photo-upload-text{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
-  .hvc-photo-preview{width:100%;height:120px;object-fit:cover;object-position:top center;display:none;border:1px solid var(--navy-border);}
+  .hvc-photo-preview{width:100%;aspect-ratio:1/1;object-fit:cover;object-position:top center;display:none;border:1px solid var(--navy-border);}
 
   /* Crimes dynamic input */
   .hvc-crimes-input-wrap{display:flex;flex-direction:column;gap:6px;}
@@ -298,7 +308,7 @@
 <!-- ACCESS GATE -->
 <div id="access-gate">
   <div class="gate-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
+    <img src="/public/images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
   </div>
   <div class="gate-text">Verifying Clearance...</div>
   <div class="gate-bar"><div class="gate-progress"></div></div>
@@ -307,13 +317,13 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
-    <img class="topbar-logo" src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <img class="topbar-logo" src="/public/images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
     <span class="topbar-brand">NEXUS</span>
     <div class="topbar-divider"></div>
     <span class="topbar-sub">CIB Internal Intelligence Portal</span>
   </div>
   <div class="topbar-right">
-    <a class="back-btn" href="Page_Nexus.html">‹ Back to Nexus</a>
+    <a class="back-btn" href="/nexus.html">‹ Back to Nexus</a>
     <span class="topbar-badge-display">Logged in as: <span id="badgeDisplay">—</span></span>
     <span class="topbar-clock" id="liveClock">—</span>
     <button class="logout-btn" onclick="logout()">Logout</button>
@@ -352,7 +362,7 @@
     <div class="nexus-title"><span>HIGH VALUE</span><br>CRIMINAL REGISTRY</div>
     <div class="nexus-line"></div>
     <div class="nexus-desc">
-      Classified registry of all high-value criminal targets currently tracked by the CIB.<br/>
+      Classified registry of all high-value criminal targets tracked by the CIB.<br/>
       Subjects are considered armed, dangerous, and of critical operational priority.
     </div>
     <div class="nexus-clearance">
@@ -574,7 +584,7 @@
   // ── Auth Gate ─────────────────────────────────────────────────
   window.addEventListener('DOMContentLoaded', () => {
     const token = sessionStorage.getItem('cib_token');
-    if (!token) { window.location.href = 'Page_Login.html'; return; }
+    if (!token) { window.location.href = '/Page_Login.html'; return; }
 
     setTimeout(async () => {
       try {
@@ -582,12 +592,12 @@
           method: 'GET',
           headers: { 'x-session-token': token }
         });
-        if (!res.ok) { sessionStorage.clear(); window.location.href = 'Page_Login.html'; return; }
+        if (!res.ok) { sessionStorage.clear(); window.location.href = '/Page_Login.html'; return; }
         document.getElementById('access-gate').classList.add('hidden');
         document.body.classList.add('page-visible');
         const badge = sessionStorage.getItem('cib_badge');
         if (badge) document.getElementById('badgeDisplay').textContent = badge;
-      } catch(e) { sessionStorage.clear(); window.location.href = 'Page_Login.html'; }
+      } catch(e) { sessionStorage.clear(); window.location.href = '/Page_Login.html'; }
     }, 900);
   });
 
@@ -616,7 +626,7 @@
       await fetch('/api/logout', { method:'POST', headers:{ 'x-session-token': token||'' } });
     } catch(e){}
     sessionStorage.clear();
-    window.location.href = 'Page_Login.html';
+    window.location.href = '/Page_Login.html';
   }
 
   // ── Page transitions ──────────────────────────────────────────
@@ -687,7 +697,10 @@
   }
 
   // ── Build Card DOM element ─────────────────────────────────────
-  function buildCard(r) {
+  function buildCard(r, seqNum) {
+    // Format sequential number as zero-padded 3-digit string: 1 → "001"
+    const seqStr = seqNum ? String(seqNum).padStart(3, '0') : '???';
+    const hvcIdDisplay = `CIB-HVC-${seqStr}`;
     const div = document.createElement('div');
     div.className = 'hvc-card';
     div.dataset.threat = (r.threat||'').toLowerCase();
@@ -711,7 +724,7 @@
       </div>
       <div class="hvc-card-body">
         <div class="hvc-card-name">${esc(r.name)}</div>
-        <div class="hvc-card-id">HVC-ID: CIB-HVC-${esc(r.id?.toString().slice(-6)||'??????')}</div>
+        <div class="hvc-card-id">HVC-ID: ${hvcIdDisplay}</div>
         ${r.bio ? `<div class="hvc-card-bio">${esc(r.bio)}</div>` : ''}
         <div class="hvc-card-rows">
           ${r.affiliation ? `<div class="hvc-card-row"><div class="hvc-card-row-label">Affiliation</div><div class="hvc-card-row-value">${esc(r.affiliation)}</div></div>` : ''}
@@ -740,7 +753,17 @@
   function renderAll(records) {
     const grid = document.getElementById('hvc-grid');
     grid.innerHTML = '';
-    records.forEach(r => grid.appendChild(buildCard(r)));
+    // Sort by created_at ascending so older entries keep lower numbers
+    const sorted = [...records].sort((a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return ta - tb;
+    });
+    // Build a lookup: id → sequential number (1-based)
+    const seqMap = {};
+    sorted.forEach((r, i) => { seqMap[r.id] = i + 1; });
+    // Render in the original (filtered) order, but use seq numbers
+    records.forEach(r => grid.appendChild(buildCard(r, seqMap[r.id] || 0)));
     updateStats(records);
   }
 
@@ -993,8 +1016,18 @@
     const r = RECORDS.find(x => x.id === id);
     if (!r) return;
 
+    // Calculate sequential number same way as renderAll
+    const sorted = [...RECORDS].sort((a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return ta - tb;
+    });
+    const seqNum  = sorted.findIndex(x => x.id === id) + 1;
+    const seqStr  = String(seqNum).padStart(3, '0');
+    const hvcIdDisplay = `CIB-HVC-${seqStr}`;
+
     document.getElementById('view-eyebrow').textContent =
-      `HIGH VALUE TARGET · THREAT: ${(r.threat||'').toUpperCase()} · ${warrantyLabel(r.warrant_status).toUpperCase()}`;
+      `${hvcIdDisplay} · THREAT: ${(r.threat||'').toUpperCase()} · ${warrantyLabel(r.warrant_status).toUpperCase()}`;
     document.getElementById('view-name').textContent = r.name || '—';
 
     const photoWrap = document.getElementById('view-photo-wrap');
