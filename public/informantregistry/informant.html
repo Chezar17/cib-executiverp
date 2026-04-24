@@ -416,7 +416,7 @@ body.page-visible {
 
     // No token at all — go to login immediately
     if (!token) {
-      window.location.href = '/Page_Login.html';
+      window.location.href = 'Page_Login.html';
       return;
     }
 
@@ -431,7 +431,7 @@ body.page-visible {
         if (!res.ok) {
           // Server said no — token is fake, expired, or not in DB
           sessionStorage.clear();
-          window.location.href = '/Page_Login.html';
+          window.location.href = 'Page_Login.html';
           return;
         }
 
@@ -445,7 +445,7 @@ body.page-visible {
       } catch (err) {
         // Network error — fail safe, redirect to login
         sessionStorage.clear();
-        window.location.href = '/Page_Login.html';
+        window.location.href = 'Page_Login.html';
       }
     }, 900);
   });
@@ -483,7 +483,7 @@ body.page-visible {
       });
     } catch (e) { /* still clear locally even if server unreachable */ }
     sessionStorage.clear();
-    window.location.href = '/Page_Login.html';
+    window.location.href = 'Page_Login.html';
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -541,11 +541,11 @@ body.page-visible {
   }
 
   // ── Render a single card element ──────────────────────────
-function buildCard(r) {
+  function buildCard(r) {
     const div = document.createElement('div');
     div.className = 'informant-card';
     div.dataset.status  = (r.status||'').toLowerCase();
-    div.dataset.handler = (r.handler||'').replace(/\\s+/g,'_').toLowerCase();
+    div.dataset.handler = (r.handler||'').replace(/\s+/g,'_').toLowerCase();
     div.dataset.infId   = r.id;
     div.style.borderTopColor = topColor(r.status);
 
@@ -557,14 +557,8 @@ function buildCard(r) {
 
     // ── Audit trail ───────────────────────────────────────────
     let auditHtml = '';
-    if (r.created_by) auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Created by</div><div class="informant-row-value" style="color:#5a6a8b;font-size:9px;letter-spacing:1px;">${esc(r.created_by)}</div></div>`;
-    if (r.edited_by)  auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Last edited by</div><div class="informant-row-value" style="color:#5a6a8b;font-size:9px;letter-spacing:1px;">${esc(r.edited_by)}</div></div>`;
-
-    // ── Delete button: hidden for Active status ───────────────
-    const canDelete = (r.status||'').toLowerCase() !== 'active';
-    const deleteBtn = canDelete
-      ? `<button class="inf-del-btn" onclick="deleteInformant(this)">✕ Delete</button>`
-      : `<button class="inf-del-btn" disabled title="Set status to Inactive or Burned to delete" style="opacity:0.25;cursor:not-allowed;pointer-events:none;">✕ Delete</button>`;
+    if (r.created_by) auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Created by</div><div class="informant-row-value" style="color:#3a4a6b;font-size:9px;font-family:'Roboto Mono',monospace;">${esc(r.created_by)}</div></div>`;
+    if (r.edited_by)  auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Last edited by</div><div class="informant-row-value" style="color:#3a4a6b;font-size:9px;font-family:'Roboto Mono',monospace;">${esc(r.edited_by)}</div></div>`;
 
     const sc = statusClass(r.status);
     div.innerHTML = `
@@ -576,11 +570,11 @@ function buildCard(r) {
         </div>
       </div>
       <div class="informant-rows">${rowsHtml}</div>
-      ${auditHtml ? `<div class="informant-rows" style="margin-top:8px;padding-top:8px;border-top:1px solid #0f1d35;">${auditHtml}</div>` : ''}
+      ${auditHtml ? `<div class="informant-rows" style="margin-top:6px;padding-top:6px;border-top:1px solid #0f1d35;">${auditHtml}</div>` : ''}
       <div class="informant-status ${sc}"><div class="status-dot"></div> ${esc(r.status)}</div>
       <div class="inf-card-actions">
         <button class="inf-edit-btn" onclick="editInformant(this)">✎ Edit</button>
-        ${deleteBtn}
+        <button class="inf-del-btn"  onclick="deleteInformant(this)">✕ Delete</button>
       </div>`;
     return div;
   }
@@ -734,13 +728,13 @@ function buildCard(r) {
 
     try {
       if (editId) {
-        // UPDATE — log who edited it
+        // UPDATE — send who edited it
         const result = await apiCall('PUT', { id: editId, ...record, edited_by: myBadge });
         const idx = RECORDS.findIndex(r => r.id === editId);
         if (idx > -1) RECORDS[idx] = result.data;
         showToast('Record updated — ' + name, 'edit');
       } else {
-        // CREATE — log who created it
+        // CREATE — send who created it
         const result = await apiCall('POST', { ...record, created_by: myBadge });
         RECORDS.push(result.data);
         showToast('New informant registered — ' + name, 'success');
@@ -780,8 +774,7 @@ function buildCard(r) {
     if (!_pendingDeleteId) return;
     const rec = RECORDS.find(r => r.id === _pendingDeleteId);
     try {
-      const myBadge = sessionStorage.getItem('cib_badge') || 'Unknown';
-      await apiCall('DELETE', { deleted_by: myBadge }, _pendingDeleteId);
+      await apiCall('DELETE', null, _pendingDeleteId);
       RECORDS = RECORDS.filter(r => r.id !== _pendingDeleteId);
       renderAll(RECORDS);
       closeDelModal();
