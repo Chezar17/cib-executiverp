@@ -36,11 +36,12 @@ export default async function handler(req, res) {
 
   try {
 
-    // ── GET: Load all informants ─────────────────────────────
+    // ── GET: Load all informants (exclude soft-deleted) ────────
     if (req.method === 'GET') {
       const { data, error } = await supabase
         .from('informants')
         .select('*')
+        .eq('is_deleted', false)
         .order('created_at', { ascending: true })
 
       if (error) throw error
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
 
     // ── POST: Create new informant ───────────────────────────
     if (req.method === 'POST') {
-      const { code, name, status, handler, gang, task, notes, created_by } = req.body
+      const { code, name, status, handler, gang, task, notes } = req.body
 
       if (!code || !name) {
         return res.status(400).json({ error: 'Code and name are required' })
@@ -57,7 +58,7 @@ export default async function handler(req, res) {
 
       const { data, error } = await supabase
         .from('informants')
-        .insert([{ code, name, status, handler, gang, task, notes, created_by }])
+        .insert([{ code, name, status, handler, gang, task, notes }])
         .select()
         .single()
 
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
 
     // ── PUT: Update existing informant ───────────────────────
     if (req.method === 'PUT') {
-      const { id, code, name, status, handler, gang, task, notes, edited_by } = req.body
+      const { id, code, name, status, handler, gang, task, notes } = req.body
 
       if (!id) {
         return res.status(400).json({ error: 'ID is required for update' })
@@ -75,7 +76,7 @@ export default async function handler(req, res) {
 
       const { data, error } = await supabase
         .from('informants')
-        .update({ code, name, status, handler, gang, task, notes, edited_by })
+        .update({ code, name, status, handler, gang, task, notes })
         .eq('id', id)
         .select()
         .single()
@@ -84,20 +85,48 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data })
     }
 
-    // ── DELETE: Remove an informant ──────────────────────────
+    // ── DELETE: Soft delete + write to deletion_logs ───────────
+    //  The row is NEVER removed from the database.
+    //  is_deleted=true hides it from the portal.
+    //  A permanent log entry is written to deletion_logs.
     if (req.method === 'DELETE') {
       const { id } = req.query
+      const { deleted_by, reason } = req.body || {}
 
       if (!id) {
         return res.status(400).json({ error: 'ID is required for delete' })
       }
 
-      const { error } = await supabase
+      // Fetch the informant before marking deleted (need name + code for the log)
+      const { data: inf } = await supabase
         .from('informants')
-        .delete()
+        .select('id, code, name')
+        .eq('id', id)
+        .single()
+
+      // Soft delete — mark the row, never remove it
+      const { error: updateErr } = await supabase
+        .from('informants')
+        .update({
+          is_deleted: true,
+          deleted_by: deleted_by || 'Unknown',
+          deleted_at: new Date().toISOString()
+        })
         .eq('id', id)
 
-      if (error) throw error
+      if (updateErr) throw updateErr
+
+      // Write a permanent entry to the deletion log
+      await supabase
+        .from('deletion_logs')
+        .insert([{
+          informant_id:   inf?.id   || null,
+          informant_code: inf?.code || null,
+          informant_name: inf?.name || null,
+          deleted_by:     deleted_by || 'Unknown',
+          reason:         reason || null
+        }])
+
       return res.status(200).json({ success: true })
     }
 
