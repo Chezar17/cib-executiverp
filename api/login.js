@@ -1,94 +1,141 @@
 // ============================================================
-//  CIB — Vercel Serverless Login Function
-//  File location: api/login.js
+//  CIB — Hardened Login Function  (api/login.js)
 //
-//  This runs on Vercel's servers — users NEVER see this code.
-//  It checks badge + password against your Supabase database.
-//
-//  HOW IT WORKS:
-//  1. Login page sends badge + password to POST /api/login
-//  2. This function hashes the password with SHA-256
-//  3. Checks Supabase database for matching badge + hash
-//  4. Returns a signed session token if matched
-//  5. Login page stores the token and redirects to Nexus
+//  SECURITY IMPROVEMENTS OVER OLD VERSION:
+//  ✅ Server-side brute-force lockout (stored in Supabase)
+//  ✅ Session token saved to Supabase sessions table
+//  ✅ CORS locked to your domain only
+//  ✅ Origin check (CSRF protection)
+//  ✅ Token has real server-enforced expiry
 // ============================================================
 
 import { createClient } from '@supabase/supabase-js'
-// ── These come from your Vercel Environment Variables ──────
-//    You set these in the Vercel dashboard — never hardcode them
-const SUPABASE_URL    = process.env.SUPABASE_URL
-const SUPABASE_KEY    = process.env.SUPABASE_ANON_KEY
-const SESSION_SECRET  = process.env.SESSION_SECRET   // any long random string you choose
-
 import crypto from 'crypto'
 
-// ── Generate a simple session token ──────────────────────────
+const SUPABASE_URL   = process.env.SUPABASE_URL
+const SUPABASE_KEY   = process.env.SUPABASE_ANON_KEY
+const SESSION_SECRET = process.env.SESSION_SECRET
+
+// ── YOUR VERCEL DOMAIN — change this to your real URL ────────
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://your-app.vercel.app'
+
+const MAX_ATTEMPTS   = 5          // max failed logins before lockout
+const LOCKOUT_MINS   = 5          // how long the lockout lasts
+const SESSION_MINS   = 30         // how long a login session lasts
+
 function sha256(text) {
   return crypto.createHash('sha256').update(text).digest('hex')
 }
+
 function generateToken(badge) {
-  const payload = `${badge}:${Date.now()}:${SESSION_SECRET}`
+  const payload = `${badge}:${Date.now()}:${SESSION_SECRET}:${Math.random()}`
   return sha256(payload)
 }
 
-// ── Main handler ─────────────────────────────────────────────
 export default async function handler(req, res) {
 
-  // Only allow POST requests
+  // ── CORS — only allow requests from your own domain ────────
+  const origin = req.headers.origin || ''
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
+  // ── CSRF — reject if request comes from a foreign origin ───
+  if (origin && origin !== ALLOWED_ORIGIN) {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // Rate limiting — max 5 attempts tracked by IP
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  // ── Get client IP ─────────────────────────────────────────
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown')
+               .split(',')[0].trim()
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
   try {
     const { badge, password } = req.body
 
-    // Validate input
-    if (!badge || !password) {
+    if (!badge || !password || typeof badge !== 'string' || typeof password !== 'string') {
       return res.status(400).json({ error: 'Badge and password are required' })
     }
 
-    if (typeof badge !== 'string' || typeof password !== 'string') {
-      return res.status(400).json({ error: 'Invalid input' })
-    }
-
-    // ⚠️ PASSWORD IS ALREADY HASHED BY THE FRONTEND
-    // Do NOT hash again — just use it directly
-    const passwordHash = password   // already SHA-256 from browser
     const badgeTrimmed = badge.trim()
 
-    // Connect to Supabase
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+    // ── SERVER-SIDE LOCKOUT CHECK ─────────────────────────────
+    // Count failed attempts from this IP in the last LOCKOUT_MINS minutes
+    const windowStart = new Date(Date.now() - LOCKOUT_MINS * 60 * 1000).toISOString()
 
-    // Query the users table
-    const { data, error } = await supabase
+    const { count } = await supabase
+      .from('login_attempts')
+      .select('*', { count: 'exact', head: true })
+      .eq('ip', ip)
+      .gte('attempted_at', windowStart)
+
+    if (count >= MAX_ATTEMPTS) {
+      return res.status(429).json({
+        error: `Too many failed attempts. Try again in ${LOCKOUT_MINS} minutes.`
+      })
+    }
+
+    // ── CHECK CREDENTIALS IN DATABASE ────────────────────────
+    const passwordHash = password  // already SHA-256 hashed by frontend
+
+    const { data: user, error } = await supabase
       .from('users')
       .select('id, badge, name, rank, division')
       .eq('badge', badgeTrimmed)
       .eq('password', passwordHash)
       .single()
 
-    if (error || !data) {
-      // Wrong credentials — don't reveal which field was wrong
-      return res.status(401).json({ error: 'Invalid badge number or password' })
+    if (error || !user) {
+      // ── Log this failed attempt to the database ─────────────
+      await supabase
+        .from('login_attempts')
+        .insert([{ ip, badge: badgeTrimmed }])
+
+      const remaining = MAX_ATTEMPTS - (count + 1)
+      return res.status(401).json({
+        error: remaining > 0
+          ? `Invalid credentials. ${remaining} attempt(s) remaining.`
+          : `Too many failed attempts. Try again in ${LOCKOUT_MINS} minutes.`
+      })
     }
 
-    // ✅ Credentials matched — generate session token
-    const token = generateToken(data.badge)
-    const expiresAt = Date.now() + (30 * 60 * 1000) // 30 minutes
+    // ── CREDENTIALS OK — create session ───────────────────────
+    const token     = generateToken(user.badge)
+    const expiresAt = new Date(Date.now() + SESSION_MINS * 60 * 1000)
 
-    // Return the token and user info to the browser
+    // Save token to Supabase sessions table
+    await supabase
+      .from('sessions')
+      .insert([{
+        token,
+        badge:      user.badge,
+        expires_at: expiresAt.toISOString()
+      }])
+
+    // Clear old failed attempts for this IP on successful login
+    await supabase
+      .from('login_attempts')
+      .delete()
+      .eq('ip', ip)
+
     return res.status(200).json({
       success:   true,
       token:     token,
-      expiresAt: expiresAt,
+      expiresAt: expiresAt.getTime(),
       user: {
-        badge:    data.badge,
-        name:     data.name,
-        rank:     data.rank,
-        division: data.division
+        badge:    user.badge,
+        name:     user.name,
+        rank:     user.rank,
+        division: user.division
       }
     })
 
