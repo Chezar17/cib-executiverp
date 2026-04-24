@@ -2922,17 +2922,41 @@
 <script>
   // ── AUTH GATE ───────────────────────────────────────────────
   window.addEventListener('DOMContentLoaded', () => {
-    const auth  = sessionStorage.getItem('cib_auth');
-    const badge = sessionStorage.getItem('cib_badge');
-    setTimeout(() => {
-      if (auth !== 'true') {
-        window.location.href = 'Page_Login.html';
-      } else {
+    const token = sessionStorage.getItem('cib_token');
+
+    // No token at all — go to login immediately, don't even wait
+    if (!token) {
+      window.location.href = 'Page_Login.html';
+      return;
+    }
+
+    setTimeout(async () => {
+      try {
+        // Ask the SERVER if this token is real and not expired
+        const res = await fetch('/api/verify-token', {
+          method: 'GET',
+          headers: { 'x-session-token': token }
+        });
+
+        if (!res.ok) {
+          // Server said no — token is fake, expired, or not in DB
+          sessionStorage.clear();
+          window.location.href = 'Page_Login.html';
+          return;
+        }
+
+        // ✅ Server confirmed — show the page
         document.getElementById('access-gate').classList.add('hidden');
         document.body.classList.add('page-visible');
+        const badge = sessionStorage.getItem('cib_badge');
         if (badge) document.getElementById('badgeDisplay').textContent = badge;
         sortGangCards();
         updateStats();
+
+      } catch (err) {
+        // Network error — fail safe, redirect to login
+        sessionStorage.clear();
+        window.location.href = 'Page_Login.html';
       }
     }, 900);
   });
@@ -2954,16 +2978,21 @@
   function resetTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
-      sessionStorage.clear();
-      alert('Session expired due to inactivity.');
-      window.location.href = 'Page_Login.html';
+      logout(); // calls the real server logout below
     }, 30 * 60 * 1000);
   }
   ['mousemove','keydown','click','scroll'].forEach(e => document.addEventListener(e, resetTimer));
   resetTimer();
 
-  // ── LOGOUT ──────────────────────────────────────────────────
-  function logout() {
+  // ── LOGOUT (server-side — deletes token from database) ──────
+  async function logout() {
+    const token = sessionStorage.getItem('cib_token');
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'x-session-token': token || '' }
+      });
+    } catch (e) { /* still clear locally even if server unreachable */ }
     sessionStorage.clear();
     window.location.href = 'Page_Login.html';
   }

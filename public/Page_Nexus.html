@@ -522,18 +522,45 @@
     showPanel(name, navEl);
   }
 
-  // ── AUTH GATE ──────────────────────────────────────────────
+  // ── AUTH GATE (hardened — server-verified) ─────────────────
+  //  No more cib_auth flag check. We ask the server directly.
+  //  A hacker setting cib_auth=true in DevTools does nothing now.
   window.addEventListener('DOMContentLoaded', () => {
-    const auth  = sessionStorage.getItem('cib_auth');
-    const badge = sessionStorage.getItem('cib_badge');
-    setTimeout(() => {
-      if (auth !== 'true') { window.location.href = 'Page_Login.html'; return; }
-      document.getElementById('access-gate').classList.add('hidden');
-      document.body.classList.add('page-visible');
-      if (badge) {
-        document.getElementById('badgeDisplay').textContent    = badge;
-        document.getElementById('sidebarBadge').textContent    = badge;
-        document.getElementById('dashWelcomeName').textContent = badge;
+    const token = sessionStorage.getItem('cib_token');
+
+    if (!token) {
+      window.location.href = 'Page_Login.html';
+      return;
+    }
+
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/verify-token', {
+          method: 'GET',
+          headers: { 'x-session-token': token }
+        });
+
+        if (!res.ok) {
+          sessionStorage.clear();
+          window.location.href = 'Page_Login.html';
+          return;
+        }
+
+        // ✅ Token confirmed valid by server
+        document.getElementById('access-gate').classList.add('hidden');
+        document.body.classList.add('page-visible');
+
+        const badge = sessionStorage.getItem('cib_badge');
+        if (badge) {
+          document.getElementById('badgeDisplay').textContent    = badge;
+          document.getElementById('sidebarBadge').textContent    = badge;
+          document.getElementById('dashWelcomeName').textContent = badge;
+        }
+
+      } catch (err) {
+        // Network error — fail safe: redirect to login
+        sessionStorage.clear();
+        window.location.href = 'Page_Login.html';
       }
     }, 900);
   });
@@ -551,13 +578,26 @@
   let _it;
   function resetTimer(){
     clearTimeout(_it);
-    _it = setTimeout(()=>{ sessionStorage.clear(); alert('Session expired.'); window.location.href='Page_Login.html'; }, 30*60*1000);
+    _it = setTimeout(()=>{
+      logout();  // calls the real server logout, not just clear()
+    }, 30*60*1000);
   }
   ['mousemove','keydown','click','scroll'].forEach(e=>document.addEventListener(e,resetTimer));
   resetTimer();
 
-  // ── LOGOUT ─────────────────────────────────────────────────
-  function logout(){ sessionStorage.clear(); window.location.href='Page_Login.html'; }
+  // ── LOGOUT (hardened — invalidates token on server) ────────
+  async function logout() {
+    const token = sessionStorage.getItem('cib_token');
+    try {
+      // Tell the server to delete this session from the database
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'x-session-token': token || '' }
+      });
+    } catch (e) { /* ignore network errors — still clear locally */ }
+    sessionStorage.clear();
+    window.location.href = 'Page_Login.html';
+  }
 
   // ── TOAST ──────────────────────────────────────────────────
   function showToast(msg,type='success'){
