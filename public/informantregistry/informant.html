@@ -278,7 +278,7 @@ body.page-visible {
     <span class="topbar-sub">CIB Internal Intelligence Portal</span>
   </div>
   <div class="topbar-right">
-    <a class="back-btn" href="Page_Nexus.html">‹ Back to Nexus</a>
+    <a class="back-btn" href="/public/nexus.html">‹ Back to Nexus</a>
     <span class="topbar-badge-display">Logged in as: <span id="badgeDisplay">—</span></span>
     <span class="topbar-clock" id="liveClock">—</span>
     <button class="logout-btn" onclick="logout()">Logout</button>
@@ -375,6 +375,10 @@ body.page-visible {
       <button class="inf-filter-btn" data-filter="inactive"
         style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--navy-border);padding:5px 14px;cursor:pointer;">
         Inactive (0)
+      </button>
+      <button class="inf-filter-btn" data-filter="burned"
+        style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--navy-border);padding:5px 14px;cursor:pointer;">
+        Burned (0)
       </button>
       <button class="inf-add-btn" onclick="openInfModal()">
         <svg viewBox="0 0 24 24"><path d="M19 11H13V5H11V11H5V13H11V19H13V13H19V11Z"/></svg>
@@ -577,7 +581,8 @@ body.page-visible {
   function renderAll(records) {
     const grid = document.getElementById('informant-grid');
     grid.innerHTML = '';
-    records.forEach(r => grid.appendChild(buildCard(r)));
+    const sorted = [...records].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    sorted.forEach(r => grid.appendChild(buildCard(r)));
     updateInfStats(records);
   }
 
@@ -599,6 +604,7 @@ body.page-visible {
       if (f === 'all')      b.textContent = `All (${records.length})`;
       if (f === 'active')   b.textContent = `Active (${active})`;
       if (f === 'inactive') b.textContent = `Inactive (${inactive})`;
+      if (f === 'burned')   b.textContent = `Burned (${burned})`;
     });
   }
 
@@ -655,17 +661,38 @@ body.page-visible {
     }
   }
 
+  // ── Auto-generate next code from existing RECORDS ─────────
+  function getNextCode() {
+    let maxNum = 0;
+    RECORDS.forEach(r => {
+      const match = (r.code || '').match(/(\d+)$/);
+      if (match) {
+        const n = parseInt(match[1], 10);
+        if (n > maxNum) maxNum = n;
+      }
+    });
+    return 'CIB-INF-C' + (maxNum + 1);
+  }
+
   // ── MODAL — Open / Close ──────────────────────────────────
   function openInfModal(prefill) {
-    document.getElementById('inf-modal-title').textContent = prefill ? 'Edit Informant' : 'Add Informant';
-    document.getElementById('inf-edit-id').value    = prefill?.id    || '';
-    document.getElementById('inf-f-code').value     = prefill?.code  || '';
-    document.getElementById('inf-f-name').value     = prefill?.name  || '';
-    document.getElementById('inf-f-status').value   = prefill?.status|| 'Active';
-    document.getElementById('inf-f-handler').value  = prefill?.handler|| '';
-    document.getElementById('inf-f-gang').value     = prefill?.gang  || '';
-    document.getElementById('inf-f-task').value     = prefill?.task  || '';
-    document.getElementById('inf-f-notes').value    = prefill?.notes || '';
+    const isEdit = !!prefill;
+    document.getElementById('inf-modal-title').textContent = isEdit ? 'Edit Informant' : 'Add Informant';
+    document.getElementById('inf-edit-id').value   = prefill?.id     || '';
+    document.getElementById('inf-f-name').value    = prefill?.name   || '';
+    document.getElementById('inf-f-status').value  = prefill?.status || 'Active';
+    document.getElementById('inf-f-handler').value = prefill?.handler|| '';
+    document.getElementById('inf-f-gang').value    = prefill?.gang   || '';
+    document.getElementById('inf-f-task').value    = prefill?.task   || '';
+    document.getElementById('inf-f-notes').value   = prefill?.notes  || '';
+
+    const codeEl = document.getElementById('inf-f-code');
+    if (isEdit) {
+      codeEl.value = prefill.code || '';
+    } else {
+      codeEl.value = getNextCode();
+    }
+
     document.getElementById('inf-modal').classList.add('open');
   }
   function closeInfModal() {
@@ -674,7 +701,9 @@ body.page-visible {
 
   // ── SAVE (Create or Update) ───────────────────────────────
   async function saveInformant() {
-    const code   = document.getElementById('inf-f-code').value.trim();
+    // Strip the display prefix "CIB-INF-" — DB stores only the short code e.g. "C34"
+    const rawCode = document.getElementById('inf-f-code').value.trim();
+    const code    = rawCode.replace(/^CIB-INF-/i, '');
     const name   = document.getElementById('inf-f-name').value.trim();
     const status = document.getElementById('inf-f-status').value;
 
@@ -769,8 +798,8 @@ body.page-visible {
       <div class="inf-form-grid">
 
         <div class="inf-form-group">
-          <label class="inf-form-label">Code <span>*</span></label>
-          <input class="inf-form-input" id="inf-f-code" placeholder="e.g. C34"/>
+          <label class="inf-form-label">Code <span style="color:var(--muted);font-size:8px;letter-spacing:1px;text-transform:none;font-weight:400;margin-left:4px;">&middot; auto-assigned</span></label>
+          <input class="inf-form-input" id="inf-f-code" readonly style="cursor:not-allowed;opacity:0.6;background:#04080F;letter-spacing:2px;font-family:'Roboto Mono',monospace;"/>
         </div>
 
         <div class="inf-form-group">
