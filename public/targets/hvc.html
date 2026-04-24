@@ -123,18 +123,8 @@
   .hvc-card[data-threat="medium"]{border-top-color:var(--threat-medium);}
   .hvc-card[data-threat="low"]{border-top-color:var(--threat-low);}
 
-  /* Photo strip — strict 1:1 square */
-  .hvc-photo-strip{
-    aspect-ratio:1 / 1;
-    width:100%;
-    background:#080C18;
-    position:relative;
-    overflow:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-bottom:1px solid var(--navy-border);
-  }
+  /* Photo strip */
+  .hvc-photo-strip{height:160px;background:#080C18;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--navy-border);}
   .hvc-photo-strip img{width:100%;height:100%;object-fit:cover;object-position:top center;}
   .hvc-photo-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;}
   .hvc-photo-placeholder svg{width:40px;height:40px;fill:var(--navy-border);}
@@ -144,7 +134,6 @@
   .threat-badge-high{background:rgba(224,90,40,0.85);color:#fff;border:1px solid var(--threat-high);}
   .threat-badge-medium{background:rgba(201,168,76,0.85);color:var(--navy);border:1px solid var(--threat-medium);}
   .threat-badge-low{background:rgba(39,174,96,0.85);color:#fff;border:1px solid var(--threat-low);}
-  .hvc-wanted-stamp{position:absolute;bottom:8px;left:10px;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:4px;color:var(--red-alert);opacity:0.6;text-transform:uppercase;border:1px solid rgba(192,57,43,0.4);padding:1px 6px;}
 
   /* Card body */
   .hvc-card-body{padding:16px;flex:1;display:flex;flex-direction:column;gap:0;}
@@ -208,12 +197,40 @@
   .hvc-form-textarea{resize:vertical;min-height:72px;}
 
   /* Photo upload */
-  .hvc-photo-upload-zone{background:#080C18;border:1px dashed var(--navy-border);padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s;position:relative;}
+  .hvc-photo-upload-zone{
+    background:#080C18;
+    border:1px dashed var(--navy-border);
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color 0.2s;
+    position:relative;
+    overflow:hidden;
+  }
   .hvc-photo-upload-zone:hover{border-color:var(--red-alert);}
-  .hvc-photo-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-  .hvc-photo-upload-icon{width:32px;height:32px;margin:0 auto 8px;fill:var(--muted);}
+  /* File input is invisible but covers the entire zone so any click triggers it */
+  .hvc-photo-upload-zone input[type=file]{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:0;
+    cursor:pointer;
+    z-index:2;
+  }
+  .hvc-photo-upload-icon{width:32px;height:32px;margin:0 auto 8px;fill:var(--muted);display:block;}
   .hvc-photo-upload-text{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
-  .hvc-photo-preview{width:100%;aspect-ratio:1/1;object-fit:cover;object-position:top center;display:none;border:1px solid var(--navy-border);}
+  /* Preview sits above the placeholder, below the input overlay */
+  .hvc-photo-preview{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    object-position:top center;
+    display:none;
+    border:1px solid var(--navy-border);
+    position:relative;
+    z-index:1;
+  }
 
   /* Crimes dynamic input */
   .hvc-crimes-input-wrap{display:flex;flex-direction:column;gap:6px;}
@@ -457,8 +474,8 @@
         <!-- Photo upload -->
         <div class="hvc-form-group full">
           <label class="hvc-form-label">Subject Photo</label>
-          <div class="hvc-photo-upload-zone" id="photoUploadZone" onclick="document.getElementById('hvc-photo-input').click()">
-            <input type="file" id="hvc-photo-input" accept="image/*" onchange="handlePhotoSelect(event)" style="display:none"/>
+          <div class="hvc-photo-upload-zone" id="photoUploadZone">
+            <input type="file" id="hvc-photo-input" accept="image/*" onchange="handlePhotoSelect(event)"/>
             <img id="hvc-photo-preview" class="hvc-photo-preview" src="" alt="Preview"/>
             <div id="hvc-photo-placeholder">
               <svg class="hvc-photo-upload-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
@@ -697,10 +714,7 @@
   }
 
   // ── Build Card DOM element ─────────────────────────────────────
-  function buildCard(r, seqNum) {
-    // Format sequential number as zero-padded 3-digit string: 1 → "001"
-    const seqStr = seqNum ? String(seqNum).padStart(3, '0') : '???';
-    const hvcIdDisplay = `CIB-HVC-${seqStr}`;
+  function buildCard(r) {
     const div = document.createElement('div');
     div.className = 'hvc-card';
     div.dataset.threat = (r.threat||'').toLowerCase();
@@ -720,11 +734,10 @@
       <div class="hvc-photo-strip">
         ${photoHtml}
         <div class="hvc-threat-badge threat-badge-${threatLvl}">${esc(r.threat||'Unknown')}</div>
-        <div class="hvc-wanted-stamp">Wanted</div>
       </div>
       <div class="hvc-card-body">
         <div class="hvc-card-name">${esc(r.name)}</div>
-        <div class="hvc-card-id">HVC-ID: ${hvcIdDisplay}</div>
+        <div class="hvc-card-id">HVC-ID: CIB-HVC-${esc(r.id?.toString().slice(-6)||'??????')}</div>
         ${r.bio ? `<div class="hvc-card-bio">${esc(r.bio)}</div>` : ''}
         <div class="hvc-card-rows">
           ${r.affiliation ? `<div class="hvc-card-row"><div class="hvc-card-row-label">Affiliation</div><div class="hvc-card-row-value">${esc(r.affiliation)}</div></div>` : ''}
@@ -753,17 +766,7 @@
   function renderAll(records) {
     const grid = document.getElementById('hvc-grid');
     grid.innerHTML = '';
-    // Sort by created_at ascending so older entries keep lower numbers
-    const sorted = [...records].sort((a, b) => {
-      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return ta - tb;
-    });
-    // Build a lookup: id → sequential number (1-based)
-    const seqMap = {};
-    sorted.forEach((r, i) => { seqMap[r.id] = i + 1; });
-    // Render in the original (filtered) order, but use seq numbers
-    records.forEach(r => grid.appendChild(buildCard(r, seqMap[r.id] || 0)));
+    records.forEach(r => grid.appendChild(buildCard(r)));
     updateStats(records);
   }
 
@@ -1016,18 +1019,8 @@
     const r = RECORDS.find(x => x.id === id);
     if (!r) return;
 
-    // Calculate sequential number same way as renderAll
-    const sorted = [...RECORDS].sort((a, b) => {
-      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return ta - tb;
-    });
-    const seqNum  = sorted.findIndex(x => x.id === id) + 1;
-    const seqStr  = String(seqNum).padStart(3, '0');
-    const hvcIdDisplay = `CIB-HVC-${seqStr}`;
-
     document.getElementById('view-eyebrow').textContent =
-      `${hvcIdDisplay} · THREAT: ${(r.threat||'').toUpperCase()} · ${warrantyLabel(r.warrant_status).toUpperCase()}`;
+      `HIGH VALUE TARGET · THREAT: ${(r.threat||'').toUpperCase()} · ${warrantyLabel(r.warrant_status).toUpperCase()}`;
     document.getElementById('view-name').textContent = r.name || '—';
 
     const photoWrap = document.getElementById('view-photo-wrap');
