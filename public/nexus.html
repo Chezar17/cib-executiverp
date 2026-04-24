@@ -74,6 +74,17 @@
   .nx-nav-item.nav-orange.active{background:rgba(224,90,40,0.07);border-left-color:var(--orange);}
   .nx-nav-item.nav-orange.active .nx-nav-label{color:var(--orange);}
   .nx-nav-item.nav-orange.active .nx-nav-icon svg{fill:var(--orange);}
+  /* HVC / Targets module — deep red accent */
+  .nx-nav-item.nav-hvc:hover .nx-nav-label{color:#E74C3C;}
+  .nx-nav-item.nav-hvc:hover .nx-nav-icon svg{fill:#E74C3C;}
+  .nx-nav-item.nav-hvc.active{background:rgba(231,76,60,0.09);border-left-color:#E74C3C;}
+  .nx-nav-item.nav-hvc.active .nx-nav-label{color:#E74C3C;}
+  .nx-nav-item.nav-hvc.active .nx-nav-icon svg{fill:#E74C3C;}
+  .badge-hvc{background:rgba(231,76,60,0.15);color:#E74C3C;border:1px solid rgba(231,76,60,0.4);}
+  /* Quick access card — HVC color */
+  .dash-quick-item.qi-hvc{border-color:rgba(231,76,60,0.25);}
+  .dash-quick-item.qi-hvc:hover{border-color:rgba(231,76,60,0.6);background:rgba(231,76,60,0.06);}
+  .dash-quick-item.qi-hvc .dash-quick-icon svg{fill:#E74C3C;}
   .nx-nav-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .nx-nav-icon svg{width:14px;height:14px;fill:var(--muted);transition:fill 0.15s;}
   .nx-nav-label{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);transition:color 0.15s;flex:1;}
@@ -281,6 +292,13 @@
         <span class="nx-nav-label">Informant Registry</span>
         <span class="nx-nav-badge badge-ts">TS</span>
       </div>
+      <a class="nx-nav-item nav-hvc" href="targets/hvc.html" style="text-decoration:none;">
+        <div class="nx-nav-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        </div>
+        <span class="nx-nav-label">HVC Targets</span>
+        <span class="nx-nav-badge badge-hvc">HVC</span>
+      </a>
     </div>
 
     <div class="nx-sidebar-footer">
@@ -338,7 +356,7 @@
         </div>
         <div class="dash-stat red">
           <div class="dash-stat-label">Modules Available</div>
-          <div class="dash-stat-value">6</div>
+          <div class="dash-stat-value">7</div>
           <div class="dash-stat-hint">Classified sections loaded</div>
         </div>
       </div>
@@ -374,6 +392,11 @@
           <div class="dash-quick-name">Informant Registry</div>
           <div class="dash-quick-hint">33 registered · Handler only</div>
         </div>
+        <a class="dash-quick-item qi-hvc" href="targets/hvc.html" style="text-decoration:none;color:inherit;">
+          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+          <div class="dash-quick-name">HVC Targets</div>
+          <div class="dash-quick-hint">High-value · Priority targets</div>
+        </a>
       </div>
     </div>
 
