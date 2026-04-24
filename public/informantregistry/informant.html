@@ -555,6 +555,11 @@ body.page-visible {
     if (r.task)    rowsHtml += `<div class="informant-row"><div class="informant-row-label">Current Task</div><div class="informant-row-value">${esc(r.task)}</div></div>`;
     if (r.notes)   rowsHtml += `<div class="informant-row"><div class="informant-row-label">Notes</div><div class="informant-row-value" style="color:var(--gold-light);font-size:10px;font-style:italic;">${esc(r.notes)}</div></div>`;
 
+    // ── Audit trail rows ──────────────────────────────────────
+    let auditHtml = '';
+    if (r.created_by) auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Created by</div><div class="informant-row-value" style="color:#3a4a6b;font-size:9px;">${esc(r.created_by)}</div></div>`;
+    if (r.edited_by)  auditHtml += `<div class="informant-row"><div class="informant-row-label" style="color:#3a4a6b;">Last edited by</div><div class="informant-row-value" style="color:#3a4a6b;font-size:9px;">${esc(r.edited_by)}</div></div>`;
+
     const sc = statusClass(r.status);
     div.innerHTML = `
       <div class="informant-header">
@@ -565,6 +570,7 @@ body.page-visible {
         </div>
       </div>
       <div class="informant-rows">${rowsHtml}</div>
+      <div class="informant-rows" style="margin-top:6px;padding-top:6px;border-top:1px solid #0f1d35;">${auditHtml}</div>
       <div class="informant-status ${sc}"><div class="status-dot"></div> ${esc(r.status)}</div>
       <div class="inf-card-actions">
         <button class="inf-edit-btn" onclick="editInformant(this)">✎ Edit</button>
@@ -710,7 +716,8 @@ body.page-visible {
     if (!code) { document.getElementById('inf-f-code').focus(); return; }
     if (!name) { document.getElementById('inf-f-name').focus(); return; }
 
-    const editId = document.getElementById('inf-edit-id').value;
+    const editId  = document.getElementById('inf-edit-id').value;
+    const myBadge = sessionStorage.getItem('cib_badge') || 'Unknown';
     const record = {
       code, name, status,
       handler: document.getElementById('inf-f-handler').value.trim(),
@@ -721,14 +728,14 @@ body.page-visible {
 
     try {
       if (editId) {
-        // UPDATE existing record in Supabase
-        const result = await apiCall('PUT', { id: editId, ...record });
+        // UPDATE existing record in Supabase — log who edited it
+        const result = await apiCall('PUT', { id: editId, ...record, edited_by: myBadge });
         const idx = RECORDS.findIndex(r => r.id === editId);
         if (idx > -1) RECORDS[idx] = result.data;
         showToast('Record updated — ' + name, 'edit');
       } else {
-        // CREATE new record in Supabase
-        const result = await apiCall('POST', record);
+        // CREATE new record in Supabase — log who created it
+        const result = await apiCall('POST', { ...record, created_by: myBadge });
         RECORDS.push(result.data);
         showToast('New informant registered — ' + name, 'success');
       }
@@ -767,7 +774,8 @@ body.page-visible {
     if (!_pendingDeleteId) return;
     const rec = RECORDS.find(r => r.id === _pendingDeleteId);
     try {
-      await apiCall('DELETE', null, _pendingDeleteId);
+      const myBadge = sessionStorage.getItem('cib_badge') || 'Unknown';
+      await apiCall('DELETE', { deleted_by: myBadge }, _pendingDeleteId);
       RECORDS = RECORDS.filter(r => r.id !== _pendingDeleteId);
       renderAll(RECORDS);
       closeDelModal();
