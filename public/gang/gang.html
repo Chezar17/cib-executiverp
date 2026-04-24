@@ -1,0 +1,3068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gang Intelligence — CIB NEXUS</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --gold:#C9A84C;
+    --gold-light:#E8C97A;
+    --navy:#0A0F1E;
+    --navy-mid:#0D1526;
+    --navy-card:#111827;
+    --navy-border:#1E2D4A;
+    --white:#F0EDE4;
+    --muted:#8A95AA;
+    --red-alert:#C0392B;
+    --green:#27AE60;
+    --threat-critical:#C0392B;
+    --threat-high:#E05A28;
+    --threat-medium:#C9A84C;
+    --threat-low:#27AE60;
+    --threat-dormant:#8A95AA;
+  }
+  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;opacity:0;transition:opacity 0.4s ease;}
+  body.page-visible{opacity:1;}
+
+  /* ══ ACCESS GATE ══ */
+  #access-gate{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+  #access-gate.hidden{display:none;}
+  .gate-logo{width:64px;height:64px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+  .gate-logo img{width:48px;height:48px;object-fit:contain;}
+  .gate-text{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+  .gate-bar{width:200px;height:2px;background:var(--navy-border);overflow:hidden;}
+  .gate-progress{height:100%;background:var(--gold);animation:gateLoad 0.8s ease forwards;}
+  @keyframes gateLoad{from{width:0}to{width:100%}}
+
+  /* ══ TOP BAR ══ */
+  .topbar{background:#080C18;border-bottom:1px solid var(--gold);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:100;}
+  .topbar-left{display:flex;align-items:center;gap:14px;}
+  .topbar-logo{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(201,168,76,0.4));}
+  .topbar-brand{font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;}
+  .topbar-divider{width:1px;height:20px;background:var(--navy-border);}
+  .topbar-sub{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+  .topbar-right{display:flex;align-items:center;gap:20px;}
+  .topbar-badge-display{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);}
+  .topbar-badge-display span{color:var(--gold);}
+  .topbar-clock{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);}
+  .back-btn{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(201,168,76,0.3);padding:5px 14px;cursor:pointer;background:transparent;text-decoration:none;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+  .back-btn:hover{background:rgba(201,168,76,0.08);}
+  .logout-btn{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--red-alert);border:1px solid rgba(192,57,43,0.4);padding:5px 14px;cursor:pointer;background:transparent;transition:all 0.2s;}
+  .logout-btn:hover{background:rgba(192,57,43,0.1);}
+
+  /* ══ CLASSIFICATION BANNER ══ */
+  .class-banner{background:#1A0505;border-bottom:2px solid var(--red-alert);padding:7px 32px;display:flex;align-items:center;justify-content:center;gap:20px;}
+  .class-banner-text{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--red-alert);text-transform:uppercase;}
+  .class-dots{display:flex;gap:6px;}
+  .class-dot{width:6px;height:6px;border-radius:50%;background:var(--red-alert);}
+
+  /* ══ TICKER ══ */
+  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:28px;display:flex;align-items:center;}
+  .ticker-label{background:#E05A28;color:#fff;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;padding:0 12px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
+  .ticker-track{display:flex;animation:ticker 45s linear infinite;white-space:nowrap;}
+  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);padding:0 40px;}
+  .ticker-track span b{color:var(--gold-light);}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ══ PAGE HERO ══ */
+  .page-hero{background:radial-gradient(ellipse at 30% 50%,#1A0E06 0%,var(--navy) 70%);padding:44px 40px 36px;position:relative;overflow:hidden;border-bottom:1px solid var(--navy-border);}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(224,90,40,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(224,90,40,0.03) 1px,transparent 1px);background-size:50px 50px;}
+  .hero-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:#E05A28;}
+  .hero-inner{position:relative;z-index:2;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr auto;align-items:end;gap:40px;}
+  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:5px;color:#E05A28;text-transform:uppercase;margin-bottom:10px;opacity:0.9;}
+  .hero-title{font-family:'Oswald',sans-serif;font-size:clamp(28px,5vw,52px);font-weight:700;letter-spacing:6px;text-transform:uppercase;color:var(--white);line-height:1.1;margin-bottom:6px;}
+  .hero-title span{color:#E05A28;}
+  .hero-line{width:60px;height:2px;background:#E05A28;margin:14px 0;}
+  .hero-desc{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;line-height:1.8;max-width:520px;}
+  .hero-stats{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+  .hero-stat{text-align:right;}
+  .hero-stat-num{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:#E05A28;line-height:1;}
+  .hero-stat-lbl{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+
+  /* ══ THREAT LEGEND BAR ══ */
+  .threat-legend{background:var(--navy-mid);border-bottom:1px solid var(--navy-border);padding:10px 40px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;}
+  .threat-legend-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-right:4px;}
+  .tl-item{display:flex;align-items:center;gap:6px;}
+  .tl-dot{width:8px;height:8px;border-radius:50%;}
+  .tl-name{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+
+  /* ══ FILTER / SEARCH BAR ══ */
+  .filter-bar{background:var(--navy-mid);border-bottom:1px solid var(--navy-border);padding:0 40px 10px;display:flex;flex-direction:column;align-items:center;gap:0;position:sticky;top:52px;z-index:80;}
+  .filter-btn-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;}
+  .filter-btn{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding:13px 18px;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:color 0.2s,border-color 0.2s;white-space:nowrap;}
+  .filter-btn:hover{color:var(--white);}
+  .filter-btn.active{color:#E05A28;border-bottom-color:#E05A28;}
+  .search-wrap{display:flex;align-items:center;gap:8px;border:1px solid var(--navy-border);padding:6px 14px;background:rgba(0,0,0,0.2);margin:0;}
+  .search-wrap input{background:none;border:none;outline:none;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--white);width:260px;}
+  .search-wrap input::placeholder{color:var(--muted);opacity:0.5;}
+
+  /* ══ MAIN WRAP ══ */
+  .gang-wrap{max-width:1200px;margin:0 auto;padding:40px 40px 80px;}
+
+  /* ══════════════════════════════════════
+     GANG CARD — THE MAIN ELEMENT
+     Each gang gets one large card.
+     Add a new gang by copying one card block.
+  ══════════════════════════════════════ */
+  .gang-cards{display:flex;flex-direction:column;gap:32px;}
+
+  .gang-card{background:var(--navy-card);border:1px solid var(--navy-border);overflow:hidden;position:relative;}
+
+  /* Left accent stripe — color driven by threat level class */
+  .gang-card::before{content:'';position:absolute;top:0;left:0;width:5px;height:100%;z-index:2;}
+  .threat-critical.gang-card::before{background:var(--threat-critical);}
+  .threat-high.gang-card::before{background:var(--threat-high);}
+  .threat-medium.gang-card::before{background:var(--threat-medium);}
+  .threat-low.gang-card::before{background:var(--threat-low);}
+  .threat-dormant.gang-card::before{background:var(--threat-dormant);}
+
+  /* ── CARD HEADER ── */
+  .gang-card-header{display:grid;grid-template-columns:140px 1fr auto;gap:0;border-bottom:1px solid var(--navy-border);padding-left:5px;}/* offset for accent stripe */
+
+  /* Logo zone */
+  .gang-logo-zone{width:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;background:rgba(0,0,0,0.2);border-right:1px solid var(--navy-border);gap:10px;flex-shrink:0;}
+  .gang-logo-frame{width:88px;height:88px;border:1px solid var(--navy-border);display:flex;align-items:center;justify-content:center;background:#080C18;overflow:hidden;position:relative;}
+  /* Corner brackets on the logo frame */
+  .gang-logo-frame::before,.gang-logo-frame::after{content:'';position:absolute;width:10px;height:10px;}
+  .gang-logo-frame::before{top:4px;left:4px;border-top:1px solid rgba(201,168,76,0.4);border-left:1px solid rgba(201,168,76,0.4);}
+  .gang-logo-frame::after{bottom:4px;right:4px;border-bottom:1px solid rgba(201,168,76,0.4);border-right:1px solid rgba(201,168,76,0.4);}
+  /* The actual logo image */
+  .gang-logo-frame img{width:100%;height:100%;object-fit:contain;}
+  /* Initials fallback shown when no image is loaded */
+  .gang-logo-initials{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;letter-spacing:3px;color:var(--muted);opacity:0.4;}
+  .gang-logo-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--muted);opacity:0.4;text-transform:uppercase;text-align:center;}
+
+  /* Gang identity */
+  .gang-identity{padding:22px 24px 18px;}
+  .gang-doc-ref{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--muted);opacity:0.5;margin-bottom:8px;text-transform:uppercase;}
+  .gang-name{font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--white);line-height:1.1;margin-bottom:3px;}
+  .gang-alias{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;}
+  .gang-meta-row{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:12px;}
+  .gang-meta-item{display:flex;flex-direction:column;gap:2px;}
+  .gang-meta-lbl{font-family:'Roboto Mono',monospace;font-size:7.5px;letter-spacing:2px;color:var(--muted);opacity:0.55;text-transform:uppercase;}
+  .gang-meta-val{font-size:12px;color:var(--white);}
+  .gang-territory-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+  .gang-territory-tag{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 8px;border:1px solid var(--navy-border);color:var(--muted);text-transform:uppercase;}
+
+  /* Threat level panel */
+  .gang-threat-panel{padding:22px 24px;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;gap:10px;min-width:160px;border-left:1px solid var(--navy-border);}
+  .gang-threat-badge{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .gang-threat-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+  .gang-threat-level{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;padding:6px 14px;border:1px solid;}
+  .threat-critical .gang-threat-level{color:var(--threat-critical);border-color:rgba(192,57,43,0.5);background:rgba(192,57,43,0.08);}
+  .threat-high .gang-threat-level{color:var(--threat-high);border-color:rgba(224,90,40,0.5);background:rgba(224,90,40,0.08);}
+  .threat-medium .gang-threat-level{color:var(--threat-medium);border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.08);}
+  .threat-low .gang-threat-level{color:var(--threat-low);border-color:rgba(39,174,96,0.5);background:rgba(39,174,96,0.08);}
+  .threat-dormant .gang-threat-level{color:var(--threat-dormant);border-color:rgba(138,149,170,0.5);background:rgba(138,149,170,0.08);}
+  /* Threat bar */
+  .gang-threat-bar-wrap{width:100%;height:4px;background:var(--navy-border);border-radius:2px;}
+  .gang-threat-bar{height:100%;border-radius:2px;}
+  .threat-critical .gang-threat-bar{background:var(--threat-critical);width:100%;}
+  .threat-high     .gang-threat-bar{background:var(--threat-high);width:80%;}
+  .threat-medium   .gang-threat-bar{background:var(--threat-medium);width:55%;}
+  .threat-low      .gang-threat-bar{background:var(--threat-low);width:30%;}
+  .threat-dormant  .gang-threat-bar{background:var(--threat-dormant);width:10%;}
+  .gang-threat-bar-pct{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);margin-top:3px;}
+  /* Status badge */
+  .gang-status-pill{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border:1px solid;display:inline-block;}
+  .pill-active{color:var(--red-alert);border-color:rgba(192,57,43,0.4);background:rgba(192,57,43,0.06);}
+  .pill-monitored{color:var(--gold);border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.06);}
+  .pill-dormant{color:var(--muted);border-color:rgba(138,149,170,0.3);background:rgba(138,149,170,0.04);}
+
+  /* ── CARD BODY (expandable) ── */
+  .gang-card-body{display:none;padding-left:5px;/* match accent offset */}
+  .gang-card-body.open{display:block;}
+  .gang-body-inner{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;}
+
+  /* Bio section */
+  .gang-bio-section{padding:20px 22px;border-right:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);}
+  .gang-section-title{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .gang-section-title::after{content:'';flex:1;height:1px;background:var(--navy-border);}
+  .gang-bio-text{font-size:12px;color:var(--muted);line-height:1.8;}
+
+  /* Crimes section */
+  .gang-crimes-section{padding:20px 22px;border-right:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);}
+  .gang-crime-list{display:flex;flex-direction:column;gap:7px;}
+  .gang-crime-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);}
+  .gang-crime-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
+  .threat-critical .gang-crime-dot{background:var(--threat-critical);}
+  .threat-high     .gang-crime-dot{background:var(--threat-high);}
+  .threat-medium   .gang-crime-dot{background:var(--threat-medium);}
+  .threat-low      .gang-crime-dot{background:var(--threat-low);}
+  .threat-dormant  .gang-crime-dot{background:var(--threat-dormant);}
+
+  /* Hierarchy section */
+  .gang-hierarchy-section{padding:20px 22px;border-right:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);}
+  .gang-hier-list{display:flex;flex-direction:column;gap:8px;}
+  .gang-hier-item{display:flex;align-items:flex-start;gap:10px;}
+  .gang-hier-rank{font-family:'Roboto Mono',monospace;font-size:7.5px;letter-spacing:1px;color:var(--muted);opacity:0.55;width:80px;flex-shrink:0;padding-top:1px;text-transform:uppercase;}
+  .gang-hier-name{font-size:11.5px;color:var(--white);}
+  .gang-hier-note{font-size:10px;color:var(--muted);margin-top:1px;}
+
+  /* Expand toggle button */
+  .gang-expand-btn{width:100%;background:rgba(0,0,0,0.15);border:none;border-top:1px solid var(--navy-border);color:var(--muted);font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .gang-expand-btn:hover{color:var(--white);background:rgba(255,255,255,0.03);}
+  .gang-expand-btn .arrow{transition:transform 0.2s;font-size:11px;}
+  .gang-expand-btn.expanded .arrow{transform:rotate(180deg);}
+
+  /* ══ NO-RESULTS ══ */
+  .no-results{display:none;padding:60px;text-align:center;}
+  .no-results-text{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+
+  /* ══ FOOTER ══ */
+  .nexus-footer{background:#080C18;border-top:1px solid var(--navy-border);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .nexus-footer-left{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.5;}
+  .nexus-footer-right{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red-alert);opacity:0.6;}
+
+  /* ══ RESPONSIVE ══ */
+  @media(max-width:960px){
+    .gang-card-header{grid-template-columns:1fr;}
+    .gang-threat-panel{border-left:none;border-top:1px solid var(--navy-border);flex-direction:row;align-items:center;justify-content:flex-start;}
+    .gang-body-inner{grid-template-columns:1fr 1fr;}
+    .gang-bio-section,.gang-hierarchy-section{border-right:none;}
+    .hero-inner{grid-template-columns:1fr;}
+    .filter-bar,.gang-wrap,.page-hero{padding-left:20px;padding-right:20px;}
+  }
+  @media(max-width:600px){
+    .topbar{padding:0 16px;}
+    .gang-logo-zone{display:none;}
+  }
+
+  /* ── GANG LOCATION PHOTOS SECTION ─────────────────────────
+     Sits as the 4th column in the gang-body-inner grid.
+     Supports up to 3 photos per gang.
+     To add a photo: replace the placeholder div with an <img> tag.
+  ──────────────────────────────────────────────────────────── */
+  .gang-location-section{padding:20px 22px;border-bottom:1px solid var(--navy-border);}
+
+  .gang-location-photos{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+
+  /* Individual photo slot */
+  .gang-loc-photo{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#080C18;border:1px solid var(--navy-border);}
+  .gang-loc-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(20%);}
+  .gang-loc-photo img:hover{filter:grayscale(0%);transform:scale(1.03);transition:filter 0.3s,transform 0.3s;}
+
+  /* Placeholder shown when no photo is uploaded */
+  .gang-loc-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px;}
+  .gang-loc-placeholder svg{width:24px;height:24px;fill:var(--navy-border);}
+  .gang-loc-placeholder span{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--navy-border);text-transform:uppercase;text-align:center;line-height:1.5;}
+
+  /* Caption strip at bottom of each photo */
+  .gang-loc-caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:5px 8px;}
+  .gang-loc-caption-text{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:rgba(240,237,228,0.55);text-transform:uppercase;}
+
+</style>
+</head>
+<body>
+
+<!-- ACCESS GATE -->
+<div id="access-gate">
+  <div class="gate-logo">
+    <img src="images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
+  </div>
+  <div class="gate-text">Loading Intelligence File...</div>
+  <div class="gate-bar"><div class="gate-progress"></div></div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <img class="topbar-logo" src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="topbar-brand">NEXUS</span>
+    <div class="topbar-divider"></div>
+    <span class="topbar-sub">Gang Intelligence Database</span>
+  </div>
+  <div class="topbar-right">
+    <a class="back-btn" href="Page_Nexus.html">‹ Back to Nexus</a>
+    <span class="topbar-badge-display">Logged in as: <span id="badgeDisplay">—</span></span>
+    <span class="topbar-clock" id="liveClock">—</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- CLASSIFICATION BANNER -->
+<div class="class-banner">
+  <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
+  <div class="class-banner-text">TOP SECRET // GRD INTELLIGENCE DATABASE // AUTHORIZED PERSONNEL ONLY // UNAUTHORIZED ACCESS IS A FEDERAL OFFENSE</div>
+  <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-label">GANG INTEL</div>
+  <div style="overflow:hidden;flex:1;">
+    <div class="ticker-track">
+      <span><b>GRD ADVISORY</b> · This database contains classified gang intelligence — do not share outside authorized channels &nbsp;|&nbsp; <b>NOTICE</b> · Threat levels are subject to change based on operational updates &nbsp;|&nbsp; <b>REMINDER</b> · All gang contacts must be reported to your handler within 24 hours &nbsp;|&nbsp; <b>GRD</b> · Intelligence entries last reviewed by Division Commander &nbsp;|&nbsp; <b>GRD ADVISORY</b> · This database contains classified gang intelligence — do not share outside authorized channels &nbsp;|&nbsp; <b>NOTICE</b> · Threat levels are subject to change based on operational updates &nbsp;|&nbsp; <b>REMINDER</b> · All gang contacts must be reported to your handler within 24 hours &nbsp;|&nbsp; <b>GRD</b> · Intelligence entries last reviewed by Division Commander</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="hero-grid"></div>
+  <div class="hero-accent"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">Gang Recon Division · Statewide Intelligence</div>
+      <div class="hero-title">Gang <span>Intelligence</span></div>
+      <div class="hero-title" style="font-size:clamp(14px,2vw,20px);letter-spacing:8px;color:var(--muted);margin-top:4px;">State of San Andreas</div>
+      <div class="hero-line"></div>
+      <div class="hero-desc">
+        Classified registry of all known criminal organizations operating within state borders.<br/>
+        Maintained by the Gang Recon Division · Threat levels, hierarchies &amp; criminal profiles.
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="stat-total">0</div>
+        <div class="hero-stat-lbl">Organizations</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="stat-critical" style="color:var(--threat-critical);">0</div>
+        <div class="hero-stat-lbl">Critical Threat</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="stat-high" style="color:var(--threat-high);">0</div>
+        <div class="hero-stat-lbl">High Threat</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THREAT LEGEND -->
+<div class="threat-legend">
+  <span class="threat-legend-label">Threat Key:</span>
+  <div class="tl-item"><div class="tl-dot" style="background:var(--threat-critical);"></div><span class="tl-name">Critical</span></div>
+  <div class="tl-item"><div class="tl-dot" style="background:var(--threat-high);"></div><span class="tl-name">High</span></div>
+  <div class="tl-item"><div class="tl-dot" style="background:var(--threat-medium);"></div><span class="tl-name">Medium</span></div>
+  <div class="tl-item"><div class="tl-dot" style="background:var(--threat-low);"></div><span class="tl-name">Low</span></div>
+  <div class="tl-item"><div class="tl-dot" style="background:var(--threat-dormant);"></div><span class="tl-name">Dormant</span></div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-btn-row">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="critical">Critical</button>
+    <button class="filter-btn" data-filter="high">High</button>
+    <button class="filter-btn" data-filter="medium">Medium</button>
+    <button class="filter-btn" data-filter="low">Low</button>
+    <button class="filter-btn" data-filter="dormant">Dormant</button>
+    <button class="filter-btn" data-filter="west">West</button>
+    <button class="filter-btn" data-filter="east">East</button>
+    <button class="filter-btn" data-filter="north">North</button>
+    <button class="filter-btn" data-filter="county">County</button>
+  </div>
+  <div class="search-wrap">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8A95AA" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="gang-search" placeholder="Search gang, territory, crime…"/>
+  </div>
+</div>
+
+
+<div class="gang-wrap">
+<div class="gang-cards" id="gang-cards">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Vici
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-medium" data-threat="medium">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-vici.png" alt="Vici" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">VC</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-001 · Last Updated: 04.2026</div>
+        <div class="gang-name">Vici</div>
+        <div class="gang-alias">West Los Santos · Prosperity Street</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Prosperity Street</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Prosperity Street</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">MEDIUM</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">55% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">VICI is a West-side organization based on Prosperity Street, operating as a sophisticated criminal enterprise with political ambitions across western Los Santos. Known for disciplined structure and calculated operations, VICI has positioned itself as a power broker in the western criminal ecosystem. GRD intelligence indicates the organization prioritizes long-term influence over short-term gains, making them difficult to prosecute but deeply embedded in the area.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Political Corruption &amp; Influence</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Money Laundering</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Organized Extortion</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Conspiracy &amp; Racketeering</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms Possession</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Street-Level Enforcement</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Aomi Ayaka</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Prosperity Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Prosperity Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Prosperity Street — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Vici ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Apex
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-apex.png" alt="Apex" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">APEX</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-002 · Last Updated: 04.2026</div>
+        <div class="gang-name">Apex</div>
+        <div class="gang-alias">West Los Santos · Little Seoul</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Little Seoul</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">2</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Little Seoul</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">APEX operates out of Little Seoul, functioning as a white-collar criminal organization with street-level enforcement capacity. The group blends financial crime with street operations, using legitimate business fronts to launder proceeds. GRD has two active informants within or adjacent to APEX, including a high-trust inside agent monitoring PFLS movement on behalf of the Bureau.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Money Laundering</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Political Corruption</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>High-Value Fraud</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Racketeering</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Contraband Brokering</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Conspiracy</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Jamien K Shen</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Gee Fortuna</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Little Seoul — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Little Seoul — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Little Seoul — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Apex ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: 45 Trench
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-45trench.png" alt="45 Trench" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">4T</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-003 · Last Updated: 04.2026</div>
+        <div class="gang-name">45 Trench</div>
+        <div class="gang-alias">West Los Santos · Cougar Avenue</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Cougar Avenue</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Cougar Avenue</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">45 Trench is a mid-level street gang operating along Cougar Avenue in West Los Santos. The group maintains a tight-knit membership structure focused on territorial control and narcotics distribution in its immediate zone. GRD classifies them as low threat due to contained operations, though their proximity to larger organizations warrants continued monitoring.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Armed Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Theft &amp; Burglary</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Acid Rasyid</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Cougar Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Cougar Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Cougar Avenue — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: 45 Trench ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Red Hustlers
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-medium" data-threat="medium">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-redhustlers.png" alt="Red Hustlers" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">RH</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-004 · Last Updated: 04.2026</div>
+        <div class="gang-name">Red Hustlers</div>
+        <div class="gang-alias">West Los Santos · Little Seoul</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Little Seoul</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">3</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Little Seoul</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">MEDIUM</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">55% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Red Hustlers are an active West-side crew operating out of Little Seoul, known for aggressive street-level operations and a layered leadership structure. With multiple Under-OG positions filled, the organization shows signs of structured succession planning. GRD maintains active intelligence on the group due to their involvement in firearms and narcotics commerce across the western corridor.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Firearms Trafficking</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Armed Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Extortion</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang-Related Violence</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Street-Level Enforcement</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Sneaky O'Brion</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Jax O'Pizz</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Billie Joe Crownstone</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Little Seoul — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Little Seoul — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Little Seoul — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Red Hustlers ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: East Block 90s
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-eastblock90s.png" alt="East Block 90s" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">EB90</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-005 · Last Updated: 04.2026</div>
+        <div class="gang-name">East Block 90s</div>
+        <div class="gang-alias">West Los Santos · Vitus Street</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Vitus Street</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">4</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Vitus Street</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">East Block 90s is a legacy street organization based on Vitus Street in West Los Santos. With four OG-level figures identified by GRD, the group operates a stable hierarchy that has maintained consistent criminal activity over an extended period. Their longevity in the area and established network make them a persistent intelligence target for the Bureau.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Armed Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang-Related Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Violence</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Tommy Cheng</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Marlo Wade</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Lamello Rodrigo</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Burton Lin</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Vitus Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Vitus Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Vitus Street — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: East Block 90s ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Black Street Alley
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-blackstreetalley.png" alt="Black Street Alley" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">BSA</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-006 · Last Updated: 04.2026</div>
+        <div class="gang-name">Black Street Alley</div>
+        <div class="gang-alias">West Los Santos · Bay City Avenue</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Bay City Avenue</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">8</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Bay City Avenue</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Black Street Alley is a small but tightly controlled street crew operating along Bay City Avenue. The organization maintains a single verified OG and operates quietly compared to larger West-side entities. GRD monitors the group for its potential role as a distribution node for larger criminal networks operating in the region.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Theft &amp; Burglary</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Dante Sykes</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Bay City Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Bay City Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Bay City Avenue — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Black Street Alley ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Top Rank Gang
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-toprankgang.png" alt="Top Rank Gang" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">TRG</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-007 · Last Updated: 04.2026</div>
+        <div class="gang-name">Top Rank Gang</div>
+        <div class="gang-alias">West Los Santos · Melanoma Street</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Melanoma Street</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Melanoma Street</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Top Rank Gang operates on Melanoma Street in West Los Santos under a single OG leadership structure. The group is classified low threat due to limited operational reach, but GRD maintains surveillance given their territory's overlap with more significant criminal corridors. The organization's activities center on local narcotics distribution and territorial assertion.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Enforcement</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Dang Bathakoo</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Melanoma Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Melanoma Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Melanoma Street — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Top Rank Gang ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Palomino Young Block
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-palominoyoungblock.png" alt="Palomino Young Block" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">PYB</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-008 · Last Updated: 04.2026</div>
+        <div class="gang-name">Palomino Young Block</div>
+        <div class="gang-alias">West Los Santos · Palomino Avenue</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Palomino Avenue</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">2</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">20</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Palomino Avenue</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Palomino Young Block operates along Palomino Avenue with a dual OG command structure. The group's youth-oriented recruitment strategy has drawn GRD attention as a potential feeder organization for larger criminal entities in the western sector. They are currently classified low threat but are actively monitored for signs of escalation or alliance-building.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang Recruitment</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Jack Ulrich</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Jay Valdemar</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Palomino Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Palomino Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Palomino Avenue — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Palomino Young Block ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Shadow of Syndicate
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-shadowofsyndicate.png" alt="Shadow of Syndicate" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">SOS</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-009 · Last Updated: 04.2026</div>
+        <div class="gang-name">Shadow of Syndicate</div>
+        <div class="gang-alias">West Los Santos · Forum Drive</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Forum Drive</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">West</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">Unknown</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Forum Drive</span>
+          <span class="gang-territory-tag">West Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Shadow of Syndicate is an emerging organization operating along Forum Drive in the western sector. GRD intelligence on this group remains limited, with no confirmed OG-level figures identified at this time. The Bureau has opened a monitoring file and is developing intelligence assets to clarify the group's structure, operations, and connections to established criminal networks.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Control</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Unknown — Under Investigation</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Leadership</span>
+              <div><div class="gang-hier-name">Unknown — Under Investigation</div><div class="gang-hier-note">GRD active identification effort</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Forum Drive — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Forum Drive — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Forum Drive — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Shadow of Syndicate ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: 6TRAY
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-6tray.png" alt="6TRAY" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">6TRAY</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-010 · Last Updated: 04.2026</div>
+        <div class="gang-name">6TRAY</div>
+        <div class="gang-alias">East Los Santos · Forum Drive</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Forum Drive</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">East</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">Unknown</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Forum Drive</span>
+          <span class="gang-territory-tag">East Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">6TRAY operates on Forum Drive in East Los Santos. GRD intelligence indicates the group is affiliated with larger East-side gang networks, positioning them as a satellite or allied entity rather than a fully independent organization. Membership details remain under active development. CIB informant C30 (Jaylen Mackenzie) has provided street-level intelligence on the group.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang-Related Violence</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Enforcement</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Leadership</span>
+              <div><div class="gang-hier-name">Unknown — Under Investigation</div><div class="gang-hier-note">GRD active identification effort</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Forum Drive — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Forum Drive — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Forum Drive — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: 6TRAY ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Rich Paisas N
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-richpaisasn.png" alt="Rich Paisas N" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">RPN</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-011 · Last Updated: 04.2026</div>
+        <div class="gang-name">Rich Paisas N</div>
+        <div class="gang-alias">East Los Santos · Strawberry Avenue</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Strawberry Avenue</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">East</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">12</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Strawberry Avenue</span>
+          <span class="gang-territory-tag">East Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Rich Paisas N is a street-level organization operating on Strawberry Avenue in East Los Santos. With one confirmed OG-level figure, the group maintains a localized criminal presence focused on territorial control and street-level commerce. GRD monitors the organization for its potential connections to larger East-side criminal alliances.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Control</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Darby Banks</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Strawberry Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Strawberry Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Strawberry Avenue — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Rich Paisas N ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: ODF
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-odf.png" alt="ODF" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">ODF</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-012 · Last Updated: 04.2026</div>
+        <div class="gang-name">ODF</div>
+        <div class="gang-alias">East Los Santos · Jamestown Street</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Jamestown Street</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">East</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">3</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Jamestown Street</span>
+          <span class="gang-territory-tag">East Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">ODF (Only Da Fam) maintains a strong presence on Jamestown Street in East Los Santos. The organization operates with a multi-OG leadership structure and has positioned itself as a significant player in East-side gang politics. GRD has two active informants embedded in or adjacent to the ODF network, providing regular intelligence on internal dynamics and territorial ambitions.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang-Related Violence</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Enforcement</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Robbery</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Dayon Gaulden</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Trae Von</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Lamar Smoke</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Jamestown Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Jamestown Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Jamestown Street — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: ODF ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Ballas
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-high" data-threat="high">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-ballas.png" alt="Ballas" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">BLS</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-013 · Last Updated: 04.2026</div>
+        <div class="gang-name">Ballas</div>
+        <div class="gang-alias">East Los Santos · Groove Street</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Groove Street</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">East</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">20</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Active</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Groove Street</span>
+          <span class="gang-territory-tag">East Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">HIGH</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">80% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-active">Active</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">The Ballas are one of the most dangerous and well-organized criminal organizations in San Andreas, operating out of Groove Street with a formidable street presence backed by heavy firepower and a disciplined internal command chain. Designated HIGH threat by GRD command, the Ballas maintain active drug supply networks, have been linked to multiple officer-involved incidents, and represent the Bureau's highest case volume of any single organization. Inter-gang conflict is frequent and frequently violent.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>RICO Violations</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Homicide &amp; Attempted Murder</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution (large-scale)</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Weapons Trafficking</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Drive-by Shootings</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Kidnapping &amp; Hostage Taking</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault on Peace Officers</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Nelson Moss</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Groove Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Groove Street — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Groove Street — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Ballas ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Sckandalouz Boyz
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-sckandalouzboyz.png" alt="Sckandalouz Boyz" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">SBZ</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-014 · Last Updated: 04.2026</div>
+        <div class="gang-name">Sckandalouz Boyz</div>
+        <div class="gang-alias">East Los Santos · Roy Lowenstein Blvd</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Roy Lowenstein Blvd</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">East</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Roy Lowenstein Blvd</span>
+          <span class="gang-territory-tag">East Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Sckandalouz Boyz operate along Roy Lowenstein Boulevard in East Los Santos. The organization has one confirmed OG-level figure, GRD informant C29 (Osvaldo Zabata), who has provided intelligence on street politics in the eastern sector. The group is classified low threat but is monitored for its participation in broader East-side criminal dynamics.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Street-Level Violence</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Osvaldo Zabata</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Roy Lowenstein Blvd — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Roy Lowenstein Blvd — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Roy Lowenstein Blvd — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Sckandalouz Boyz ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: 666 Menace Steppaz
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-666menacesteppaz.png" alt="666 Menace Steppaz" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">666</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-015 · Last Updated: 04.2026</div>
+        <div class="gang-name">666 Menace Steppaz</div>
+        <div class="gang-alias">East Los Santos · Brouge Avenue</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Brouge Avenue</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">East</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">3</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Brouge Avenue</span>
+          <span class="gang-territory-tag">East Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">666 Menace Steppaz is an East Los Santos organization operating along Brouge Avenue with a three-OG leadership structure. The group has been linked to East-side political violence and territorial disputes. GRD informant C8 (Killon Duncan) is embedded within the organization's network and has provided actionable intelligence on gang politics and movement in the eastern sector.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang-Related Violence</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Enforcement</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Killon Duncan</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Owen Griffin</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Davis Lou</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Brouge Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Brouge Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Brouge Avenue — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: 666 Menace Steppaz ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Nine Six Nine
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-high" data-threat="high">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-ninesixnine.png" alt="Nine Six Nine" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">969</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-016 · Last Updated: 04.2026</div>
+        <div class="gang-name">Nine Six Nine</div>
+        <div class="gang-alias">North Los Santos · Tequilala Bar</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Tequilala Bar</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">20</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Active</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Tequilala Bar</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">HIGH</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">80% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-active">Active</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Nine Six Nine is a High threat organization based at Tequilala Bar in North Los Santos. The group operates with a single confirmed OG and has demonstrated capacity for organized criminal activity at a scale that warrants elevated threat classification. GRD is actively developing intelligence on the group's operations, supply networks, and connections to other North-side criminal entities.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Organized Crime</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Extortion</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Firearms Trafficking</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang-Related Violence</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Baramuto Rayden</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Tequilala Bar — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Tequilala Bar — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Tequilala Bar — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Nine Six Nine ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Saint Hustle
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-high" data-threat="high">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-sainthustle.png" alt="Saint Hustle" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">SH</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-017 · Last Updated: 04.2026</div>
+        <div class="gang-name">Saint Hustle</div>
+        <div class="gang-alias">North Los Santos · Eclipse Boulevard</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Eclipse Boulevard</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">3</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">20</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Active</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Eclipse Boulevard</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">HIGH</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">80% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-active">Active</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Saint Hustle is a High threat organization operating along Eclipse Boulevard in North Los Santos. With three confirmed OG-level figures and an expanding criminal reach, the group has established itself as a significant power in the northern sector. GRD maintains multiple intelligence assets connected to the organization and monitors the group closely for signs of further escalation or alliance with higher-threat entities.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Street-Level Drug Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Armed Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang Alliance Activity</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Theft &amp; Burglary</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Shelby Young Tjhio</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Andreas Ratakiri</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Dorii G Wagon</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Eclipse Boulevard — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Eclipse Boulevard — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Eclipse Boulevard — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Saint Hustle ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Miltonbois
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-miltonbois.png" alt="Miltonbois" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">MB</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-018 · Last Updated: 04.2026</div>
+        <div class="gang-name">Miltonbois</div>
+        <div class="gang-alias">North Los Santos · Hawick Avenue</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Hawick Avenue</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">2</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Hawick Avenue</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Miltonbois operates on Hawick Avenue in North Los Santos with a dual OG structure. The organization is involved in street-level criminal activity across the northern corridor. GRD informant C33 (Pink Hernandez) provides intelligence on gun dealers and street updates from within the Miltonbois network. The group is classified low threat but actively monitored.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Firearms Trafficking</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Black Market Commerce</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Max Tonelar</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Isaac Cartier</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Hawick Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Hawick Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Hawick Avenue — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Miltonbois ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Blacklist
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-blacklist.png" alt="Blacklist" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">BL</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-019 · Last Updated: 04.2026</div>
+        <div class="gang-name">Blacklist</div>
+        <div class="gang-alias">North Los Santos · Clinton Avenue</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Clinton Avenue</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Clinton Avenue</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Blacklist is a North Los Santos organization based on Clinton Avenue. GRD intelligence from informant C13 (Van Jefferson) indicates the group is involved in firearm reselling and black market activity. The organization operates under single OG leadership and is classified low threat, with ongoing monitoring focused on its weapons commerce and connections to suppliers.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Firearms Reselling</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Black Market Operations</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Van Jefferson</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Clinton Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Clinton Avenue — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Clinton Avenue — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Blacklist ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Rottweiler
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-rottweiler.png" alt="Rottweiler" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">R</div>
+          <div class="gang-logo-initials">R</div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-020 · Last Updated: 04.2026</div>
+        <div class="gang-name">Rottweiler</div>
+        <div class="gang-alias">North Los Santos · Gantry Lane</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Gantry Lane</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">2</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Gantry Lane</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Rottweiler operates along Gantry Lane in North Los Santos with a dual OG structure. The organization is monitored by GRD for its activities in the northern sector, including association with larger criminal networks operating in adjacent territories. GRD informant C19 (Rexy Jaegervale) is connected to the organization and provides periodic intelligence updates.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Enforcement</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Robbery</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Jamal F Jackson</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Rexy Jaegervale</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Gantry Lane — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Gantry Lane — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Gantry Lane — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Rottweiler ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: 58th Flock
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-medium" data-threat="medium">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-58thflock.png" alt="58th Flock" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">HFLOG</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-021 · Last Updated: 04.2026</div>
+        <div class="gang-name">58th Flock</div>
+        <div class="gang-alias">North Los Santos · Laguna Place</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Laguna Place</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">2</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Laguna Place</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">MEDIUM</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">55% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">58th Flock is a Medium threat organization based at Laguna Place in North Los Santos. The group operates with a confirmed dual OG structure and is involved in criminal activity including firearm trafficking. GRD informant C31 (Juan Craig Skiller) operates within the group's network and provides intelligence on firearms and criminal activity.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Firearms Trafficking</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Extortion</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Gang-Related Violence</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Armed Robbery</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Juan Craig Skiller</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Edward Doffy</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Laguna Place — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Laguna Place — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Laguna Place — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: 58th Flock ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Iron Eagle MC
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-medium" data-threat="medium">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-ironeaglemc.png" alt="Iron Eagle MC" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">IEMC</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-022 · Last Updated: 04.2026</div>
+        <div class="gang-name">Iron Eagle MC</div>
+        <div class="gang-alias">North Los Santos · Mirror Park Blvd</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Mirror Park Blvd</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">20</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Mirror Park Blvd</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">MEDIUM</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">55% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Iron Eagle MC is a one-percenter motorcycle club based along Mirror Park Boulevard with operations extending into Blaine County. The club operates with rigid chapter structure and strict internal code, making infiltration highly difficult. Intelligence indicates the MC controls portions of Route 68 trafficking corridors and serves as a distribution intermediary. GRD has two active informants with access to the organization.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Arms Trafficking &amp; Manufacturing</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Transportation</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms Modification</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Extortion (rural businesses)</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault &amp; Battery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Contraband Smuggling</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">President</span>
+              <div><div class="gang-hier-name">El Marius Juntak</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Mirror Park Blvd — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Mirror Park Blvd — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Mirror Park Blvd — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Iron Eagle MC ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Asian Dragon Family
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-asiandragonfamily.png" alt="Asian Dragon Family" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">ADF</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-023 · Last Updated: 04.2026</div>
+        <div class="gang-name">Asian Dragon Family</div>
+        <div class="gang-alias">North Los Santos · Nikola Place</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Nikola Place</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">North</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Nikola Place</span>
+          <span class="gang-territory-tag">North Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Asian Dragon Family is a North Los Santos organization based on Nikola Place. Operating under single OG leadership, the group maintains a focused criminal presence in the northern sector. GRD intelligence on the organization's internal structure and criminal specialization is ongoing. The group is classified low threat with continued monitoring.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Organized Crime</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Money Laundering</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Cassius Wong</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Nikola Place — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Nikola Place — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Nikola Place — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Asian Dragon Family ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Yellow Corner Crew
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-critical" data-threat="critical">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-yellowcornercrew.png" alt="Yellow Corner Crew" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">Y2C</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-024 · Last Updated: 04.2026</div>
+        <div class="gang-name">Yellow Corner Crew</div>
+        <div class="gang-alias">County Los Santos · Route 68</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Route 68</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">County</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">4</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">25</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Active</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Route 68</span>
+          <span class="gang-territory-tag">County Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">CRITICAL</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">100% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-active">Active</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Yellow Corner Crew is the sole CRITICAL threat organization on GRD's active registry, operating along Route 68 in the county sector. With four confirmed OG-level figures, the group poses a significant and imminent danger to law enforcement and public safety. Their county positioning gives them strategic control over key trafficking corridors. GRD has multiple informants embedded in the organization and considers this group the highest priority intelligence target in the state.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>RICO Violations</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Trafficking (large-scale)</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Weapons Trafficking</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Armed Robbery</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Homicide</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault on Peace Officers</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Contraband Smuggling</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Adriel Dominik</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Louis Tokio</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Daquan Amberwo</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">CJ</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Route 68 — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Route 68 — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Route 68 — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Yellow Corner Crew ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Velkar Syndicate
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-medium" data-threat="medium">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-velkarsyndicate.png" alt="Velkar Syndicate" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">VS</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-025 · Last Updated: 04.2026</div>
+        <div class="gang-name">Velkar Syndicate</div>
+        <div class="gang-alias">County Los Santos · Sandy Shore</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Sandy Shore</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">County</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">1</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">15</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Sandy Shore</span>
+          <span class="gang-territory-tag">County Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">MEDIUM</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">55% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Velkar Syndicate is a Medium threat organization based in Sandy Shore with a single confirmed OG. The group operates in the county sector and is connected to criminal networks exploiting the rural geography of Blaine County for trafficking and criminal operations. GRD maintains active monitoring of the Syndicate's activities and connections to larger criminal enterprises operating in the region.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Organized Crime</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Extortion</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Conspiracy</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Adrian</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Sandy Shore — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Sandy Shore — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Sandy Shore — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Velkar Syndicate ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: BBMC
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-low" data-threat="low">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-bbmc.png" alt="BBMC" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">BBMC</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-026 · Last Updated: 04.2026</div>
+        <div class="gang-name">BBMC</div>
+        <div class="gang-alias">County Los Santos · Sandy Shore</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Sandy Shore</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">County</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">Unknown</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Monitored</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Sandy Shore</span>
+          <span class="gang-territory-tag">County Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">LOW</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">25% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-monitored">Monitored</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">BBMC (Blaine County Biker MC) operates out of Sandy Shore in the county sector. GRD intelligence on this group's internal structure remains limited, with no confirmed OG-level figures at this time. The Bureau maintains a monitoring file on the organization given its geographic overlap with other county-sector criminal entities. Intelligence development is ongoing.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Transportation</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Contraband Smuggling</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Territorial Enforcement</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Leadership</span>
+              <div><div class="gang-hier-name">Unknown — Under Investigation</div><div class="gang-hier-note">GRD active identification effort</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Sandy Shore — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Sandy Shore — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Sandy Shore — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: BBMC ═══════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GANG: Lakeside Reaper
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="gang-card threat-dormant" data-threat="dormant">
+    <div class="gang-card-header">
+      <div class="gang-logo-zone">
+        <div class="gang-logo-frame">
+          <img src="gang-lakesidereaper.png" alt="Lakeside Reaper" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+          <div class="gang-logo-initials" style="display:none;">LSR</div>
+          <div class="gang-logo-initials"></div>
+        </div>
+        <div class="gang-logo-label">Upload Logo</div>
+      </div>
+      <div class="gang-identity">
+        <div class="gang-doc-ref">GRD-ORG-027 · Last Updated: 04.2026</div>
+        <div class="gang-name">Lakeside Reaper</div>
+        <div class="gang-alias">County Los Santos · Marina Drive</div>
+        <div class="gang-meta-row">
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Primary Area</span><span class="gang-meta-val">Marina Drive</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">County</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">2</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Approx. Members</span><span class="gang-meta-val">10</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">GRD Status</span><span class="gang-meta-val">Dormant</span></div>
+        </div>
+        <div class="gang-territory-tags">
+          <span class="gang-territory-tag">Marina Drive</span>
+          <span class="gang-territory-tag">County Sector</span>
+        </div>
+      </div>
+      <div class="gang-threat-panel">
+        <div class="gang-threat-badge">
+          <div class="gang-threat-label">Threat Level</div>
+          <div class="gang-threat-level">DORMANT</div>
+        </div>
+        <div style="width:100%;">
+          <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
+          <div class="gang-threat-bar-pct">5% Threat Index</div>
+        </div>
+        <span class="gang-status-pill pill-dormant">Dormant</span>
+      </div>
+    </div>
+    <button class="gang-expand-btn" onclick="toggleGang(this)">
+      <span>View Full Profile</span><span class="arrow">▼</span>
+    </button>
+    <div class="gang-card-body">
+      <div class="gang-body-inner">
+        <div class="gang-bio-section">
+          <div class="gang-section-title">Organization Bio</div>
+          <div class="gang-bio-text">Lakeside Reaper is currently classified DORMANT by GRD, operating along Marina Drive with two identified OG-level figures. The organization has significantly reduced its criminal activity and is believed to be in a period of restructuring or leadership transition. GRD maintains a reduced monitoring posture but retains the file active pending any signs of resurgence or renewed criminal activity.</div>
+        </div>
+        <div class="gang-crimes-section">
+          <div class="gang-section-title">Common Criminal Activity</div>
+          <div class="gang-crime-list">
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Narcotics Distribution (inactive)</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Assault (historical)</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Illegal Firearms (historical)</div>
+            <div class="gang-crime-item"><div class="gang-crime-dot"></div>Dormant — Reduced Activity</div>
+          </div>
+        </div>
+        <div class="gang-hierarchy-section">
+          <div class="gang-section-title">Known Hierarchy</div>
+          <div class="gang-hier-list">
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">OG / Leader</span>
+              <div><div class="gang-hier-name">Pharrel J-Rich</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+            <div class="gang-hier-item">
+              <span class="gang-hier-rank">Under OG</span>
+              <div><div class="gang-hier-name">Luh Jaylen</div><div class="gang-hier-note">Confirmed by GRD Intelligence</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gang-location-section">
+          <div class="gang-section-title">Location Photos</div>
+          <div class="gang-location-photos">
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 1</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Marina Drive — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 2</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Marina Drive — Edit caption</div></div>
+            </div>
+            <div class="gang-loc-photo">
+              <div class="gang-loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Upload location<br/>photo 3</span></div>
+              <div class="gang-loc-caption"><div class="gang-loc-caption-text">Marina Drive — Edit caption</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════ END GANG: Lakeside Reaper ═══════════════════════════ -->
+
+</div><!-- end gang-cards -->
+<div class="no-results" id="no-results">
+  <div class="no-results-text">No organizations match your filter or search</div>
+</div>
+</div><!-- end gang-wrap -->
+
+<!-- FOOTER -->
+<div class="nexus-footer">
+  <div class="nexus-footer-left">© 2026 CENTRAL INVESTIGATION BUREAU · GRD GANG INTELLIGENCE DATABASE · ALL ACTIVITY IS LOGGED</div>
+  <div class="nexus-footer-right">TOP SECRET // GRD CLASSIFIED // AUTHORIZED PERSONNEL ONLY</div>
+</div>
+
+<script>
+  // ── AUTH GATE ───────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const token = sessionStorage.getItem('cib_token');
+
+    // No token at all — go to login immediately, don't even wait
+    if (!token) {
+      window.location.href = 'Page_Login.html';
+      return;
+    }
+
+    setTimeout(async () => {
+      try {
+        // Ask the SERVER if this token is real and not expired
+        const res = await fetch('/api/verify-token', {
+          method: 'GET',
+          headers: { 'x-session-token': token }
+        });
+
+        if (!res.ok) {
+          // Server said no — token is fake, expired, or not in DB
+          sessionStorage.clear();
+          window.location.href = 'Page_Login.html';
+          return;
+        }
+
+        // ✅ Server confirmed — show the page
+        document.getElementById('access-gate').classList.add('hidden');
+        document.body.classList.add('page-visible');
+        const badge = sessionStorage.getItem('cib_badge');
+        if (badge) document.getElementById('badgeDisplay').textContent = badge;
+        sortGangCards();
+        updateStats();
+
+      } catch (err) {
+        // Network error — fail safe, redirect to login
+        sessionStorage.clear();
+        window.location.href = 'Page_Login.html';
+      }
+    }, 900);
+  });
+
+  // ── LIVE CLOCK ──────────────────────────────────────────────
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    const d = now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('liveClock').textContent = d + ' · ' + h + ':' + m + ':' + s;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── SESSION TIMEOUT ─────────────────────────────────────────
+  let inactivityTimer;
+  function resetTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      logout(); // calls the real server logout below
+    }, 30 * 60 * 1000);
+  }
+  ['mousemove','keydown','click','scroll'].forEach(e => document.addEventListener(e, resetTimer));
+  resetTimer();
+
+  // ── LOGOUT (server-side — deletes token from database) ──────
+  async function logout() {
+    const token = sessionStorage.getItem('cib_token');
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'x-session-token': token || '' }
+      });
+    } catch (e) { /* still clear locally even if server unreachable */ }
+    sessionStorage.clear();
+    window.location.href = 'Page_Login.html';
+  }
+
+  // ── EXPAND / COLLAPSE ───────────────────────────────────────
+  function toggleGang(btn) {
+    const card = btn.closest('.gang-card');
+    const body = card.querySelector('.gang-card-body');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    btn.classList.toggle('expanded', !isOpen);
+    btn.querySelector('span:first-child').textContent = isOpen ? 'View Full Profile' : 'Collapse Profile';
+  }
+
+  // ── STATS ───────────────────────────────────────────────────
+  function updateStats() {
+    const cards = document.querySelectorAll('.gang-card');
+    let total=0, critical=0, high=0;
+    cards.forEach(c => {
+      total++;
+      const t = c.dataset.threat;
+      if (t === 'critical') critical++;
+      if (t === 'high')     high++;
+    });
+    document.getElementById('stat-total').textContent    = total;
+    document.getElementById('stat-critical').textContent = critical;
+    document.getElementById('stat-high').textContent     = high;
+  }
+
+  // ── SORT BY THREAT (Critical → High → Medium → Low → Dormant) ──
+  const THREAT_ORDER = { critical:0, high:1, medium:2, low:3, dormant:4 };
+  function sortGangCards() {
+    const container = document.getElementById('gang-cards');
+    const cards = Array.from(container.querySelectorAll('.gang-card'));
+    cards.sort((a, b) => {
+      const ta = THREAT_ORDER[a.dataset.threat] ?? 99;
+      const tb = THREAT_ORDER[b.dataset.threat] ?? 99;
+      return ta - tb;
+    });
+    cards.forEach(card => container.appendChild(card));
+  }
+
+  // ── FILTER ──────────────────────────────────────────────────
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  let currentFilter = 'all';
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      applyFilters();
+    });
+  });
+
+  document.getElementById('gang-search').addEventListener('input', applyFilters);
+
+  function applyFilters() {
+    const q = document.getElementById('gang-search').value.toLowerCase().trim();
+    let visible = 0;
+    document.querySelectorAll('.gang-card').forEach(card => {
+      const sector = (card.querySelector('.gang-alias')||{}).textContent?.split('·')[0]?.trim().toLowerCase()||'';
+      const threatOk = currentFilter === 'all' || card.dataset.threat === currentFilter || sector.includes(currentFilter);
+      const textOk   = q === '' || card.innerText.toLowerCase().includes(q);
+      const show = threatOk && textOk;
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+  }
+</script>
+</body>
+</html>
