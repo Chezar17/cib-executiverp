@@ -890,13 +890,14 @@ body.page-visible {
       if (response.ok && result.success) {
         secretFailedAttempts = 0;
         sessionStorage.removeItem('secretLockUntil');
-        sessionStorage.setItem('cib_auth',     'true');
-        sessionStorage.setItem('cib_token',    result.token);
-        sessionStorage.setItem('cib_badge',    result.user.badge);
-        sessionStorage.setItem('cib_name',     result.user.name);
-        sessionStorage.setItem('cib_rank',     result.user.rank);
-        sessionStorage.setItem('cib_division', result.user.division);
-        sessionStorage.setItem('cib_expires',  result.expiresAt);
+        sessionStorage.setItem('cib_auth',           'true');
+        sessionStorage.setItem('cib_token',          result.token);
+        sessionStorage.setItem('cib_badge',          result.user.badge);
+        sessionStorage.setItem('cib_name',           result.user.name);
+        sessionStorage.setItem('cib_rank',           result.user.rank);
+        sessionStorage.setItem('cib_division',       result.user.division);
+        sessionStorage.setItem('cib_classification', result.user.classification || '');
+        sessionStorage.setItem('cib_expires',        result.expiresAt);
 
         showSecretSuccess();
 
