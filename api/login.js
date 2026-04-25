@@ -7,6 +7,15 @@
 //  ✅ CORS locked to your domain only
 //  ✅ Origin check (CSRF protection)
 //  ✅ Token has real server-enforced expiry
+//  ✅ classification returned so frontend can gate page access
+//
+//  FRONTEND (Page_Login.html) — after a successful login response,
+//  make sure you save classification to sessionStorage like this:
+//
+//    sessionStorage.setItem('cib_token',          data.token)
+//    sessionStorage.setItem('cib_badge',          data.user.badge)
+//    sessionStorage.setItem('cib_classification', data.user.classification)
+//
 // ============================================================
 
 import { createClient } from '@supabase/supabase-js'
@@ -89,7 +98,7 @@ export default async function handler(req, res) {
 
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, badge, name, rank, division')
+      .select('id, badge, name, rank, division, classification')
       .eq('badge', badgeTrimmed)
       .eq('password', passwordHash)
       .single()
@@ -132,10 +141,11 @@ export default async function handler(req, res) {
       token:     token,
       expiresAt: expiresAt.getTime(),
       user: {
-        badge:    user.badge,
-        name:     user.name,
-        rank:     user.rank,
-        division: user.division
+        badge:          user.badge,
+        name:           user.name,
+        rank:           user.rank,
+        division:       user.division,
+        classification: user.classification || ''   // ← used by gang.html & future pages for access control
       }
     })
 
