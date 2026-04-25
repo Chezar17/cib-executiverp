@@ -273,7 +273,28 @@
   .gf-cancel{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);border:1px solid var(--navy-border);padding:9px 22px;background:transparent;cursor:pointer;transition:all 0.15s;}
   .gf-cancel:hover{color:var(--white);}
   .gf-save{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--navy);background:var(--gold);border:none;padding:9px 28px;cursor:pointer;font-weight:600;transition:background 0.15s;}
-  .gf-save:hover{background:var(--gold-light);}
+  .gf-save:hover:not(:disabled){background:var(--gold-light);}
+  .gf-save.loading{
+    background:rgba(201,168,76,0.4);color:transparent;cursor:not-allowed;
+    position:relative;pointer-events:none;min-width:130px;
+  }
+  .gf-save.loading::after{
+    content:'';position:absolute;top:50%;left:50%;
+    width:13px;height:13px;margin:-6.5px 0 0 -6.5px;
+    border:2px solid rgba(10,14,28,0.3);border-top-color:#0a0e1c;
+    border-radius:50%;animation:btn-spin 0.6s linear infinite;
+  }
+  .gang-del-confirm.loading{
+    background:rgba(180,42,42,0.4);color:transparent;cursor:not-allowed;
+    position:relative;pointer-events:none;
+  }
+  .gang-del-confirm.loading::after{
+    content:'';position:absolute;top:50%;left:50%;
+    width:13px;height:13px;margin:-6.5px 0 0 -6.5px;
+    border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;
+    border-radius:50%;animation:btn-spin 0.6s linear infinite;
+  }
+  @keyframes btn-spin{to{transform:rotate(360deg);}}
 
   /* Delete confirm modal */
   .gang-del-modal{position:fixed;inset:0;background:rgba(4,6,14,0.88);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px;}
@@ -1074,6 +1095,11 @@ async function saveGang(){
   const name = document.getElementById('gf-name').value.trim();
   if (!name){ toast('Gang name is required','error'); return; }
 
+  // ── Lock button while saving ──────────────────────────────
+  const saveBtn = document.querySelector('.gf-save');
+  saveBtn.classList.add('loading');
+  saveBtn.disabled = true;
+
   const editId  = document.getElementById('gf-edit-id').value;
   const isEdit  = !!editId;
   const badge   = sessionStorage.getItem('cib_badge') || 'unknown';
@@ -1119,6 +1145,9 @@ async function saveGang(){
   } catch(e){
     console.error('Save error:', e);
     toast('Save failed — ' + e.message, 'error');
+    // ── Restore button on error so user can retry ──────────
+    saveBtn.classList.remove('loading');
+    saveBtn.disabled = false;
   }
 }
 
@@ -1132,6 +1161,12 @@ function openDelModal(gangId){
 function closeDelModal(){ document.getElementById('gang-del-modal').classList.remove('open'); _pendingDelId=null; }
 async function confirmGangDelete(){
   if (!_pendingDelId) return;
+
+  // ── Lock button while deleting ────────────────────────────
+  const delBtn = document.querySelector('.gang-del-confirm');
+  delBtn.classList.add('loading');
+  delBtn.disabled = true;
+
   const g = GANGS.find(x=>x.id==_pendingDelId);
   try {
     await sbFetch('gangs', { method:'DELETE', filter:`id=eq.${_pendingDelId}` });
@@ -1143,6 +1178,9 @@ async function confirmGangDelete(){
   } catch(e){
     console.error('Delete error:', e);
     toast('Delete failed — ' + e.message, 'error');
+    // ── Restore button on error so user can retry ──────────
+    delBtn.classList.remove('loading');
+    delBtn.disabled = false;
     closeDelModal();
   }
 }
