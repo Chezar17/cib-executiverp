@@ -355,90 +355,10 @@
   /* ══════════════════════════════════════════════════════
      SINGLE LOCATION PHOTO — replaces the 3-slot grid
   ══════════════════════════════════════════════════════ */
-  .gang-location-section{padding:20px 22px;border-bottom:1px solid var(--navy-border);}
 
-  /* Single photo — 16:9, full width of its column */
-  .gang-loc-single{
-    position:relative;width:100%;aspect-ratio:16/9;
-    overflow:hidden;background:#080C18;
-    border:1px solid var(--navy-border);
-  }
-  .gang-loc-single img.loc-img{
-    width:100%;height:100%;object-fit:cover;display:block;
-    filter:grayscale(15%);transition:filter 0.3s,transform 0.3s;
-  }
-  .gang-loc-single img.loc-img:hover{filter:grayscale(0%);transform:scale(1.03);}
 
-  /* Upload overlay — shown for CRUD users when no photo or on hover */
-  .loc-upload-overlay{
-    position:absolute;inset:0;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-    background:rgba(8,12,24,0.7);
-    cursor:pointer;
-    transition:opacity 0.2s;
-  }
-  .gang-loc-single.has-photo .loc-upload-overlay{opacity:0;}
-  .gang-loc-single.has-photo:hover .loc-upload-overlay{opacity:1;}
-  .loc-upload-overlay svg{width:22px;height:22px;fill:var(--gold);}
-  .loc-upload-overlay span{
-    font-family:'Roboto Mono',monospace;font-size:8px;
-    letter-spacing:2px;color:var(--gold);text-transform:uppercase;
-  }
-  .loc-upload-overlay input{
-    position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
-  }
-  /* Hide upload overlay entirely for non-CRUD users */
-  .gang-loc-single .loc-upload-overlay{display:none;}
-  .can-crud .gang-loc-single .loc-upload-overlay{display:flex;}
 
-  /* No-photo placeholder (non-CRUD users) */
-  .loc-placeholder{
-    width:100%;height:100%;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  }
-  .loc-placeholder svg{width:24px;height:24px;fill:var(--navy-border);}
-  .loc-placeholder span{
-    font-family:'Roboto Mono',monospace;font-size:8px;
-    letter-spacing:2px;color:var(--navy-border);text-transform:uppercase;
-  }
-  /* Caption */
-  .gang-loc-caption{
-    position:absolute;bottom:0;left:0;right:0;
-    background:linear-gradient(transparent,rgba(0,0,0,0.75));
-    padding:5px 8px;
-  }
-  .gang-loc-caption-text{
-    font-family:'Roboto Mono',monospace;font-size:8px;
-    letter-spacing:1px;color:rgba(240,237,228,0.55);text-transform:uppercase;
-  }
 
-  /* ══════════════════════════════════════════════════════
-     SINGLE PHOTO UPLOAD FIELD IN THE MODAL
-  ══════════════════════════════════════════════════════ */
-  .gf-loc-upload-zone{
-    border:1px dashed rgba(201,168,76,0.3);background:#04080F;
-    width:100%;aspect-ratio:16/9;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    cursor:pointer;position:relative;overflow:hidden;
-    transition:border-color 0.2s;
-  }
-  .gf-loc-upload-zone:hover{border-color:var(--gold);}
-  .gf-loc-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-  .gf-loc-upload-zone img{
-    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  }
-  .gf-loc-upload-text{
-    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;
-    color:var(--muted);text-align:center;text-transform:uppercase;line-height:1.7;
-    pointer-events:none;
-  }
-  .gf-loc-upload-text svg{width:22px;height:22px;fill:var(--muted);margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;}
-  .gf-loc-clear-btn{
-    position:absolute;top:8px;right:8px;
-    background:rgba(192,57,43,0.85);border:none;color:#fff;
-    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
-    padding:3px 8px;cursor:pointer;z-index:2;display:none;
-  }
 
   /* ══════════════════════════════════════════════════════
      MIRO MAP SECTION
@@ -844,18 +764,7 @@
           <textarea class="gf-textarea" id="gf-hierarchy" placeholder="OG / Leader | John Doe | Confirmed by GRD&#10;Under OG | Jane Smith | Suspected"></textarea>
         </div>
 
-        <div class="gf-group gf-full">
-          <label class="gf-label">Location Photo <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(16:9 recommended)</span></label>
-          <div class="gf-loc-upload-zone" id="gf-loc-zone" onclick="document.getElementById('gf-loc-input').click()">
-            <input type="file" id="gf-loc-input" accept="image/*" onchange="handleLocUpload(this)" style="display:none"/>
-            <img id="gf-loc-preview" src="" alt="" style="display:none;"/>
-            <button class="gf-loc-clear-btn" id="gf-loc-clear" onclick="clearLocPhoto(event)">✕ Remove</button>
-            <div id="gf-loc-placeholder" class="gf-loc-upload-text">
-              <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-              Click to upload location photo
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
     <div class="gang-modal-footer">
@@ -1045,21 +954,7 @@ function buildGangCard(g){
           <div class="gang-section-title">Known Hierarchy</div>
           <div class="gang-hier-list">${hier||'<div style="font-size:11px;color:var(--muted);">No hierarchy data on file.</div>'}</div>
         </div>
-        <div class="gang-location-section">
-          <div class="gang-section-title">Location Photo</div>
-          <div class="gang-loc-single ${g.location_photo ? 'has-photo' : ''}">
-            ${g.location_photo
-              ? `<img class="loc-img" src="${esc(g.location_photo)}" alt="Location"/>`
-              : `<div class="loc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No location photo</span></div>`
-            }
-            <div class="loc-upload-overlay" onclick="event.stopPropagation()">
-              <input type="file" accept="image/*" onchange="updateLocPhotoInline(this,'${g.id}')" title="Upload location photo"/>
-              <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-              <span>${g.location_photo ? 'Replace Photo' : 'Upload Photo'}</span>
-            </div>
-            ${g.location_photo ? `<div class="gang-loc-caption"><div class="gang-loc-caption-text">${esc(g.primary_area||g.name)}</div></div>` : ''}
-          </div>
-        </div>
+
       </div>
     </div>`;
   return card;
@@ -1151,19 +1046,7 @@ function openGangModal(editId){
     document.getElementById('gf-crimes').value    = (g.crimes||[]).join('\n');
     document.getElementById('gf-hierarchy').value = (g.hierarchy||[]).join('\n');
     if (g.logo_url){ _imgBase64=g.logo_url; document.getElementById('gf-img-preview').src=g.logo_url; document.getElementById('gf-img-preview').style.display='block'; document.getElementById('gf-img-placeholder').style.display='none'; }
-    // Location photo
-    _locPhotoBase64 = g.location_photo || null;
-    if (g.location_photo) {
-      document.getElementById('gf-loc-preview').src = g.location_photo;
-      document.getElementById('gf-loc-preview').style.display = 'block';
-      document.getElementById('gf-loc-placeholder').style.display = 'none';
-      document.getElementById('gf-loc-clear').style.display = 'block';
-    } else {
-      document.getElementById('gf-loc-preview').src = '';
-      document.getElementById('gf-loc-preview').style.display = 'none';
-      document.getElementById('gf-loc-placeholder').style.display = '';
-      document.getElementById('gf-loc-clear').style.display = 'none';
-    }
+
   } else {
     document.getElementById('gang-modal-title').textContent = 'Add Gang';
     document.getElementById('gf-edit-id').value   = '';
@@ -1180,11 +1063,7 @@ function openGangModal(editId){
     document.getElementById('gf-bio').value       = '';
     document.getElementById('gf-crimes').value    = '';
     document.getElementById('gf-hierarchy').value = '';
-    _locPhotoBase64 = null;
-    document.getElementById('gf-loc-preview').src = '';
-    document.getElementById('gf-loc-preview').style.display = 'none';
-    document.getElementById('gf-loc-placeholder').style.display = '';
-    document.getElementById('gf-loc-clear').style.display = 'none';
+
   }
   document.getElementById('gang-modal').classList.add('open');
 }
@@ -1214,7 +1093,6 @@ async function saveGang(){
     crimes:          document.getElementById('gf-crimes').value.split('\n').map(c=>c.trim()).filter(Boolean),
     hierarchy:       document.getElementById('gf-hierarchy').value.split('\n').map(h=>h.trim()).filter(Boolean),
     logo_url:        _imgBase64 || (isEdit ? GANGS.find(g=>g.id==editId)?.logo_url : null),
-    location_photo:  _locPhotoBase64 || (isEdit ? GANGS.find(g=>g.id==editId)?.location_photo : null),
     updated_at:      new Date().toISOString(),
     updated_by:      badge,
   };
@@ -1476,7 +1354,6 @@ const CSV_SEED = [
       "OG | Ramadhan | Tolol sekali"
     ],
     "logo_url": "",
-    "location_photo": "",
     "updated_at": "2026-04-25 12:42:01.033+00"
   }
 ];
@@ -1511,52 +1388,9 @@ async function deleteLogoInline(gangId){
   } catch(e) { toast('Logo delete failed — '+e.message,'error'); }
 }
 
-// ── Inline location photo upload (on the card itself) ─────────
-function updateLocPhotoInline(input, gangId){
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const base64 = e.target.result;
-    try {
-      await sbFetch('gangs', {method:'PATCH', body:{location_photo:base64, updated_at:new Date().toISOString()}, filter:`id=eq.${gangId}`});
-      const idx = GANGS.findIndex(g=>g.id==gangId);
-      if (idx>-1) GANGS[idx].location_photo = base64;
-      renderGangs(GANGS);
-      toast('Location photo updated', 'edit');
-    } catch(e) { toast('Photo update failed — '+e.message,'error'); }
-  };
-  reader.readAsDataURL(file);
-}
 
-// ── Modal location photo handler ──────────────────────────────
-let _locPhotoBase64 = null;
 
-function handleLocUpload(input){
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    _locPhotoBase64 = e.target.result;
-    const preview = document.getElementById('gf-loc-preview');
-    preview.src = _locPhotoBase64;
-    preview.style.display = 'block';
-    document.getElementById('gf-loc-placeholder').style.display = 'none';
-    document.getElementById('gf-loc-clear').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
 
-function clearLocPhoto(e){
-  e.stopPropagation();
-  _locPhotoBase64 = null;
-  const preview = document.getElementById('gf-loc-preview');
-  preview.src = '';
-  preview.style.display = 'none';
-  document.getElementById('gf-loc-placeholder').style.display = '';
-  document.getElementById('gf-loc-clear').style.display = 'none';
-  document.getElementById('gf-loc-input').value = '';
-}
 
 // ── PAGE TRANSITIONS ─────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{ requestAnimationFrame(()=>document.body.classList.add('page-visible')); });
