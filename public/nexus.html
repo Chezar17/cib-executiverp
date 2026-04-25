@@ -51,27 +51,27 @@
   .nexus-shell{display:flex;flex:1;overflow:hidden;min-height:0;}
 
   /* SIDEBAR */
-  .nx-sidebar{width:240px;background:#070B15;border-right:1px solid var(--navy-border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
-  .nx-sidebar-header{padding:20px 18px 16px;border-bottom:1px solid var(--navy-border);}
+  .nx-sidebar{width:240px;background:#060A14;border-right:1px solid var(--navy-border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+  .nx-sidebar-header{padding:20px 18px 16px;border-bottom:1px solid var(--navy-border);background:rgba(201,168,76,0.03);}
   .nx-sidebar-user-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;opacity:0.6;}
   .nx-sidebar-user{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;}
   .nx-sidebar-session{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--green);margin-top:4px;display:flex;align-items:center;gap:5px;}
   .nx-session-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0;}
   @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
 
-  .nx-nav-group{padding:12px 0;}
+  .nx-nav-group{padding:10px 0;}
   .nx-nav-group+.nx-nav-group{border-top:1px solid var(--navy-border);}
-  .nx-nav-group-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;padding:0 18px 8px;opacity:0.4;}
-  .nx-nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;}
-  .nx-nav-item:hover{background:rgba(201,168,76,0.04);}
+  .nx-nav-group-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;padding:8px 18px 6px;opacity:0.5;}
+  .nx-nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;position:relative;}
+  .nx-nav-item:hover{background:rgba(201,168,76,0.05);}
   .nx-nav-item:hover .nx-nav-label{color:var(--white);}
-  .nx-nav-item.active{background:rgba(201,168,76,0.07);border-left-color:var(--gold);}
+  .nx-nav-item.active{background:rgba(201,168,76,0.08);border-left-color:var(--gold);}
   .nx-nav-item.active .nx-nav-label{color:var(--gold);}
   .nx-nav-item.active .nx-nav-icon svg{fill:var(--gold);}
-  .nx-nav-item.nav-red.active{background:rgba(192,57,43,0.07);border-left-color:var(--red-alert);}
+  .nx-nav-item.nav-red.active{background:rgba(192,57,43,0.08);border-left-color:var(--red-alert);}
   .nx-nav-item.nav-red.active .nx-nav-label{color:var(--red-alert);}
   .nx-nav-item.nav-red.active .nx-nav-icon svg{fill:var(--red-alert);}
-  .nx-nav-item.nav-orange.active{background:rgba(224,90,40,0.07);border-left-color:var(--orange);}
+  .nx-nav-item.nav-orange.active{background:rgba(224,90,40,0.08);border-left-color:var(--orange);}
   .nx-nav-item.nav-orange.active .nx-nav-label{color:var(--orange);}
   .nx-nav-item.nav-orange.active .nx-nav-icon svg{fill:var(--orange);}
   /* HVC / Targets module — deep red accent */
@@ -116,34 +116,162 @@
   .nx-panel{display:none;padding:32px 36px;flex:1;}
   .nx-panel.panel-active{display:block;}
 
-  /* DASHBOARD */
-  .dash-welcome{margin-bottom:28px;}
-  .dash-welcome-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;opacity:0.8;}
-  .dash-welcome-title{font-family:'Oswald',sans-serif;font-size:26px;letter-spacing:5px;text-transform:uppercase;color:var(--white);margin-bottom:4px;}
-  .dash-welcome-sub{font-size:13px;color:var(--muted);line-height:1.7;max-width:600px;}
+  /* ══════════════════════════════════════
+     DASHBOARD — FULL REDESIGN
+  ══════════════════════════════════════ */
+  #panel-dashboard.nx-panel{padding:0;}
 
-  .dash-status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px;}
-  .dash-stat{background:var(--navy-card);border:1px solid var(--navy-border);padding:18px 20px;position:relative;overflow:hidden;}
-  .dash-stat::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;}
-  .dash-stat.gold::before{background:var(--gold);}
-  .dash-stat.red::before{background:var(--red-alert);}
-  .dash-stat.green::before{background:var(--green);}
-  .dash-stat-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;opacity:0.7;}
-  .dash-stat-value{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:var(--white);}
-  .dash-stat.gold .dash-stat-value{color:var(--gold);}
-  .dash-stat.red .dash-stat-value{color:var(--red-alert);}
-  .dash-stat.green .dash-stat-value{color:var(--green);}
-  .dash-stat-hint{font-family:'Roboto Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px;opacity:0.45;}
+  /* ── NEXUS HERO SPLASH ── */
+  .dash-hero{
+    position:relative;overflow:hidden;
+    padding:52px 44px 0;
+    background:radial-gradient(ellipse 80% 120% at 50% -10%, #102040 0%, var(--navy) 65%);
+    border-bottom:1px solid var(--navy-border);
+  }
+  .dash-hero::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.035) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(201,168,76,0.035) 1px,transparent 1px);
+    background-size:60px 60px;
+    animation:gridDrift 20s linear infinite;
+  }
+  @keyframes gridDrift{from{background-position:0 0;}to{background-position:60px 60px;}}
+  .dash-hero::after{
+    content:'';position:absolute;top:18px;right:24px;width:40px;height:40px;
+    border-top:2px solid rgba(201,168,76,0.25);border-right:2px solid rgba(201,168,76,0.25);pointer-events:none;
+  }
+  .dash-hero-corner-bl{
+    position:absolute;bottom:0;left:24px;width:40px;height:40px;
+    border-bottom:2px solid rgba(201,168,76,0.25);border-left:2px solid rgba(201,168,76,0.25);pointer-events:none;
+  }
+  .dash-hero-inner{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap;padding-bottom:32px;}
+  .dash-hero-wordmark{display:flex;flex-direction:column;gap:4px;}
+  .dash-hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;opacity:0.65;margin-bottom:4px;}
+  .dash-hero-title{
+    font-family:'Oswald',sans-serif;font-size:clamp(52px,8vw,96px);font-weight:700;
+    letter-spacing:10px;text-transform:uppercase;line-height:0.9;
+  }
+  .dash-hero-title span{
+    display:block;
+    background:linear-gradient(135deg,var(--gold-light) 0%,var(--gold) 45%,rgba(201,168,76,0.35) 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .dash-hero-sub{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-top:12px;line-height:1.8;}
+  .dash-hero-session{
+    display:flex;flex-direction:column;gap:10px;flex-shrink:0;
+    border:1px solid var(--navy-border);background:rgba(6,10,20,0.75);
+    padding:18px 22px;min-width:220px;backdrop-filter:blur(4px);
+  }
+  .dash-session-row{display:flex;align-items:center;justify-content:space-between;gap:20px;}
+  .dash-session-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;opacity:0.55;}
+  .dash-session-value{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:1px;color:var(--white);}
+  .dash-session-value.gold{color:var(--gold);}
+  .dash-session-value.green{color:var(--green);}
+  .dash-session-value.red{color:var(--red-alert);}
+  .dash-session-divider{height:1px;background:var(--navy-border);}
+  .dash-session-active{display:flex;align-items:center;gap:8px;margin-top:2px;}
+  .dash-session-active-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0;}
+  .dash-session-active-text{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--green);text-transform:uppercase;}
+  .dash-officer-name{font-family:'Oswald',sans-serif;font-size:17px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
 
-  .dash-quick-label{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;opacity:0.55;}
-  .dash-quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-  .dash-quick-item{background:var(--navy-card);border:1px solid var(--navy-border);padding:16px 14px;cursor:pointer;transition:border-color 0.15s,transform 0.15s;display:flex;flex-direction:column;gap:8px;}
-  .dash-quick-item:hover{border-color:rgba(201,168,76,0.4);transform:translateY(-2px);}
-  .dash-quick-icon svg{width:15px;height:15px;fill:var(--gold);}
-  .dash-quick-item.qi-red .dash-quick-icon svg{fill:var(--red-alert);}
-  .dash-quick-item.qi-orange .dash-quick-icon svg{fill:var(--orange);}
-  .dash-quick-name{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--white);}
-  .dash-quick-hint{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:1px;color:var(--muted);opacity:0.45;}
+  /* Stats strip inside hero */
+  .dash-alert-strip{display:flex;border-top:1px solid var(--navy-border);}
+  .dash-alert-cell{flex:1;padding:10px 18px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--navy-border);}
+  .dash-alert-cell:last-child{border-right:none;}
+  .dash-alert-cell-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;opacity:0.5;}
+  .dash-alert-cell-value{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:1px;}
+  .dash-alert-cell-value.gold{color:var(--gold);}
+  .dash-alert-cell-value.green{color:var(--green);}
+  .dash-alert-cell-value.red{color:var(--red-alert);}
+  .dash-alert-cell-value.white{color:var(--white);}
+
+  /* ── MODULES ── */
+  .dash-modules{padding:32px 44px 48px;}
+  .dash-section-head{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+  .dash-section-head::after{content:'';flex:1;height:1px;background:var(--navy-border);}
+  .dash-section-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:5px;color:var(--muted);text-transform:uppercase;opacity:0.4;white-space:nowrap;}
+  .dash-section-cat{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--white);}
+  .dash-cat{margin-bottom:36px;}
+  .dash-cat-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:5px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;opacity:0.35;display:flex;align-items:center;gap:10px;}
+  .dash-cat-label::before{content:'';width:14px;height:1px;background:var(--navy-border);}
+  .dash-mod-grid{display:grid;gap:10px;}
+  .dash-mod-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .dash-mod-grid.cols-4{grid-template-columns:repeat(4,1fr);}
+
+  /* ── MODULE CARD ── */
+  .dash-mod{
+    position:relative;overflow:hidden;cursor:pointer;
+    background:var(--navy-card);border:1px solid var(--navy-border);border-top:2px solid transparent;
+    padding:20px 20px 16px;display:flex;flex-direction:column;
+    transition:transform 0.18s,border-color 0.2s,box-shadow 0.2s;
+    text-decoration:none;color:inherit;
+    animation:modIn 0.4s ease both;
+  }
+  @keyframes modIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .dash-mod:nth-child(1){animation-delay:0.04s;}
+  .dash-mod:nth-child(2){animation-delay:0.09s;}
+  .dash-mod:nth-child(3){animation-delay:0.14s;}
+  .dash-mod:nth-child(4){animation-delay:0.19s;}
+  .dash-mod::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,0.015) 50%,transparent 60%);
+    transform:translateX(-100%);transition:transform 0.55s;pointer-events:none;
+  }
+  .dash-mod:hover::after{transform:translateX(100%);}
+  .dash-mod:hover{transform:translateY(-3px);}
+  .dash-mod.mod-gold{border-top-color:var(--gold);}
+  .dash-mod.mod-gold::before{content:'';position:absolute;top:0;right:0;width:90px;height:90px;background:radial-gradient(circle,rgba(201,168,76,0.06) 0%,transparent 70%);pointer-events:none;}
+  .dash-mod.mod-gold:hover{border-color:rgba(201,168,76,0.45);box-shadow:0 10px 30px rgba(201,168,76,0.07);}
+  .dash-mod.mod-red{border-top-color:var(--red-alert);}
+  .dash-mod.mod-red::before{content:'';position:absolute;top:0;right:0;width:90px;height:90px;background:radial-gradient(circle,rgba(192,57,43,0.07) 0%,transparent 70%);pointer-events:none;}
+  .dash-mod.mod-red:hover{border-color:rgba(192,57,43,0.45);box-shadow:0 10px 30px rgba(192,57,43,0.08);}
+  .dash-mod.mod-orange{border-top-color:var(--orange);}
+  .dash-mod.mod-orange::before{content:'';position:absolute;top:0;right:0;width:90px;height:90px;background:radial-gradient(circle,rgba(224,90,40,0.06) 0%,transparent 70%);pointer-events:none;}
+  .dash-mod.mod-orange:hover{border-color:rgba(224,90,40,0.45);box-shadow:0 10px 30px rgba(224,90,40,0.07);}
+  .dash-mod.mod-hvc{border-top-color:#E74C3C;}
+  .dash-mod.mod-hvc::before{content:'';position:absolute;top:0;right:0;width:90px;height:90px;background:radial-gradient(circle,rgba(231,76,60,0.07) 0%,transparent 70%);pointer-events:none;}
+  .dash-mod.mod-hvc:hover{border-color:rgba(231,76,60,0.45);box-shadow:0 10px 30px rgba(231,76,60,0.08);}
+  .dash-mod-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+  .dash-mod-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid;flex-shrink:0;}
+  .dash-mod.mod-gold .dash-mod-icon{border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.06);}
+  .dash-mod.mod-red  .dash-mod-icon{border-color:rgba(192,57,43,0.28);background:rgba(192,57,43,0.06);}
+  .dash-mod.mod-orange .dash-mod-icon{border-color:rgba(224,90,40,0.3);background:rgba(224,90,40,0.06);}
+  .dash-mod.mod-hvc  .dash-mod-icon{border-color:rgba(231,76,60,0.3);background:rgba(231,76,60,0.06);}
+  .dash-mod-icon svg{width:16px;height:16px;}
+  .dash-mod.mod-gold .dash-mod-icon svg{fill:var(--gold);}
+  .dash-mod.mod-red  .dash-mod-icon svg{fill:var(--red-alert);}
+  .dash-mod.mod-orange .dash-mod-icon svg{fill:var(--orange);}
+  .dash-mod.mod-hvc  .dash-mod-icon svg{fill:#E74C3C;}
+  .dash-mod-badge{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:1px;padding:2px 7px;border:1px solid;text-transform:uppercase;}
+  .dash-mod.mod-gold .dash-mod-badge{background:rgba(201,168,76,0.08);color:var(--gold);border-color:rgba(201,168,76,0.25);}
+  .dash-mod.mod-red  .dash-mod-badge{background:rgba(192,57,43,0.1);color:var(--red-alert);border-color:rgba(192,57,43,0.3);}
+  .dash-mod.mod-orange .dash-mod-badge{background:rgba(224,90,40,0.08);color:var(--orange);border-color:rgba(224,90,40,0.25);}
+  .dash-mod.mod-hvc  .dash-mod-badge{background:rgba(231,76,60,0.1);color:#E74C3C;border-color:rgba(231,76,60,0.3);}
+  .dash-mod-name{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:6px;transition:color 0.15s;}
+  .dash-mod:hover.mod-gold .dash-mod-name{color:var(--gold);}
+  .dash-mod:hover.mod-red  .dash-mod-name{color:var(--red-alert);}
+  .dash-mod:hover.mod-orange .dash-mod-name{color:var(--orange);}
+  .dash-mod:hover.mod-hvc  .dash-mod-name{color:#E74C3C;}
+  .dash-mod-desc{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);line-height:1.65;opacity:0.55;}
+  .dash-mod-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:10px;border-top:1px solid var(--navy-border);}
+  .dash-mod-meta{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:1px;color:var(--muted);opacity:0.38;text-transform:uppercase;}
+  .dash-mod-arrow{font-size:16px;color:var(--muted);transition:color 0.15s,transform 0.15s;font-family:monospace;}
+  .dash-mod:hover .dash-mod-arrow{transform:translateX(4px);}
+  .dash-mod:hover.mod-gold .dash-mod-arrow{color:var(--gold);}
+  .dash-mod:hover.mod-red  .dash-mod-arrow{color:var(--red-alert);}
+  .dash-mod:hover.mod-orange .dash-mod-arrow{color:var(--orange);}
+  .dash-mod:hover.mod-hvc  .dash-mod-arrow{color:#E74C3C;}
+
+  @media(max-width:900px){
+    .dash-mod-grid.cols-3,.dash-mod-grid.cols-4{grid-template-columns:1fr 1fr;}
+    .dash-hero{padding:28px 20px 0;}
+    .dash-modules{padding:24px 20px 32px;}
+    .dash-hero-title{font-size:clamp(40px,14vw,72px);}
+    .dash-hero-session{min-width:unset;width:100%;}
+    .dash-alert-strip{flex-wrap:wrap;}
+    .dash-alert-cell{min-width:50%;}
+  }
 
   /* LINK PANEL */
   .lp-card{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);padding:32px;margin-bottom:16px;}
@@ -336,69 +464,204 @@
       <div id="panelBadge"></div>
     </div>
 
-    <!-- DASHBOARD PANEL -->
+    <!-- DASHBOARD PANEL — REDESIGNED -->
     <div class="nx-panel panel-active" id="panel-dashboard">
-      <div class="dash-welcome">
-        <div class="dash-welcome-eyebrow">Welcome back</div>
-        <div class="dash-welcome-title" id="dashWelcomeName">—</div>
-        <div class="dash-welcome-sub">You have full access to all classified resources within NEXUS. Use the sidebar to navigate between sections. All activity in this portal is logged and monitored by CIB Command.</div>
+
+      <!-- HERO SPLASH -->
+      <div class="dash-hero">
+        <div class="dash-hero-corner-bl"></div>
+        <div class="dash-hero-inner">
+
+          <!-- Wordmark -->
+          <div class="dash-hero-wordmark">
+            <div class="dash-hero-eyebrow">Central Investigation Bureau · Internal Portal</div>
+            <div class="dash-hero-title"><span>NEXUS</span></div>
+            <div class="dash-hero-sub">
+              Welcome back, <span id="dashWelcomeName" style="color:var(--gold);font-family:'Oswald',sans-serif;letter-spacing:3px;">—</span><br/>
+              You have Top Secret clearance · All activity is monitored
+            </div>
+          </div>
+
+          <!-- Session card -->
+          <div class="dash-hero-session">
+            <div>
+              <div class="dash-session-label">Active Officer</div>
+              <div class="dash-officer-name" id="dashHeroOfficer">—</div>
+            </div>
+            <div class="dash-session-divider"></div>
+            <div class="dash-session-row">
+              <span class="dash-session-label">Clearance</span>
+              <span class="dash-session-value gold">TOP SECRET</span>
+            </div>
+            <div class="dash-session-row">
+              <span class="dash-session-label">Modules</span>
+              <span class="dash-session-value white">7 Available</span>
+            </div>
+            <div class="dash-session-divider"></div>
+            <div class="dash-session-active">
+              <div class="dash-session-active-dot"></div>
+              <span class="dash-session-active-text">Secure Session · Active</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Stats strip pinned to bottom of hero -->
+        <div class="dash-alert-strip">
+          <div class="dash-alert-cell">
+            <div class="dash-alert-cell-label">Portal Status</div>
+            <div class="dash-alert-cell-value green">Online</div>
+          </div>
+          <div class="dash-alert-cell">
+            <div class="dash-alert-cell-label">Classification</div>
+            <div class="dash-alert-cell-value gold">Top Secret</div>
+          </div>
+          <div class="dash-alert-cell">
+            <div class="dash-alert-cell-label">Session Timeout</div>
+            <div class="dash-alert-cell-value white">30 min idle</div>
+          </div>
+          <div class="dash-alert-cell">
+            <div class="dash-alert-cell-label">Data Integrity</div>
+            <div class="dash-alert-cell-value green">Verified</div>
+          </div>
+          <div class="dash-alert-cell">
+            <div class="dash-alert-cell-label">Audit Logging</div>
+            <div class="dash-alert-cell-value red">Active</div>
+          </div>
+        </div>
       </div>
-      <div class="dash-status-grid">
-        <div class="dash-stat gold">
-          <div class="dash-stat-label">Classification Level</div>
-          <div class="dash-stat-value">TS</div>
-          <div class="dash-stat-hint">Top Secret · All Sections</div>
+
+      <!-- MODULES -->
+      <div class="dash-modules">
+
+        <div class="dash-section-head">
+          <span class="dash-section-cat">Available Modules</span>
+          <span class="dash-section-label">7 sections · Select to navigate</span>
         </div>
-        <div class="dash-stat green">
-          <div class="dash-stat-label">Session Status</div>
-          <div class="dash-stat-value">Active</div>
-          <div class="dash-stat-hint">Expires after 30 min idle</div>
+
+        <!-- DOCUMENTS -->
+        <div class="dash-cat">
+          <div class="dash-cat-label">Documents</div>
+          <div class="dash-mod-grid cols-3">
+
+            <div class="dash-mod mod-gold" onclick="showPanelByName('guidebook')">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V6h10v2z"/></svg>
+                </div>
+                <span class="dash-mod-badge">Internal</span>
+              </div>
+              <div class="dash-mod-name">CIB Guidebook</div>
+              <div class="dash-mod-desc">Standard operating procedures · Chain of command · Rules of engagement</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">All Personnel</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
+
+            <div class="dash-mod mod-gold" onclick="showPanelByName('penal')">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l4.59-4.58L17 9l-6 6z"/></svg>
+                </div>
+                <span class="dash-mod-badge">SA Legislature</span>
+              </div>
+              <div class="dash-mod-name">Penal Codes</div>
+              <div class="dash-mod-desc">Criminal statutes · Charge reference · Sentencing guidelines</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">LEO Reference</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
+
+            <div class="dash-mod mod-red" onclick="showPanelByName('directory')">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                </div>
+                <span class="dash-mod-badge">Top Secret</span>
+              </div>
+              <div class="dash-mod-name">Main Directory</div>
+              <div class="dash-mod-desc">Complete case files · Operation archives · All divisional records</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">GRD · CID · Command</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
+
+          </div>
         </div>
-        <div class="dash-stat red">
-          <div class="dash-stat-label">Modules Available</div>
-          <div class="dash-stat-value">7</div>
-          <div class="dash-stat-hint">Classified sections loaded</div>
+
+        <!-- INTELLIGENCE -->
+        <div class="dash-cat">
+          <div class="dash-cat-label">Intelligence</div>
+          <div class="dash-mod-grid cols-4">
+
+            <div class="dash-mod mod-red" onclick="showPanelByName('weapons')">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M2 16v2h4.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5H22v-2H2zm7 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM22 7h-8V4H2v2h2v8h16V7h2V7zm-4 5H6V6h12v6z"/></svg>
+                </div>
+                <span class="dash-mod-badge">CIB Eyes Only</span>
+              </div>
+              <div class="dash-mod-name">Weapons Tracker</div>
+              <div class="dash-mod-desc">Active arms networks · Seizure logs · Supply chain</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">GRD Division</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
+
+            <div class="dash-mod mod-orange" onclick="showPanelByName('gang')">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                </div>
+                <span class="dash-mod-badge">GRD Database</span>
+              </div>
+              <div class="dash-mod-name">Gang Intel</div>
+              <div class="dash-mod-desc">Active gang profiles · Territorial maps · Threat assessments</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">Statewide · All Factions</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
+
+            <div class="dash-mod mod-red" onclick="showPanelByName('informant')">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                </div>
+                <span class="dash-mod-badge">Handler Only</span>
+              </div>
+              <div class="dash-mod-name">Informant Registry</div>
+              <div class="dash-mod-desc">Handler assignments · Gang affiliations · Active tasking</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">Identities Classified</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
+
+            <a class="dash-mod mod-hvc" href="targets/hvc.html" style="text-decoration:none;">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+                <span class="dash-mod-badge">Priority</span>
+              </div>
+              <div class="dash-mod-name">HVC Targets</div>
+              <div class="dash-mod-desc">High-value criminals · Active warrants · Threat profiles</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">Command Eyes Only</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </a>
+
+          </div>
         </div>
-      </div>
-      <div class="dash-quick-label">Quick Access</div>
-      <div class="dash-quick-grid">
-        <div class="dash-quick-item" onclick="showPanelByName('guidebook')">
-          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V6h10v2z"/></svg></div>
-          <div class="dash-quick-name">CIB Guidebook</div>
-          <div class="dash-quick-hint">SOPs · Chain of command</div>
-        </div>
-        <div class="dash-quick-item" onclick="showPanelByName('penal')">
-          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l4.59-4.58L17 9l-6 6z"/></svg></div>
-          <div class="dash-quick-name">Penal Codes</div>
-          <div class="dash-quick-hint">Criminal statutes · Charges</div>
-        </div>
-        <div class="dash-quick-item" onclick="showPanelByName('directory')">
-          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></div>
-          <div class="dash-quick-name">Main Directory</div>
-          <div class="dash-quick-hint">Case files · Archives</div>
-        </div>
-        <div class="dash-quick-item qi-red" onclick="showPanelByName('weapons')">
-          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M17.5 12c-2.49 0-4.5 2.01-4.5 4.5S15.01 21 17.5 21 22 18.99 22 16.5 19.99 12 17.5 12z"/></svg></div>
-          <div class="dash-quick-name">Weapons Tracker</div>
-          <div class="dash-quick-hint">Arms networks · GRD</div>
-        </div>
-        <div class="dash-quick-item qi-orange" onclick="showPanelByName('gang')">
-          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
-          <div class="dash-quick-name">Gang Intel</div>
-          <div class="dash-quick-hint">Profiles · Territories</div>
-        </div>
-        <div class="dash-quick-item qi-red" onclick="showPanelByName('informant')">
-          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>
-          <div class="dash-quick-name">Informant Registry</div>
-          <div class="dash-quick-hint">33 registered · Handler only</div>
-        </div>
-        <a class="dash-quick-item qi-hvc" href="targets/hvc.html" style="text-decoration:none;color:inherit;">
-          <div class="dash-quick-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
-          <div class="dash-quick-name">HVC Targets</div>
-          <div class="dash-quick-hint">High-value · Priority targets</div>
-        </a>
-      </div>
-    </div>
+
+      </div><!-- /dash-modules -->
+    </div><!-- /panel-dashboard -->
 
     <!-- GUIDEBOOK PANEL -->
     <div class="nx-panel" id="panel-guidebook">
@@ -578,6 +841,8 @@
           document.getElementById('badgeDisplay').textContent    = badge;
           document.getElementById('sidebarBadge').textContent    = badge;
           document.getElementById('dashWelcomeName').textContent = badge;
+          const hero2 = document.getElementById('dashHeroOfficer');
+          if (hero2) hero2.textContent = badge;
         }
 
       } catch (err) {
