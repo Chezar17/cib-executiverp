@@ -1276,13 +1276,13 @@ document.getElementById('gang-del-modal').addEventListener('click', e=>{ if(e.ta
 // ── AUTH GATE ─────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   const token = sessionStorage.getItem('cib_token');
-  if (!token){ window.location.href = 'Page_Login.html'; return; }
+  if (!token){ window.location.href = '/Page_Login.html'; return; }
 
   setTimeout(async () => {
     try {
       // Verify token
       const res = await fetch('/api/verify-token', { method:'GET', headers:{'x-session-token':token} });
-      if (!res.ok){ sessionStorage.clear(); window.location.href = 'Page_Login.html'; return; }
+      if (!res.ok){ sessionStorage.clear(); window.location.href = '/Page_Login.html'; return; }
 
       // Get user classification from sessionStorage (set at login)
       USER_CLASS = (sessionStorage.getItem('cib_classification') || '').toLowerCase().trim();
@@ -1318,7 +1318,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     } catch(e){
       sessionStorage.clear();
-      window.location.href = 'Page_Login.html';
+      window.location.href = '/Page_Login.html';
     }
   }, 900);
 });
@@ -1343,7 +1343,7 @@ async function logout(){
   const token = sessionStorage.getItem('cib_token');
   try { await fetch('/api/logout',{method:'POST',headers:{'x-session-token':token||''}}); } catch(e){}
   sessionStorage.clear();
-  window.location.href = 'Page_Login.html';
+  window.location.href = '/Page_Login.html';
 }
 
 // ── MIRO BOARD PASSWORD GATE ─────────────────────────────────
