@@ -1,67 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Recruitment — CENTRAL INVESTIGATION BUREAU</title>
+<title>Recruitment â€” CENTRAL INVESTIGATION BUREAU</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
+<link rel="stylesheet" href="shared/styles/sections.css"/>
+<link rel="stylesheet" href="shared/styles/footer.css"/>
+<link rel="stylesheet" href="shared/styles/site-header.css"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
-
-/* ── PAGE TRANSITIONS ── */
-body {
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-body.page-visible {
-  opacity: 1;
-}
-
-  /* ── NAV ── */
-  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
-  .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
-  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
-  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;text-decoration:none;}
-
-  /* ── TICKER ── */
-  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
-  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
-  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
-  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
-  .ticker-track span b{color:var(--gold-light);}
-  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  /* ── PAGE HERO ── */
-  .page-hero{position:relative;padding:80px 40px 72px;overflow:hidden;border-bottom:1px solid var(--navy-border);}
-  .page-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,#0D1A35 0%,var(--navy) 65%);z-index:0;}
-  .page-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
-  .page-hero-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:var(--gold);z-index:1;}
-  .page-hero-content{position:relative;z-index:2;max-width:1100px;margin:0 auto;}
-  .breadcrumb{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
-  .breadcrumb span{color:var(--gold);}
-  .page-hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;opacity:0.8;}
-  .page-hero h1{font-family:'Oswald',sans-serif;font-size:clamp(28px,5vw,56px);font-weight:700;letter-spacing:6px;text-transform:uppercase;color:var(--white);line-height:1.1;margin-bottom:16px;}
-  .page-hero-line{width:80px;height:2px;background:var(--gold);margin-bottom:20px;}
-  .page-hero-desc{font-size:14px;color:var(--muted);max-width:620px;line-height:1.9;letter-spacing:0.5px;}
-
-  /* ── INVITATION SECTION ── */
+/* â”€â”€ INVITATION SECTION â”€â”€ */
   .invite-section{padding:80px 40px;background:var(--navy);}
   .invite-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;}
   .invite-text .section-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;opacity:0.8;}
@@ -84,14 +36,14 @@ body.page-visible {
   .btn-apply:hover{background:var(--gold-light);}
   .apply-note{margin-top:14px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);opacity:0.6;}
 
-  /* ── STATS BAR ── */
+  /* â”€â”€ STATS BAR â”€â”€ */
   .stats-bar{background:var(--navy-mid);border-top:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);display:grid;grid-template-columns:repeat(4,1fr);}
   .stat-item{padding:24px 20px;text-align:center;border-right:1px solid var(--navy-border);}
   .stat-item:last-child{border-right:none;}
   .stat-num{font-family:'Oswald',sans-serif;font-size:32px;font-weight:700;color:var(--gold);}
   .stat-label{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px;}
 
-  /* ── REQUIREMENTS SECTION ── */
+  /* â”€â”€ REQUIREMENTS SECTION â”€â”€ */
   .req-section{padding:80px 40px;background:var(--navy);}
   .req-inner{max-width:1100px;margin:0 auto;}
   .req-header{text-align:center;margin-bottom:56px;}
@@ -126,7 +78,7 @@ body.page-visible {
   .req-card-note{background:#0A0F1E;border-top:1px solid var(--navy-border);padding:14px 28px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.6;display:flex;align-items:center;gap:8px;}
   .req-note-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:0.5;flex-shrink:0;}
 
-  /* ── PROCESS SECTION ── */
+  /* â”€â”€ PROCESS SECTION â”€â”€ */
   .process-section{padding:80px 40px;background:var(--navy-mid);border-top:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);}
   .process-inner{max-width:1100px;margin:0 auto;}
   .process-header{text-align:center;margin-bottom:56px;}
@@ -141,7 +93,7 @@ body.page-visible {
   .step-title{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:10px;}
   .step-desc{font-size:12px;color:var(--muted);line-height:1.7;}
 
-  /* ── CTA BOTTOM ── */
+  /* â”€â”€ CTA BOTTOM â”€â”€ */
   .cta-section{padding:72px 40px;background:var(--navy);text-align:center;}
   .cta-inner{max-width:640px;margin:0 auto;}
   .cta-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;opacity:0.8;}
@@ -150,20 +102,6 @@ body.page-visible {
   .cta-text{font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:36px;}
   .btn-cta{display:inline-block;background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:4px;padding:15px 48px;text-transform:uppercase;font-weight:600;text-decoration:none;transition:background 0.2s;}
   .btn-cta:hover{background:var(--gold-light);}
-
-  /* ── FOOTER ── */
-  footer{background:var(--navy-mid);border-top:1px solid var(--gold);padding:40px 40px 24px;}
-  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
-  .footer-brand img{height:50px;width:50px;object-fit:contain;margin-bottom:12px;}
-  .footer-brand p{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
-  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.7;}
-  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
-  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
-  .footer-col ul li a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
-  .footer-col ul li a:hover{color:var(--gold);}
-  .footer-bottom{border-top:1px solid var(--navy-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
-  .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
-  .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
 
   @media(max-width:768px){
     nav{padding:0 16px;}
@@ -175,48 +113,19 @@ body.page-visible {
     .stats-bar{grid-template-columns:1fr 1fr;}
     .stat-item:nth-child(2){border-right:none;}
     .stat-item{border-bottom:1px solid var(--navy-border);}
-    .footer-top{grid-template-columns:1fr;}
     footer{padding:32px 20px 20px;}
     .invite-section,.req-section,.process-section,.cta-section{padding:56px 20px;}
     .page-hero{padding:56px 20px;}
   }
 </style>
+
+<link rel='stylesheet' href='shared/styles/site-header.css'/>
+<script type='module' src='shared/components/site-header.js'></script>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
-  <a href="index.html" class="nav-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="nav-brand">Central Investigation Bureau</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Page_About.html">About</a></li>
-    <li><a href="Page_OurMission.html">Our Mission</a></li>
-    <li><a href="Page_Divisions.html">Detectives</a></li>
-    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
-    <li><a href="Page_Wanted.html">Most Wanted</a></li>
-    <li><a href="Page_Press.html">Press Room</a></li>
-    <li><a href="Page_Recruitment.html">Recruitment</a></li>
-  </ul>
-  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
-</nav>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-label">LIVE ALERT</div>
-  <div style="overflow:hidden;flex:1;">
-    <div class="ticker-track">
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
-      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-    </div>  
-  </div>
-</div>
+<div data-shared-site-header></div>
 
 <!-- PAGE HERO -->
 <section class="page-hero">
@@ -240,8 +149,8 @@ body.page-visible {
       <div class="section-eyebrow">An Invitation to Serve</div>
       <h2>We Are Looking For<br><span>The Best of the Best</span></h2>
       <div class="invite-line"></div>
-      <p>The Central Investigation Bureau is not just another division — it is the premier investigative unit of the San Andreas Police Department. Our detectives operate at the intersection of intelligence, law, and courage, taking on cases that other units cannot.</p>
-      <p>We are extending a formal invitation to law enforcement officers from both the Los Santos County Sheriff's Department and the Los Santos Police Department who believe they have what it takes to wear the CIB badge. If you are driven by purpose, undeterred by complexity, and committed to the law — this is your call.</p>
+      <p>The Central Investigation Bureau is not just another division â€” it is the premier investigative unit of the San Andreas Police Department. Our detectives operate at the intersection of intelligence, law, and courage, taking on cases that other units cannot.</p>
+      <p>We are extending a formal invitation to law enforcement officers from both the Los Santos County Sheriff's Department and the Los Santos Police Department who believe they have what it takes to wear the CIB badge. If you are driven by purpose, undeterred by complexity, and committed to the law â€” this is your call.</p>
       <p>Positions are limited. Only the most qualified candidates will advance through our selection process. This is your opportunity to be part of something greater.</p>
       <div class="invite-tags">
         <span class="invite-tag">Plainclothes Operations</span>
@@ -346,7 +255,7 @@ body.page-visible {
         </div>
         <div class="req-card-note">
           <span class="req-note-dot"></span>
-          Requirements subject to change at the discretion of CIB Command · Last updated 04.2026
+          Requirements subject to change at the discretion of CIB Command Â· Last updated 04.2026
         </div>
       </div>
 
@@ -398,7 +307,7 @@ body.page-visible {
         </div>
         <div class="req-card-note">
           <span class="req-note-dot"></span>
-          Requirements subject to change at the discretion of CIB Command · Last updated 04.2026
+          Requirements subject to change at the discretion of CIB Command Â· Last updated 04.2026
         </div>
       </div>
 
@@ -445,54 +354,20 @@ body.page-visible {
     <div class="cta-eyebrow">Your Next Step</div>
     <div class="cta-title">Ready to Join the Bureau?</div>
     <div class="cta-line"></div>
-    <p class="cta-text">The CIB is looking for officers who are ready to go beyond the badge. If you meet the requirements for your department and you're driven to make a real impact against organized crime in San Andreas — don't wait. Applications are open now.</p>
+    <p class="cta-text">The CIB is looking for officers who are ready to go beyond the badge. If you meet the requirements for your department and you're driven to make a real impact against organized crime in San Andreas â€” don't wait. Applications are open now.</p>
     <a class="btn-cta" href="https://tinyurl.com/detectives2026" target="_blank" rel="noopener noreferrer">Apply Now</a>
   </div>
 </section>
 
 <!-- FOOTER -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-      <p>Central Investigation Bureau</p>
-      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
-    </div>
-    <div class="footer-col">
-      <h4>Divisions</h4>
-      <ul>
-        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
-        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Resources</h4>
-      <ul>
-        <li><a href="Page_Press.html">Press Room</a></li>
-        <li><a href="Page_Recruitment.html">Recruitment</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="index.html">CIB Headquarters</a></li>
-        <li><a href="Page_Press.html">Tip Hotline</a></li>
-        <li><a href="Page_Login.html">Personnel Login</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
-    <div class="classified-stamp">EXECUTIVE RP</div>
-  </div>
-</footer>
+<div data-shared-footer></div>
+<script type="module" src="shared/components/site-footer.js"></script>
 
+<script src="shared/scripts/site-ui.js"></script>
 <script>
-  // Fade IN when page loads
-  window.addEventListener('DOMContentLoaded', () => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('page-visible');
-    });
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+</script>
+<script>
   });
 
   // Fade OUT before navigating away
@@ -515,3 +390,5 @@ body.page-visible {
 
 </body>
 </html>
+
+

@@ -1,64 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Press Room — Central Investigation Bureau</title>
+<title>Press Room â€” Central Investigation Bureau</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
+<link rel="stylesheet" href="shared/styles/sections.css"/>
+<link rel="stylesheet" href="shared/styles/footer.css"/>
+<link rel="stylesheet" href="shared/styles/site-header.css"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
-
-/* ── PAGE TRANSITIONS ── */
-body {
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-body.page-visible {
-  opacity: 1;
-}
-
-  /* NAV */
-  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
-  .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
-  .nav-links a:hover{color:var(--gold);}
-  .nav-links a.active{color:var(--gold);border-bottom:2px solid var(--gold);padding-bottom:2px;}
-  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;cursor:pointer;}
-
-  /* TICKER */
-  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
-  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
-  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
-  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
-  .ticker-track span b{color:var(--gold-light);}
-  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  /* PAGE HERO */
-  .page-hero{background:radial-gradient(ellipse at center,#0D1A35 0%,var(--navy) 70%);border-bottom:1px solid var(--navy-border);padding:72px 40px 60px;position:relative;overflow:hidden;}
-  .page-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:60px 60px;}
-  .page-hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;}
-  .page-hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;opacity:0.8;}
-  .page-hero h1{font-family:'Oswald',sans-serif;font-size:clamp(40px,7vw,80px);font-weight:700;letter-spacing:10px;text-transform:uppercase;color:var(--white);line-height:1.05;margin-bottom:12px;}
-  .page-hero-line{width:60px;height:2px;background:var(--gold);margin:20px auto;}
-  .page-hero-desc{font-size:14px;color:var(--muted);line-height:1.85;max-width:600px;margin:0 auto;}
-
-  /* LAYOUT */
+/* LAYOUT */
   .press-wrap{max-width:1300px;margin:0 auto;padding:56px 40px;}
   .press-layout{display:grid;grid-template-columns:1fr 300px;gap:48px;}
 
@@ -94,12 +49,11 @@ body.page-visible {
   .pr-text{font-size:13px;color:var(--muted);line-height:1.9;}
   .pr-text p{margin-bottom:10px;}
   .pr-text p:last-child{margin-bottom:0;}
-  .pr-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:20px;padding-top:14px;border-top:1px solid var(--navy-border);}
-  .pr-division-tag{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;opacity:0.7;}
+  .pr-.pr-division-tag{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;opacity:0.7;}
   .pr-issued{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--muted);opacity:0.5;}
 
   /* =====================================================
-     MAIN HEADLINE CARDS — Full width, high prominence
+     MAIN HEADLINE CARDS â€” Full width, high prominence
      ===================================================== */
   .main-pr-list{display:flex;flex-direction:column;gap:32px;}
   .pr-card-main{background:var(--navy-card);border:1px solid var(--navy-border);border-left:4px solid var(--red-alert);overflow:hidden;}
@@ -110,7 +64,7 @@ body.page-visible {
   .pr-card-main .pr-divider{width:44px;height:2px;background:var(--red-alert);opacity:0.5;margin-bottom:16px;}
 
   /* =====================================================
-     SUB HEADLINE CARDS — Compact 2-column grid
+     SUB HEADLINE CARDS â€” Compact 2-column grid
      ===================================================== */
   .sub-pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
   .pr-card-sub{background:var(--navy-card);border:1px solid var(--navy-border);border-left:3px solid var(--gold);overflow:hidden;}
@@ -128,20 +82,6 @@ body.page-visible {
   .contact-row{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;}
   .contact-row span{color:var(--gold-light);}
 
-  /* FOOTER */
-  footer{background:var(--navy-mid);border-top:1px solid var(--gold);padding:40px 40px 24px;}
-  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
-  .footer-brand img{height:50px;width:50px;object-fit:contain;margin-bottom:12px;}
-  .footer-brand p{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
-  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.7;}
-  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
-  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
-  .footer-col ul li a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
-  .footer-col ul li a:hover{color:var(--gold);}
-  .footer-bottom{border-top:1px solid var(--navy-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
-  .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
-  .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
-
   @media(max-width:960px){
     .press-layout{grid-template-columns:1fr;}
     .sub-pr-grid{grid-template-columns:1fr;}
@@ -150,53 +90,24 @@ body.page-visible {
     .press-wrap{padding:40px 20px;}
     .page-hero{padding:48px 20px 40px;}
     footer{padding:32px 20px 20px;}
-    .footer-top{grid-template-columns:1fr;}
     .pr-card-main .pr-body{padding:22px 20px;}
     .section-label-text{font-size:22px;}
   }
 </style>
+
+<link rel='stylesheet' href='shared/styles/site-header.css'/>
+<script type='module' src='shared/components/site-header.js'></script>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
-  <a href="index.html" class="nav-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="nav-brand">Central Investigation Bureau</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Page_About.html">About</a></li>
-    <li><a href="Page_OurMission.html">Our Mission</a></li>
-    <li><a href="Page_Divisions.html">Detectives</a></li>
-    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
-    <li><a href="Page_Wanted.html">Most Wanted</a></li>
-    <li><a href="Page_Press.html">Press Room</a></li>
-    <li><a href="Page_Recruitment.html">Recruitment</a></li>
-  </ul>
-  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
-</nav>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-label">LIVE ALERT</div>
-  <div style="overflow:hidden;flex:1;">
-    <div class="ticker-track">
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
-      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-    </div>  
-  </div>
-</div>
+<div data-shared-site-header></div>
 
 <!-- PAGE HERO -->
 <div class="page-hero">
   <div class="page-hero-grid"></div>
   <div class="page-hero-inner">
-    <div class="page-hero-eyebrow">Central Investigation Bureau · Official Communications</div>
+    <div class="page-hero-eyebrow">Central Investigation Bureau Â· Official Communications</div>
     <h1>Press Room</h1>
     <div class="page-hero-line"></div>
     <p class="page-hero-desc">Official press releases, public advisories, and statements issued by the Central Investigation Bureau and its sub-divisions. All communications are authorized by the Office of the CIB Director.</p>
@@ -238,7 +149,7 @@ body.page-visible {
             <span class="section-label-icon main-icon"></span>
             <div>
               <div class="section-label-text">Main Headline</div>
-              <div class="section-label-sub">High-priority — citywide awareness required</div>
+              <div class="section-label-sub">High-priority â€” citywide awareness required</div>
             </div>
           </div>
         </div>
@@ -265,14 +176,14 @@ body.page-visible {
               <div class="pr-text">
                 <p>The Central Investigation Bureau today reaffirmed its commitment to dismantling organized criminal networks involved in the illegal trafficking and distribution of firearms across the region.</p>
                 <p>Commander Diraj Lakota, Director of the Central Investigation Bureau, issued a strong statement regarding the growing threat posed by armed street gangs and weapon suppliers:</p>
-                <p>“We must be tougher on criminal gangs whose only business is selling weapons. These organizations fuel violence, intimidate communities, and profit from fear. The CIB will not allow them to operate freely. We are expanding investigations, increasing intelligence-led enforcement, and working with our law enforcement partners to identify, disrupt, and prosecute every individual involved in the illegal weapons trade.”</p>
+                <p>â€œWe must be tougher on criminal gangs whose only business is selling weapons. These organizations fuel violence, intimidate communities, and profit from fear. The CIB will not allow them to operate freely. We are expanding investigations, increasing intelligence-led enforcement, and working with our law enforcement partners to identify, disrupt, and prosecute every individual involved in the illegal weapons trade.â€</p>
                 <p>Under Commander Lakota leadership, the Bureau has prioritized gang suppression operations, long-term intelligence gathering, and coordinated enforcement actions targeting those responsible for supplying firearms to violent offenders.</p>
                 <p>The CIB emphasized that illegal weapons trafficking remains a direct threat to public safety, often linked to robberies, assaults, extortion, and gang-related shootings. The Bureau stated that future operations will focus not only on gang members, but also on financiers, smugglers, brokers, and anyone assisting criminal enterprises.</p>
                 <p>Commander Lakota concluded by assuring the public that the Bureau remains fully committed to protecting communities and restoring order through decisive action, professional investigations, and relentless enforcement.</p>
               </div>
               <div class="pr-footer">
                 <span class="pr-division-tag">Issued by: Office of the CIB Director</span>
-                <span class="pr-issued">RELEASED: 20 APR 2026 · 06:00 HRS</span>
+                <span class="pr-issued">RELEASED: 20 APR 2026 Â· 06:00 HRS</span>
               </div>
             </div>
           </article>
@@ -329,12 +240,12 @@ body.page-visible {
               <div class="pr-divider"></div>
               <div class="pr-text">
                 <p>Captain Elias Makya, Head of the Central Investigation Division, congratulated Los Santos County Sheriff Detective II Julian Flux on being named Detective of the Month.</p>
-                <p><em>“Detective Julian Flux has shown outstanding dedication, professionalism, and commitment to justice. This recognition is well deserved, and I extend my sincere congratulations on this achievement.”</em></p>
+                <p><em>â€œDetective Julian Flux has shown outstanding dedication, professionalism, and commitment to justice. This recognition is well deserved, and I extend my sincere congratulations on this achievement.â€</em></p>
                 <p>The Central Investigation Bureau commends Detective Flux for his service and wishes him continued success in future investigations.</p>
               </div>
               <div class="pr-footer">
                 <span class="pr-division-tag">Issued by: Office of the CID Command</span>
-                <span class="pr-issued">RELEASED: 05 MAR 2026 · 09:00 HRS</span>
+                <span class="pr-issued">RELEASED: 05 MAR 2026 Â· 09:00 HRS</span>
               </div>
             </div>
           </article>
@@ -357,12 +268,12 @@ body.page-visible {
               <div class="pr-divider"></div>
               <div class="pr-text">
                 <p>Captain Meifanny Lorenta, Head of the Gang Recon Division, congratulated Los Santos Police Department Detective II Tarsha Kim on being named Detective of the Month.</p>
-                <p><em>“Detective Tarsha Kim has demonstrated exceptional dedication, professionalism, and commitment to protecting the community. This recognition is well deserved, and I extend my sincere congratulations on this achievement.”</em></p>
+                <p><em>â€œDetective Tarsha Kim has demonstrated exceptional dedication, professionalism, and commitment to protecting the community. This recognition is well deserved, and I extend my sincere congratulations on this achievement.â€</em></p>
                 <p>The Central Investigation Bureau commends Detective Kim for her service and wishes her continued success in future investigations.</p>
               </div>
               <div class="pr-footer">
                 <span class="pr-division-tag">Issued by: SAPD Commissioner's Office</span>
-                <span class="pr-issued">RELEASED: 10 JAN 2026 · 08:00 HRS</span>
+                <span class="pr-issued">RELEASED: 10 JAN 2026 Â· 08:00 HRS</span>
               </div>
             </div>
           </article>
@@ -382,7 +293,7 @@ body.page-visible {
         <div class="sidebar-title">Media Contact</div>
         <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;">For press inquiries, interview requests, or media credential applications, contact the CIB Public Affairs Office.</p>
         <div class="contact-row">Office: <span>CIB PAO Associate</span></div>
-        <div class="contact-row">Hours: <span>Mon–Fri · 19:00–22:00</span></div>
+        <div class="contact-row">Hours: <span>Monâ€“Fri Â· 19:00â€“22:00</span></div>
         <div class="contact-row">Location: <span>Sandy Shore Sherriff Office</span></div>
         <div class="contact-row">Jurisdiction: <span>State of San Andreas</span></div>
       </div>
@@ -404,48 +315,14 @@ body.page-visible {
 </div>
 
 <!-- FOOTER -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-      <p>Central Investigation Bureau</p>
-      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
-    </div>
-    <div class="footer-col">
-      <h4>Divisions</h4>
-      <ul>
-        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
-        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Resources</h4>
-      <ul>
-        <li><a href="Page_Press.html">Press Room</a></li>
-        <li><a href="Page_Recruitment.html">Recruitment</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="index.html">CIB Headquarters</a></li>
-        <li><a href="Page_Press.html">Tip Hotline</a></li>
-        <li><a href="Page_Login.html">Personnel Login</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
-    <div class="classified-stamp">EXECUTIVE RP</div>
-  </div>
-</footer>
+<div data-shared-footer></div>
+<script type="module" src="shared/components/site-footer.js"></script>
 
+<script src="shared/scripts/site-ui.js"></script>
 <script>
-  // Fade IN when page loads
-  window.addEventListener('DOMContentLoaded', () => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('page-visible');
-    });
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+</script>
+<script>
   });
 
   // Fade OUT before navigating away
@@ -468,3 +345,5 @@ body.page-visible {
 
 </body>
 </html>
+
+

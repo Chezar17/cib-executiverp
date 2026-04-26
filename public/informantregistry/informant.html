@@ -1,37 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="../shared/styles/tokens.css"/>
+<link rel="stylesheet" href="../shared/styles/base.css"/>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Informant Registry — CIB NEXUS</title>
 <link rel="icon" href="images/cib-logo.png" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-    --green:#27AE60;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
-
-/* ── PAGE TRANSITIONS ── */
-body {
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-body.page-visible {
-  opacity: 1;
-}
-
-  /* ── ACCESS GATE (shown before auth check completes) ── */
+/* ── ACCESS GATE (shown before auth check completes) ── */
   #access-gate{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
   #access-gate.hidden{display:none;}
   .gate-logo{width:64px;height:64px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
@@ -70,7 +48,6 @@ body.page-visible {
   .ticker-track span{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);padding:0 40px;}
   .ticker-track span b{color:var(--gold-light);}
   @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
   /* ── HERO ── */
   .nexus-hero{background:radial-gradient(ellipse at center,#0D1A35 0%,var(--navy) 70%);padding:44px 40px 36px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--navy-border);}
   .nexus-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:50px 50px;}
@@ -969,11 +946,6 @@ body.page-visible {
 <div id="inf-toast"></div>
 
 <script>
-  // Fade IN when page loads
-  window.addEventListener('DOMContentLoaded', () => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('page-visible');
-    });
   });
 
   // Fade OUT before navigating away
@@ -994,5 +966,10 @@ body.page-visible {
   });
 </script>
 
+<script src="../shared/scripts/site-ui.js"></script>
+<script>
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+  SiteUi.initScrollReveal();
+</script>
 </body>
 </html>

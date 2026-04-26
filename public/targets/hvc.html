@@ -1,23 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="../shared/styles/tokens.css"/>
+<link rel="stylesheet" href="../shared/styles/base.css"/>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>High Value Criminals — CIB NEXUS</title>
 <link rel="icon" href="/images/cib-logo.png" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;--gold-light:#E8C97A;--navy:#0A0F1E;--navy-mid:#0D1526;
-    --navy-card:#111827;--navy-border:#1E2D4A;--white:#F0EDE4;--muted:#8A95AA;
-    --red-alert:#C0392B;--green:#27AE60;--orange:#E05A28;
-    --threat-critical:#C0392B;--threat-high:#E05A28;--threat-medium:#C9A84C;--threat-low:#27AE60;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;opacity:0;transition:opacity 0.4s ease;}
-  body.page-visible{opacity:1;}
-
-  /* ── ACCESS GATE ── */
+/* ── ACCESS GATE ── */
   #access-gate{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
   #access-gate.hidden{display:none;}
   .gate-logo{width:64px;height:64px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
@@ -56,7 +48,6 @@
   .ticker-track span{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);padding:0 40px;}
   .ticker-track span b{color:var(--gold-light);}
   @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
   /* ── HERO ── */
   .nexus-hero{background:radial-gradient(ellipse at center,#1A0808 0%,var(--navy) 70%);padding:44px 40px 36px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--navy-border);}
   .nexus-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(192,57,43,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(192,57,43,0.04) 1px,transparent 1px);background-size:50px 50px;}
@@ -314,13 +305,10 @@
   .nexus-footer-left{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.5;}
   .nexus-footer-right{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red-alert);opacity:0.6;}
 
-  /* Scrollbar */
-  ::-webkit-scrollbar{width:4px;}
-  ::-webkit-scrollbar-track{background:var(--navy);}
-  ::-webkit-scrollbar-thumb{background:var(--navy-border);}
-  ::-webkit-scrollbar-thumb:hover{background:var(--red-alert);}
+  /* Scrollbar — portal uses red hover */
+  ::-webkit-scrollbar-thumb:hover { background: var(--red-alert); }
 
-  @media(max-width:900px){
+@media(max-width:900px){
     .topbar{padding:0 16px;}
     .nexus-wrap{padding:32px 16px 48px;}
     .nexus-hero{padding:32px 20px 28px;}
@@ -1129,5 +1117,10 @@
   document.getElementById('hvc-view-modal').addEventListener('click', e => { if(e.target===document.getElementById('hvc-view-modal')) closeViewModal(); });
 </script>
 
+<script src="../shared/scripts/site-ui.js"></script>
+<script>
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+  SiteUi.initScrollReveal();
+</script>
 </body>
 </html>

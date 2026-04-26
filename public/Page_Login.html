@@ -1,65 +1,30 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Personnel Login — CENTRAL INVESTIGATION BUREAU</title>
+<title>Personnel Login â€” CENTRAL INVESTIGATION BUREAU</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
+<link rel="stylesheet" href="shared/styles/sections.css"/>
+<link rel="stylesheet" href="shared/styles/footer.css"/>
+<link rel="stylesheet" href="shared/styles/site-header.css"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
-
-/* ── PAGE TRANSITIONS ── */
-body {
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-body.page-visible {
-  opacity: 1;
-}
-
-  /* ── NAV ── */
-  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
-  .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
-  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
-  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;}
-
-  /* ── TICKER ── */
-  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
-  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
-  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
-  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
-  .ticker-track span b{color:var(--gold-light);}
-  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  .construction-banner{background:#0D1A0A;border-bottom:2px solid #27AE60;padding:10px 40px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+.construction-banner{background:#0D1A0A;border-bottom:2px solid #27AE60;padding:10px 40px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
   .construction-dot{width:8px;height:8px;border-radius:50%;background:#27AE60;animation:pulse 1.5s infinite;flex-shrink:0;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
   .construction-text{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:2px;color:#4CAF50;text-transform:uppercase;text-align:center;}
   .construction-text b{color:#81C784;}
 
-  /* ── LOGIN WRAPPER ── */
+  /* â”€â”€ LOGIN WRAPPER â”€â”€ */
   .login-wrapper{min-height:calc(100vh - 92px);display:flex;align-items:center;justify-content:center;padding:60px 20px;position:relative;overflow:hidden;}
   .login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#0D1A35 0%,var(--navy) 70%);z-index:0;}
   .login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
 
-  /* ── LOGIN CARD ── */
+  /* â”€â”€ LOGIN CARD â”€â”€ */
   .login-card{position:relative;z-index:2;width:100%;max-width:460px;}
 
   /* top status bar */
@@ -77,13 +42,13 @@ body.page-visible {
   .login-subtitle{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;text-align:center;margin-bottom:8px;}
   .login-divider{width:50px;height:1px;background:var(--gold);margin:16px auto 28px;opacity:0.5;}
 
-  /* ── DEV NOTICE inside card ── */
+  /* â”€â”€ DEV NOTICE inside card â”€â”€ */
   .dev-notice{background:#1A1008;border:1px solid rgba(201,168,76,0.35);border-left:3px solid var(--gold);padding:12px 16px;margin-bottom:28px;display:flex;align-items:flex-start;gap:12px;}
   .dev-notice-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
   .dev-notice-text{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--gold-light);line-height:1.7;letter-spacing:0.5px;}
   .dev-notice-text b{color:var(--gold);display:block;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
 
-  /* ── FORM ── */
+  /* â”€â”€ FORM â”€â”€ */
   .form-group{margin-bottom:20px;}
   .form-label{display:block;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;opacity:0.9;}
   .form-input-wrap{position:relative;}
@@ -101,7 +66,7 @@ body.page-visible {
   .login-btn:hover{background:var(--gold-light);}
   .login-btn:disabled{opacity:0.6;cursor:not-allowed;}
 
-  /* ── FORGOT PASSWORD ── */
+  /* â”€â”€ FORGOT PASSWORD â”€â”€ */
   .forgot-section{margin-top:24px;border-top:1px solid var(--navy-border);padding-top:20px;text-align:center;}
   .forgot-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;opacity:0.7;}
   .forgot-card{background:var(--navy-mid);border:1px solid var(--navy-border);padding:14px 18px;display:inline-flex;align-items:center;gap:12px;width:100%;}
@@ -112,25 +77,11 @@ body.page-visible {
   .forgot-card-name{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;}
   .forgot-card-rank{font-size:11px;color:var(--muted);margin-top:1px;}
 
-  /* ── BOTTOM STATUS ── */
+  /* â”€â”€ BOTTOM STATUS â”€â”€ */
   .login-footer-bar{background:var(--navy-mid);border:1px solid var(--navy-border);border-top:none;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;}
   .login-footer-left{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.5;}
   .login-secure-badge{display:flex;align-items:center;gap:6px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.5;}
   .secure-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);opacity:0.5;}
-
-  /* ── FOOTER ── */
-  footer{background:var(--navy-mid);border-top:1px solid var(--gold);padding:40px 40px 24px;}
-  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
-  .footer-brand img{height:50px;width:50px;object-fit:contain;margin-bottom:12px;}
-  .footer-brand p{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
-  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.7;}
-  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
-  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
-  .footer-col ul li a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
-  .footer-col ul li a:hover{color:var(--gold);}
-  .footer-bottom{border-top:1px solid var(--navy-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
-  .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
-  .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
 
   #surv-overlay{
     position:fixed;inset:0;z-index:9999;
@@ -203,10 +154,10 @@ body.page-visible {
   .surv-tag{display:inline-block;background:rgba(192,57,43,0.15);border:1px solid rgba(192,57,43,0.3);font-size:8px;letter-spacing:2px;padding:1px 6px;color:var(--red-alert);margin-left:6px;vertical-align:middle;}
   .surv-tag.green{background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#27AE60;}
 
-  /* ── MAIN COLS ── */
+  /* â”€â”€ MAIN COLS â”€â”€ */
   .surv-main-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;align-items:start;}
 
-  /* ── LEFT: DOWNLOAD / ACQUISITION PANEL ── */
+  /* â”€â”€ LEFT: DOWNLOAD / ACQUISITION PANEL â”€â”€ */
   .surv-acquire-panel{display:flex;flex-direction:column;gap:10px;}
   .surv-acquire-header{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--red-alert);text-transform:uppercase;margin-bottom:4px;opacity:0.8;}
 
@@ -263,18 +214,18 @@ body.page-visible {
   }
   #packet-log{display:flex;flex-direction:column;gap:0;}
 
-  /* ── RIGHT: WARNING PANEL ── */
+  /* â”€â”€ RIGHT: WARNING PANEL â”€â”€ */
   .surv-warning{background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.25);padding:14px 16px;margin-bottom:0;}
   .surv-warning-title{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--red-alert);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
-  .surv-warning-title::before{content:'⚠';font-size:12px;}
+  .surv-warning-title::before{content:'âš ';font-size:12px;}
   .surv-warning-text{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);line-height:1.8;}
   .surv-warning-text b{color:var(--white);}
   .surv-consequences{display:grid;grid-template-columns:1fr;gap:5px;margin-top:10px;}
   .surv-consequence{display:flex;align-items:flex-start;gap:8px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);line-height:1.5;}
-  .surv-consequence::before{content:'›';color:var(--red-alert);flex-shrink:0;}
+  .surv-consequence::before{content:'â€º';color:var(--red-alert);flex-shrink:0;}
   .surv-consequence b{color:rgba(240,237,228,0.85);}
 
-  /* ── CHANNEL ENCRYPTION METER ── */
+  /* â”€â”€ CHANNEL ENCRYPTION METER â”€â”€ */
   .surv-threat-meter{
     background:rgba(52,152,219,0.04);border:1px solid rgba(52,152,219,0.2);
     padding:10px 14px;margin-bottom:14px;
@@ -289,7 +240,7 @@ body.page-visible {
   .surv-threat-bar.active.teal{background:#1ABC9C;}
   .surv-threat-bar.active.secured{background:#27AE60;}
 
-  /* ── STATUS ROW (timestamp + status) ── */
+  /* â”€â”€ STATUS ROW (timestamp + status) â”€â”€ */
   .surv-status-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
   .surv-status-cell{
     display:flex;align-items:flex-start;gap:10px;
@@ -317,7 +268,7 @@ body.page-visible {
   .surv-btn.enabled{opacity:1;cursor:pointer;}
   .surv-btn.enabled:hover{background:#a93226;}
   .surv-legal{border-top:1px solid rgba(192,57,43,0.15);padding:10px 20px;font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(138,149,170,0.3);text-align:center;line-height:1.7;}
-  /* ── HIDDEN MODAL ── */
+  /* â”€â”€ HIDDEN MODAL â”€â”€ */
   #secret-modal{position:fixed;inset:0;background:rgba(5,8,18,0.94);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px;}
   #secret-modal.open{display:flex;}
   .secret-modal-box{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);width:100%;max-width:440px;position:relative;overflow:hidden;}
@@ -331,7 +282,7 @@ body.page-visible {
   .secret-modal-sub{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:20px;}
   .secret-modal-divider{height:1px;background:var(--navy-border);margin-bottom:20px;}
 
-  /* ── SECRET TRIGGER — the seal becomes subtly clickable ── */
+  /* â”€â”€ SECRET TRIGGER â€” the seal becomes subtly clickable â”€â”€ */
   .login-seal{cursor:default;} /* default so it doesn't hint */
   .login-seal:active{filter:drop-shadow(0 0 20px rgba(201,168,76,0.6));}
 
@@ -342,47 +293,16 @@ body.page-visible {
     .construction-banner{padding:10px 16px;}
     .login-wrapper{padding:40px 16px;}
     .login-body{padding:28px 20px 24px;}
-    .footer-top{grid-template-columns:1fr;}
     footer{padding:32px 20px 20px;}
   }
 </style>
+
+<link rel='stylesheet' href='shared/styles/site-header.css'/>
+<script type='module' src='shared/components/site-header.js'></script>
 </head>
 <body>
 
-<nav>
-  <a href="index.html" class="nav-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="nav-brand">Central Investigation Bureau</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Page_About.html">About</a></li>
-    <li><a href="Page_OurMission.html">Our Mission</a></li>
-    <li><a href="Page_Divisions.html">Detectives</a></li>
-    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
-    <li><a href="Page_Wanted.html">Most Wanted</a></li>
-    <li><a href="Page_Press.html">Press Room</a></li>
-    <li><a href="Page_Recruitment.html">Recruitment</a></li>
-  </ul>
-  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
-</nav>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-label">LIVE ALERT</div>
-  <div style="overflow:hidden;flex:1;">
-    <div class="ticker-track">
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
-      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-    </div>  
-  </div>
-</div>
-
-
+<div data-shared-site-header></div>
 
 <div class="login-wrapper">
   <div class="login-bg"></div>
@@ -392,8 +312,8 @@ body.page-visible {
 
     <!-- top status bar -->
     <div class="login-status-bar">
-      <span class="login-status-left">CIB · SECURE PERSONNEL PORTAL</span>
-      <span class="login-status-right">SYS-AUTH v1.0 — SECURE CHANNEL ACTIVE</span>
+      <span class="login-status-left">CIB Â· SECURE PERSONNEL PORTAL</span>
+      <span class="login-status-right">SYS-AUTH v1.0 â€” SECURE CHANNEL ACTIVE</span>
     </div>
 
     <!-- card body -->
@@ -410,7 +330,7 @@ body.page-visible {
 
       <!-- DEV NOTICE -->
       <div class="dev-notice">
-        <span class="dev-notice-icon">⚠</span>
+        <span class="dev-notice-icon">âš </span>
         <div class="dev-notice-text">
           <b>Portal Under Development</b>
           This login portal is currently not functional and is still under active development. Authentication is temporarily disabled. Authorized personnel should use the <span style="color:var(--gold);font-weight:bold;">classified access channel</span> to log in.
@@ -436,7 +356,7 @@ body.page-visible {
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
           </span>
-          <input class="form-input" type="password" id="password-main" placeholder="••••••••••••" autocomplete="off" disabled tabindex="-1"/>
+          <input class="form-input" type="password" id="password-main" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="off" disabled tabindex="-1"/>
         </div>
       </div>
 
@@ -453,7 +373,7 @@ body.page-visible {
           <div class="forgot-card-text">
             <div class="forgot-card-top">Contact!</div>
             <div class="forgot-card-name">Capt. Elias Makya</div>
-            <div class="forgot-card-rank">Captain · CID Command Division</div>
+            <div class="forgot-card-rank">Captain Â· CID Command Division</div>
           </div>
         </div>
       </div>
@@ -462,7 +382,7 @@ body.page-visible {
 
 
     <div class="login-footer-bar">
-      <span class="login-footer-left">© 2026 CENTRAL INVESTIGATION BUREAU</span>
+      <span class="login-footer-left">Â© 2026 CENTRAL INVESTIGATION BUREAU</span>
       <span class="login-secure-badge"><span class="secure-dot"></span> ENCRYPTED CHANNEL</span>
     </div>
 
@@ -479,11 +399,11 @@ body.page-visible {
     <div class="surv-topbar">
       <div class="surv-topbar-left">
         <div class="surv-topbar-dot"></div>
-        <span class="surv-topbar-label">CIB · SURVEILLANCE ACTIVE</span>
+        <span class="surv-topbar-label">CIB Â· SURVEILLANCE ACTIVE</span>
       </div>
       <div class="surv-topbar-right">
         <span class="surv-topbar-ref" id="surv-session-ref">SESSION: INITIALIZING...</span>
-        <span class="surv-topbar-time" id="surv-time">—</span>
+        <span class="surv-topbar-time" id="surv-time">â€”</span>
       </div>
     </div>
 
@@ -493,7 +413,7 @@ body.page-visible {
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1zm0 2.18l7 3.12V11c0 4.54-3.13 8.79-7 9.93C8.13 19.79 5 15.54 5 11V6.3l7-3.12zM11 7v2H9v2h2v2h2v-2h2V9h-2V7h-2z"/></svg>
       </div>
 
-      <div class="surv-eyebrow">Restricted Access · CIB Secure Portal</div>
+      <div class="surv-eyebrow">Restricted Access Â· CIB Secure Portal</div>
       <div class="surv-title">You Are Being Monitored</div>
       <div class="surv-subtitle">All activity on this portal is logged & traceable</div>
       <div class="surv-div"></div>
@@ -522,13 +442,13 @@ body.page-visible {
 
         <!-- LEFT: Animated data acquisition / download panel -->
         <div class="surv-acquire-panel">
-          <div class="surv-acquire-header">■ Acquiring Visitor Data — CIB INTEL SYSTEM</div>
+          <div class="surv-acquire-header">â–  Acquiring Visitor Data â€” CIB INTEL SYSTEM</div>
 
           <!-- Download item: Device Fingerprint -->
           <div class="dl-item">
             <div class="dl-item-top">
               <span class="dl-item-label">Hardware Data</span>
-              <span class="dl-item-size" id="dl-size-0" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-size" id="dl-size-0" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">â€” KB / â€” KB</span>
               <span class="dl-item-status" id="dl-status-0">QUEUED</span>
             </div>
             <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-0"></div></div>
@@ -539,7 +459,7 @@ body.page-visible {
           <div class="dl-item">
             <div class="dl-item-top">
               <span class="dl-item-label">Browser Profile</span>
-              <span class="dl-item-size" id="dl-size-1" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-size" id="dl-size-1" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">â€” KB / â€” KB</span>
               <span class="dl-item-status" id="dl-status-1">QUEUED</span>
             </div>
             <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-1"></div></div>
@@ -550,7 +470,7 @@ body.page-visible {
           <div class="dl-item">
             <div class="dl-item-top">
               <span class="dl-item-label">Keystroke Pattern</span>
-              <span class="dl-item-size" id="dl-size-2" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-size" id="dl-size-2" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">â€” KB / â€” KB</span>
               <span class="dl-item-status" id="dl-status-2">QUEUED</span>
             </div>
             <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-2"></div></div>
@@ -561,7 +481,7 @@ body.page-visible {
           <div class="dl-item">
             <div class="dl-item-top">
               <span class="dl-item-label">Session Metadata</span>
-              <span class="dl-item-size" id="dl-size-3" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">— KB / — KB</span>
+              <span class="dl-item-size" id="dl-size-3" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">â€” KB / â€” KB</span>
               <span class="dl-item-status" id="dl-status-3">QUEUED</span>
             </div>
             <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-3"></div></div>
@@ -606,11 +526,11 @@ body.page-visible {
           <div class="surv-status-row">
             <div class="surv-status-cell">
               <div class="surv-status-cell-label">Timestamp</div>
-              <div class="surv-status-cell-val" id="surv-time-cell">—</div>
+              <div class="surv-status-cell-val" id="surv-time-cell">â€”</div>
             </div>
             <div class="surv-status-cell">
               <div class="surv-status-cell-label">Status</div>
-              <div class="surv-status-cell-val"><span style="color:var(--red-alert);">● MONITORED</span><span class="surv-tag">LIVE</span></div>
+              <div class="surv-status-cell-val"><span style="color:var(--red-alert);">â— MONITORED</span><span class="surv-tag">LIVE</span></div>
             </div>
           </div>
 
@@ -627,7 +547,7 @@ body.page-visible {
           </div>
         </label>
         <button class="surv-btn" id="surv-btn" disabled onclick="survDismiss()">
-          I Understand —<br>Proceed to Portal
+          I Understand â€”<br>Proceed to Portal
         </button>
       </div>
 
@@ -635,49 +555,16 @@ body.page-visible {
 
     <!-- Legal strip -->
     <div class="surv-legal">
-      CIB SECURE SYSTEM · SYS-AUTH v1.0 · ALL CONNECTIONS ARE ENCRYPTED AND LOGGED<br>
-      CENTRAL INVESTIGATION BUREAU · STATE OF SAN ANDREAS · EST. 2026
+      CIB SECURE SYSTEM Â· SYS-AUTH v1.0 Â· ALL CONNECTIONS ARE ENCRYPTED AND LOGGED<br>
+      CENTRAL INVESTIGATION BUREAU Â· STATE OF SAN ANDREAS Â· EST. 2026
     </div>
 
   </div><!-- /surv-box -->
 </div><!-- /surv-overlay -->
 
 
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-      <p>Central Investigation Bureau</p>
-      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
-    </div>
-    <div class="footer-col">
-      <h4>Divisions</h4>
-      <ul>
-        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
-        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Resources</h4>
-      <ul>
-        <li><a href="Page_Press.html">Press Room</a></li>
-        <li><a href="Page_Recruitment.html">Recruitment</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="index.html">CIB Headquarters</a></li>
-        <li><a href="Page_Press.html">Tip Hotline</a></li>
-        <li><a href="Page_Login.html">Personnel Login</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
-    <div class="classified-stamp">EXECUTIVE RP</div>
-  </div>
-</footer>
+<div data-shared-footer></div>
+<script type="module" src="shared/components/site-footer.js"></script>
 
 
 
@@ -685,12 +572,12 @@ body.page-visible {
   <div class="secret-modal-box">
 
     <div class="secret-modal-topbar">
-      <span class="secret-modal-topleft">CIB · SECURE ACCESS — AUTHORIZED ONLY</span>
-      <button class="secret-modal-close" onclick="closeSecretModal()">✕</button>
+      <span class="secret-modal-topleft">CIB Â· SECURE ACCESS â€” AUTHORIZED ONLY</span>
+      <button class="secret-modal-close" onclick="closeSecretModal()">âœ•</button>
     </div>
 
     <div class="secret-modal-body">
-      <div class="secret-modal-eyebrow">Classified Channel · Do Not Share</div>
+      <div class="secret-modal-eyebrow">Classified Channel Â· Do Not Share</div>
       <div class="secret-modal-title">Personnel Access</div>
       <div class="secret-modal-sub">Enter your credentials to access the portal</div>
       <div class="secret-modal-divider"></div>
@@ -714,7 +601,7 @@ body.page-visible {
           <span class="form-input-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
           </span>
-          <input class="form-input" type="password" id="s-password" placeholder="••••••••••••" autocomplete="off"/>
+          <input class="form-input" type="password" id="s-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="off"/>
         </div>
       </div>
 
@@ -745,6 +632,10 @@ body.page-visible {
   </div>
 </div>
 
+<script src="shared/scripts/site-ui.js"></script>
+<script>
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+</script>
 <script>
   let sealClicks = 0;
   let sealTimer  = null;
@@ -791,7 +682,7 @@ body.page-visible {
     }
   });
 
-  /* ── Button ripple effect ── */
+  /* â”€â”€ Button ripple effect â”€â”€ */
   document.getElementById('s-loginBtn').addEventListener('click', function(e) {
     const ripple = document.createElement('span');
     ripple.classList.add('login-btn-ripple');
@@ -804,7 +695,7 @@ body.page-visible {
 </script>
 
 <script>
-  /* ── SECRET LOGIN — 5 attempt lockout ── */
+  /* â”€â”€ SECRET LOGIN â€” 5 attempt lockout â”€â”€ */
   let secretFailedAttempts = 0;
   const SECRET_MAX_ATTEMPTS = 5;
   const SECRET_LOCKOUT_MS   = 5 * 60 * 1000;
@@ -910,7 +801,7 @@ body.page-visible {
           sessionStorage.setItem('secretLockUntil', String(Date.now() + SECRET_LOCKOUT_MS));
           sShowError('Too many failed attempts. Try again in 5 minutes.');
           const btn = document.getElementById('s-loginBtn');
-          if (btn) { btn.disabled = true; btn.textContent = 'Locked — Try Later'; }
+          if (btn) { btn.disabled = true; btn.textContent = 'Locked â€” Try Later'; }
         } else {
           const remaining = SECRET_MAX_ATTEMPTS - secretFailedAttempts;
           sShowError(`${result.error || 'Invalid credentials'}. ${remaining} attempt(s) remaining.`);
@@ -965,11 +856,11 @@ body.page-visible {
 
 <script>
   
-/* ── helpers ── */
+/* â”€â”€ helpers â”€â”€ */
 function rand(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-/* ── Session ref ── */
+/* â”€â”€ Session ref â”€â”€ */
 function genSessionRef(){
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let r='SES-';
@@ -977,11 +868,11 @@ function genSessionRef(){
   return r;
 }
 
-/* ── Live clock (topbar + timestamp cell) ── */
+/* â”€â”€ Live clock (topbar + timestamp cell) â”€â”€ */
 function startClock(){
   function tick(){
     const n=new Date(),p=v=>String(v).padStart(2,'0');
-    const s=`${n.getFullYear()}.${p(n.getMonth()+1)}.${p(n.getDate())} · ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())} HRS`;
+    const s=`${n.getFullYear()}.${p(n.getMonth()+1)}.${p(n.getDate())} Â· ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())} HRS`;
     const t1=document.getElementById('surv-time');
     const t2=document.getElementById('surv-time-cell');
     if(t1)t1.textContent=s;
@@ -990,7 +881,7 @@ function startClock(){
   tick();setInterval(tick,1000);
 }
 
-/* ── CHANNEL ENCRYPTION animated fill ── */
+/* â”€â”€ CHANNEL ENCRYPTION animated fill â”€â”€ */
 async function animateEncryption(){
   const lbl=document.getElementById('surv-threat-label');
   const bars=['tb1','tb2','tb3','tb4','tb5','tb6','tb7','tb8','tb9','tb10'];
@@ -1019,13 +910,13 @@ async function animateEncryption(){
   if(lbl){lbl.classList.add('secured');}
 }
 
-/* ── PACKET STREAM log ── */
+/* â”€â”€ PACKET STREAM log â”€â”€ */
 const PKT_LINES=[
   'SYN > 192.168.0.1:443','ACK received','TLS 1.3 handshake OK',
   'Fingerprint hash: 0xA4F2...','Sending visitor token','Extracting canvas data',
   'UA string captured','WebGL vendor read','CPU cores: '+navigator.hardwareConcurrency,
   'Timezone: '+Intl.DateTimeFormat().resolvedOptions().timeZone,
-  'Lang: '+navigator.language,'Screen: '+screen.width+'×'+screen.height,
+  'Lang: '+navigator.language,'Screen: '+screen.width+'Ã—'+screen.height,
   'Cookie policy scan','Storage probe OK','Beacon sent to CIB-INTEL',
   'Plugin enum complete','Font fingerprint logged','Net RTT measured',
 ];
@@ -1054,7 +945,7 @@ async function runPacketStream(){
   },2200);
 }
 
-/* ── PER-ITEM FAKE DOWNLOADS ── */
+/* â”€â”€ PER-ITEM FAKE DOWNLOADS â”€â”€ */
 const DL_ITEMS=[
   {label:'Hardware Data',    subs:['CPU model detected','GPU vendor read','RAM size probed']},
   {label:'Browser Profile',  subs:['UA string captured','Plugin list extracted','Locale logged']},
@@ -1102,7 +993,7 @@ async function runDownloads(){
     if(barEl){barEl.style.width='100%';barEl.classList.remove('active');barEl.classList.add('done');}
     if(statusEl){statusEl.textContent='DONE';statusEl.classList.add('done');}
     if(sizeEl) sizeEl.textContent=`${totalKB} KB / ${totalKB} KB`;
-    if(subEl) subEl.textContent=DL_ITEMS[i].subs[DL_ITEMS[i].subs.length-1]+' ✓';
+    if(subEl) subEl.textContent=DL_ITEMS[i].subs[DL_ITEMS[i].subs.length-1]+' âœ“';
 
     completedCount++;
     const overall=Math.round((completedCount/DL_ITEMS.length)*100);
@@ -1120,7 +1011,7 @@ async function runDownloads(){
   }
 }
 
-/* ── GEO DATA via JSONP + fallback fetch ── */
+/* â”€â”€ GEO DATA via JSONP + fallback fetch â”€â”€ */
 function fetchGeoData(){
   function setIp(ip){
     const el=document.getElementById('surv-ip');
@@ -1133,14 +1024,14 @@ function fetchGeoData(){
     const el=document.getElementById(id);if(!el)return;
     el.classList.remove('loading');el.innerHTML=html;
   }
-  function bold(v){return`<strong style="color:#F0EDE4;">${v||'—'}</strong>`;}
+  function bold(v){return`<strong style="color:#F0EDE4;">${v||'â€”'}</strong>`;}
   function render(d){
     if(d.query)setIp(d.query);
-    const city=d.city||'—',country=d.country||'—';
-    const lat=d.lat!=null?parseFloat(d.lat).toFixed(4):'—';
-    const lon=d.lon!=null?parseFloat(d.lon).toFixed(4):'—';
+    const city=d.city||'â€”',country=d.country||'â€”';
+    const lat=d.lat!=null?parseFloat(d.lat).toFixed(4):'â€”';
+    const lon=d.lon!=null?parseFloat(d.lon).toFixed(4):'â€”';
     setField('surv-location',`${bold(city+', '+country)}&nbsp;<span style="color:var(--muted);font-size:9px;">[${lat}, ${lon}]</span>`);
-    setField('surv-region',`${bold(d.regionName)}<span style="color:var(--muted);"> · ${country}</span>`);
+    setField('surv-region',`${bold(d.regionName)}<span style="color:var(--muted);"> Â· ${country}</span>`);
     setField('surv-isp',bold(d.isp||d.org||d.as));
   }
 
@@ -1181,7 +1072,7 @@ function fetchGeoData(){
   }
 }
 
-/* ── CHECKBOX gate ── */
+/* â”€â”€ CHECKBOX gate â”€â”€ */
 function survCheckChange(){
   const cb=document.getElementById('surv-check');
   const btn=document.getElementById('surv-btn');
@@ -1190,14 +1081,14 @@ function survCheckChange(){
   else{btn.disabled=true;btn.classList.remove('enabled');}
 }
 
-/* ── DISMISS overlay ── */
+/* â”€â”€ DISMISS overlay â”€â”€ */
 function survDismiss(){
   const o=document.getElementById('surv-overlay');if(!o)return;
   o.style.opacity='0';o.style.transition='opacity 0.5s ease';
   setTimeout(()=>{o.classList.add('surv-dismissed');o.style.opacity='';o.style.transition='';},500);
 }
 
-/* ── INIT ── */
+/* â”€â”€ INIT â”€â”€ */
 window.addEventListener('DOMContentLoaded',()=>{
   requestAnimationFrame(()=>document.body.classList.add('page-visible'));
 
@@ -1216,7 +1107,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('keydown',e=>{if(e.key==='Escape')e.preventDefault();});
 });
 
-/* ── PAGE TRANSITIONS ── */
+/* â”€â”€ PAGE TRANSITIONS â”€â”€ */
 document.querySelectorAll('a[href]').forEach(link=>{
   link.addEventListener('click',function(e){
     const href=this.getAttribute('href');
@@ -1231,3 +1122,4 @@ document.querySelectorAll('a[href]').forEach(link=>{
 
 </body>
 </html>
+

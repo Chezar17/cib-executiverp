@@ -1,54 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>CENTRAL INVESTIGATION BUREAU</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
+<link rel="stylesheet" href="shared/styles/sections.css"/>
+<link rel="stylesheet" href="shared/styles/footer.css"/>
+<link rel="stylesheet" href="shared/styles/site-header.css"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
-
-/* ── PAGE TRANSITIONS ── */
-body {
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-body.page-visible {
-  opacity: 1;
-}
-
-  /* NAV */
-  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
-  .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
-  .nav-links a:hover{color:var(--gold);}
-  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;}
-
-  /* TICKER */
-  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
-  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
-  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
-  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
-  .ticker-track span b{color:var(--gold-light);}
-  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  /* HERO */
+/* HERO */
   .hero{position:relative;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 40px;overflow:hidden;}
   .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#0D1A35 0%,var(--navy) 70%);z-index:0;}
   .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
@@ -63,20 +28,8 @@ body.page-visible {
   .hero-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:44px;}
   .hero-badge{border:1px solid rgba(201,168,76,0.3);padding:6px 18px;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--gold-light);text-transform:uppercase;}
   .hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
-  .btn-primary{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:3px;padding:12px 32px;text-transform:uppercase;cursor:pointer;border:none;font-weight:600;transition:background 0.2s;}
-  .btn-primary:hover{background:var(--gold-light);}
-  .btn-outline{background:transparent;color:var(--gold);font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:3px;padding:12px 32px;text-transform:uppercase;cursor:pointer;border:1px solid var(--gold);font-weight:600;transition:all 0.2s;}
-  .btn-outline:hover{background:rgba(201,168,76,0.1);}
-
-  /* ALERT BANNER */
-  .alert-banner{background:#1A0A0A;border:1px solid var(--red-alert);border-left:4px solid var(--red-alert);margin:32px 40px;padding:16px 24px;display:flex;align-items:center;gap:16px;}
-  .alert-icon{width:36px;height:36px;border-radius:50%;background:var(--red-alert);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .alert-icon svg{width:18px;height:18px;fill:#fff;}
-  .alert-text-label{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:var(--red-alert);text-transform:uppercase;}
-  .alert-text-msg{font-size:13px;color:var(--white);margin-top:2px;}
-  .alert-stamp{margin-left:auto;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap;}
-
-  /* STATS */
+  
+/* STATS */
   .stats-bar{background:var(--navy-mid);border-top:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);display:grid;grid-template-columns:repeat(4,1fr);}
   .stat-item{padding:24px 20px;text-align:center;border-right:1px solid var(--navy-border);}
   .stat-item:last-child{border-right:none;}
@@ -86,10 +39,6 @@ body.page-visible {
   /* SECTIONS */
   .section{padding:64px 40px;}
   .section-header{text-align:center;margin-bottom:48px;}
-  .section-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
-  .section-title{font-family:'Oswald',sans-serif;font-size:clamp(22px,4vw,36px);letter-spacing:4px;text-transform:uppercase;color:var(--white);}
-  .section-line{width:60px;height:2px;background:var(--gold);margin:16px auto 0;}
-
   /* DIVISIONS */
   .divisions-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:960px;margin:0 auto;}
   .division-card{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);padding:32px;position:relative;overflow:hidden;}
@@ -105,32 +54,31 @@ body.page-visible {
   .div-btn:hover{background:var(--gold);color:var(--navy);}
 
   /* OPERATIONS & CASES SHARED */
-  .alt-section{background:var(--navy-mid);border-top:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);}
-
-  /*
-  ┌──────────────────────────────────────────────────────────┐
-  │  HOW TO ADD A NEW CASE CARD                              │
-  │                                                          │
-  │  1. Copy the block between:                              │
-  │     <!-- ▼ CASE CARD START ▼ -->                         │
-  │     <!-- ▲ CASE CARD END ▲ -->                           │
-  │                                                          │
-  │  2. Paste it anywhere inside <div class="ops-grid">      │
-  │     (newest case at the top is recommended)              │
-  │                                                          │
-  │  3. Fill in the CASE NO., status, name, desc, and meta   │
-  │                                                          │
-  │  STATUS OPTIONS:                                         │
-  │    Closed       → class="op-status status-active"        │
-  │    Pending      → class="op-status status-pending"       │
-  │    Classified   → class="op-status status-classified"    │
-  │                                                          │
-  │  ODD NUMBER OF CARDS? No problem — the last card         │
-  │  automatically centres itself on its own row.            │
-  └──────────────────────────────────────────────────────────┘
+  
+/*
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚  HOW TO ADD A NEW CASE CARD                              â”‚
+  â”‚                                                          â”‚
+  â”‚  1. Copy the block between:                              â”‚
+  â”‚     <!-- â–¼ CASE CARD START â–¼ -->                         â”‚
+  â”‚     <!-- â–² CASE CARD END â–² -->                           â”‚
+  â”‚                                                          â”‚
+  â”‚  2. Paste it anywhere inside <div class="ops-grid">      â”‚
+  â”‚     (newest case at the top is recommended)              â”‚
+  â”‚                                                          â”‚
+  â”‚  3. Fill in the CASE NO., status, name, desc, and meta   â”‚
+  â”‚                                                          â”‚
+  â”‚  STATUS OPTIONS:                                         â”‚
+  â”‚    Closed       â†’ class="op-status status-active"        â”‚
+  â”‚    Pending      â†’ class="op-status status-pending"       â”‚
+  â”‚    Classified   â†’ class="op-status status-classified"    â”‚
+  â”‚                                                          â”‚
+  â”‚  ODD NUMBER OF CARDS? No problem â€” the last card         â”‚
+  â”‚  automatically centres itself on its own row.            â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
   */
 
-  /* Flex-wrap grid — cards wrap and odd ones auto-center */
+  /* Flex-wrap grid â€” cards wrap and odd ones auto-center */
   .ops-grid{
     display:flex;
     flex-wrap:wrap;
@@ -158,7 +106,7 @@ body.page-visible {
     overflow:hidden;
   }
   .op-card::after{
-    content:'VIEW FILE ›';
+    content:'VIEW FILE â€º';
     position:absolute;
     bottom:12px;
     right:14px;
@@ -186,9 +134,9 @@ body.page-visible {
   .op-meta{display:flex;justify-content:space-between;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);border-top:1px solid var(--navy-border);padding-top:12px;}
   .case-id{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.6;margin-bottom:6px;}
 
-  /* ══════════════════════════════════════════
-     MOST WANTED SECTION — HIGH VISIBILITY
-  ══════════════════════════════════════════ */
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     MOST WANTED SECTION â€” HIGH VISIBILITY
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
   /* Full-bleed section with dark red atmosphere */
   .wanted-section{
@@ -307,7 +255,7 @@ body.page-visible {
   .wanted-view-all:hover{opacity:0.85;}
   .wanted-view-all-arrow{font-family:monospace;font-size:16px;}
 
-  /* Wanted cards grid — horizontal layout, larger */
+  /* Wanted cards grid â€” horizontal layout, larger */
   .wanted-grid{
     display:flex;
     flex-wrap:wrap;
@@ -315,7 +263,7 @@ body.page-visible {
     gap:20px;
   }
 
-  /* Each card — taller, more prominent */
+  /* Each card â€” taller, more prominent */
   .wanted-card{
     background:#130508;
     border:1px solid rgba(192,57,43,0.3);
@@ -350,7 +298,7 @@ body.page-visible {
     opacity:0.8;
   }
 
-  /* Photo zone — taller */
+  /* Photo zone â€” taller */
   .wanted-photo{
     background:#080306;
     height:230px;
@@ -423,17 +371,7 @@ body.page-visible {
   .threat-mid{background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
 
   /* Bottom CTA strip inside section */
-  .wanted-section-footer{
-    margin-top:40px;
-    padding-top:32px;
-    border-top:1px solid rgba(192,57,43,0.2);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:16px;
-  }
-  .wanted-section-footer-note{
+  .wanted-section-.wanted-section-footer-note{
     font-family:'Roboto Mono',monospace;
     font-size:10px;
     letter-spacing:2px;
@@ -441,21 +379,7 @@ body.page-visible {
     opacity:0.5;
   }
 
-  /* FOOTER */
-  footer{background:var(--navy-mid);border-top:1px solid var(--gold);padding:40px 40px 24px;}
-  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
-  .footer-brand img{height:50px;width:50px;object-fit:contain;margin-bottom:12px;}
-  .footer-brand p{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
-  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.7;}
-  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
-  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
-  .footer-col ul li a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
-  .footer-col ul li a:hover{color:var(--gold);}
-  .footer-bottom{border-top:1px solid var(--navy-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
-  .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
-  .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
-
-  /* ── DEV NOTICE POPUP ── */
+  /* â”€â”€ DEV NOTICE POPUP â”€â”€ */
   #dev-overlay{
     position:fixed;inset:0;z-index:9999;
     background:rgba(5,8,18,0.92);
@@ -614,8 +538,7 @@ body.page-visible {
   @keyframes overlayOut{to{opacity:0;pointer-events:none;}}
 
   @media(max-width:768px){
-    .divisions-grid,.stats-bar,.footer-top{grid-template-columns:1fr;}
-    .ops-grid{gap:14px;}
+    .divisions-grid,.stats-bar,.ops-grid{gap:14px;}
     .op-card{width:100%;min-width:0;}
     .wanted-grid{gap:16px;}
     .wanted-card{width:calc(50% - 8px);}
@@ -633,7 +556,7 @@ body.page-visible {
     footer{padding:32px 20px 20px;}
   }
 
-  /* ── ROLEPLAY DISCLAIMER BLOCK inside dev-modal ────────────────── */
+  /* â”€â”€ ROLEPLAY DISCLAIMER BLOCK inside dev-modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .rp-disclaimer{
     margin:0 24px 0;
     background:rgba(201,168,76,0.05);
@@ -684,26 +607,28 @@ body.page-visible {
     background:linear-gradient(90deg,transparent,var(--navy-border) 20%,var(--navy-border) 80%,transparent);
     margin:4px 24px 16px;
   }
-
 </style>
+
+<link rel='stylesheet' href='shared/styles/site-header.css'/>
+<script type='module' src='shared/components/site-header.js'></script>
 </head>
 <body>
 
-<!-- ── DEV NOTICE POPUP ── -->
+<!-- â”€â”€ DEV NOTICE POPUP â”€â”€ -->
 <div id="dev-overlay" role="dialog" aria-modal="true" aria-labelledby="dev-modal-title">
   <div id="dev-modal">
 
     <!-- Header bar -->
     <div class="dev-modal-header">
       <div class="dev-modal-dot"></div>
-      <span class="dev-modal-tag">System Notice · CIB Web Portal</span>
+      <span class="dev-modal-tag">System Notice Â· CIB Web Portal</span>
       <span class="dev-modal-ref">REF: CIB-DEV-2026</span>
     </div>
 
     <!-- Body -->
     <div class="dev-modal-body">
       <div class="dev-modal-title" id="dev-modal-title">Site Under <span>Development</span></div>
-      <div class="dev-modal-sub">// Active Development Notice — Please Read</div>
+      <div class="dev-modal-sub">// Active Development Notice â€” Please Read</div>
       <div class="dev-notice-divider"></div>
 
       <div class="dev-notice-list">
@@ -732,7 +657,7 @@ body.page-visible {
           </div>
           <div class="dev-notice-text">
             <strong>Copyright &amp; Content Claims:</strong> If any element, media, or source on this website potentially infringes your copyright, please contact the web creator immediately for prompt removal.<br/>
-            <strong>Elias Makya</strong> — Discord: <a href="https://discord.com/users/426776197322506260" onclick="return true;">razehc</a>
+            <strong>Elias Makya</strong> â€” Discord: <a href="https://discord.com/users/426776197322506260" onclick="return true;">razehc</a>
           </div>
         </div>
 
@@ -740,15 +665,15 @@ body.page-visible {
     </div>
 
 
-    <!-- ═══ ROLEPLAY DISCLAIMER ═══════════════════════════════════
+    <!-- â•â•â• ROLEPLAY DISCLAIMER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          Inserted between dev notices and credits.
          Change href below to the actual Executive Roleplay URL.
-    ═══════════════════════════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div class="rp-separator"></div>
     <div class="rp-disclaimer">
       <div class="rp-disclaimer-eyebrow">
         <div class="rp-disclaimer-eyebrow-dot"></div>
-        Roleplay Disclaimer · Please Read
+        Roleplay Disclaimer Â· Please Read
       </div>
       <div class="rp-disclaimer-title">
         From the World of<br/><span>Executive Roleplay</span>
@@ -769,7 +694,7 @@ body.page-visible {
 
     <!-- Credits -->
     <div class="dev-credits">
-      <span class="dev-credits-label">© 2026 Built by</span>
+      <span class="dev-credits-label">Â© 2026 Built by</span>
       <div class="dev-credits-pill">
         <div class="dev-credits-pill-dot"></div>
         <span>Elias Makya</span>
@@ -799,45 +724,14 @@ body.page-visible {
 
     <!-- Dismiss -->
     <div class="dev-modal-footer">
-      <button id="dev-dismiss" onclick="dismissDevNotice()">I Understand — Enter Site</button>
+      <button id="dev-dismiss" onclick="dismissDevNotice()">I Understand â€” Enter Site</button>
     </div>
 
   </div>
 </div>
 
 <!-- NAV -->
-<nav>
-  <a href="index.html" class="nav-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="nav-brand">Central Investigation Bureau</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Page_About.html">About</a></li>
-    <li><a href="Page_OurMission.html">Our Mission</a></li>
-    <li><a href="Page_Divisions.html">Detectives</a></li>
-    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
-    <li><a href="Page_Wanted.html">Most Wanted</a></li>
-    <li><a href="Page_Press.html">Press Room</a></li>
-    <li><a href="Page_Recruitment.html">Recruitment</a></li>
-  </ul>
-  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
-</nav>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-label">LIVE ALERT</div>
-  <div style="overflow:hidden;flex:1;">
-    <div class="ticker-track">
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
-      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-    </div>  
-  </div>
-</div>
+<div data-shared-site-header></div>
 
 <!-- HERO -->
 <section class="hero">
@@ -853,7 +747,7 @@ body.page-visible {
     <div class="hero-divider"></div>
     <div class="hero-tagline">"Quietly, Precisely, and Decisively."</div>
     <div class="hero-badges">
-      <span class="hero-badge">Est. 2026 · State of San Andreas</span>
+      <span class="hero-badge">Est. 2026 Â· State of San Andreas</span>
     </div>
     <div class="hero-cta">
       <a href="Page_OurMission.html"><button class="btn-outline">Our Mission</button></a>
@@ -872,7 +766,7 @@ body.page-visible {
     <div class="alert-text-label">Threat Level: Elevated</div>
     <div class="alert-text-msg">CIB has elevated citywide threat condition following an increase in organized criminal activity across Los Santos. All units remain on standby.</div>
   </div>
-  <div class="alert-stamp">ISSUED: 04.20.2026 · 08:34 HRS</div>
+  <div class="alert-stamp">ISSUED: 04.20.2026 Â· 08:34 HRS</div>
 </div>
 
 <!-- STATS -->
@@ -938,7 +832,7 @@ body.page-visible {
   <!-- Urgency strip at the very top -->
   <div class="wanted-alert-strip">
     <div class="wanted-alert-strip-dot"></div>
-    <div class="wanted-alert-strip-text">Active Warrant — These individuals are considered armed and dangerous — Do not approach alone</div>
+    <div class="wanted-alert-strip-text">Active Warrant â€” These individuals are considered armed and dangerous â€” Do not approach alone</div>
     <div class="wanted-alert-strip-dot"></div>
   </div>
 
@@ -947,40 +841,40 @@ body.page-visible {
     <!-- Header -->
     <div class="wanted-header">
       <div class="wanted-header-left">
-        <div class="wanted-eyebrow">Priority Targets · CIB Active Warrants</div>
+        <div class="wanted-eyebrow">Priority Targets Â· CIB Active Warrants</div>
         <div class="wanted-title">Most Wanted</div>
         <div class="wanted-title-accent">State of San Andreas</div>
         <div class="wanted-title-line"></div>
       </div>
       <a class="wanted-view-all" href="Page_Wanted.html">
-        View Full Registry <span class="wanted-view-all-arrow">›</span>
+        View Full Registry <span class="wanted-view-all-arrow">â€º</span>
       </a>
     </div>
 
     <!--
-    ╔══════════════════════════════════════════════════════╗
-    ║  HOW TO ADD A NEW WANTED CARD                        ║
-    ║                                                      ║
-    ║  1. Copy from "WANTED CARD START" to "WANTED CARD END"║
-    ║  2. Paste it inside .wanted-grid below               ║
-    ║  3. Fill in name, crimes, threat level               ║
-    ║                                                      ║
-    ║  HOW TO ADD A PHOTO:                                 ║
-    ║  Delete the <div class="wanted-photo-placeholder">   ║
-    ║  block and replace with:                             ║
-    ║    <img src="images/your-photo.jpg" alt="Name"/>     ║
-    ║                                                      ║
-    ║  THREAT LEVELS:                                      ║
-    ║    threat-high → red  (HIGH THREAT)                  ║
-    ║    threat-mid  → gold (MED THREAT)                   ║
-    ╚══════════════════════════════════════════════════════╝
+    â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+    â•‘  HOW TO ADD A NEW WANTED CARD                        â•‘
+    â•‘                                                      â•‘
+    â•‘  1. Copy from "WANTED CARD START" to "WANTED CARD END"â•‘
+    â•‘  2. Paste it inside .wanted-grid below               â•‘
+    â•‘  3. Fill in name, crimes, threat level               â•‘
+    â•‘                                                      â•‘
+    â•‘  HOW TO ADD A PHOTO:                                 â•‘
+    â•‘  Delete the <div class="wanted-photo-placeholder">   â•‘
+    â•‘  block and replace with:                             â•‘
+    â•‘    <img src="images/your-photo.jpg" alt="Name"/>     â•‘
+    â•‘                                                      â•‘
+    â•‘  THREAT LEVELS:                                      â•‘
+    â•‘    threat-high â†’ red  (HIGH THREAT)                  â•‘
+    â•‘    threat-mid  â†’ gold (MED THREAT)                   â•‘
+    â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     -->
 
     <div class="wanted-grid">
 
-      <!-- ── WANTED CARD START ── -->
+      <!-- â”€â”€ WANTED CARD START â”€â”€ -->
       <a class="wanted-card" href="Page_Wanted.html">
-        <div class="wanted-case-ref">WANTED · CIB-2026-W001</div>
+        <div class="wanted-case-ref">WANTED Â· CIB-2026-W001</div>
         <div class="wanted-photo">
           <div class="wanted-photo-placeholder">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
@@ -992,11 +886,11 @@ body.page-visible {
         <div class="wanted-info">
           <div class="wanted-label">Wanted</div>
           <div class="wanted-name">"JOHN DOE"</div>
-          <div class="wanted-crime">Murder of A Government Employee · Chief of Fire Department Ankoow Alrex</div>
+          <div class="wanted-crime">Murder of A Government Employee Â· Chief of Fire Department Ankoow Alrex</div>
           <span class="wanted-threat threat-high">HIGH THREAT</span>
         </div>
       </a>
-      <!-- ── WANTED CARD END ── -->
+      <!-- â”€â”€ WANTED CARD END â”€â”€ -->
 
     </div>
 
@@ -1004,7 +898,7 @@ body.page-visible {
     <div class="wanted-section-footer">
       <div class="wanted-section-footer-note">If you have information on any of these individuals, contact the CIB Tip Hotline immediately. Do not approach.</div>
       <a class="wanted-view-all" href="Page_Wanted.html">
-        Full Wanted Registry <span class="wanted-view-all-arrow">›</span>
+        Full Wanted Registry <span class="wanted-view-all-arrow">â€º</span>
       </a>
     </div>
 
@@ -1012,75 +906,21 @@ body.page-visible {
 </section>
 
 <!-- FOOTER -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-      <p>Central Investigation Bureau</p>
-      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
-    </div>
-    <div class="footer-col">
-      <h4>Divisions</h4>
-      <ul>
-        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
-        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Resources</h4>
-      <ul>
-        <li><a href="Page_Press.html">Press Room</a></li>
-        <li><a href="Page_Cases.html">Cases</a></li>
-        <li><a href="Page_Recruitment.html">Recruitment</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="index.html">CIB Headquarters</a></li>
-        <li><a href="Page_Press.html">Tip Hotline</a></li>
-        <li><a href="Page_Login.html">Personnel Login</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
-    <div class="classified-stamp">EXECUTIVE RP</div>
-  </div>
-</footer>
+<div data-shared-footer></div>
+<script type="module" src="shared/components/site-footer.js"></script>
 
+<script src="shared/scripts/site-ui.js"></script>
 <script>
-  // ── DEV NOTICE POPUP ──
+  // â”€â”€ DEV NOTICE POPUP â”€â”€
   function dismissDevNotice() {
     const overlay = document.getElementById('dev-overlay');
     overlay.classList.add('hidden');
     overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
   }
-
-  // Fade IN when page loads
-  window.addEventListener('DOMContentLoaded', () => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('page-visible');
-    });
-  });
-
-  // Fade OUT before navigating away
-  document.querySelectorAll('a[href]').forEach(link => {
-    link.addEventListener('click', function (e) {
-      const href = this.getAttribute('href');
-
-      // Skip external links, anchors, and empty links
-      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
-
-      e.preventDefault();
-      document.body.classList.remove('page-visible');
-
-      setTimeout(() => {
-        window.location.href = href;
-      }, 400); // must match the transition duration above
-    });
-  });
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
 </script>
 
 </body>
 </html>
+
+

@@ -4,18 +4,15 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>NEXUS — CIB Internal Portal</title>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;--gold-light:#E8C97A;--navy:#0A0F1E;--navy-mid:#0D1526;
-    --navy-card:#111827;--navy-border:#1E2D4A;--white:#F0EDE4;--muted:#8A95AA;
-    --red-alert:#C0392B;--green:#27AE60;--orange:#E05A28;
-  }
-  html,body{height:100%;}
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow:hidden;display:flex;flex-direction:column;opacity:0;transition:opacity 0.4s ease;}
-  body.page-visible{opacity:1;}
+  /* nexus-specific body override — full height portal layout */
+  html, body { height: 100%; }
+  body { overflow: hidden; display: flex; flex-direction: column; }
 
   
   /* ACCESS GATE */
@@ -811,6 +808,7 @@
 
 <div id="inf-toast" style="position:fixed;bottom:28px;right:28px;z-index:9000;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
+<script src="shared/scripts/site-ui.js"></script>
 <script>
   // ── PANEL DATA ──────────────────────────────────────────────
   const PANEL_META = {
@@ -931,16 +929,8 @@
     setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),350);},2800);
   }
 
-  // ── PAGE TRANSITIONS ─────────────────────────────────────────
-  document.querySelectorAll('a[href]').forEach(link=>{
-    link.addEventListener('click',function(e){
-      const href=this.getAttribute('href');
-      if(!href||href.startsWith('http')||href.startsWith('#')||href.startsWith('mailto'))return;
-      e.preventDefault();
-      document.body.classList.remove('page-visible');
-      setTimeout(()=>{window.location.href=href;},400);
-    });
-  });
+  SiteUi.initPageFadeTransitions({ transitionMs: 400, skipInitialFadeIn: true });
+  SiteUi.initScrollReveal();
 </script>
 
 </body>

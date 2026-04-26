@@ -1,23 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="../shared/styles/tokens.css"/>
+<link rel="stylesheet" href="../shared/styles/base.css"/>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Budget Ledger — CIB Internal Portal</title>
 <link rel="icon" href="/images/cib-logo.png" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --gold:#C9A84C;--gold-light:#E8C97A;--navy:#0A0F1E;--navy-mid:#0D1526;
-  --navy-card:#111827;--navy-border:#1E2D4A;--white:#F0EDE4;--muted:#8A95AA;
-  --red-alert:#C0392B;--green:#27AE60;--orange:#E05A28;
-  --finance:#1A6B3C;--finance-light:#27AE60;--finance-border:#1E4D32;
-}
 html,body{height:100%;}
-body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow:hidden;display:flex;flex-direction:column;opacity:0;transition:opacity 0.4s ease;}
-body.page-visible{opacity:1;}
-
 /* ACCESS GATE */
 #access-gate{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
 #access-gate.hidden{display:none;}
@@ -1143,6 +1135,11 @@ document.querySelectorAll('a[href]').forEach(link => {
     setTimeout(() => { window.location.href = href }, 400)
   })
 })
+</script>
+<script src="../shared/scripts/site-ui.js"></script>
+<script>
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+  SiteUi.initScrollReveal();
 </script>
 </body>
 </html>

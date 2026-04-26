@@ -1,71 +1,24 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>About — CENTRAL INVESTIGATION BUREAU</title>
+<title>About â€” CENTRAL INVESTIGATION BUREAU</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
+<link rel="stylesheet" href="shared/styles/sections.css"/>
+<link rel="stylesheet" href="shared/styles/footer.css"/>
+<link rel="stylesheet" href="shared/styles/site-header.css"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
-
-/* ── PAGE TRANSITIONS ── */
-body {
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-body.page-visible {
-  opacity: 1;
-}
-
-  /* ── NAV ── */
-  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
-  .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
-  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
-  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;}
-
-  /* ── TICKER ── */
-  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
-  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
-  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
-  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
-  .ticker-track span b{color:var(--gold-light);}
-  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  /* ── PAGE HERO ── */
-  .page-hero{position:relative;padding:72px 40px 60px;overflow:hidden;border-bottom:1px solid var(--navy-border);}
-  .page-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,#0D1A35 0%,var(--navy) 65%);z-index:0;}
-  .page-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
-  .page-hero-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:var(--gold);z-index:1;}
-  .page-hero-content{position:relative;z-index:2;max-width:1100px;margin:0 auto;}
-  .breadcrumb{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
-  .breadcrumb span{color:var(--gold);}
-  .page-hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;opacity:0.8;}
-  .page-hero h1{font-family:'Oswald',sans-serif;font-size:clamp(28px,5vw,56px);font-weight:700;letter-spacing:6px;text-transform:uppercase;color:var(--white);line-height:1.1;margin-bottom:16px;}
-  .page-hero-line{width:80px;height:2px;background:var(--gold);margin-bottom:20px;}
-  .page-hero-desc{font-size:14px;color:var(--muted);max-width:560px;line-height:1.8;letter-spacing:0.5px;}
-  .doc-ref{margin-top:24px;display:inline-flex;align-items:center;gap:10px;border:1px solid var(--navy-border);padding:8px 16px;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;}
+.doc-ref{margin-top:24px;display:inline-flex;align-items:center;gap:10px;border:1px solid var(--navy-border);padding:8px 16px;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;}
   .doc-ref-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
 
-  /* ══════════════════════════════════════════════════
-     COMMANDER SECTION — FULL-WIDTH HERO TREATMENT
-  ══════════════════════════════════════════════════ */
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     COMMANDER SECTION â€” FULL-WIDTH HERO TREATMENT
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
   .commander-section{
     padding:0;
     background:var(--navy);
@@ -108,7 +61,7 @@ body.page-visible {
     min-height:600px;
   }
 
-  /* ── LEFT: Photo column ── */
+  /* â”€â”€ LEFT: Photo column â”€â”€ */
   .commander-photo-col{
     position:relative;
     display:flex;flex-direction:column;
@@ -187,7 +140,7 @@ body.page-visible {
     letter-spacing:2px;color:var(--muted);opacity:0.5;
   }
 
-  /* RANK BADGE — overlaid top-left on photo */
+  /* RANK BADGE â€” overlaid top-left on photo */
   .cmd-rank-badge{
     position:absolute;top:20px;left:20px;z-index:5;
     display:flex;align-items:center;gap:8px;
@@ -250,7 +203,7 @@ body.page-visible {
   .commander-avatar svg{width:60px;height:60px;fill:var(--muted);opacity:0.35;}
   .photo-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);opacity:0.5;text-transform:uppercase;}
 
-  /* ── RIGHT: Bio column ── */
+  /* â”€â”€ RIGHT: Bio column â”€â”€ */
   .commander-bio{
     padding:56px 60px;
     display:flex;flex-direction:column;
@@ -340,16 +293,12 @@ body.page-visible {
     content:'';width:5px;height:5px;background:var(--gold);flex-shrink:0;
   }
 
-  /* ── GENERIC SECTION STYLES ── */
+  /* â”€â”€ GENERIC SECTION STYLES â”€â”€ */
   .content-section{padding:72px 40px;}
   .content-section.alt{background:var(--navy-mid);border-top:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);}
   .content-inner{max-width:1100px;margin:0 auto;}
   .section-header-left{margin-bottom:48px;}
-  .section-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
-  .section-title{font-family:'Oswald',sans-serif;font-size:clamp(22px,4vw,36px);letter-spacing:4px;text-transform:uppercase;color:var(--white);}
-  .section-line{width:60px;height:2px;background:var(--gold);margin-top:16px;}
-
-  /* ── HISTORY ── */
+  /* â”€â”€ HISTORY â”€â”€ */
   .timeline{display:flex;flex-direction:column;gap:0;}
   .timeline-item{display:grid;grid-template-columns:120px 1fr;gap:0;position:relative;}
   .timeline-item:not(:last-child)::after{content:'';position:absolute;left:119px;top:40px;bottom:0;width:1px;background:var(--navy-border);}
@@ -360,7 +309,7 @@ body.page-visible {
   .tl-title{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:8px;}
   .tl-text{font-size:13px;color:var(--muted);line-height:1.8;}
 
-  /* ── MISSION ── */
+  /* â”€â”€ MISSION â”€â”€ */
   .mission-layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;}
   .mission-text .body-text{font-size:14px;color:var(--muted);line-height:1.9;margin-bottom:16px;}
   .mission-pillars{display:flex;flex-direction:column;gap:16px;}
@@ -370,7 +319,7 @@ body.page-visible {
   .pillar-title{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:4px;}
   .pillar-desc{font-size:12px;color:var(--muted);line-height:1.7;}
 
-  /* ── VISION ── */
+  /* â”€â”€ VISION â”€â”€ */
   .vision-layout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;}
   .vision-card{background:var(--navy-card);border:1px solid var(--navy-border);border-top:3px solid var(--gold);padding:32px 24px;text-align:center;position:relative;overflow:hidden;}
   .vision-card::after{content:'';position:absolute;bottom:0;right:0;width:60px;height:60px;border-top:1px solid rgba(201,168,76,0.08);border-left:1px solid rgba(201,168,76,0.08);}
@@ -380,7 +329,7 @@ body.page-visible {
   .vision-title{font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:3px;text-transform:uppercase;color:var(--white);margin-bottom:12px;}
   .vision-desc{font-size:12px;color:var(--muted);line-height:1.8;}
 
-  /* ── JURISDICTION ── */
+  /* â”€â”€ JURISDICTION â”€â”€ */
   .jurisdiction-layout{display:grid;grid-template-columns:1fr 380px;gap:48px;align-items:start;}
   .jurisdiction-text .body-text{font-size:14px;color:var(--muted);line-height:1.9;margin-bottom:16px;}
   .jur-areas{display:flex;flex-direction:column;gap:12px;margin-top:28px;}
@@ -395,28 +344,14 @@ body.page-visible {
   .jur-authority-text{font-size:12px;color:var(--muted);line-height:1.7;}
   .jur-authority-text strong{color:var(--white);font-weight:500;}
 
-  /* ── FOOTER ── */
-  footer{background:#070B17;border-top:1px solid var(--navy-border);}
-  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;padding:48px 40px 40px;max-width:1400px;margin:0 auto;}
-  .footer-brand p{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin:12px 0 10px;}
-  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.8;}
-  .footer-brand img{height:44px;opacity:0.8;}
-  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--navy-border);}
-  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
-  .footer-col a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:1px;transition:color 0.2s;}
-  .footer-col a:hover{color:var(--gold);}
-  .footer-bottom{border-top:1px solid var(--navy-border);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;}
-  .footer-bottom p{font-size:11px;color:var(--muted);letter-spacing:1px;}
-  .classified-stamp{border:1px solid rgba(192,57,43,0.5);color:var(--red-alert);font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;padding:4px 12px;}
-
-  /* ── ANIMATIONS ── */
+  /* â”€â”€ ANIMATIONS â”€â”€ */
   .fade-in{opacity:0;transform:translateY(20px);animation:fadeIn 0.7s ease forwards;}
   .fade-in-delay-1{animation-delay:0.1s;}
   .fade-in-delay-2{animation-delay:0.2s;}
   .fade-in-delay-3{animation-delay:0.3s;}
   @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
 
-  /* ── RESPONSIVE ── */
+  /* â”€â”€ RESPONSIVE â”€â”€ */
   @media(max-width:900px){
     .commander-inner{grid-template-columns:1fr;min-height:auto;}
     .commander-photo{min-height:400px;aspect-ratio:4/3;}
@@ -424,8 +359,7 @@ body.page-visible {
     .mission-layout,.jurisdiction-layout{grid-template-columns:1fr;}
     .vision-layout{grid-template-columns:1fr 1fr;}
     .nav-links{display:none;}
-    .footer-top{grid-template-columns:1fr 1fr;}
-  }
+    }
   @media(max-width:580px){
     .vision-layout,.bio-stats{grid-template-columns:1fr;}
     nav{padding:0 20px;}
@@ -434,15 +368,15 @@ body.page-visible {
     .bio-specialisms{gap:6px;}
   }
 
-  /* ══════════════════════════════════════════════════════
-     COMMANDER CARD — YOUTUBE PULL-UP DRAWER
-  ══════════════════════════════════════════════════════ */
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     COMMANDER CARD â€” YOUTUBE PULL-UP DRAWER
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
   /* Ensure photo zone clips the drawer */
   .commander-photo{overflow:hidden !important;}
   .commander-card{cursor:pointer;}
 
-  /* The drawer — starts below, slides up on card hover */
+  /* The drawer â€” starts below, slides up on card hover */
   .cmd-yt-drawer{
     position:absolute;
     bottom:-100%;
@@ -485,7 +419,7 @@ body.page-visible {
 
   /* Pull tab hint at top of drawer */
   .cmd-yt-drawer::after{
-    content:'▲  YOUTUBE  ▲';
+    content:'â–²  YOUTUBE  â–²';
     position:absolute;
     top:8px;left:50%;transform:translateX(-50%);
     font-family:'Roboto Mono',monospace;
@@ -546,65 +480,35 @@ body.page-visible {
     border-top-color:rgba(255,0,0,0.5) !important;
     box-shadow:0 4px 28px rgba(255,0,0,0.08);
   }
-
 </style>
+
+<link rel='stylesheet' href='shared/styles/site-header.css'/>
+<script type='module' src='shared/components/site-header.js'></script>
 </head>
 <body>
 
-<!-- ══════════════ NAV ══════════════ -->
-<nav>
-  <a href="index.html" class="nav-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="nav-brand">Central Investigation Bureau</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Page_About.html">About</a></li>
-    <li><a href="Page_OurMission.html">Our Mission</a></li>
-    <li><a href="Page_Divisions.html">Detectives</a></li>
-    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
-    <li><a href="Page_Wanted.html">Most Wanted</a></li>
-    <li><a href="Page_Press.html">Press Room</a></li>
-    <li><a href="Page_Recruitment.html">Recruitment</a></li>
-  </ul>
-  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
-</nav>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• NAV â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div data-shared-site-header></div>
 
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-label">LIVE ALERT</div>
-  <div style="overflow:hidden;flex:1;">
-    <div class="ticker-track">
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
-      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-    </div>  
-  </div>
-</div>
-
-<!-- ══════════════ PAGE HERO ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• PAGE HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="page-hero">
   <div class="page-hero-bg"></div>
   <div class="page-hero-grid"></div>
   <div class="page-hero-accent"></div>
   <div class="page-hero-content">
     <div class="breadcrumb fade-in">CIB &nbsp;/&nbsp; <span>About</span></div>
-    <div class="page-hero-eyebrow fade-in fade-in-delay-1">Document Ref · CIB-PUB-001</div>
+    <div class="page-hero-eyebrow fade-in fade-in-delay-1">Document Ref Â· CIB-PUB-001</div>
     <h1 class="fade-in fade-in-delay-2">About the Bureau</h1>
     <div class="page-hero-line fade-in fade-in-delay-2"></div>
-    <p class="page-hero-desc fade-in fade-in-delay-3">The Central Intelligence Bureau is San Andreas's premier law enforcement intelligence agency — a specialized division of the San Andreas Police Department dedicated to organized crime suppression, criminal intelligence, and covert operations across the state.</p>
+    <p class="page-hero-desc fade-in fade-in-delay-3">The Central Intelligence Bureau is San Andreas's premier law enforcement intelligence agency â€” a specialized division of the San Andreas Police Department dedicated to organized crime suppression, criminal intelligence, and covert operations across the state.</p>
     <div class="doc-ref fade-in fade-in-delay-3">
       <div class="doc-ref-dot"></div>
-      CLASSIFICATION: UNRESTRICTED PUBLIC DISCLOSURE &nbsp;·&nbsp; ISSUED 01.01.2026
+      CLASSIFICATION: UNRESTRICTED PUBLIC DISCLOSURE &nbsp;Â·&nbsp; ISSUED 01.01.2026
     </div>
   </div>
 </div>
 
-<!-- ══════════════ COMMANDER ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• COMMANDER â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <section class="commander-section">
   <div class="commander-section-bg"></div>
   <div class="commander-section-grid"></div>
@@ -632,7 +536,7 @@ body.page-visible {
           <!-- Rank badge overlaid top-left -->
           <div class="cmd-rank-badge">
             <div class="cmd-rank-badge-dot"></div>
-            <span class="cmd-rank-badge-text">Commander · Head of CIB</span>
+            <span class="cmd-rank-badge-text">Commander Â· Head of CIB</span>
           </div>
 
           <!-- Classified stamp top-right -->
@@ -647,7 +551,7 @@ body.page-visible {
             <div class="cmd-yt-corner tr"></div>
             <div class="cmd-yt-corner bl"></div>
             <div class="cmd-yt-corner br"></div>
-            <div class="cmd-yt-label">Commander · Head of CIB</div>
+            <div class="cmd-yt-label">Commander Â· Head of CIB</div>
             <div class="cmd-yt-name">Diraj Lakota</div>
             <a class="cmd-yt-btn"
                href="https://www.youtube.com/@GungKaka"
@@ -675,22 +579,22 @@ body.page-visible {
                 <path d="M8 58c0-13.3 10.7-24 24-24s24 10.7 24 24"/>
               </svg>
             </div>
-            <div class="photo-label">Photo · Not Uploaded</div>
+            <div class="photo-label">Photo Â· Not Uploaded</div>
           </div>
 
         </div><!-- /commander-photo -->
 
         <!-- Meta strip below photo -->
         <div class="commander-meta">
-          <div class="cmd-rank">Commander &nbsp;·&nbsp; Head of CIB</div>
+          <div class="cmd-rank">Commander &nbsp;Â·&nbsp; Head of CIB</div>
           <div class="cmd-name">Diraj Lakota</div>
-          <div class="cmd-dept">San Andreas State Trooper · LEO/CIB</div>
+          <div class="cmd-dept">San Andreas State Trooper Â· LEO/CIB</div>
           <div class="cmd-tags">
             <span class="cmd-tag">Top Secret</span>
             <span class="cmd-tag">Field Certified</span>
             <span class="cmd-tag">Command Authority</span>
           </div>
-          <div class="cmd-id-line">BADGE NO. CIB-CMD-0001 &nbsp;·&nbsp; ACTIVE DUTY</div>
+          <div class="cmd-id-line">BADGE NO. CIB-CMD-0001 &nbsp;Â·&nbsp; ACTIVE DUTY</div>
         </div>
 
       </div>
@@ -720,11 +624,11 @@ body.page-visible {
 
       <!-- Pull quote -->
       <div class="bio-quote">
-        <div class="bio-quote-text">"हम अपराध होने का इंतजार नहीं करते। हम अपराध होने से पहले ही उसे खत्म कर देते हैं। <em>ham aparaadh hone ka intajaar nahin karate. ham aparaadh hone se pahale hee use khatm kar dete hain.</em>"</div>
-        <div class="bio-quote-attr">— Commander Diraj Lakota, CIB Inaugural Address, 2026</div>
+        <div class="bio-quote-text">"à¤¹à¤® à¤…à¤ªà¤°à¤¾à¤§ à¤¹à¥‹à¤¨à¥‡ à¤•à¤¾ à¤‡à¤‚à¤¤à¤œà¤¾à¤° à¤¨à¤¹à¥€à¤‚ à¤•à¤°à¤¤à¥‡à¥¤ à¤¹à¤® à¤…à¤ªà¤°à¤¾à¤§ à¤¹à¥‹à¤¨à¥‡ à¤¸à¥‡ à¤ªà¤¹à¤²à¥‡ à¤¹à¥€ à¤‰à¤¸à¥‡ à¤–à¤¤à¥à¤® à¤•à¤° à¤¦à¥‡à¤¤à¥‡ à¤¹à¥ˆà¤‚à¥¤ <em>ham aparaadh hone ka intajaar nahin karate. ham aparaadh hone se pahale hee use khatm kar dete hain.</em>"</div>
+        <div class="bio-quote-attr">â€” Commander Diraj Lakota, CIB Inaugural Address, 2026</div>
       </div>
 
-      <p class="bio-text">Prior to his elevation to Commander, Lakota built an extensive career within the San Andreas law enforcement apparatus, serving in multiple capacities that exposed him to the full spectrum of criminal enterprise — from street-level gang activity to complex interstate trafficking operations. His reputation for methodical, intelligence-led policing made him the unanimous choice for the Bureau's top role.</p>
+      <p class="bio-text">Prior to his elevation to Commander, Lakota built an extensive career within the San Andreas law enforcement apparatus, serving in multiple capacities that exposed him to the full spectrum of criminal enterprise â€” from street-level gang activity to complex interstate trafficking operations. His reputation for methodical, intelligence-led policing made him the unanimous choice for the Bureau's top role.</p>
 
       <p class="bio-text">Under his command, the CIB has expanded its operational reach, formalized interagency cooperation protocols, and launched the Bureau's most ambitious intelligence-gathering initiatives to date. Commander Lakota holds full executive authority over all CIB divisions and reports directly to the SAPD Commissioner.</p>
 
@@ -746,7 +650,7 @@ body.page-visible {
       <div class="cmd-status-row">
         <div class="cmd-clearance">
           <div class="clearance-dot"></div>
-          <span class="clearance-text">Active Duty &nbsp;·&nbsp; Clearance Level: Top Secret</span>
+          <span class="clearance-text">Active Duty &nbsp;Â·&nbsp; Clearance Level: Top Secret</span>
         </div>
       </div>
 
@@ -755,7 +659,7 @@ body.page-visible {
   </div>
 </section>
 
-<!-- ══════════════ HISTORY ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• HISTORY â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <section class="content-section">
   <div class="content-inner">
     <div class="section-header-left fade-in">
@@ -777,7 +681,7 @@ body.page-visible {
         <div class="tl-marker"></div>
         <div class="timeline-body">
           <div class="tl-title">Expansion & Deployment of GRD</div>
-          <div class="tl-text">Following early operational successes, the Bureau was formally restructured into specialized divisions — the Gang Recon Division (GRD) led by Meifanny Lorenta and Criminal Investigation Division (CID) were established, giving the CIB a permanent institutional framework and dedicated personnel streams for long-term intelligence collection.</div>
+          <div class="tl-text">Following early operational successes, the Bureau was formally restructured into specialized divisions â€” the Gang Recon Division (GRD) led by Meifanny Lorenta and Criminal Investigation Division (CID) were established, giving the CIB a permanent institutional framework and dedicated personnel streams for long-term intelligence collection.</div>
         </div>
       </div>
       <div class="timeline-item fade-in fade-in-delay-2">
@@ -792,7 +696,7 @@ body.page-visible {
   </div>
 </section>
 
-<!-- ══════════════ MISSION ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• MISSION â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <section class="content-section alt">
   <div class="content-inner">
     <div class="section-header-left fade-in">
@@ -802,9 +706,9 @@ body.page-visible {
     </div>
     <div class="mission-layout">
       <div class="mission-text fade-in">
-        <p class="body-text">The Central Intelligence Bureau exists to protect the people and institutions of San Andreas from organized criminal enterprise through intelligence-led law enforcement. Our mission is not reactive — it is anticipatory, strategic, and sustained.</p>
+        <p class="body-text">The Central Intelligence Bureau exists to protect the people and institutions of San Andreas from organized criminal enterprise through intelligence-led law enforcement. Our mission is not reactive â€” it is anticipatory, strategic, and sustained.</p>
         <p class="body-text">We operate at the intersection of intelligence collection, criminal investigation, and field operations, ensuring that no criminal network can operate within San Andreas without the Bureau's awareness. Every resource, every operation, and every officer within the CIB is oriented toward a single purpose: the suppression and dismantlement of organized crime.</p>
-        <p class="body-text">The CIB upholds the rule of law without compromise — employing lawful, rigorous, and ethical methods in every operation. We are accountable to the people of San Andreas and to the principles upon which the SAPD was founded.</p>
+        <p class="body-text">The CIB upholds the rule of law without compromise â€” employing lawful, rigorous, and ethical methods in every operation. We are accountable to the people of San Andreas and to the principles upon which the SAPD was founded.</p>
       </div>
       <div class="mission-pillars fade-in fade-in-delay-1">
 
@@ -857,7 +761,7 @@ body.page-visible {
   </div>
 </section>
 
-<!-- ══════════════ VISION ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• VISION â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <section class="content-section">
   <div class="content-inner">
     <div class="section-header-left fade-in">
@@ -873,7 +777,7 @@ body.page-visible {
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M1 6l5 5 7-9 7 9 5-5"/></svg>
         </div>
         <div class="vision-title">A Safer San Andreas</div>
-        <div class="vision-desc">We envision a San Andreas where organized criminal networks cannot operate freely — where intelligence-led enforcement creates lasting safety for every community in the state, from Los Santos to Paleto Bay.</div>
+        <div class="vision-desc">We envision a San Andreas where organized criminal networks cannot operate freely â€” where intelligence-led enforcement creates lasting safety for every community in the state, from Los Santos to Paleto Bay.</div>
       </div>
 
       <div class="vision-card fade-in fade-in-delay-1">
@@ -882,7 +786,7 @@ body.page-visible {
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         </div>
         <div class="vision-title">Intelligence Excellence</div>
-        <div class="vision-desc">To be the gold standard in criminal intelligence across the Western United States — setting the benchmark for how law enforcement agencies collect, analyse, and act on intelligence in the modern era.</div>
+        <div class="vision-desc">To be the gold standard in criminal intelligence across the Western United States â€” setting the benchmark for how law enforcement agencies collect, analyse, and act on intelligence in the modern era.</div>
       </div>
 
       <div class="vision-card fade-in fade-in-delay-2">
@@ -891,7 +795,7 @@ body.page-visible {
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div class="vision-title">Public Trust</div>
-        <div class="vision-desc">To earn and maintain the full confidence of San Andreas citizens through transparent, accountable, and ethical conduct — demonstrating that effective intelligence work and civil liberties are not in conflict.</div>
+        <div class="vision-desc">To earn and maintain the full confidence of San Andreas citizens through transparent, accountable, and ethical conduct â€” demonstrating that effective intelligence work and civil liberties are not in conflict.</div>
       </div>
 
       <div class="vision-card fade-in">
@@ -900,7 +804,7 @@ body.page-visible {
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </div>
         <div class="vision-title">Operational Precision</div>
-        <div class="vision-desc">Every operation the CIB conducts must be justified, proportionate, and executed with precision. We pursue criminals — not communities — and measure success by prosecutions secured, not arrests made.</div>
+        <div class="vision-desc">Every operation the CIB conducts must be justified, proportionate, and executed with precision. We pursue criminals â€” not communities â€” and measure success by prosecutions secured, not arrests made.</div>
       </div>
 
       <div class="vision-card fade-in fade-in-delay-1">
@@ -909,7 +813,7 @@ body.page-visible {
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         </div>
         <div class="vision-title">Adaptive Capability</div>
-        <div class="vision-desc">Criminal organizations evolve — so must we. Our vision is a Bureau that continuously develops its personnel, methodology, and technology to stay ahead of emerging threats and criminal innovations.</div>
+        <div class="vision-desc">Criminal organizations evolve â€” so must we. Our vision is a Bureau that continuously develops its personnel, methodology, and technology to stay ahead of emerging threats and criminal innovations.</div>
       </div>
 
       <div class="vision-card fade-in fade-in-delay-2">
@@ -918,14 +822,14 @@ body.page-visible {
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <div class="vision-title">Unified Justice</div>
-        <div class="vision-desc">A San Andreas where every law enforcement agency — from patrol officers to federal partners — operates from the same intelligence picture. The CIB's vision is a fully unified state-wide justice system.</div>
+        <div class="vision-desc">A San Andreas where every law enforcement agency â€” from patrol officers to federal partners â€” operates from the same intelligence picture. The CIB's vision is a fully unified state-wide justice system.</div>
       </div>
 
     </div>
   </div>
 </section>
 
-<!-- ══════════════ JURISDICTION ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• JURISDICTION â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <section class="content-section alt">
   <div class="content-inner">
     <div class="section-header-left fade-in">
@@ -937,7 +841,7 @@ body.page-visible {
 
       <div class="jurisdiction-text fade-in">
         <p class="body-text">The Central Intelligence Bureau operates under the full legal authority of the San Andreas Police Department and exercises jurisdiction across the entire territory of the State of San Andreas. This authority is codified under the San Andreas Law Enforcement Intelligence Act, which grants the CIB broad powers to investigate, surveil, and prosecute organized criminal activity wherever it occurs within state borders.</p>
-        <p class="body-text">The Bureau's jurisdiction is not limited to any single municipality or county. Unlike standard SAPD divisions — which operate within defined precinct boundaries — the CIB's mandate is statewide, enabling investigators to pursue criminal organizations that deliberately operate across jurisdictional lines to evade detection.</p>
+        <p class="body-text">The Bureau's jurisdiction is not limited to any single municipality or county. Unlike standard SAPD divisions â€” which operate within defined precinct boundaries â€” the CIB's mandate is statewide, enabling investigators to pursue criminal organizations that deliberately operate across jurisdictional lines to evade detection.</p>
         <p class="body-text">The CIB also holds authority to coordinate with and support federal law enforcement agencies in matters involving interstate criminal enterprises, and may exercise concurrent jurisdiction alongside federal bodies where applicable under existing bilateral agreements.</p>
 
         <div class="jur-areas">
@@ -973,27 +877,27 @@ body.page-visible {
 
         <div class="jur-authority-item">
           <div class="jur-bullet"></div>
-          <div class="jur-authority-text"><strong>Arrest Authority</strong> — CIB officers hold full sworn peace officer status and may effect lawful arrests anywhere within the State of San Andreas.</div>
+          <div class="jur-authority-text"><strong>Arrest Authority</strong> â€” CIB officers hold full sworn peace officer status and may effect lawful arrests anywhere within the State of San Andreas.</div>
         </div>
         <div class="jur-authority-item">
           <div class="jur-bullet"></div>
-          <div class="jur-authority-text"><strong>Search &amp; Surveillance</strong> — The Bureau may apply for and execute search warrants, wiretap orders, and surveillance authorizations under applicable state statute.</div>
+          <div class="jur-authority-text"><strong>Search &amp; Surveillance</strong> â€” The Bureau may apply for and execute search warrants, wiretap orders, and surveillance authorizations under applicable state statute.</div>
         </div>
         <div class="jur-authority-item">
           <div class="jur-bullet"></div>
-          <div class="jur-authority-text"><strong>Asset Seizure</strong> — The CIB is empowered to seize assets, vehicles, and property connected to criminal enterprise under San Andreas civil forfeiture law.</div>
+          <div class="jur-authority-text"><strong>Asset Seizure</strong> â€” The CIB is empowered to seize assets, vehicles, and property connected to criminal enterprise under San Andreas civil forfeiture law.</div>
         </div>
         <div class="jur-authority-item">
           <div class="jur-bullet"></div>
-          <div class="jur-authority-text"><strong>Undercover Operations</strong> — CIB personnel may conduct covert and undercover operations under the authority of the Bureau Commander and with appropriate judicial oversight.</div>
+          <div class="jur-authority-text"><strong>Undercover Operations</strong> â€” CIB personnel may conduct covert and undercover operations under the authority of the Bureau Commander and with appropriate judicial oversight.</div>
         </div>
         <div class="jur-authority-item">
           <div class="jur-bullet"></div>
-          <div class="jur-authority-text"><strong>Federal Coordination</strong> — Formal MOUs with federal agencies permit the CIB to operate in a support or lead capacity on federal investigations within state territory.</div>
+          <div class="jur-authority-text"><strong>Federal Coordination</strong> â€” Formal MOUs with federal agencies permit the CIB to operate in a support or lead capacity on federal investigations within state territory.</div>
         </div>
         <div class="jur-authority-item">
           <div class="jur-bullet"></div>
-          <div class="jur-authority-text"><strong>Information Sharing</strong> — The Bureau maintains a classified intelligence database accessible to authorised SAPD, LSPD, and DA personnel under strict need-to-know protocols.</div>
+          <div class="jur-authority-text"><strong>Information Sharing</strong> â€” The Bureau maintains a classified intelligence database accessible to authorised SAPD, LSPD, and DA personnel under strict need-to-know protocols.</div>
         </div>
       </div>
 
@@ -1001,49 +905,15 @@ body.page-visible {
   </div>
 </section>
 
-<!-- ══════════════ FOOTER ══════════════ -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-      <p>Central Investigation Bureau</p>
-      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
-    </div>
-    <div class="footer-col">
-      <h4>Divisions</h4>
-      <ul>
-        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
-        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Resources</h4>
-      <ul>
-        <li><a href="Page_Press.html">Press Room</a></li>
-        <li><a href="Page_Recruitment.html">Recruitment</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="index.html">CIB Headquarters</a></li>
-        <li><a href="Page_Press.html">Tip Hotline</a></li>
-        <li><a href="Page_Login.html">Personnel Login</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
-    <div class="classified-stamp">EXECUTIVE RP</div>
-  </div>
-</footer>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• FOOTER â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div data-shared-footer></div>
+<script type="module" src="shared/components/site-footer.js"></script>
 
+<script src="shared/scripts/site-ui.js"></script>
 <script>
-  // Fade IN when page loads
-  window.addEventListener('DOMContentLoaded', () => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('page-visible');
-    });
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+</script>
+<script>
   });
 
   // Fade OUT before navigating away
@@ -1066,3 +936,5 @@ body.page-visible {
 
 </body>
 </html>
+
+

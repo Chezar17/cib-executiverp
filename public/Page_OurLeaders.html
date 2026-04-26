@@ -1,51 +1,20 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
-<meta charset="UTF-8"/>
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Our Leaders — Central Investigation Bureau</title>
+<title>Our Leaders â€” Central Investigation Bureau</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
+<link rel="stylesheet" href="shared/styles/sections.css"/>
+<link rel="stylesheet" href="shared/styles/footer.css"/>
+<link rel="stylesheet" href="shared/styles/site-header.css"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-    --green:#27AE60;
-    /* Department accent colours */
-    --sast:#2E86C1;   /* State Trooper — blue */
-    --lcso:#8E6B23;   /* Sheriff — dark gold */
-    --lspd:#1A5276;   /* LSPD — deep navy-blue */
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;opacity:0;transition:opacity 0.4s ease;}
-  body.page-visible{opacity:1;}
-
-  /* ══ NAV ══ */
-  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
-  .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
-  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
-  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;text-decoration:none;}
-
-  /* ══ TICKER ══ */
-  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
-  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
-  .ticker-track{display:flex;animation:ticker 38s linear infinite;white-space:nowrap;}
-  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
-  .ticker-track span b{color:var(--gold-light);}
-  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  /* ══ PAGE HERO ══ */
+body.page-visible{opacity:1;}
+  /* â•â• PAGE HERO â•â• */
   .page-hero{position:relative;padding:72px 40px 60px;overflow:hidden;border-bottom:1px solid var(--navy-border);}
   .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,#0D1A35 0%,var(--navy) 65%);z-index:0;}
   .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
@@ -58,20 +27,20 @@
   .hero-line{width:80px;height:2px;background:var(--gold);margin-bottom:20px;}
   .hero-desc{font-size:14px;color:var(--muted);max-width:580px;line-height:1.8;}
 
-  /* ══ PAGE WRAP ══ */
+  /* â•â• PAGE WRAP â•â• */
   .page-wrap{max-width:1200px;margin:0 auto;padding:64px 40px 80px;}
 
-  /* ══ SECTION HEADER ══ */
+  /* â•â• SECTION HEADER â•â• */
   .section-head{margin-bottom:48px;}
   .section-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;opacity:0.8;}
   .section-title{font-family:'Oswald',sans-serif;font-size:clamp(20px,3.5vw,32px);letter-spacing:4px;text-transform:uppercase;color:var(--white);}
   .section-rule{width:60px;height:2px;background:var(--gold);margin-top:14px;}
   .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--navy-border) 20%,var(--gold) 50%,var(--navy-border) 80%,transparent);margin:72px 0 0;}
 
-  /* ═══════════════════════════════════════════════════════
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      LEADER CARDS
-     3 cards across — large portrait + info below
-  ═══════════════════════════════════════════════════════ */
+     3 cards across â€” large portrait + info below
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
   .leaders-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
 
   .leader-card{background:var(--navy-card);border:1px solid var(--navy-border);overflow:hidden;position:relative;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;}
@@ -80,10 +49,10 @@
   /* Gold top stripe */
   .leader-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);z-index:3;}
 
-  /* ── Portrait ── */
+  /* â”€â”€ Portrait â”€â”€ */
   .leader-portrait{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#080D1C;}
 
-  /* The photo — upload: replace src with your PNG, 1:1 crop, top-center focus */
+  /* The photo â€” upload: replace src with your PNG, 1:1 crop, top-center focus */
   .leader-portrait img.portrait-img{
     display:block;width:100%;height:100%;
     object-fit:cover;object-position:top center;
@@ -129,7 +98,7 @@
     text-transform:uppercase;color:var(--gold);opacity:0.7;z-index:4;
   }
 
-  /* ── Leader info body ── */
+  /* â”€â”€ Leader info body â”€â”€ */
   .leader-body{padding:22px 22px 20px;display:flex;flex-direction:column;gap:0;}
 
   .leader-rank-tag{
@@ -164,10 +133,10 @@
   }
   .leader-badge.gold{border-color:rgba(201,168,76,0.4);color:var(--gold);}
 
-  /* ═══════════════════════════════════════════════════════
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      DEPARTMENT CARDS (click to expand)
-     Compact view → click → modal-style expanded overlay
-  ═══════════════════════════════════════════════════════ */
+     Compact view â†’ click â†’ modal-style expanded overlay
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
   .dept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
 
   /* Compact card */
@@ -227,9 +196,9 @@
   .dept-view-btn svg{width:10px;height:10px;fill:var(--gold);transition:transform 0.2s;}
   .dept-card:hover .dept-view-btn svg{transform:translateX(3px);}
 
-  /* ═══════════════════════════════════════════════════════
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      DEPARTMENT MODAL (full-screen overlay)
-  ═══════════════════════════════════════════════════════ */
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
   #dept-modal{
     position:fixed;inset:0;z-index:8000;
     background:rgba(5,8,18,0.9);
@@ -366,7 +335,7 @@
   }
   .modal-info-val{font-size:12px;color:var(--white);}
 
-  /* ══ ANIMATIONS ══ */
+  /* â•â• ANIMATIONS â•â• */
   .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1);}
   .reveal.in-view{opacity:1;transform:translateY(0);}
   .reveal-d1{transition-delay:0.07s;}
@@ -374,21 +343,7 @@
   .reveal-d3{transition-delay:0.21s;}
   .reveal-d4{transition-delay:0.28s;}
 
-  /* ══ FOOTER ══ */
-  footer{background:#070B17;border-top:1px solid var(--navy-border);}
-  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;padding:48px 40px 40px;max-width:1400px;margin:0 auto;}
-  .footer-brand p{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin:12px 0 10px;}
-  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.8;}
-  .footer-brand img{height:44px;opacity:0.8;}
-  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--navy-border);}
-  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
-  .footer-col a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:1px;transition:color 0.2s;}
-  .footer-col a:hover{color:var(--gold);}
-  .footer-bottom{border-top:1px solid var(--navy-border);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;}
-  .footer-bottom p{font-size:11px;color:var(--muted);letter-spacing:1px;}
-  .classified-stamp{border:1px solid rgba(192,57,43,0.5);color:var(--red-alert);font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;padding:4px 12px;}
-
-  /* ══ RESPONSIVE ══ */
+  /* â•â• RESPONSIVE â•â• */
   @media(max-width:960px){
     .leaders-grid,.dept-grid{grid-template-columns:1fr 1fr;}
     .modal-body{grid-template-columns:1fr;}
@@ -396,8 +351,7 @@
     .dept-modal-header{grid-template-columns:100px 1fr auto;}
     nav{padding:0 20px;}
     .page-wrap,.page-hero{padding-left:20px;padding-right:20px;}
-    .footer-top{grid-template-columns:1fr 1fr;}
-  }
+    }
   @media(max-width:600px){
     .leaders-grid,.dept-grid{grid-template-columns:1fr;}
     .nav-links{display:none;}
@@ -405,9 +359,9 @@
     .modal-logo-zone{display:none;}
   }
 
-  /* ══ NEW: Commissioner Hero + Sub-grid + Bio Modal + Animations ══ */
+  /* â•â• NEW: Commissioner Hero + Sub-grid + Bio Modal + Animations â•â• */
 
-  /* Commissioner featured card — full width, horizontal */
+  /* Commissioner featured card â€” full width, horizontal */
   .commissioner-wrap{margin-bottom:28px;}
   .commissioner-card{position:relative;overflow:hidden;cursor:pointer;display:grid;grid-template-columns:400px 1fr;background:var(--navy-card);border:1px solid var(--navy-border);border-top:4px solid var(--gold);transition:box-shadow 0.35s,border-color 0.3s;}
   .commissioner-card:hover{border-color:var(--gold);box-shadow:0 20px 60px rgba(201,168,76,0.12),0 0 0 1px rgba(201,168,76,0.18);}
@@ -506,7 +460,7 @@
   .section-rule::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);animation:ruleShimmer 2.8s ease 1s infinite;}
   @keyframes ruleShimmer{0%{transform:translateX(-100%);}100%{transform:translateX(200%);}}
 
-  /* ══ PHOTOGRAPHER CREDIT LABEL ══ */
+  /* â•â• PHOTOGRAPHER CREDIT LABEL â•â• */
   .photo-credit{
     position:absolute;
     bottom:8px;right:10px;
@@ -523,67 +477,43 @@
   .commissioner-card:hover .photo-credit{
     color:rgba(240,237,228,0.55);
   }
-
 </style>
+
+<link rel='stylesheet' href='shared/styles/site-header.css'/>
+<script type='module' src='shared/components/site-header.js'></script>
 </head>
 <body>
 
-<!-- ══════════════ NAV ══════════════ -->
-<nav>
-  <a href="index.html" class="nav-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="nav-brand">Central Investigation Bureau</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Page_About.html">About</a></li>
-    <li><a href="Page_OurMission.html">Our Mission</a></li>
-    <li><a href="Page_Divisions.html">Detectives</a></li>
-    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
-    <li><a href="Page_Wanted.html">Most Wanted</a></li>
-    <li><a href="Page_Press.html">Press Room</a></li>
-    <li><a href="Page_Recruitment.html">Recruitment</a></li>
-  </ul>
-  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
-</nav>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• NAV â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div data-shared-site-header></div>
 
-<!-- ══════════════ TICKER ══════════════ -->
-<div class="ticker">
-  <div class="ticker-label">LEADERSHIP</div>
-  <div style="overflow:hidden;flex:1;">
-    <div class="ticker-track">
-      <span><b>LEO:</b> All divisions under joint command of SA law enforcement leadership &nbsp;|&nbsp; <b>LSPD:</b> Chief Osborne reaffirms zero-tolerance policy on organized crime &nbsp;|&nbsp; <b>LSCS:</b> Sheriff Wesley expands county patrol coverage in Blaine County &nbsp;|&nbsp; <b>SASP:</b> Commissioner Gunner presides over quarterly SAPD inter-agency briefing &nbsp;|&nbsp; <b>SAPD:</b> All divisions under joint command of SA law enforcement leadership &nbsp;|&nbsp; <b>LSPD:</b> Chief Osborne reaffirms zero-tolerance policy on organized crime &nbsp;|&nbsp; <b>LSCS:</b> Sheriff Wesley expands county patrol coverage in Blaine County &nbsp;|&nbsp; <b>SASP:</b> Commissioner Gunner presides over quarterly SAPD inter-agency briefing</span>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════ PAGE HERO ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• PAGE HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="page-hero">
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
   <div class="hero-accent"></div>
   <div class="hero-inner">
     <div class="breadcrumb reveal">CIB &nbsp;/&nbsp; <span>Our Leaders</span></div>
-    <div class="hero-eyebrow reveal">Document Ref · CIB-PUB-005</div>
+    <div class="hero-eyebrow reveal">Document Ref Â· CIB-PUB-005</div>
     <h1 class="reveal">Our Leaders</h1>
     <div class="hero-line reveal"></div>
     <p class="hero-desc reveal">The Central Investigation Bureau operates under the joint authority of San Andreas's three primary law enforcement bodies. The following profiles represent the commanding officers who provide strategic direction and operational mandate for law enforcement activities across the State of San Andreas.</p>
   </div>
 </div>
 
-<!-- ══════════════ MAIN CONTENT ══════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• MAIN CONTENT â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="page-wrap">
 
-  <!-- ══════════════════════════════════════════════
-       SECTION 1 — COMMAND LEADERSHIP
-  ══════════════════════════════════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       SECTION 1 â€” COMMAND LEADERSHIP
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="section-head reveal">
     <div class="section-eyebrow">Command Authority</div>
     <div class="section-title">Commanding Officers</div>
     <div class="section-rule"></div>
   </div>
 
-  <!-- Commissioner — Featured Hero -->
+  <!-- Commissioner â€” Featured Hero -->
   <div class="commissioner-wrap comm-entrance">
     <div class="commissioner-card" onclick="openBio('gunner')">
       <div class="comm-particles" id="comm-particles"></div>
@@ -594,19 +524,19 @@
         <div class="comm-photo-status"><div class="s-pulse"></div>Active Duty</div>
         <div class="comm-photo-corner tl"></div>
         <div class="comm-photo-corner bl"></div>
-        <div class="photo-credit">📷 @agungisra</div>
+        <div class="photo-credit">ðŸ“· @agungisra</div>
       </div>
       <div class="comm-info">
-        <div class="comm-supreme-tag"><div class="comm-supreme-dot"></div>Supreme Command · State of San Andreas</div>
-        <div class="comm-rank">Commissioner · Highest Rank in San Andreas</div>
+        <div class="comm-supreme-tag"><div class="comm-supreme-dot"></div>Supreme Command Â· State of San Andreas</div>
+        <div class="comm-rank">Commissioner Â· Highest Rank in San Andreas</div>
         <div class="comm-name">Andrew Gunner</div>
-        <div class="comm-dept">San Andreas State Police · Statewide Jurisdiction</div>
+        <div class="comm-dept">San Andreas State Police Â· Statewide Jurisdiction</div>
         <div class="comm-sep"></div>
         <div class="comm-rows">
           <div class="comm-row"><span class="comm-row-lbl">Department</span><span class="comm-row-val">San Andreas State Police</span></div>
-          <div class="comm-row"><span class="comm-row-lbl">Authority</span><span class="comm-row-val">Statewide — Supreme Command over all SA Law Enforcement</span></div>
-          <div class="comm-row"><span class="comm-row-lbl">Jurisdiction</span><span class="comm-row-val">Full Territorial Command — State of San Andreas</span></div>
-          <div class="comm-row"><span class="comm-row-lbl">CIB Relation</span><span class="comm-row-val">Direct Oversight · Strategic Mandate Authority</span></div>
+          <div class="comm-row"><span class="comm-row-lbl">Authority</span><span class="comm-row-val">Statewide â€” Supreme Command over all SA Law Enforcement</span></div>
+          <div class="comm-row"><span class="comm-row-lbl">Jurisdiction</span><span class="comm-row-val">Full Territorial Command â€” State of San Andreas</span></div>
+          <div class="comm-row"><span class="comm-row-lbl">CIB Relation</span><span class="comm-row-val">Direct Oversight Â· Strategic Mandate Authority</span></div>
         </div>
         <div class="comm-badges">
           <span class="comm-badge">State Authority</span>
@@ -623,7 +553,7 @@
     </div>
   </div>
 
-  <!-- Sheriff + Chief — 2 card row -->
+  <!-- Sheriff + Chief â€” 2 card row -->
   <div class="sub-leaders-grid">
 
     <div class="leader-card sub-entrance-1" onclick="openBio('wesley')">
@@ -636,18 +566,18 @@
 
         <div class="portrait-fade"></div>
         <div class="portrait-click-layer"><div class="portrait-click-pill">View Biography</div></div>
-        <div class="photo-credit">📷 @agungisra</div>
+        <div class="photo-credit">ðŸ“· @agungisra</div>
       </div>
       <div class="leader-body">
-        <div class="leader-rank-tag">Sheriff · County Commander</div>
+        <div class="leader-rank-tag">Sheriff Â· County Commander</div>
         <div class="leader-name">Kevin Wesley</div>
         <div class="leader-title">Los Santos County Sheriff</div>
         <div class="leader-divider"></div>
         <div class="leader-rows">
           <div class="leader-row"><span class="leader-row-lbl">Department</span><span class="leader-row-val">Los Santos County Sheriff</span></div>
           <div class="leader-row"><span class="leader-row-lbl">Rank</span><span class="leader-row-val">Sheriff</span></div>
-          <div class="leader-row"><span class="leader-row-lbl">Authority</span><span class="leader-row-val">County-Wide · Civil Command</span></div>
-          <div class="leader-row"><span class="leader-row-lbl">Jurisdiction</span><span class="leader-row-val">Los Santos County · Blaine County</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Authority</span><span class="leader-row-val">County-Wide Â· Civil Command</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Jurisdiction</span><span class="leader-row-val">Los Santos County Â· Blaine County</span></div>
         </div>
         <div class="leader-badge-row">
           <span class="leader-badge gold">County Authority</span>
@@ -670,17 +600,17 @@
         <div class="portrait-corner tl"></div><div class="portrait-corner tr"></div>
         <div class="portrait-fade"></div>
         <div class="portrait-click-layer"><div class="portrait-click-pill">View Biography</div></div>
-        <div class="photo-credit">📷 @agungisra</div>
+        <div class="photo-credit">ðŸ“· @agungisra</div>
       </div>
       <div class="leader-body">
-        <div class="leader-rank-tag">Chief of Police · City Command</div>
+        <div class="leader-rank-tag">Chief of Police Â· City Command</div>
         <div class="leader-name">Luke Osborne</div>
         <div class="leader-title">Los Santos Police Department</div>
         <div class="leader-divider"></div>
         <div class="leader-rows">
           <div class="leader-row"><span class="leader-row-lbl">Department</span><span class="leader-row-val">Los Santos Police Department</span></div>
           <div class="leader-row"><span class="leader-row-lbl">Rank</span><span class="leader-row-val">Chief of Police</span></div>
-          <div class="leader-row"><span class="leader-row-lbl">Authority</span><span class="leader-row-val">Metropolitan · City Command</span></div>
+          <div class="leader-row"><span class="leader-row-lbl">Authority</span><span class="leader-row-val">Metropolitan Â· City Command</span></div>
           <div class="leader-row"><span class="leader-row-lbl">Jurisdiction</span><span class="leader-row-val">City of Los Santos</span></div>
         </div>
         <div class="leader-badge-row">
@@ -699,9 +629,9 @@
 
   <div class="section-divider"></div>
 
-  <!-- ══════════════════════════════════════════════
-       SECTION 2 — DEPARTMENTS
-  ══════════════════════════════════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       SECTION 2 â€” DEPARTMENTS
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="section-head reveal" style="margin-top:72px;">
     <div class="section-eyebrow">Law Enforcement Bodies</div>
     <div class="section-title">Departments</div>
@@ -710,13 +640,13 @@
 
   <div class="dept-grid">
 
-    <!-- ════════════════════════════════
-         DEPT 1 — San Andreas State Trooper
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         DEPT 1 â€” San Andreas State Trooper
          onclick opens the modal with id "modal-sast"
-    ════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div class="dept-card dept-sast reveal" onclick="openDept('sast')">
       <div class="dept-logo-zone">
-        <!-- ░ UPLOAD: replace src with images/dept-sast-logo.png ░ -->
+        <!-- â–‘ UPLOAD: replace src with images/dept-sast-logo.png â–‘ -->
         <img class="dept-logo"
              src="images/SAST_Logo.png"
              alt="SAST Logo"
@@ -734,12 +664,12 @@
       </div>
     </div>
 
-    <!-- ════════════════════════════════
-         DEPT 2 — Los Santos County Sheriff
-    ════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         DEPT 2 â€” Los Santos County Sheriff
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div class="dept-card dept-lcso reveal reveal-d1" onclick="openDept('lcso')">
       <div class="dept-logo-zone">
-        <!-- ░ UPLOAD: replace src with images/dept-lcso-logo.png ░ -->
+        <!-- â–‘ UPLOAD: replace src with images/dept-lcso-logo.png â–‘ -->
         <img class="dept-logo"
              src="images/LSCS_Logo.png"
              alt="LCSO Logo"
@@ -756,12 +686,12 @@
       </div>
     </div>
 
-    <!-- ════════════════════════════════
-         DEPT 3 — Los Santos Police Department
-    ════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         DEPT 3 â€” Los Santos Police Department
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div class="dept-card dept-lspd reveal reveal-d2" onclick="openDept('lspd')">
       <div class="dept-logo-zone">
-        <!-- ░ UPLOAD: replace src with images/dept-lspd-logo.png ░ -->
+        <!-- â–‘ UPLOAD: replace src with images/dept-lspd-logo.png â–‘ -->
         <img class="dept-logo"
              src="images/LSPD_Logo.png"
              alt="LSPD Logo"
@@ -783,7 +713,7 @@
 </div><!-- /page-wrap -->
 
 
-<!-- ══════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      DEPARTMENT MODALS
      Each modal contains: header (logo + name), office photo,
      and two-column body (About + Jurisdiction).
@@ -795,11 +725,11 @@
 
      HOW TO EDIT CONTENT:
        Each modal is clearly labelled. Edit text directly inside.
-══════════════════════════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="dept-modal" onclick="handleModalBackdrop(event)">
   <div class="dept-modal-box" id="modal-box" data-dept="">
 
-    <!-- MODAL HEADER — populated by JS -->
+    <!-- MODAL HEADER â€” populated by JS -->
     <div class="dept-modal-header" id="modal-header">
       <div class="modal-logo-zone" id="modal-logo-zone">
         <div class="modal-logo-frame">
@@ -813,7 +743,7 @@
         <div class="modal-name" id="modal-name"></div>
         <div class="modal-badges" id="modal-badges"></div>
       </div>
-      <button class="modal-close-btn" onclick="closeDept()">✕</button>
+      <button class="modal-close-btn" onclick="closeDept()">âœ•</button>
     </div>
 
     <!-- OFFICE PHOTO -->
@@ -846,60 +776,30 @@
 </div>
 
 
-<!-- ══════════════ FOOTER ══════════════ -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-      <p>Central Investigation Bureau</p>
-      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
-    </div>
-    <div class="footer-col">
-      <h4>Divisions</h4>
-      <ul>
-        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
-        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Resources</h4>
-      <ul>
-        <li><a href="Page_Press.html">Press Room</a></li>
-        <li><a href="Page_Cases.html">Cases</a></li>
-        <li><a href="Page_Recruitment.html">Recruitment</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="index.html">CIB Headquarters</a></li>
-        <li><a href="Page_Press.html">Tip Hotline</a></li>
-        <li><a href="Page_Login.html">Personnel Login</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
-    <div class="classified-stamp">EXECUTIVE RP</div>
-  </div>
-</footer>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• FOOTER â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div data-shared-footer></div>
+<script type="module" src="shared/components/site-footer.js"></script>
 
 
+<script src="shared/scripts/site-ui.js"></script>
 <script>
-  // ══════════════════════════════════════════════════════════════
+  SiteUi.initPageFadeTransitions({ transitionMs: 400 });
+</script>
+<script>
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  DEPARTMENT DATA
   //  Edit any field here to update what appears in the modal.
   //  logo:  path to the department logo image
   //  office: path to the office/HQ photo
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   const DEPTS = {
     sast: {
-      eyebrow:  'State Agency · San Andreas',
+      eyebrow:  'State Agency Â· San Andreas',
       name:     'San Andreas State Trooper',
       abbr:     'SAST',
       logo:     'images/SAST_Logo.png',
       office:   'images/SAST_Logo.png',
-      caption:  'SAST State Headquarters — San Andreas',
+      caption:  'SAST State Headquarters â€” San Andreas',
       badges:   ['State Authority','Statewide Patrol','Highway Division','Criminal Investigation'],
       about:    'The San Andreas State Police (SASP) is the premier statewide law enforcement body, established under executive authority of the Governor of San Andreas. The agency holds supreme command authority over all SAPD-affiliated departments and maintains jurisdiction across every county, municipality, and unincorporated territory within state borders. SAST is responsible for statewide highway patrol, criminal investigations of federal and interstate nature, and command-level coordination during major incidents or civil emergencies.',
       info: [
@@ -910,21 +810,21 @@
         { lbl: 'Oversight',     val: 'Governor of San Andreas' },
       ],
       jur: [
-        { strong: 'Statewide Jurisdiction', text: ' — Full authority across all counties, municipalities, and territories within the State of San Andreas.' },
-        { strong: 'Highway Patrol',         text: ' — Primary authority over all state highways, interstates, and rural road networks.' },
-        { strong: 'Criminal Investigation', text: ' — Conducts state-level investigations into organized crime, corruption, and cross-jurisdictional offenses.' },
-        { strong: 'Command Authority',      text: ' — Holds supreme operational authority over LSPD and LCSO in joint operations and state emergencies.' },
-        { strong: 'CIB Oversight',          text: ' — The Commissioner serves as the highest authority overseeing CIB operations and strategic direction.' },
-        { strong: 'Federal Coordination',   text: ' — Acts as the state liaison for federal law enforcement agencies operating within San Andreas.' },
+        { strong: 'Statewide Jurisdiction', text: ' â€” Full authority across all counties, municipalities, and territories within the State of San Andreas.' },
+        { strong: 'Highway Patrol',         text: ' â€” Primary authority over all state highways, interstates, and rural road networks.' },
+        { strong: 'Criminal Investigation', text: ' â€” Conducts state-level investigations into organized crime, corruption, and cross-jurisdictional offenses.' },
+        { strong: 'Command Authority',      text: ' â€” Holds supreme operational authority over LSPD and LCSO in joint operations and state emergencies.' },
+        { strong: 'CIB Oversight',          text: ' â€” The Commissioner serves as the highest authority overseeing CIB operations and strategic direction.' },
+        { strong: 'Federal Coordination',   text: ' â€” Acts as the state liaison for federal law enforcement agencies operating within San Andreas.' },
       ],
     },
     lcso: {
-      eyebrow:  'County Agency · Los Santos',
+      eyebrow:  'County Agency Â· Los Santos',
       name:     'Los Santos County Sheriff',
       abbr:     'LCSO',
       logo:     'images/LSCS_Logo.png',
       office:   'images/LSCS_Logo.png',
-      caption:  'LCSO County Sheriff Headquarters — Los Santos',
+      caption:  'LCSO County Sheriff Headquarters â€” Los Santos',
       badges:   ['County Authority','Civil Enforcement','Corrections','Court Security'],
       about:    'The Los Santos County Sheriff\'s Department (LCSO) is the primary law enforcement authority for Los Santos County and Blaine County. Headed by the elected Sheriff, the department operates patrol divisions across both urban and rural county territories, manages the county correctional system, and provides court security and civil enforcement services. LSCS plays a critical role in CIB operations as a significant source of detective personnel and maintains concurrent jurisdiction with LSPD in overlapping areas.',
       info: [
@@ -935,21 +835,21 @@
         { lbl: 'Oversight',     val: 'Los Santos County Board of Supervisors' },
       ],
       jur: [
-        { strong: 'Los Santos County',  text: ' — Full patrol and investigative authority across all unincorporated areas of Los Santos County.' },
-        { strong: 'Blaine County',      text: ' — Primary law enforcement jurisdiction for the rural Blaine County area including Sandy Shores and Paleto Bay.' },
-        { strong: 'Concurrent City',    text: ' — May operate within the City of Los Santos in coordination with or in the absence of LSPD personnel.' },
-        { strong: 'Corrections',        text: ' — Operates and manages the county jail and detention facilities for all arrested individuals awaiting trial.' },
-        { strong: 'Court Security',     text: ' — Responsible for security of county court facilities and execution of civil court orders.' },
-        { strong: 'CIB Contribution',   text: ' — A primary source of CIB detective personnel; multiple LSCS deputies hold active CIB assignments.' },
+        { strong: 'Los Santos County',  text: ' â€” Full patrol and investigative authority across all unincorporated areas of Los Santos County.' },
+        { strong: 'Blaine County',      text: ' â€” Primary law enforcement jurisdiction for the rural Blaine County area including Sandy Shores and Paleto Bay.' },
+        { strong: 'Concurrent City',    text: ' â€” May operate within the City of Los Santos in coordination with or in the absence of LSPD personnel.' },
+        { strong: 'Corrections',        text: ' â€” Operates and manages the county jail and detention facilities for all arrested individuals awaiting trial.' },
+        { strong: 'Court Security',     text: ' â€” Responsible for security of county court facilities and execution of civil court orders.' },
+        { strong: 'CIB Contribution',   text: ' â€” A primary source of CIB detective personnel; multiple LSCS deputies hold active CIB assignments.' },
       ],
     },
     lspd: {
-      eyebrow:  'Municipal Agency · City of Los Santos',
+      eyebrow:  'Municipal Agency Â· City of Los Santos',
       name:     'Los Santos Police Department',
       abbr:     'LSPD',
       logo:     'images/LSPD_Logo.png',
       office:   'images/LSPD_Logo.png',
-      caption:  'LSPD Mission Row Headquarters — Los Santos',
+      caption:  'LSPD Mission Row Headquarters â€” Los Santos',
       badges:   ['City Authority','Urban Patrol','Homicide','Narcotics','SWAT'],
       about:    'The Los Santos Police Department (LSPD) is the municipal police force of the City of Los Santos and the largest single law enforcement agency in San Andreas by personnel count. Operating from Mission Row headquarters and multiple district stations, LSPD provides 24-hour urban patrol coverage, homicide investigation, narcotics enforcement, and specialized units including SWAT and K-9. The department contributes the largest proportion of personnel to CIB operations and maintains a close operational relationship with both the Bureau and the County Sheriff.',
       info: [
@@ -960,19 +860,19 @@
         { lbl: 'Oversight',     val: 'Los Santos City Council' },
       ],
       jur: [
-        { strong: 'City of Los Santos',   text: ' — Primary jurisdiction over all criminal activity within the incorporated boundaries of Los Santos.' },
-        { strong: 'Urban Districts',      text: ' — Operates multiple precinct stations covering Vinewood, East LS, South LS, Davis, Strawberry, and all other city districts.' },
-        { strong: 'Special Operations',   text: ' — Deploys SWAT, K-9, Air Support, and Undercover Units for high-risk and specialized operations.' },
-        { strong: 'Narcotics Division',   text: ' — Operates a dedicated narcotics enforcement unit with authority to conduct undercover buy operations and raids.' },
-        { strong: 'Homicide & Major Crimes', text: ' — Investigates all homicides and serious felonies occurring within city limits.' },
-        { strong: 'CIB Contribution',     text: ' — LSPD is the primary source of sworn CIB detective personnel across both GRD and CID divisions.' },
+        { strong: 'City of Los Santos',   text: ' â€” Primary jurisdiction over all criminal activity within the incorporated boundaries of Los Santos.' },
+        { strong: 'Urban Districts',      text: ' â€” Operates multiple precinct stations covering Vinewood, East LS, South LS, Davis, Strawberry, and all other city districts.' },
+        { strong: 'Special Operations',   text: ' â€” Deploys SWAT, K-9, Air Support, and Undercover Units for high-risk and specialized operations.' },
+        { strong: 'Narcotics Division',   text: ' â€” Operates a dedicated narcotics enforcement unit with authority to conduct undercover buy operations and raids.' },
+        { strong: 'Homicide & Major Crimes', text: ' â€” Investigates all homicides and serious felonies occurring within city limits.' },
+        { strong: 'CIB Contribution',     text: ' â€” LSPD is the primary source of sworn CIB detective personnel across both GRD and CID divisions.' },
       ],
     },
   };
 
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  OPEN / CLOSE MODAL
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   function openDept(key) {
     const d = DEPTS[key];
     if (!d) return;
@@ -1041,9 +941,9 @@
   // Close on Escape key
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDept(); });
 
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  SCROLL-TRIGGERED REVEAL
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   const revealObs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -1058,17 +958,7 @@
     requestAnimationFrame(() => document.body.classList.add('page-visible'));
   });
 
-  // ══════════════════════════════════════════════════════════════
-  //  PAGE TRANSITIONS
-  // ══════════════════════════════════════════════════════════════
-  document.querySelectorAll('a[href]').forEach(link => {
-    link.addEventListener('click', function(e) {
-      const href = this.getAttribute('href');
-      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
-      e.preventDefault();
-      document.body.classList.remove('page-visible');
-      setTimeout(() => { window.location.href = href; }, 400);
-    });
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   });
 </script>
 
@@ -1089,7 +979,7 @@
         <div class="bio-name" id="bio-name"></div>
         <div class="bio-dept-label" id="bio-dept-label"></div>
       </div>
-      <button class="bio-close" onclick="closeBio()">✕</button>
+      <button class="bio-close" onclick="closeBio()">âœ•</button>
     </div>
     <div class="bio-body">
       <div class="bio-main">
@@ -1108,31 +998,31 @@
 </div>
 
 <script>
-// ── BIOGRAPHY DATA — Edit text here ───────────────────────────────
+// â”€â”€ BIOGRAPHY DATA â€” Edit text here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BIOS = {
   gunner:{
-    rank:'Commissioner · Highest Rank',name:'Andrew Gunner',dept:'San Andreas State Trooper',
-    badge:'SAST · Commissioner',initials:'AG',img:'images/SAST_Gunner1.jpg',
+    rank:'Commissioner Â· Highest Rank',name:'Andrew Gunner',dept:'San Andreas State Trooper',
+    badge:'SAST Â· Commissioner',initials:'AG',img:'images/SAST_Gunner1.jpg',
     bio1:'Commissioner Andrew Gunner serves as the supreme commanding officer of all law enforcement agencies operating within the State of San Andreas, including the San Andreas State Trooper, the Los Santos County Sheriff\'s Office, and the Los Santos Police Department. He holds ultimate strategic authority over the Central Investigation Bureau and its sub-divisions.',
     bio2:'Commissioner Gunner is known for his uncompromising stance on organized crime and his instrumental role in the formation of the CIB as a dedicated intelligence and investigation division within the SAPD structure. Under his directive, the Bureau has significantly expanded its operational capacity since its founding in 2026.',
-    service:[{year:'2026 – Present',role:'Commissioner, San Andreas State Trooper'},{year:'2024 – 2026',role:'Deputy Commissioner, SAST'},{year:'2020 – 2024',role:'Director of State Law Enforcement Operations'},{year:'2015 – 2020',role:'Senior Commander, SAST Northern Division'}],
-    info:[{lbl:'Full Name',val:'Andrew Gunner'},{lbl:'Rank',val:'Commissioner'},{lbl:'Department',val:'San Andreas State Trooper'},{lbl:'Authority',val:'Statewide — Supreme Command'},{lbl:'Jurisdiction',val:'State of San Andreas'},{lbl:'CIB Relation',val:'Direct Oversight'},{lbl:'Status',val:'Active Duty'}]
+    service:[{year:'2026 â€“ Present',role:'Commissioner, San Andreas State Trooper'},{year:'2024 â€“ 2026',role:'Deputy Commissioner, SAST'},{year:'2020 â€“ 2024',role:'Director of State Law Enforcement Operations'},{year:'2015 â€“ 2020',role:'Senior Commander, SAST Northern Division'}],
+    info:[{lbl:'Full Name',val:'Andrew Gunner'},{lbl:'Rank',val:'Commissioner'},{lbl:'Department',val:'San Andreas State Trooper'},{lbl:'Authority',val:'Statewide â€” Supreme Command'},{lbl:'Jurisdiction',val:'State of San Andreas'},{lbl:'CIB Relation',val:'Direct Oversight'},{lbl:'Status',val:'Active Duty'}]
   },
   wesley:{
-    rank:'Sheriff · County Commander',name:'Kevin Wesley',dept:'Los Santos County Sheriff\'s Office',
-    badge:'LCSO · Sheriff',initials:'KW',img:'images/LSCS_Kevin1.jpg',
+    rank:'Sheriff Â· County Commander',name:'Kevin Wesley',dept:'Los Santos County Sheriff\'s Office',
+    badge:'LCSO Â· Sheriff',initials:'KW',img:'images/LSCS_Kevin1.jpg',
     bio1:'Sheriff Kevin Wesley commands the Los Santos County Sheriff\'s Office, overseeing law enforcement operations across Los Santos County and Blaine County. He is responsible for county-wide civil authority, rural law enforcement, and coordination with state and city departments on joint operations.',
-    bio2:'Sheriff Wesley has been a longstanding partner of the Central Investigation Bureau, providing jurisdictional support across Blaine County regions and rural San Andreas — areas critical to CIB Gang Recon Division field operations targeting narcotics routes and gang activity outside city limits.',
-    service:[{year:'2023 – Present',role:'Sheriff, Los Santos County Sheriff\'s Office'},{year:'2019 – 2023',role:'Undersheriff, LCSO'},{year:'2014 – 2019',role:'Captain, LCSO Blaine County Division'},{year:'2009 – 2014',role:'Lieutenant, LCSO Patrol Division'}],
-    info:[{lbl:'Full Name',val:'Kevin Wesley'},{lbl:'Rank',val:'Sheriff'},{lbl:'Department',val:'Los Santos County Sheriff'},{lbl:'Authority',val:'County-Wide · Civil Command'},{lbl:'Jurisdiction',val:'LS County · Blaine County'},{lbl:'CIB Relation',val:'CID Partner · Field Support'},{lbl:'Status',val:'Active Duty'}]
+    bio2:'Sheriff Wesley has been a longstanding partner of the Central Investigation Bureau, providing jurisdictional support across Blaine County regions and rural San Andreas â€” areas critical to CIB Gang Recon Division field operations targeting narcotics routes and gang activity outside city limits.',
+    service:[{year:'2023 â€“ Present',role:'Sheriff, Los Santos County Sheriff\'s Office'},{year:'2019 â€“ 2023',role:'Undersheriff, LCSO'},{year:'2014 â€“ 2019',role:'Captain, LCSO Blaine County Division'},{year:'2009 â€“ 2014',role:'Lieutenant, LCSO Patrol Division'}],
+    info:[{lbl:'Full Name',val:'Kevin Wesley'},{lbl:'Rank',val:'Sheriff'},{lbl:'Department',val:'Los Santos County Sheriff'},{lbl:'Authority',val:'County-Wide Â· Civil Command'},{lbl:'Jurisdiction',val:'LS County Â· Blaine County'},{lbl:'CIB Relation',val:'CID Partner Â· Field Support'},{lbl:'Status',val:'Active Duty'}]
   },
   osborne:{
-    rank:'Chief of Police · City Command',name:'Luke Osborne',dept:'Los Santos Police Department',
-    badge:'LSPD · Chief of Police',initials:'LO',img:'images/LSPD_Luke1.jpg',
+    rank:'Chief of Police Â· City Command',name:'Luke Osborne',dept:'Los Santos Police Department',
+    badge:'LSPD Â· Chief of Police',initials:'LO',img:'images/LSPD_Luke1.jpg',
     bio1:'Chief of Police Luke Osborne commands the Los Santos Police Department, the primary metropolitan law enforcement body for the City of Los Santos. His jurisdiction encompasses all LSPD precincts, specialized units, and tactical divisions operating within city limits, including SWAT, Narcotics, and the Homicide Division.',
     bio2:'Chief Osborne has been a strong institutional supporter of the CIB since its establishment, facilitating inter-agency cooperation between LSPD units and CIB detectives during joint investigations and emergency response situations. He has publicly championed intelligence-led policing as the future of urban law enforcement in San Andreas.',
-    service:[{year:'2022 – Present',role:'Chief of Police, LSPD'},{year:'2018 – 2022',role:'Assistant Chief, LSPD'},{year:'2013 – 2018',role:'Commander, LSPD Organized Crime Division'},{year:'2007 – 2013',role:'Captain, LSPD Central Division'}],
-    info:[{lbl:'Full Name',val:'Luke Osborne'},{lbl:'Rank',val:'Chief of Police'},{lbl:'Department',val:'Los Santos Police Department'},{lbl:'Authority',val:'Metropolitan · City Command'},{lbl:'Jurisdiction',val:'City of Los Santos'},{lbl:'CIB Relation',val:'CIB Partner · Joint Operations'},{lbl:'Status',val:'Active Duty'}]
+    service:[{year:'2022 â€“ Present',role:'Chief of Police, LSPD'},{year:'2018 â€“ 2022',role:'Assistant Chief, LSPD'},{year:'2013 â€“ 2018',role:'Commander, LSPD Organized Crime Division'},{year:'2007 â€“ 2013',role:'Captain, LSPD Central Division'}],
+    info:[{lbl:'Full Name',val:'Luke Osborne'},{lbl:'Rank',val:'Chief of Police'},{lbl:'Department',val:'Los Santos Police Department'},{lbl:'Authority',val:'Metropolitan Â· City Command'},{lbl:'Jurisdiction',val:'City of Los Santos'},{lbl:'CIB Relation',val:'CIB Partner Â· Joint Operations'},{lbl:'Status',val:'Active Duty'}]
   }
 };
 
@@ -1178,3 +1068,5 @@ window.addEventListener('DOMContentLoaded',()=>{ spawnParticles(); });
 
 </body>
 </html>
+
+

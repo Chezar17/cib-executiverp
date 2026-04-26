@@ -9,32 +9,20 @@
 //  DELETE /api/informants?id=xxx → delete informant
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY
-
-function getSupabase() {
-  return createClient(SUPABASE_URL, SUPABASE_KEY)
-}
-
-// ── Simple session check (reuse your existing token system) ──
-function isAuthorized(req) {
-  const token = req.headers['x-session-token']
-  // You can make this more strict — for now just checks it exists
-  return !!token
-}
+import { allowMethods } from './_lib/http.js'
+import { requireSession } from './_lib/session.js'
+import { getSupabase } from './_lib/supabase.js'
 
 export default async function handler(req, res) {
 
-  // Block if not logged in
-  if (!isAuthorized(req)) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
+  const session = await requireSession(req, res)
+  if (!session) return
 
   const supabase = getSupabase()
 
   try {
+    if (!allowMethods(req, res, ['GET', 'POST', 'PUT', 'DELETE'])) return
+
 
     // ── GET: Load all informants (exclude soft-deleted) ────────
     if (req.method === 'GET') {
@@ -91,7 +79,7 @@ export default async function handler(req, res) {
     //  A permanent log entry is written to deletion_logs.
     if (req.method === 'DELETE') {
       const { id } = req.query
-      const { deleted_by, reason } = req.body || {}
+      const { reason } = req.body || {}
 
       if (!id) {
         return res.status(400).json({ error: 'ID is required for delete' })
@@ -123,7 +111,7 @@ export default async function handler(req, res) {
           informant_id:   inf?.id   || null,
           informant_code: inf?.code || null,
           informant_name: inf?.name || null,
-          deleted_by:     deleted_by || 'Unknown',
+          deleted_by:     session.badge,
           reason:         reason || null
         }])
 

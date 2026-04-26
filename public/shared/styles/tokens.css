@@ -1,0 +1,13 @@
+:root {
+  --gold:         #C9A84C;
+  --gold-light:   #E8C97A;
+  --navy:         #0A0F1E;
+  --navy-mid:     #0D1526;
+  --navy-card:    #111827;
+  --navy-border:  #1E2D4A;
+  --white:        #F0EDE4;
+  --muted:        #8A95AA;
+  --red-alert:    #C0392B;
+  --green:        #27AE60;
+  --orange:       #E05A28;
+}

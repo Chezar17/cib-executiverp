@@ -18,15 +18,16 @@
 //
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
-
-const SUPABASE_URL   = process.env.SUPABASE_URL
-const SUPABASE_KEY   = process.env.SUPABASE_ANON_KEY
-const SESSION_SECRET = process.env.SESSION_SECRET
-
-// ── YOUR VERCEL DOMAIN — change this to your real URL ────────
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://your-app.vercel.app'
+import { SESSION_SECRET } from './_lib/config.js'
+import {
+  allowMethods,
+  applyCors,
+  getClientIp,
+  handlePreflight,
+  rejectForeignOrigin,
+} from './_lib/http.js'
+import { getSupabase } from './_lib/supabase.js'
 
 const MAX_ATTEMPTS   = 5          // max failed logins before lockout
 const LOCKOUT_MINS   = 5          // how long the lockout lasts
@@ -44,29 +45,15 @@ function generateToken(badge) {
 export default async function handler(req, res) {
 
   // ── CORS — only allow requests from your own domain ────────
-  const origin = req.headers.origin || ''
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
-
-  // ── CSRF — reject if request comes from a foreign origin ───
-  if (origin && origin !== ALLOWED_ORIGIN) {
-    return res.status(403).json({ error: 'Forbidden' })
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  applyCors(res, { methods: 'POST, OPTIONS', headers: 'Content-Type' })
+  if (handlePreflight(req, res)) return
+  if (rejectForeignOrigin(req, res)) return
+  if (!allowMethods(req, res, ['POST'])) return
 
   // ── Get client IP ─────────────────────────────────────────
-  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown')
-               .split(',')[0].trim()
+  const ip = getClientIp(req)
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+  const supabase = getSupabase()
 
   try {
     const { badge, password } = req.body
@@ -122,13 +109,20 @@ export default async function handler(req, res) {
     const expiresAt = new Date(Date.now() + SESSION_MINS * 60 * 1000)
 
     // Save token to Supabase sessions table
-    await supabase
+    const { error: sessionErr } = await supabase
       .from('sessions')
       .insert([{
         token,
         badge:      user.badge,
         expires_at: expiresAt.toISOString()
       }])
+
+    if (sessionErr) {
+      console.error('Session insert error:', sessionErr)
+      return res.status(500).json({
+        error: 'Failed to create session. Make sure the "sessions" table exists in Supabase.'
+      })
+    }
 
     // Clear old failed attempts for this IP on successful login
     await supabase
