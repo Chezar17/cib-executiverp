@@ -1,3 +1,72 @@
+/* ── PAGE HERO — restored from original, overrides shared/styles/sections.css ── */
+.page-hero{
+  position:relative;
+  padding:72px 40px 60px;
+  overflow:hidden;
+  border-bottom:1px solid var(--navy-border);
+  text-align:left;        /* shared stylesheet centres this — force left */
+}
+.page-hero-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,#0D1A35 0%,var(--navy) 65%);
+  z-index:0;
+}
+.page-hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  z-index:0;
+}
+/* Left gold accent bar — the 4px vertical stripe on the left edge */
+.page-hero-accent{
+  position:absolute;top:0;left:0;
+  width:4px;height:100%;
+  background:var(--gold);
+  z-index:1;
+}
+.page-hero-content{
+  position:relative;z-index:2;
+  max-width:1100px;
+  margin:0 auto;          /* horizontally centres the content column */
+  text-align:left;        /* but text itself stays left-aligned */
+}
+.breadcrumb{
+  font-family:'Roboto Mono',monospace;font-size:10px;
+  letter-spacing:3px;color:var(--muted);text-transform:uppercase;
+  margin-bottom:20px;
+  text-align:left;
+}
+.breadcrumb span{color:var(--gold);}
+.page-hero-eyebrow{
+  font-family:'Roboto Mono',monospace;font-size:10px;
+  letter-spacing:4px;color:var(--gold);text-transform:uppercase;
+  margin-bottom:12px;opacity:0.8;
+  text-align:left;
+}
+/* h1 sizing — shared stylesheet may override font-size; this restores it */
+.page-hero h1{
+  font-family:'Oswald',sans-serif;
+  font-size:clamp(28px,5vw,56px);
+  font-weight:700;letter-spacing:6px;text-transform:uppercase;
+  color:var(--white);line-height:1.1;margin-bottom:16px;
+  text-align:left;
+}
+.page-hero-line{
+  width:80px;height:2px;
+  background:var(--gold);
+  margin-bottom:20px;
+  /* do NOT use margin:auto — keeps it left-aligned */
+}
+.page-hero-desc{
+  font-size:14px;color:var(--muted);
+  max-width:560px;line-height:1.8;letter-spacing:0.5px;
+  text-align:left;
+  margin-left:0;   /* shared stylesheet may add auto margins */
+  margin-right:0;
+}
+
 .doc-ref{margin-top:24px;display:inline-flex;align-items:center;gap:10px;border:1px solid var(--navy-border);padding:8px 16px;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;}
   .doc-ref-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
 
