@@ -58,30 +58,20 @@
 //  Run: UPDATE storage.buckets SET public = true WHERE name = 'hvc-photos';
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js'
+import { allowMethods } from './_lib/http.js'
+import { requireSession } from './_lib/session.js'
+import { getSupabase } from './_lib/supabase.js'
 
-const SUPABASE_URL     = process.env.SUPABASE_URL
-const SUPABASE_KEY     = process.env.SUPABASE_ANON_KEY
 const PHOTO_BUCKET     = 'hvc-photos'
 const TABLE            = 'high_value_criminals'
 const AUDIT_TABLE      = 'hvc_audit_log'
 
-function getSupabase() {
-  return createClient(SUPABASE_URL, SUPABASE_KEY)
-}
-
-// ── Session check ─────────────────────────────────────────────
-function isAuthorized(req) {
-  const token = req.headers['x-session-token']
-  return !!token
-}
-
 // ── Get badge/identity from session (for audit log) ──────────
-function getActor(req) {
+function getActor(req, session) {
   // The token itself is the session token; for the audit log we rely
   // on the caller passing their badge via a custom header, or fall back
   // to parsing from the token if you later embed it there.
-  return req.headers['x-actor'] || req.body?.performed_by || 'Unknown'
+  return req.headers['x-actor'] || req.body?.performed_by || session?.badge || 'Unknown'
 }
 
 // ── Upload base64 photo to Supabase Storage ───────────────────
@@ -153,14 +143,15 @@ function computeDiff(oldRecord, newRecord) {
 // ══════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
 
-  if (!isAuthorized(req)) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
+  const session = await requireSession(req, res)
+  if (!session) return
 
   const supabase = getSupabase()
-  const actor    = getActor(req)
+  const actor    = getActor(req, session)
 
   try {
+    if (!allowMethods(req, res, ['GET', 'POST', 'PUT', 'DELETE'])) return
+
 
     // ── GET: Load all active HVC records ─────────────────────
     if (req.method === 'GET') {

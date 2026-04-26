@@ -1,0 +1,31 @@
+:root {
+  /* ── Core palette ─────────────────────────────────────────── */
+  --gold:         #C9A84C;
+  --gold-light:   #E8C97A;
+  --navy:         #0A0F1E;
+  --navy-mid:     #0D1526;
+  --navy-card:    #111827;
+  --navy-border:  #1E2D4A;
+  --white:        #F0EDE4;
+  --muted:        #8A95AA;
+  --red-alert:    #C0392B;
+  --red-dim:      rgba(192, 57, 43, 0.08);
+  --green:        #27AE60;
+  --orange:       #E05A28;
+
+  /* ── Threat level colours ─────────────────────────────────── */
+  --threat-critical: #C0392B;
+  --threat-high:     #E05A28;
+  --threat-medium:   #C9A84C;
+  --threat-low:      #27AE60;
+  --threat-dormant:  #8A95AA;
+
+  /* ── Portal accent ────────────────────────────────────────── */
+  --finance-light: #2ECC71;
+  --cid-accent:    #4A90D9;
+
+  /* ── Department colours (Our Leaders page) ───────────────── */
+  --sast: #4B8B3B;
+  --lcso: #A07850;
+  --lspd: #1E3A5F;
+}

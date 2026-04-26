@@ -6,45 +6,19 @@
 //  POST /api/finance-balance        → set/update main balance (Top Secret only)
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY
-
-function getSupabase() {
-  return createClient(SUPABASE_URL, SUPABASE_KEY)
-}
-
-// ── Verify token and return session badge + classification ────
-async function getSession(req) {
-  const token = req.headers['x-session-token']
-  if (!token) return null
-  const supabase = getSupabase()
-  const { data } = await supabase
-    .from('sessions')
-    .select('badge, expires_at')
-    .eq('token', token)
-    .single()
-  if (!data) return null
-  if (new Date(data.expires_at) < new Date()) return null
-
-  // Get classification from users table
-  const { data: user } = await supabase
-    .from('users')
-    .select('classification')
-    .eq('badge', data.badge)
-    .single()
-
-  return { badge: data.badge, classification: user?.classification || null }
-}
+import { allowMethods } from './_lib/http.js'
+import { requireSession } from './_lib/session.js'
+import { getSupabase } from './_lib/supabase.js'
 
 export default async function handler(req, res) {
-  const session = await getSession(req)
-  if (!session) return res.status(401).json({ error: 'Unauthorized' })
+  const session = await requireSession(req, res)
+  if (!session) return
 
   const supabase = getSupabase()
 
   try {
+    if (!allowMethods(req, res, ['GET', 'POST'])) return
+
     // ── GET: Return current main balance ─────────────────────
     if (req.method === 'GET') {
       const { data, error } = await supabase

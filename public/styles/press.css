@@ -1,0 +1,80 @@
+/* LAYOUT */
+  .press-wrap{max-width:1300px;margin:0 auto;padding:56px 40px;}
+  .press-layout{display:grid;grid-template-columns:1fr 300px;gap:48px;}
+
+  /* SECTION LABELS */
+  .section-block{margin-bottom:64px;}
+  .section-label-bar{display:flex;align-items:center;gap:16px;margin-bottom:32px;}
+  .section-label-bar::after{content:'';flex:1;height:1px;background:var(--navy-border);}
+  .section-label{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .section-label-icon{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .main-icon{background:var(--red-alert);box-shadow:0 0 10px rgba(192,57,43,0.7);}
+  .sub-icon{background:var(--gold);box-shadow:0 0 8px rgba(201,168,76,0.4);}
+  .section-label-text{font-family:'Oswald',sans-serif;font-size:28px;letter-spacing:5px;text-transform:uppercase;color:var(--white);}
+  .section-label-sub{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+
+  /* SHARED CARD PARTS */
+  .pr-img-wrap{position:relative;background:#080D1A;border-bottom:1px solid var(--navy-border);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .pr-img-wrap img{width:100%;object-fit:cover;display:block;}
+  .pr-img-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;width:100%;}
+  .pr-img-placeholder svg{width:32px;height:32px;fill:var(--navy-border);}
+  .pr-img-placeholder span{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--navy-border);text-transform:uppercase;}
+  .pr-img-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:12px 18px;}
+  .pr-img-caption{font-family:'Roboto Mono',monospace;font-size:10px;color:rgba(240,237,228,0.5);letter-spacing:1px;}
+
+  .pr-meta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .pr-number{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.55;}
+  .pr-urgency{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:3px 10px;text-transform:uppercase;background:rgba(192,57,43,0.15);color:var(--red-alert);border:1px solid rgba(192,57,43,0.4);}
+  .pr-category{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:3px 10px;text-transform:uppercase;}
+  .cat-official{background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
+  .cat-operation{background:rgba(39,174,96,0.1);color:#27AE60;border:1px solid rgba(39,174,96,0.3);}
+  .cat-advisory{background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);}
+  .cat-personnel{background:rgba(52,152,219,0.1);color:#3498DB;border:1px solid rgba(52,152,219,0.3);}
+  .pr-date{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto;}
+  .pr-text{font-size:13px;color:var(--muted);line-height:1.9;}
+  .pr-text p{margin-bottom:10px;}
+  .pr-text p:last-child{margin-bottom:0;}
+  .pr-.pr-division-tag{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;opacity:0.7;}
+  .pr-issued{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--muted);opacity:0.5;}
+
+  /* =====================================================
+     MAIN HEADLINE CARDS â€” Full width, high prominence
+     ===================================================== */
+  .main-pr-list{display:flex;flex-direction:column;gap:32px;}
+  .pr-card-main{background:var(--navy-card);border:1px solid var(--navy-border);border-left:4px solid var(--red-alert);overflow:hidden;}
+  .pr-card-main .pr-img-wrap{min-height:260px;}
+  .pr-card-main .pr-img-wrap img{height:280px;}
+  .pr-card-main .pr-body{padding:28px 32px;}
+  .pr-card-main .pr-title{font-family:'Oswald',sans-serif;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:12px;line-height:1.3;}
+  .pr-card-main .pr-divider{width:44px;height:2px;background:var(--red-alert);opacity:0.5;margin-bottom:16px;}
+
+  /* =====================================================
+     SUB HEADLINE CARDS â€” Compact 2-column grid
+     ===================================================== */
+  .sub-pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .pr-card-sub{background:var(--navy-card);border:1px solid var(--navy-border);border-left:3px solid var(--gold);overflow:hidden;}
+  .pr-card-sub .pr-img-wrap{min-height:160px;}
+  .pr-card-sub .pr-img-wrap img{height:170px;}
+  .pr-card-sub .pr-body{padding:20px 22px;}
+  .pr-card-sub .pr-title{font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:10px;line-height:1.35;}
+  .pr-card-sub .pr-divider{width:32px;height:1px;background:var(--gold);opacity:0.4;margin-bottom:12px;}
+  .pr-card-sub .pr-text{font-size:12px;}
+
+  /* SIDEBAR */
+  .sidebar{display:flex;flex-direction:column;gap:24px;padding-top:4px;}
+  .sidebar-card{background:var(--navy-card);border:1px solid var(--navy-border);padding:22px;}
+  .sidebar-title{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--navy-border);}
+  .contact-row{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;}
+  .contact-row span{color:var(--gold-light);}
+
+  @media(max-width:960px){
+    .press-layout{grid-template-columns:1fr;}
+    .sub-pr-grid{grid-template-columns:1fr;}
+    nav{padding:0 16px;}
+    .nav-links{display:none;}
+    .press-wrap{padding:40px 20px;}
+    .page-hero{padding:48px 20px 40px;}
+    footer{padding:32px 20px 20px;}
+    .pr-card-main .pr-body{padding:22px 20px;}
+    .section-label-text{font-size:22px;}
+  }

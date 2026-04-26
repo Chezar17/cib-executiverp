@@ -1,497 +1,32 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="images/cib-logo.png" type="image/png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Our Mission — Central Investigation Bureau</title>
+<title>Our Mission â€” Central Investigation Bureau</title>
+<link rel="icon" href="images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --navy:#0A0F1E;
-    --navy-mid:#0D1526;
-    --navy-card:#111827;
-    --navy-border:#1E2D4A;
-    --white:#F0EDE4;
-    --muted:#8A95AA;
-    --red-alert:#C0392B;
-    --cid:#1A3A5C;
-    --grd:#1A2E1A;
-  }
-  body{background:var(--navy);color:var(--white);font-family:'Roboto',sans-serif;overflow-x:hidden;}
+<link rel="stylesheet" href="shared/styles/tokens.css"/>
+<link rel="stylesheet" href="shared/styles/base.css"/>
+<link rel="stylesheet" href="shared/styles/sections.css"/>
+<link rel="stylesheet" href="shared/styles/footer.css"/>
+<link rel="stylesheet" href="shared/styles/site-header.css"/>
 
-  /* ── PAGE TRANSITION ── */
-  body{opacity:0;transition:opacity 0.4s ease;}
-  body.page-visible{opacity:1;}
 
-  /* ── SCROLL REVEAL ── */
-  .reveal{opacity:0;transform:translateY(36px);transition:opacity 0.7s ease,transform 0.7s ease;}
-  .reveal.visible{opacity:1;transform:translateY(0);}
-  .reveal-left{opacity:0;transform:translateX(-48px);transition:opacity 0.7s ease,transform 0.7s ease;}
-  .reveal-left.visible{opacity:1;transform:translateX(0);}
-  .reveal-right{opacity:0;transform:translateX(48px);transition:opacity 0.7s ease,transform 0.7s ease;}
-  .reveal-right.visible{opacity:1;transform:translateX(0);}
-  .reveal-delay-1{transition-delay:0.1s;}
-  .reveal-delay-2{transition-delay:0.2s;}
-  .reveal-delay-3{transition-delay:0.3s;}
-  .reveal-delay-4{transition-delay:0.4s;}
-  .reveal-delay-5{transition-delay:0.5s;}
-
-  /* ── NAV ── */
-  nav{background:rgba(10,15,30,0.97);border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:100;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-brand{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
-  .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{color:var(--muted);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;font-family:'Oswald',sans-serif;transition:color 0.2s;}
-  .nav-links a:hover,.nav-links a.active{color:var(--gold);}
-  .nav-badge{background:var(--red-alert);color:#fff;font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:1px;font-family:'Roboto Mono',monospace;text-decoration:none;}
-
-  /* ── TICKER ── */
-  .ticker{background:#0D1526;border-bottom:1px solid var(--navy-border);overflow:hidden;height:32px;display:flex;align-items:center;}
-  .ticker-label{background:var(--gold);color:var(--navy);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
-  .ticker-track{display:flex;animation:ticker 35s linear infinite;white-space:nowrap;}
-  .ticker-track span{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);padding:0 40px;}
-  .ticker-track span b{color:var(--gold-light);}
-  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  /* ── PAGE HERO ── */
-  .page-hero{
-    position:relative;
-    min-height:52vh;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:80px 40px 60px;
-    overflow:hidden;
-  }
-  .page-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#0D1A35 0%,var(--navy) 70%);z-index:0;}
-  .page-hero-grid{
-    position:absolute;inset:0;
-    background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);
-    background-size:60px 60px;z-index:0;
-  }
-  /* Animated scan line */
-  .page-hero-scan{
-    position:absolute;top:0;left:0;width:100%;height:2px;
-    background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5),transparent);
-    animation:scanLine 4s ease-in-out infinite;z-index:1;
-  }
-  @keyframes scanLine{0%{top:0;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:100%;opacity:0;}}
-
-  .page-hero-content{position:relative;z-index:2;}
-  .page-hero-eyebrow{
-    font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:5px;
-    color:var(--gold);text-transform:uppercase;margin-bottom:16px;opacity:0.8;
-  }
-  .page-hero h1{
-    font-family:'Oswald',sans-serif;
-    font-size:clamp(30px,6vw,60px);
-    font-weight:700;letter-spacing:6px;text-transform:uppercase;
-    color:var(--white);line-height:1.1;margin-bottom:10px;
-  }
-  .page-hero-sub{
-    font-family:'Oswald',sans-serif;font-size:clamp(11px,2vw,15px);
-    letter-spacing:6px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;
-  }
-  .page-hero-divider{width:80px;height:1px;background:var(--gold);margin:20px auto;opacity:0.5;}
-  .page-hero-desc{
-    font-size:14px;color:var(--muted);max-width:640px;line-height:1.8;letter-spacing:0.5px;
-  }
-
-  /* ── BREADCRUMB ── */
-  .breadcrumb{
-    background:var(--navy-mid);border-bottom:1px solid var(--navy-border);
-    padding:10px 40px;display:flex;align-items:center;gap:10px;
-    font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);
-  }
-  .breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
-  .breadcrumb a:hover{color:var(--gold);}
-  .breadcrumb-sep{color:var(--gold);opacity:0.4;}
-  .breadcrumb-current{color:var(--gold);}
-
-  /* ── MANDATE BANNER ── */
-  .mandate-banner{
-    background:linear-gradient(135deg,#0B1628 0%,#0D1F3C 100%);
-    border-top:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);
-    padding:48px 40px;
-    display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;
-    max-width:1100px;margin:0 auto;
-  }
-  .mandate-item{padding:0 40px;text-align:center;}
-  .mandate-divider{background:var(--navy-border);}
-  .mandate-icon{
-    width:48px;height:48px;border:1px solid rgba(201,168,76,0.3);
-    display:flex;align-items:center;justify-content:center;
-    margin:0 auto 16px;
-  }
-  .mandate-icon svg{width:22px;height:22px;fill:var(--gold);}
-  .mandate-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
-  .mandate-title{font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:8px;}
-  .mandate-desc{font-size:12px;color:var(--muted);line-height:1.7;}
-
-  /* ── SECTION SHARED ── */
-  .section-eyebrow{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
-  .section-title{font-family:'Oswald',sans-serif;font-size:clamp(22px,4vw,36px);letter-spacing:4px;text-transform:uppercase;color:var(--white);}
-  .section-line{width:60px;height:2px;background:var(--gold);margin:16px 0 0;}
-  .section-line-center{margin:16px auto 0;}
-
-  /* ── DIVISION HERO BANDS ── */
-  .div-band{
-    padding:80px 40px;
-    position:relative;overflow:hidden;
-  }
-  .div-band-cid{background:linear-gradient(135deg,#070D1C 0%,#0A1628 50%,#060C1B 100%);}
-  .div-band-grd{background:linear-gradient(135deg,#0D0E08 0%,#14120A 50%,#0A0C07 100%);}
-
-  /* Animated background grid for each band */
-  .div-band-grid{
-    position:absolute;inset:0;z-index:0;
-    background-size:48px 48px;
-  }
-  .div-band-cid .div-band-grid{
-    background-image:linear-gradient(rgba(30,100,200,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(30,100,200,0.04) 1px,transparent 1px);
-  }
-  .div-band-grd .div-band-grid{
-    background-image:linear-gradient(rgba(201,168,76,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.05) 1px,transparent 1px);
-  }
-  /* GRD gold radial glow */
-  .div-band-grd::before{
-    content:'';position:absolute;
-    top:-100px;right:-100px;
-    width:500px;height:500px;
-    background:radial-gradient(circle,rgba(201,168,76,0.07) 0%,transparent 70%);
-    z-index:0;pointer-events:none;
-  }
-
-  /* Accent corner decoration */
-  .div-band::after{
-    content:'';position:absolute;top:0;right:0;
-    width:300px;height:300px;z-index:0;
-    border-left:1px solid rgba(201,168,76,0.05);
-    border-bottom:1px solid rgba(201,168,76,0.05);
-  }
-
-  .div-band-inner{
-    position:relative;z-index:1;
-    max-width:1200px;margin:0 auto;
-    display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;
-  }
-  .div-band-inner.reverse{direction:rtl;}
-  .div-band-inner.reverse > *{direction:ltr;}
-
-  /* Division label strip */
-  .div-label-strip{
-    display:flex;align-items:center;gap:12px;margin-bottom:20px;
-  }
-  .div-label-strip-line{flex:1;height:1px;background:var(--navy-border);}
-  .div-label-strip-tag{
-    font-family:'Roboto Mono',monospace;font-size:9px;
-    letter-spacing:3px;color:var(--muted);text-transform:uppercase;white-space:nowrap;
-  }
-
-  .div-abbr-display{
-    font-family:'Oswald',sans-serif;font-size:clamp(52px,8vw,88px);
-    font-weight:700;letter-spacing:4px;line-height:1;
-    margin-bottom:8px;
-  }
-  .div-abbr-cid{color:rgba(30,120,220,0.12);-webkit-text-stroke:1px rgba(30,120,220,0.2);}
-  .div-abbr-grd{color:rgba(201,168,76,0.10);-webkit-text-stroke:1px rgba(201,168,76,0.25);}
-
-  .div-name-display{
-    font-family:'Oswald',sans-serif;font-size:clamp(20px,3vw,30px);
-    font-weight:700;letter-spacing:4px;text-transform:uppercase;
-    color:var(--white);margin-bottom:6px;
-  }
-  .div-tagline{
-    font-family:'Roboto Mono',monospace;font-size:11px;
-    letter-spacing:3px;font-style:italic;margin-bottom:24px;
-  }
-  .div-tagline-cid{color:rgba(30,120,220,0.7);}
-  .div-tagline-grd{color:var(--gold-light);opacity:0.8;}
-
-  .div-description{font-size:13px;color:var(--muted);line-height:1.85;margin-bottom:32px;}
-
-  /* Capability list */
-  .capability-list{display:flex;flex-direction:column;gap:12px;margin-bottom:36px;}
-  .capability-item{
-    display:flex;align-items:flex-start;gap:14px;
-    padding:14px 16px;
-    background:rgba(255,255,255,0.02);
-    border:1px solid var(--navy-border);
-    border-left:3px solid transparent;
-    transition:border-color 0.2s,background 0.2s,transform 0.2s;
-  }
-  .capability-item:hover{
-    background:rgba(255,255,255,0.04);
-    transform:translateX(4px);
-  }
-  .capability-item-grd:hover{
-    background:rgba(201,168,76,0.04);
-  }
-  .capability-item-cid{border-left-color:rgba(30,120,220,0.5);}
-  .capability-item-grd{border-left-color:rgba(201,168,76,0.55);}
-  .capability-num{
-    font-family:'Roboto Mono',monospace;font-size:10px;
-    letter-spacing:1px;flex-shrink:0;margin-top:1px;
-  }
-  .capability-num-cid{color:rgba(30,120,220,0.6);}
-  .capability-num-grd{color:var(--gold);opacity:0.8;}
-  .capability-text-title{
-    font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;
-    text-transform:uppercase;color:var(--white);margin-bottom:3px;
-  }
-  .capability-text-desc{font-size:11px;color:var(--muted);line-height:1.6;}
-
-  .div-cta{
-    display:inline-flex;align-items:center;gap:10px;
-    font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;
-    text-transform:uppercase;text-decoration:none;padding:10px 24px;
-    border:1px solid;transition:all 0.2s;font-weight:600;
-  }
-  .div-cta-cid{color:rgba(80,160,255,0.8);border-color:rgba(30,120,220,0.4);}
-  .div-cta-cid:hover{background:rgba(30,120,220,0.12);border-color:rgba(30,120,220,0.7);}
-  .div-cta-grd{color:var(--gold);border-color:rgba(201,168,76,0.4);}
-  .div-cta-grd:hover{background:rgba(201,168,76,0.1);border-color:var(--gold);}
-
-  /* ── DIVISION SEAL ── */
-  .div-seal-wrap{
-    display:flex;flex-direction:column;align-items:flex-start;gap:8px;
-    margin-bottom:28px;
-  }
-  .div-seal{
-    width:110px;height:110px;
-    border:1px solid;
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;position:relative;
-    background:rgba(255,255,255,0.02);
-    flex-shrink:0;
-  }
-  .div-seal-cid{border-color:rgba(30,120,220,0.3);box-shadow:0 0 20px rgba(30,120,220,0.08);}
-  .div-seal-grd{border-color:rgba(201,168,76,0.35);box-shadow:0 0 20px rgba(201,168,76,0.10);}
-  .div-seal img{width:100%;height:100%;object-fit:contain;padding:8px;}
-  .div-seal-placeholder{
-    width:100%;height:100%;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  }
-  .div-seal-placeholder svg{width:36px;height:36px;}
-  .div-seal-placeholder-cid svg{fill:rgba(30,120,220,0.18);}
-  .div-seal-placeholder-grd svg{fill:rgba(201,168,76,0.2);}
-  .div-seal-placeholder-label{
-    font-family:'Roboto Mono',monospace;font-size:7px;
-    letter-spacing:2px;text-transform:uppercase;text-align:center;padding:0 6px;
-  }
-  .div-seal-placeholder-cid .div-seal-placeholder-label{color:rgba(30,120,220,0.35);}
-  .div-seal-placeholder-grd .div-seal-placeholder-label{color:rgba(201,168,76,0.35);}
-  .div-seal-caption{
-    font-family:'Roboto Mono',monospace;font-size:8px;
-    letter-spacing:2px;text-transform:uppercase;
-  }
-  .div-seal-caption-cid{color:rgba(30,120,220,0.4);}
-  .div-seal-caption-grd{color:rgba(201,168,76,0.45);}
-
-  /* ── IMAGE PANEL ── */
-  .img-panel{display:flex;flex-direction:column;gap:16px;}
-  .img-main{
-    width:100%;aspect-ratio:16/10;
-    background:var(--navy-card);
-    border:1px solid var(--navy-border);
-    overflow:hidden;position:relative;
-  }
-  .img-main img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s;}
-  .img-main:hover img{transform:scale(1.03);}
-  .img-placeholder{
-    width:100%;height:100%;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
-    background:var(--navy-card);
-  }
-  .img-placeholder svg{width:40px;height:40px;fill:rgba(201,168,76,0.12);}
-  .img-placeholder-label{
-    font-family:'Roboto Mono',monospace;font-size:9px;
-    letter-spacing:3px;color:rgba(201,168,76,0.25);text-transform:uppercase;
-  }
-  .img-placeholder-hint{
-    font-size:10px;color:rgba(201,168,76,0.15);
-    font-family:'Roboto Mono',monospace;letter-spacing:1px;margin-top:2px;
-  }
-  /* How to replace label */
-  .img-how{
-    position:absolute;bottom:8px;right:8px;
-    background:rgba(10,15,30,0.7);
-    font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;
-    color:rgba(201,168,76,0.4);padding:4px 8px;
-    border:1px solid rgba(201,168,76,0.1);
-  }
-
-  .img-sub-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .img-sub{
-    width:100%;aspect-ratio:4/3;
-    background:var(--navy-card);border:1px solid var(--navy-border);
-    overflow:hidden;position:relative;
-  }
-  .img-sub img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s;}
-  .img-sub:hover img{transform:scale(1.04);}
-
-  /* Caption strip under images */
-  .img-caption{
-    font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;
-    color:var(--muted);opacity:0.5;text-align:right;padding-top:2px;
-  }
-
-  /* ── DIVIDER BETWEEN BANDS ── */
-  .band-divider{
-    height:1px;background:linear-gradient(90deg,transparent,var(--navy-border),transparent);
-  }
-
-  /* ── PROCESS SECTION ── */
-  .process-section{padding:80px 40px;background:var(--navy-mid);border-top:1px solid var(--navy-border);border-bottom:1px solid var(--navy-border);}
-  .process-inner{max-width:1100px;margin:0 auto;}
-  .process-header{text-align:center;margin-bottom:64px;}
-  .process-grid{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:0;
-    position:relative;
-  }
-  /* Connecting line behind steps */
-  .process-grid::before{
-    content:'';position:absolute;
-    top:36px;left:calc(12.5%);width:75%;height:1px;
-    background:linear-gradient(90deg,var(--gold),rgba(201,168,76,0.2));
-    z-index:0;
-  }
-  .process-step{padding:0 20px;text-align:center;position:relative;z-index:1;}
-  .process-num{
-    width:72px;height:72px;
-    border:1px solid var(--gold);
-    display:flex;align-items:center;justify-content:center;
-    margin:0 auto 20px;
-    background:var(--navy-mid);
-    font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;
-    color:var(--gold);letter-spacing:2px;
-    position:relative;
-    transition:background 0.3s;
-  }
-  .process-num::after{
-    content:'';position:absolute;inset:-4px;
-    border:1px solid rgba(201,168,76,0.15);
-  }
-  .process-step:hover .process-num{background:rgba(201,168,76,0.08);}
-  .process-step-label{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;opacity:0.7;}
-  .process-step-title{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:8px;}
-  .process-step-desc{font-size:11px;color:var(--muted);line-height:1.7;}
-
-  /* ── QUOTE BANNER ── */
-  .quote-banner{
-    padding:64px 40px;text-align:center;
-    background:var(--navy);
-    border-top:1px solid var(--navy-border);
-    border-bottom:1px solid var(--navy-border);
-    position:relative;overflow:hidden;
-  }
-  .quote-banner::before{
-    content:'"';
-    position:absolute;top:-20px;left:50%;transform:translateX(-50%);
-    font-family:'Oswald',sans-serif;font-size:300px;font-weight:700;
-    color:rgba(201,168,76,0.03);line-height:1;pointer-events:none;
-    user-select:none;
-  }
-  .quote-text{
-    font-family:'Oswald',sans-serif;
-    font-size:clamp(20px,4vw,36px);
-    font-weight:400;letter-spacing:4px;text-transform:uppercase;
-    color:var(--white);line-height:1.5;
-    max-width:800px;margin:0 auto 20px;
-    position:relative;z-index:1;
-  }
-  .quote-text em{color:var(--gold);font-style:normal;}
-  .quote-attr{
-    font-family:'Roboto Mono',monospace;font-size:10px;
-    letter-spacing:4px;color:var(--muted);text-transform:uppercase;
-    position:relative;z-index:1;
-  }
-  .quote-line{width:40px;height:1px;background:var(--gold);margin:16px auto;opacity:0.4;}
-
-  /* ── FOOTER ── */
-  footer{background:var(--navy-mid);border-top:1px solid var(--gold);padding:40px 40px 24px;}
-  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
-  .footer-brand img{height:50px;width:50px;object-fit:contain;margin-bottom:12px;}
-  .footer-brand p{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
-  .footer-brand small{font-size:11px;color:var(--muted);line-height:1.7;}
-  .footer-col h4{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
-  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
-  .footer-col ul li a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
-  .footer-col ul li a:hover{color:var(--gold);}
-  .footer-bottom{border-top:1px solid var(--navy-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
-  .footer-bottom p{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);}
-  .classified-stamp{border:2px solid var(--red-alert);color:var(--red-alert);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:4px 12px;transform:rotate(-2deg);display:inline-block;opacity:0.6;}
-
-  /* ── RESPONSIVE ── */
-  @media(max-width:900px){
-    .div-band-inner{grid-template-columns:1fr;gap:40px;}
-    .div-band-inner.reverse{direction:ltr;}
-    .mandate-banner{grid-template-columns:1fr;gap:32px;}
-    .mandate-divider{display:none;}
-    .process-grid{grid-template-columns:1fr 1fr;gap:32px;}
-    .process-grid::before{display:none;}
-    .footer-top{grid-template-columns:1fr 1fr;}
-  }
-  @media(max-width:600px){
-    nav{padding:0 16px;}
-    .nav-links{display:none;}
-    .page-hero{padding:60px 20px 40px;}
-    .div-band{padding:56px 20px;}
-    .process-section{padding:56px 20px;}
-    .img-sub-row{grid-template-columns:1fr;}
-    .process-grid{grid-template-columns:1fr;}
-    .breadcrumb{padding:10px 20px;}
-    .mandate-banner{padding:40px 20px;}
-    .mandate-item{padding:0 10px;}
-    .quote-banner{padding:48px 20px;}
-    footer{padding:32px 20px 20px;}
-    .footer-top{grid-template-columns:1fr;}
-  }
-</style>
+<link rel='stylesheet' href='shared/styles/site-header.css'/>
+<script type='module' src='shared/components/site-header.js'></script>
+<link rel="stylesheet" href="styles/mission.css"/>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
-  <a href="index.html" class="nav-logo">
-    <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="nav-brand">Central Investigation Bureau</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Page_About.html">About</a></li>
-    <li><a href="Page_OurMission.html">Our Mission</a></li>
-    <li><a href="Page_Divisions.html">Detectives</a></li>
-    <li><a href="Page_OurLeaders.html">Our Leaders</a></li>
-    <li><a href="Page_Wanted.html">Most Wanted</a></li>
-    <li><a href="Page_Press.html">Press Room</a></li>
-    <li><a href="Page_Recruitment.html">Recruitment</a></li>
-  </ul>
-  <a href="Page_Login.html" class="nav-badge">PERSONNEL LOGIN</a>
-</nav>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-label">LIVE ALERT</div>
-  <div style="overflow:hidden;flex:1;">
-    <div class="ticker-track">
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-      <span><b>ALERT:</b> Anyone who do Sells gun illegaly will arrested accordingly — The LEO Will watch you!</span>
-      <span><b>PRESS RELEASE:</b> CIB Commander commends all division to be aware of criminal activities at all time</span>
-      <span><b>BOLO:</b> Killer of Chief Ankoow Alrex still on the Loose, Be Aware!</span>  
-      <span><b>ADVISORY:</b> Increased Gang activity reported in East Side of Los Santos, residents advised to stay indoors</span>
-    </div>  
-  </div>
-</div>
+<div data-shared-site-header></div>
 
 <!-- BREADCRUMB -->
 <div class="breadcrumb">
   <a href="index.html">Home</a>
-  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-sep">â€º</span>
   <span class="breadcrumb-current">Our Mission</span>
 </div>
 
@@ -501,9 +36,9 @@
   <div class="page-hero-grid"></div>
   <div class="page-hero-scan"></div>
   <div class="page-hero-content">
-    <div class="page-hero-eyebrow reveal">CIB · Operational Mandate</div>
+    <div class="page-hero-eyebrow reveal">CIB Â· Operational Mandate</div>
     <h1 class="reveal reveal-delay-1">Our Mission</h1>
-    <div class="page-hero-sub reveal reveal-delay-2">What We Do · How We Do It</div>
+    <div class="page-hero-sub reveal reveal-delay-2">What We Do Â· How We Do It</div>
     <div class="page-hero-divider reveal reveal-delay-3"></div>
     <p class="page-hero-desc reveal reveal-delay-4">
       The Central Investigation Bureau operates two specialized divisions dedicated to dismantling organized crime and solving complex criminal cases across the State of San Andreas. This page outlines the operational scope, methods, and mandate of each division.
@@ -528,7 +63,7 @@
     </div>
     <div class="mandate-label">Pillar II</div>
     <div class="mandate-title">Investigate</div>
-    <div class="mandate-desc">Conducting thorough, evidence-based investigations into complex crimes — from homicide to financial fraud and gang networks.</div>
+    <div class="mandate-desc">Conducting thorough, evidence-based investigations into complex crimes â€” from homicide to financial fraud and gang networks.</div>
   </div>
   <div class="mandate-divider"></div>
   <div class="mandate-item reveal reveal-delay-4">
@@ -541,9 +76,9 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════
-     CID — CRIMINAL INVESTIGATION DIVISION
-══════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     CID â€” CRIMINAL INVESTIGATION DIVISION
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <section class="div-band div-band-cid">
   <div class="div-band-grid"></div>
   <div class="div-band-inner">
@@ -551,7 +86,7 @@
     <!-- LEFT: Text Content -->
     <div>
       <div class="div-label-strip reveal">
-        <div class="div-label-strip-tag">Sub-Division · Criminal Investigation</div>
+        <div class="div-label-strip-tag">Sub-Division Â· Criminal Investigation</div>
         <div class="div-label-strip-line"></div>
       </div>
 
@@ -559,12 +94,12 @@
       <div class="div-name-display reveal reveal-delay-1">Criminal Investigation Division</div>
 
       <!--
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         HOW TO ADD YOUR CID LOGO/SEAL
         1. Upload your logo to the images/ folder
         2. Delete the <div class="div-seal-placeholder"> block
         3. Replace with: <img src="images/YOUR-CID-LOGO.png" alt="CID Seal"/>
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
       -->
       <div class="div-seal-wrap reveal reveal-delay-1">
         <div class="div-seal div-seal-cid">
@@ -575,7 +110,7 @@
       <div class="div-tagline div-tagline-cid reveal reveal-delay-2">"The end justifies the means"</div>
 
       <p class="div-description reveal reveal-delay-2">
-        The Criminal Investigation Division is the backbone of CIB's prosecutorial power. CID agents handle the State's most complex and high-profile criminal cases — including organized crime networks, financial fraud, homicide, and major felonies. Every case is built meticulously from the ground up: from the first tip to the final courtroom verdict. CID does not act on assumption — it acts on proof.
+        The Criminal Investigation Division is the backbone of CIB's prosecutorial power. CID agents handle the State's most complex and high-profile criminal cases â€” including organized crime networks, financial fraud, homicide, and major felonies. Every case is built meticulously from the ground up: from the first tip to the final courtroom verdict. CID does not act on assumption â€” it acts on proof.
       </p>
 
       <div class="capability-list">
@@ -615,7 +150,7 @@
       </div>
 
       <a href="Page_Divisions.html" class="div-cta div-cta-cid reveal reveal-delay-5">
-        View Full Division Profile ›
+        View Full Division Profile â€º
       </a>
     </div>
 
@@ -623,12 +158,12 @@
     <div class="img-panel">
 
       <!--
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         HOW TO ADD YOUR IMAGE HERE (CID Main)
         1. Upload your image to the images/ folder
         2. Delete the <div class="img-placeholder"> block
         3. Replace with: <img src="images/YOUR-FILE.jpg" alt="CID Operations"/>
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
       -->
       <div class="img-main reveal reveal-right">
         <div class="img-placeholder">
@@ -639,10 +174,10 @@
       <div class="img-sub-row">
 
         <!--
-        ════════════════════════════
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HOW TO ADD IMAGE (CID Sub 1)
           Same process as above
-        ════════════════════════════
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         -->
         <div class="img-sub reveal reveal-right reveal-delay-2">
           <div class="img-placeholder">
@@ -651,10 +186,10 @@
         </div>
 
         <!--
-        ════════════════════════════
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HOW TO ADD IMAGE (CID Sub 2)
           Same process as above
-        ════════════════════════════
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         -->
         <div class="img-sub reveal reveal-right reveal-delay-3">
           <div class="img-placeholder">
@@ -663,7 +198,7 @@
         </div>
 
       </div>
-      <div class="img-caption reveal reveal-delay-4">CIB · CRIMINAL INVESTIGATION DIVISION · CLASSIFIED OPERATIONS</div>
+      <div class="img-caption reveal reveal-delay-4">CIB Â· CRIMINAL INVESTIGATION DIVISION Â· CLASSIFIED OPERATIONS</div>
     </div>
 
   </div>
@@ -671,9 +206,9 @@
 
 <div class="band-divider"></div>
 
-<!-- ══════════════════════════════════
-     GRD — GANG RECON DIVISION
-══════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     GRD â€” GANG RECON DIVISION
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <section class="div-band div-band-grd">
   <div class="div-band-grid"></div>
   <div class="div-band-inner reverse">
@@ -682,12 +217,12 @@
     <div class="img-panel">
 
       <!--
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         HOW TO ADD YOUR IMAGE HERE (GRD Main)
         1. Upload your image to the images/ folder
         2. Delete the <div class="img-placeholder"> block
         3. Replace with: <img src="images/YOUR-FILE.jpg" alt="GRD Operations"/>
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
       -->
       <div class="img-main reveal reveal-left">
         <div class="img-placeholder">
@@ -710,13 +245,13 @@
         </div>
 
       </div>
-      <div class="img-caption reveal reveal-delay-4">CIB · GANG RECON DIVISION · FIELD OPERATIONS</div>
+      <div class="img-caption reveal reveal-delay-4">CIB Â· GANG RECON DIVISION Â· FIELD OPERATIONS</div>
     </div>
 
     <!-- RIGHT: Text Content -->
     <div>
       <div class="div-label-strip reveal">
-        <div class="div-label-strip-tag">Sub-Division · Gang Reconnaissance</div>
+        <div class="div-label-strip-tag">Sub-Division Â· Gang Reconnaissance</div>
         <div class="div-label-strip-line"></div>
       </div>
 
@@ -724,12 +259,12 @@
       <div class="div-name-display reveal reveal-delay-1">Gang Recon Division</div>
 
       <!--
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         HOW TO ADD YOUR GRD LOGO/SEAL
         1. Upload your logo to the images/ folder
         2. Delete the <div class="div-seal-placeholder"> block
         3. Replace with: <img src="images/YOUR-GRD-LOGO.png" alt="GRD Seal"/>
-      ════════════════════════════════════════
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
       -->
       <div class="div-seal-wrap reveal reveal-delay-1">
         <div class="div-seal div-seal-grd">
@@ -740,7 +275,7 @@
       <div class="div-tagline div-tagline-grd reveal reveal-delay-2">"We see before they move"</div>
 
       <p class="div-description reveal reveal-delay-2">
-        The Gang Recon Division operates where conventional law enforcement cannot — deep within the neighborhoods, streets, and networks where organized gang activity thrives. GRD Detectives are trained in surveillance, undercover operations, and threat intelligence, embedding themselves within communities to identify, monitor, and disrupt criminal gangs before they can escalate into open violence. They are the CIB's eyes on the ground.
+        The Gang Recon Division operates where conventional law enforcement cannot â€” deep within the neighborhoods, streets, and networks where organized gang activity thrives. GRD Detectives are trained in surveillance, undercover operations, and threat intelligence, embedding themselves within communities to identify, monitor, and disrupt criminal gangs before they can escalate into open violence. They are the CIB's eyes on the ground.
       </p>
 
       <div class="capability-list">
@@ -780,14 +315,14 @@
       </div>
 
       <a href="Page_Divisions.html" class="div-cta div-cta-grd reveal reveal-delay-5">
-        View Full Division Profile ›
+        View Full Division Profile â€º
       </a>
     </div>
 
   </div>
 </section>
 
-<!-- HOW WE WORK — PROCESS -->
+<!-- HOW WE WORK â€” PROCESS -->
 <section class="process-section">
   <div class="process-inner">
     <div class="process-header">
@@ -836,82 +371,19 @@
     "Quietly. <em>Precisely.</em> And Decisively."
   </div>
   <div class="quote-line reveal"></div>
-  <div class="quote-attr reveal reveal-delay-2">Central Investigation Bureau · State of San Andreas · Est. 2026</div>
+  <div class="quote-attr reveal reveal-delay-2">Central Investigation Bureau Â· State of San Andreas Â· Est. 2026</div>
 </div>
 
 <!-- FOOTER -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-      <p>Central Investigation Bureau</p>
-      <small>A division of the San Andreas Law Enforcement Officer.<br>Serving and protecting the state of San Andreas.<br>All investigations are conducted under the jurisdiction<br>of the Law Enforcement and applicable federal statutes.</small>
-    </div>
-    <div class="footer-col">
-      <h4>Divisions</h4>
-      <ul>
-        <li><a href="Page_Divisions.html">Gang Recon Division</a></li>
-        <li><a href="Page_Divisions.html">Criminal Investigation</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Resources</h4>
-      <ul>
-        <li><a href="Page_Press.html">Press Room</a></li>
-        <li><a href="Page_Cases.html">Cases</a></li>
-        <li><a href="Page_Recruitment.html">Recruitment</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="index.html">CIB Headquarters</a></li>
-        <li><a href="Page_Press.html">Tip Hotline</a></li>
-        <li><a href="Page_Login.html">Personnel Login</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 Central Investigation Bureau — San Andreas Law Enforcement Officer. All Rights Reserved. This is a fictional organization in the world of Executive Roleplay.</p>
-    <div class="classified-stamp">EXECUTIVE RP</div>
-  </div>
-</footer>
+<div data-shared-footer></div>
+<script type="module" src="shared/components/site-footer.js"></script>
 
-<script>
-  // ── PAGE FADE IN ──
-  window.addEventListener('DOMContentLoaded', () => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('page-visible');
-    });
-    // Trigger reveals that are already in view on load
-    triggerReveal();
-  });
 
-  // ── SCROLL REVEAL ──
-  function triggerReveal() {
-    const elements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-    elements.forEach(el => observer.observe(el));
-  }
 
-  // ── PAGE FADE OUT ON NAVIGATE ──
-  document.querySelectorAll('a[href]').forEach(link => {
-    link.addEventListener('click', function(e) {
-      const href = this.getAttribute('href');
-      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto')) return;
-      e.preventDefault();
-      document.body.classList.remove('page-visible');
-      setTimeout(() => { window.location.href = href; }, 400);
-    });
-  });
-</script>
+<script src="shared/scripts/site-ui.js"></script>
 
+<script src="scripts/mission.js"></script>
 </body>
 </html>
+
+

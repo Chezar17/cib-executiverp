@@ -1,57 +1,47 @@
 {
   "version": 2,
   "public": false,
-
   "cleanUrls": true,
   "trailingSlash": false,
-  
+
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
+    { "src": "/api/(.*)",  "dest": "/api/$1"       },
+
+    { "src": "/",                "dest": "/public/index.html"           },
+    { "src": "/login",           "dest": "/public/Page_Login.html"      },
+    { "src": "/about",           "dest": "/public/Page_About.html"      },
+    { "src": "/mission",         "dest": "/public/Page_OurMission.html" },
+    { "src": "/divisions",       "dest": "/public/Page_Divisions.html"  },
+    { "src": "/leaders",         "dest": "/public/Page_OurLeaders.html" },
+    { "src": "/wanted",          "dest": "/public/Page_Wanted.html"     },
+    { "src": "/press",           "dest": "/public/Page_Press.html"      },
+    { "src": "/recruitment",     "dest": "/public/Page_Recruitment.html"},
+    { "src": "/nexus",           "dest": "/public/nexus.html"           },
+    { "src": "/portal",          "dest": "/public/Page_Nexus.html"      },
+    { "src": "/portal/gang",     "dest": "/public/gangintel/gang.html"  },
+    { "src": "/portal/informants","dest": "/public/informantregistry/informant.html" },
+    { "src": "/portal/targets",  "dest": "/public/targets/hvc.html"     },
+    { "src": "/portal/finance",  "dest": "/public/budget/finance.html"  },
+
+    { "src": "/(.*)", "dest": "/public/$1" }
   ],
+
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
+        { "key": "X-Frame-Options",        "value": "SAMEORIGIN"                  },
+        { "key": "X-Content-Type-Options", "value": "nosniff"                     },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" },
+        { "key": "X-XSS-Protection",       "value": "1; mode=block"               }
       ]
     },
     {
       "source": "/api/(.*)",
       "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "https://your-site.vercel.app"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "POST, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type"
-        }
+        { "key": "Access-Control-Allow-Origin",  "value": "https://your-site.vercel.app" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-session-token, x-actor" }
       ]
     }
   ]

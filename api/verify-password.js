@@ -9,27 +9,28 @@
 //  logged in. This is just a re-confirmation step.
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL   = process.env.SUPABASE_URL
-const SUPABASE_KEY   = process.env.SUPABASE_ANON_KEY
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://your-app.vercel.app'
+import {
+  allowMethods,
+  applyCors,
+  handlePreflight,
+  rejectForeignOrigin,
+} from './_lib/http.js'
+import { getSupabase } from './_lib/supabase.js'
 
 export default async function handler(req, res) {
 
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-session-token')
-
-  if (req.method === 'OPTIONS') return res.status(200).end()
+  applyCors(res, {
+    methods: 'POST, OPTIONS',
+    headers: 'Content-Type, x-session-token',
+  })
+  if (handlePreflight(req, res)) return
+  if (rejectForeignOrigin(req, res)) return
 
   // Must be logged in first
   const token = req.headers['x-session-token']
   if (!token) return res.status(401).json({ error: 'Unauthorized' })
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  if (!allowMethods(req, res, ['POST'])) return
 
   try {
     const { badge, passwordHash } = req.body
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Badge and password are required' })
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+    const supabase = getSupabase()
 
     // Check badge + hashed password match in users table
     const { data, error } = await supabase

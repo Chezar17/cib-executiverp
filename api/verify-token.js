@@ -9,30 +9,23 @@
 //  "Any user can set cib_auth=true in DevTools"
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL   = process.env.SUPABASE_URL
-const SUPABASE_KEY   = process.env.SUPABASE_ANON_KEY
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://your-app.vercel.app'
+import {
+  allowMethods,
+  applyCors,
+  handlePreflight,
+  rejectForeignOrigin,
+} from './_lib/http.js'
+import { getSupabase } from './_lib/supabase.js'
 
 export default async function handler(req, res) {
 
-  // ── CORS ───────────────────────────────────────────────────
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-session-token')
-
-  if (req.method === 'OPTIONS') return res.status(200).end()
-
-  // ── CSRF ───────────────────────────────────────────────────
-  const origin = req.headers.origin || ''
-  if (origin && origin !== ALLOWED_ORIGIN) {
-    return res.status(403).json({ error: 'Forbidden' })
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  applyCors(res, {
+    methods: 'GET, OPTIONS',
+    headers: 'Content-Type, x-session-token',
+  })
+  if (handlePreflight(req, res)) return
+  if (rejectForeignOrigin(req, res)) return
+  if (!allowMethods(req, res, ['GET'])) return
 
   // ── Get token from request header ──────────────────────────
   const token = req.headers['x-session-token']
@@ -42,7 +35,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+    const supabase = getSupabase()
 
     // Look up the token in the sessions table
     const { data: session, error } = await supabase
