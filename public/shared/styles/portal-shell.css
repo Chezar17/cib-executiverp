@@ -1,0 +1,223 @@
+/* ============================================================
+   portal-shell.css
+   Shared chrome for all NEXUS portal / sub-app pages.
+   Used by: nexus.html, hvc.html, finance.html,
+            gang.html, informant.html
+   ============================================================ */
+
+/* ── Access Gate ─────────────────────────────────────────── */
+#access-gate {
+  position: fixed;
+  inset: 0;
+  background: var(--navy);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+#access-gate.hidden { display: none; }
+
+.gate-logo {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.gate-logo img { width: 48px; height: 48px; object-fit: contain; }
+.gate-text {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.gate-bar {
+  width: 200px;
+  height: 2px;
+  background: var(--navy-border);
+  overflow: hidden;
+}
+.gate-progress {
+  height: 100%;
+  background: var(--gold);
+  animation: gateLoad 0.8s ease forwards;
+}
+@keyframes gateLoad { from { width: 0 } to { width: 100% } }
+
+/* ── Keyframes shared by portal pages ───────────────────── */
+@keyframes blink   { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+@keyframes ticker  { from { transform:translateX(0) } to { transform:translateX(-50%) } }
+
+/* ── Top Bar ─────────────────────────────────────────────── */
+.topbar {
+  background: #080C18;
+  border-bottom: 1px solid var(--gold);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-left  { display: flex; align-items: center; gap: 14px; }
+.topbar-logo  { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 6px rgba(201,168,76,0.4)); }
+.topbar-brand {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.topbar-divider { width: 1px; height: 20px; background: var(--navy-border); }
+.topbar-sub {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.topbar-right { display: flex; align-items: center; gap: 20px; }
+.topbar-badge-display {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.topbar-badge-display span { color: var(--gold); }
+.topbar-clock {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+
+/* ── Back / Logout buttons ───────────────────────────────── */
+.back-btn {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.3);
+  padding: 5px 14px;
+  cursor: pointer;
+  background: transparent;
+  text-decoration: none;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.back-btn:hover { background: rgba(201,168,76,0.08); }
+
+.logout-btn {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red-alert);
+  border: 1px solid rgba(192,57,43,0.4);
+  padding: 5px 14px;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.2s;
+}
+.logout-btn:hover { background: rgba(192,57,43,0.1); }
+
+/* ── Classification Banner ───────────────────────────────── */
+.class-banner {
+  background: #1A0505;
+  border-bottom: 2px solid var(--red-alert);
+  padding: 7px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.class-banner-text {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--red-alert);
+  text-transform: uppercase;
+}
+.class-dots { display: flex; gap: 6px; }
+.class-dot  { width: 6px; height: 6px; border-radius: 50%; background: var(--red-alert); }
+
+/* ── Portal Ticker ───────────────────────────────────────── */
+.ticker {
+  background: #0D1526;
+  border-bottom: 1px solid var(--navy-border);
+  overflow: hidden;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+.ticker-label {
+  background: var(--red-alert);
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 0 12px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ticker-track {
+  display: flex;
+  animation: ticker 40s linear infinite;
+  white-space: nowrap;
+}
+.ticker-track span {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  padding: 0 40px;
+}
+.ticker-track span b { color: var(--gold-light); }
+
+/* ── Toast Notifications ─────────────────────────────────── */
+.inf-toast-container,
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 8000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.inf-toast-item,
+.toast-item {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 10px 18px;
+  border-left: 3px solid var(--gold);
+  background: var(--navy-card);
+  color: var(--white);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: auto;
+  max-width: 340px;
+}
+.inf-toast-item.show,
+.toast-item.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast-success { border-left-color: var(--green); }
+.toast-error   { border-left-color: var(--red-alert); }

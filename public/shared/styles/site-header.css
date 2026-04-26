@@ -1,14 +1,20 @@
-nav {
-  background: rgba(10, 15, 30, 0.97);
-  border-bottom: 1px solid var(--gold);
+/* Sticky wrapper — makes nav + ticker both stick to top */
+[data-shared-site-header] {
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+nav {
+  background: rgba(10, 15, 30, 0.97);
+  border-bottom: 1px solid var(--gold);
   padding: 0 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 60px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .nav-logo {
