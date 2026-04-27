@@ -7,6 +7,7 @@
     weapons:   {bc:'NEXUS · INTELLIGENCE',title:'Weapons Tracker',   sub:'Active arms networks · Seizure logs · Supply chain mapping',   badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);">CIB EYES ONLY</span>'},
     gang:      {bc:'NEXUS · INTELLIGENCE',title:'Gang Intelligence',  sub:'Active gang profiles · Territorial maps · Threat assessments', badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(224,90,40,0.1);color:#E05A28;border:1px solid rgba(224,90,40,0.3);">GRD DATABASE</span>'},
     informant: {bc:'NEXUS · INTELLIGENCE',title:'Informant Registry', sub:'Handler access only · Identities classified · 33 registered', badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);">HANDLER EYES ONLY</span>'},
+    reports:   {bc:'NEXUS · CID OPERATIONS',title:'Investigation Reports', sub:'CID Form 0001 · Formal case documentation · PDF export', badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(79,195,247,0.1);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);">CID FORM 0001</span>'},
   };
 
   function showPanel(name, navEl) {

@@ -28,6 +28,9 @@ body { overflow: hidden; display: flex; flex-direction: column; }
 .nx-nav-item.nav-orange.active { background: rgba(224,90,40,0.07); border-left-color: var(--orange); }
 .nx-nav-item.nav-orange.active .nx-nav-label { color: var(--orange); }
 .nx-nav-item.nav-orange.active .nx-nav-icon svg { fill: var(--orange); }
+.nx-nav-item.nav-blue.active { background: rgba(79,195,247,0.07); border-left-color: #4fc3f7; }
+.nx-nav-item.nav-blue.active .nx-nav-label { color: #4fc3f7; }
+.nx-nav-item.nav-blue.active .nx-nav-icon svg { fill: #4fc3f7; }
 .nx-nav-icon { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .nx-nav-icon svg { width: 14px; height: 14px; fill: var(--muted); transition: fill 0.15s; }
 .nx-nav-label { font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); transition: color 0.15s; flex: 1; }

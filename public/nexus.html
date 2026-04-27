@@ -103,6 +103,11 @@
         <span class="nx-nav-label">Informant Registry</span>
         <span class="nx-nav-badge badge-ts">TS</span>
       </div>
+      <div class="nx-nav-item nav-blue" onclick="showPanel('reports',this)">
+        <div class="nx-nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h8v2H8v-2zm0 4h5v2H8v-2z"/></svg></div>
+        <span class="nx-nav-label">Investigation Reports</span>
+        <span class="nx-nav-badge badge-ts">TS</span>
+      </div>
       <a class="nx-nav-item nav-hvc" href="targets/hvc.html" style="text-decoration:none;">
         <div class="nx-nav-icon">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
@@ -189,7 +194,7 @@
             </div>
             <div class="dash-session-row">
               <span class="dash-session-label">Modules</span>
-              <span class="dash-session-value white">7 Available</span>
+              <span class="dash-session-value white">8 Available</span>
             </div>
             <div class="dash-session-divider"></div>
             <div class="dash-session-active">
@@ -230,7 +235,7 @@
 
         <div class="dash-section-head">
           <span class="dash-section-cat">Available Modules</span>
-          <span class="dash-section-label">7 sections · Select to navigate</span>
+          <span class="dash-section-label">8 sections · Select to navigate</span>
         </div>
 
         <!-- DOCUMENTS -->
@@ -377,6 +382,29 @@
           </div>
         </div>
 
+        <!-- CID OPERATIONS -->
+        <div class="dash-cat">
+          <div class="dash-cat-label">CID Operations</div>
+          <div class="dash-mod-grid cols-3">
+
+            <div class="dash-mod" onclick="showPanelByName('reports')" style="border-top:2px solid #4fc3f7;background:linear-gradient(135deg,rgba(10,20,40,0.5),transparent);">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24" style="fill:#4fc3f7;"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h8v2H8v-2zm0 4h5v2H8v-2z"/></svg>
+                </div>
+                <span class="dash-mod-badge" style="background:rgba(79,195,247,0.12);color:#4fc3f7;border-color:rgba(79,195,247,0.3);">Form 0001</span>
+              </div>
+              <div class="dash-mod-name" style="color:#4fc3f7;">Investigation Reports</div>
+              <div class="dash-mod-desc">CID Form 0001 · Full case documentation · PDF export</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">CID &middot; Top Secret</span>
+                <span class="dash-mod-arrow" style="color:#4fc3f7;">›</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div><!-- /dash-modules -->
     </div><!-- /panel-dashboard -->
 
@@ -479,6 +507,23 @@
         <div class="lp-info-cell"><div class="lp-info-cell-label">Total Registered</div><div class="lp-info-cell-value">33 Informants</div></div>
         <div class="lp-info-cell"><div class="lp-info-cell-label">Access</div><div class="lp-info-cell-value">Handler + Command Only</div></div>
         <div class="lp-info-cell"><div class="lp-info-cell-label">Classification</div><div class="lp-info-cell-value" style="color:var(--red-alert);">Top Secret</div></div>
+      </div>
+    </div>
+
+    <!-- INVESTIGATION REPORTS PANEL -->
+    <div class="nx-panel" id="panel-reports">
+      <div class="lp-card" style="border-top:2px solid #4fc3f7;background:linear-gradient(135deg,rgba(10,20,40,0.5),transparent);">
+        <div class="lp-eyebrow">CID &mdash; Form 0001 &middot; Criminal Investigation Division</div>
+        <div class="lp-title">Investigation Reports</div>
+        <div class="lp-divider"></div>
+        <div class="lp-desc">Secure repository for all formal Investigation Reports filed by CIB detectives. Each report covers the complete documentation of a criminal case including victim and suspect details, witness affidavits, forensic evidence, autopsy results, and final case closure. Reports can be created, edited, and exported as official PDF documents matching the CID Form 0001 standard format.</div>
+        <div class="lp-tags"><span class="lp-tag lp-tag-ts">Top Secret</span><span class="lp-tag lp-tag-r">CID Only</span><span class="lp-tag lp-tag-i">Form 0001</span></div>
+        <a class="lp-open-btn" href="/portal/reports" style="background:#4fc3f7;color:#0a0f1e;">Open Reports Module <span class="lp-open-btn-arrow">&rsaquo;</span></a>
+      </div>
+      <div class="lp-info-strip">
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Maintained By</div><div class="lp-info-cell-value">Criminal Investigation Division</div></div>
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Export Format</div><div class="lp-info-cell-value">PDF &middot; CID Form 0001</div></div>
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Classification</div><div class="lp-info-cell-value" style="color:#4fc3f7;">Top Secret</div></div>
       </div>
     </div>
 

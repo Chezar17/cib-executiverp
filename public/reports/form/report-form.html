@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="/shared/styles/tokens.css"/>
+<link rel="stylesheet" href="/shared/styles/base.css"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IR Form &ndash; CIB NEXUS</title>
+<link rel="icon" href="/images/cib-logo.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/shared/styles/portal-shell.css"/>
+<link rel="stylesheet" href="/reports/reports.css"/>
+<link rel="stylesheet" href="/reports/form/report-form.css"/>
+</head>
+<body>
+
+<!-- ACCESS GATE -->
+<div id="access-gate">
+  <div class="gate-logo">
+    <img src="/images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
+  </div>
+  <div class="gate-text">Verifying Clearance...</div>
+  <div class="gate-bar"><div class="gate-progress"></div></div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <img class="topbar-logo" src="/images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="topbar-brand">NEXUS</span>
+    <div class="topbar-divider"></div>
+    <span class="topbar-sub">CIB Internal Intelligence Portal</span>
+  </div>
+  <div class="topbar-right">
+    <a class="back-btn" href="/portal/reports">&lsaquo; Back to Reports</a>
+    <span class="topbar-badge-display">Logged in as: <span id="badgeDisplay">&ndash;</span></span>
+    <span class="topbar-clock" id="liveClock">&ndash;</span>
+    <button class="logout-btn" onclick="PortalAuth.logout()">Logout</button>
+  </div>
+</div>
+
+<!-- CLASSIFICATION BANNER -->
+<div class="class-banner">
+  <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
+  <div class="class-banner-text">TOP SECRET // CLASSIFIED // AUTHORIZED PERSONNEL ONLY // UNAUTHORIZED ACCESS IS A FEDERAL OFFENSE</div>
+  <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="portal-content form-page" id="portalContent" style="display:none">
+
+  <!-- FORM HEADER -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-title-group">
+        <div class="page-label">CID &mdash; FORM 0001 (CID/DDMMYY)</div>
+        <h1 class="page-title" id="formPageTitle">NEW INVESTIGATION REPORT</h1>
+        <div class="page-sub">Criminal Investigation Division &bull; State of San Andreas</div>
+      </div>
+    </div>
+    <div class="page-header-right" style="gap:10px;display:flex">
+      <button class="btn-ghost" onclick="window.location.href='/portal/reports'">Cancel</button>
+      <button class="btn-primary" onclick="saveReport()" id="saveBtn">Save Report</button>
+      <button class="btn-pdf" onclick="exportPDF()" id="exportBtn" style="display:none">
+        &#128196; Export PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- SECTION TABS -->
+  <div class="section-tabs">
+    <button class="sec-tab active" data-sec="sec-a" onclick="switchTab(this,'sec-a')">A. Classification</button>
+    <button class="sec-tab"        data-sec="sec-b" onclick="switchTab(this,'sec-b')">B. Debrief</button>
+    <button class="sec-tab"        data-sec="sec-c" onclick="switchTab(this,'sec-c')">C. Suspects</button>
+    <button class="sec-tab"        data-sec="sec-d" onclick="switchTab(this,'sec-d')">D. Victims</button>
+    <button class="sec-tab"        data-sec="sec-e" onclick="switchTab(this,'sec-e')">E. Witnesses</button>
+    <button class="sec-tab"        data-sec="sec-f" onclick="switchTab(this,'sec-f')">F. Evidences</button>
+    <button class="sec-tab"        data-sec="sec-g" onclick="switchTab(this,'sec-g')">G. Closure</button>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SECTION A: CLASSIFICATION                              -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="form-section" id="sec-a">
+    <div class="form-section-header">
+      <span>CRIMINAL INVESTIGATION DIVISION &ndash; STATE OF SAN ANDREAS</span>
+      <span>FORM 0001 (CID/DDMMYY)</span>
+    </div>
+    <div class="form-section-title">CASE CLASSIFICATION: CRIME AGAINST PERSON</div>
+
+    <div class="field-grid cols-3">
+      <div class="field-group span-3">
+        <label>Case Title <span class="req">*</span></label>
+        <input type="text" id="case_title" placeholder='e.g. "Homicide of John Doe"'/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4">
+      <div class="field-group">
+        <label>1. Category <span class="req">*</span></label>
+        <div class="checkbox-row">
+          <label class="chk-label"><input type="radio" name="category" value="A" checked/> a. CATEGORY A</label>
+          <label class="chk-label"><input type="radio" name="category" value="B"/> b. CATEGORY B</label>
+          <label class="chk-label"><input type="radio" name="category" value="C"/> c. CATEGORY C</label>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>2. Case No. <span class="req">*</span></label>
+        <input type="text" id="case_number" placeholder="0001"/>
+      </div>
+      <div class="field-group span-2">
+        <label>3. Highest Type of Offense or Incident</label>
+        <input type="text" id="offense_type" placeholder="e.g. 1st Degree Murder"/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4">
+      <div class="field-group">
+        <label>4. MDW Incident Number</label>
+        <input type="text" id="mdw_incident_number" placeholder="#310"/>
+      </div>
+      <div class="field-group">
+        <label>5. Building Number</label>
+        <input type="text" id="building_number" placeholder="Not Identified"/>
+      </div>
+      <div class="field-group span-2">
+        <label>6. Address</label>
+        <input type="text" id="address" placeholder="Municipal Area"/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4">
+      <div class="field-group">
+        <label>7. Name of Bureau</label>
+        <input type="text" id="bureau_name" value="CID"/>
+      </div>
+      <div class="field-group">
+        <label>8. Agency / Bureau Code</label>
+        <input type="text" id="agency_code" placeholder="VICE"/>
+      </div>
+      <div class="field-group span-2">
+        <label>9. Specific Location</label>
+        <input type="text" id="specific_location" placeholder="Rear of Mission Row PD (Primary) / ..."/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4">
+      <div class="field-group">
+        <label>10. Location Code</label>
+        <input type="text" id="location_code" placeholder="Not Identified"/>
+      </div>
+      <div class="field-group">
+        <label>11a. Date of Offense</label>
+        <input type="date" id="date_of_offense"/>
+      </div>
+      <div class="field-group">
+        <label>11b. Time of Offense</label>
+        <input type="text" id="time_of_offense" placeholder="02:15 UTC+7"/>
+      </div>
+      <div class="field-group">
+        <label>12. Day</label>
+        <input type="text" id="day_of_offense" placeholder="Saturday"/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4">
+      <div class="field-group">
+        <label>13a. Date Reported</label>
+        <input type="date" id="date_reported"/>
+      </div>
+      <div class="field-group">
+        <label>13b. Day Reported</label>
+        <input type="text" id="day_reported" placeholder="Saturday"/>
+      </div>
+      <div class="field-group span-2">
+        <label>14. Jurisdiction</label>
+        <div class="checkbox-row">
+          <label class="chk-label"><input type="checkbox" id="jur_lspd"/> LSPD</label>
+          <label class="chk-label"><input type="checkbox" id="jur_sast"/> SAST</label>
+          <label class="chk-label"><input type="checkbox" id="jur_lscs"/> LSCS</label>
+          <label class="chk-label"><input type="checkbox" id="jur_state"/> STATE</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4">
+      <div class="field-group span-2">
+        <label>15. Lead Investigators</label>
+        <input type="text" id="lead_investigators" placeholder="Detective II Julian Flux"/>
+      </div>
+      <div class="field-group span-2">
+        <label>16a. Prosecutor</label>
+        <input type="text" id="prosecutor" placeholder="TBA"/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4">
+      <div class="field-group">
+        <label>16b. Prosecutor Time Start</label>
+        <input type="date" id="prosecutor_time_start"/>
+      </div>
+      <div class="field-group">
+        <label>16c. Prosecutor Time End</label>
+        <input type="date" id="prosecutor_time_end"/>
+      </div>
+    </div>
+
+    <!-- 17. Victims summary table -->
+    <div class="sub-section-header">
+      <span>17. VICTIM(S)</span>
+      <button type="button" class="btn-add" onclick="addVictimRow()">+ Add Victim</button>
+    </div>
+    <div class="sub-table-wrap">
+      <table class="sub-table" id="victimSummaryTable">
+        <thead>
+          <tr>
+            <th>ID Code</th><th>Full Name, AKA</th><th>Age</th><th>Sex</th><th>Race</th><th>Telephone</th><th>Welfare / Occupation</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="victimRows"></tbody>
+      </table>
+    </div>
+
+    <!-- 18. Suspects summary table -->
+    <div class="sub-section-header" style="margin-top:24px">
+      <span>18. SUSPECT(S)</span>
+      <button type="button" class="btn-add" onclick="addSuspectRow()">+ Add Suspect</button>
+    </div>
+    <div class="sub-table-wrap">
+      <table class="sub-table" id="suspectSummaryTable">
+        <thead>
+          <tr>
+            <th>ID Code</th><th>Full Name, AKA</th><th>Age</th><th>Sex</th><th>Race</th><th>Telephone</th><th>Status / Occupation</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="suspectRows"></tbody>
+      </table>
+    </div>
+
+    <div class="field-grid cols-2" style="margin-top:24px">
+      <div class="field-group">
+        <label>19. Suspect Status</label>
+        <select id="suspect_status">
+          <option value="">-- Select --</option>
+          <option value="NOT_IDENTIFIED">a. Not Identified</option>
+          <option value="GOVT_EMPLOYEE">b. Government Employee</option>
+          <option value="GOVT_CONTRACT">c. Government Contract</option>
+          <option value="CITATION">d. Citation Issued</option>
+          <option value="NON_GOVT">d. Non-Government Employee</option>
+          <option value="NA">e. N/A</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>20. Disposition of Suspect</label>
+        <select id="suspect_disposition">
+          <option value="">-- Select --</option>
+          <option value="ARRESTED">a. Arrested</option>
+          <option value="NOT_ARRESTED">b. Not Arrested</option>
+          <option value="RELEASED">c. Released</option>
+          <option value="NA">d. N/A</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-group" style="margin-top:12px">
+      <label>Suspect Notes</label>
+      <textarea id="suspect_notes" rows="3" placeholder="Additional notes about suspect status..."></textarea>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SECTION B: DEBRIEF OF INCIDENT                         -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="form-section" id="sec-b" style="display:none">
+    <div class="form-section-header">
+      <span>B. DEBRIEF OF INCIDENT</span>
+      <span>FORM 0001 (CID/DDMMYY)</span>
+    </div>
+    <div class="section-desc">Add chronological entries describing the incident timeline.</div>
+
+    <div id="debriefList"></div>
+    <button type="button" class="btn-add-section" onclick="addDebriefEntry()">+ Add Timeline Entry</button>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SECTION C: SUSPECTS DETAIL                             -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="form-section" id="sec-c" style="display:none">
+    <div class="form-section-header">
+      <span>C. SUSPECTS (DETAIL)</span>
+      <span>FORM 0001 (CID/DDMMYY)</span>
+    </div>
+    <div class="section-desc">Detailed profiles per suspect. Suspect list is managed in Section A.</div>
+    <div id="suspectDetailList"></div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SECTION D: VICTIMS DETAIL                              -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="form-section" id="sec-d" style="display:none">
+    <div class="form-section-header">
+      <span>D. VICTIMS (DETAIL)</span>
+      <span>FORM 0001 (CID/DDMMYY)</span>
+    </div>
+    <div class="section-desc">Detailed victim profiles including autopsy. Victim list is managed in Section A.</div>
+    <div id="victimDetailList"></div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SECTION E: WITNESSES                                   -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="form-section" id="sec-e" style="display:none">
+    <div class="form-section-header">
+      <span>E. WITNESSES</span>
+      <span>FORM 0001 (CID/DDMMYY)</span>
+    </div>
+
+    <div id="witnessList"></div>
+    <button type="button" class="btn-add-section" onclick="addWitnessEntry()">+ Add Witness</button>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SECTION F: EVIDENCES                                   -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="form-section" id="sec-f" style="display:none">
+    <div class="form-section-header">
+      <span>F. EVIDENCES</span>
+      <span>FORM 0001 (CID/DDMMYY)</span>
+    </div>
+
+    <div id="evidenceList"></div>
+    <button type="button" class="btn-add-section" onclick="addEvidenceEntry()">+ Add Evidence</button>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SECTION G: CLOSURE                                     -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="form-section" id="sec-g" style="display:none">
+    <div class="form-section-header">
+      <span>G. INVESTIGATION CLOSURE</span>
+      <span>FORM 0001 (CID/DDMMYY)</span>
+    </div>
+
+    <div class="field-group">
+      <label>I. Summary of Investigation</label>
+      <textarea id="closure_summary" rows="5" placeholder="Narrative summary..."></textarea>
+    </div>
+    <div class="field-group" style="margin-top:16px">
+      <label>II. Forensic Findings and Cause of Death</label>
+      <textarea id="closure_forensic" rows="4" placeholder="Forensic results..."></textarea>
+    </div>
+    <div class="field-group" style="margin-top:16px">
+      <label>III. Suspect Identification and Culpability</label>
+      <textarea id="closure_suspect_id" rows="4" placeholder="Suspect evidence summary..."></textarea>
+    </div>
+    <div class="field-group" style="margin-top:16px">
+      <label>IV. Final Disposition</label>
+      <textarea id="closure_final_disposition" rows="3" placeholder="Final case disposition..."></textarea>
+    </div>
+
+    <div class="field-grid cols-4" style="margin-top:20px">
+      <div class="field-group">
+        <label>24a. Time Received</label>
+        <input type="date" id="closure_time_received"/>
+      </div>
+      <div class="field-group">
+        <label>24b. Time Arrived</label>
+        <input type="date" id="closure_time_arrived"/>
+      </div>
+      <div class="field-group">
+        <label>Type</label>
+        <div class="checkbox-row">
+          <label class="chk-label"><input type="radio" name="closure_type" value="CID" checked/> CID</label>
+          <label class="chk-label"><input type="radio" name="closure_type" value="GRD"/> GRD</label>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>c. Primary Detective Name</label>
+        <input type="text" id="closure_detective_name" placeholder="Julian Flux"/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4" style="margin-top:12px">
+      <div class="field-group">
+        <label>Signature Date</label>
+        <input type="date" id="closure_date"/>
+      </div>
+      <div class="field-group">
+        <label>Returned to Service</label>
+        <input type="date" id="closure_returned_to_service"/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4" style="margin-top:20px">
+      <div class="field-group span-2">
+        <label>26. Case Referred To</label>
+        <select id="case_referred_to">
+          <option value="">-- Select --</option>
+          <option value="LSPD">a. LSPD</option>
+          <option value="LSCS">b. LSCS</option>
+          <option value="SAST">c. SAST</option>
+          <option value="DOJ">d. DOJ</option>
+          <option value="DOC">e. DOC</option>
+          <option value="NA">f. N/A</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>27. Case Status</label>
+        <select id="case_status">
+          <option value="OPEN">Open</option>
+          <option value="CLOSED">Closed</option>
+          <option value="COLD">Cold</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-grid cols-2" style="margin-top:12px">
+      <div class="field-group">
+        <label>28a. Prosecutor Name</label>
+        <input type="text" id="prosecutor_final_name"/>
+      </div>
+      <div class="field-group">
+        <label>28c. Prosecutor Occupation</label>
+        <input type="text" id="prosecutor_final_occupation"/>
+      </div>
+    </div>
+
+    <div class="field-grid cols-4" style="margin-top:20px">
+      <div class="field-group">
+        <label>29b. How Closed</label>
+        <select id="detective_how_closed">
+          <option value="">-- Select --</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="ARREST">Arrest</option>
+          <option value="OTHER">Other Means</option>
+        </select>
+      </div>
+      <div class="field-group span-3">
+        <label>29 Checkboxes</label>
+        <div class="checkbox-row wrap">
+          <label class="chk-label"><input type="checkbox" id="det_suspect_developed"/> Suspect Developed</label>
+          <label class="chk-label"><input type="checkbox" id="det_suspect_arrested"/> Suspect Arrested</label>
+          <label class="chk-label"><input type="checkbox" id="det_entered_forensics"/> Entered Forensics</label>
+          <label class="chk-label"><input type="checkbox" id="det_evidence_recovered"/> Evidence Recovered</label>
+          <label class="chk-label"><input type="checkbox" id="det_cleared_forensics"/> Cleared Forensics</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-grid cols-2" style="margin-top:12px">
+      <div class="field-group">
+        <label>f. Value of Property</label>
+        <input type="text" id="detective_value_of_property" placeholder="N/A"/>
+      </div>
+      <div class="field-group">
+        <label>h. Referred To</label>
+        <input type="text" id="detective_referred_to"/>
+      </div>
+    </div>
+
+    <div class="field-group" style="margin-top:12px">
+      <label>i. Date Referral Accepted</label>
+      <input type="date" id="detective_date_referral" style="max-width:200px"/>
+    </div>
+  </div>
+
+</div><!-- /portal-content -->
+
+<div id="toast-container" class="toast-container"></div>
+
+<!-- Hidden PDF template rendered at export time -->
+<div id="pdf-template-root" style="display:none"></div>
+
+<script src="/shared/scripts/portal-auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/reports/form/report-form.js"></script>
+</body>
+</html>
