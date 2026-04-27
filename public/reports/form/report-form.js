@@ -62,6 +62,18 @@
     setVal('day_reported',  todayDay)
   }
 
+  // ── Loading overlay helpers ──────────────────────────────
+  function showLoad(label) {
+    const el = document.getElementById('pdf-loading-overlay')
+    const lb = document.getElementById('pdf-loading-label')
+    if (el) el.style.display = 'flex'
+    if (lb) lb.textContent = label || 'LOADING...'
+  }
+  function hideLoad() {
+    const el = document.getElementById('pdf-loading-overlay')
+    if (el) el.style.display = 'none'
+  }
+
   // ── Tab switching ────────────────────────────────────────
   window.switchTab = function (btn, secId) {
     document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'))
@@ -72,6 +84,7 @@
 
   // ── Load existing report ─────────────────────────────────
   async function loadReport(id) {
+    showLoad('LOADING REPORT...')
     try {
       const token = sessionStorage.getItem('cib_token')
       const res   = await fetch('/api/reports/' + id, {
@@ -82,6 +95,8 @@
       populateForm(report)
     } catch (e) {
       PortalAuth.showToast('Failed to load report: ' + e.message, 'error', 'toast-container')
+    } finally {
+      hideLoad()
     }
   }
 
@@ -247,6 +262,7 @@
     if (!validateField('case_title',  'Case Title',  'sec-a')) return
     const btn = document.getElementById('saveBtn')
     btn.disabled = true; btn.textContent = 'Saving...'
+    showLoad('SAVING REPORT...')
     try {
       const token   = sessionStorage.getItem('cib_token')
       const payload = buildPayload()
@@ -278,6 +294,7 @@
       PortalAuth.showToast('Save failed: ' + e.message, 'error', 'toast-container')
     } finally {
       btn.disabled = false; btn.textContent = 'Save Report'
+      hideLoad()
     }
   }
 
@@ -527,25 +544,40 @@
   // ─────────────────────────────────────────────────────────
   // PDF EXPORT
   // ─────────────────────────────────────────────────────────
-  window.exportPDF = function () {
-    const payload = buildPayload()
-    const html    = buildPDFHtml(payload)
-    const root    = document.getElementById('pdf-template-root')
-    root.innerHTML = html
-    root.style.display = 'block'
+  window.exportPDF = async function () {
+    const btn      = document.getElementById('exportBtn')
+    const origText = btn.innerHTML
 
-    const opt = {
-      margin:      [10, 15, 10, 15],
-      filename:    'CID-IR-' + (payload.case_number || 'DRAFT') + '.pdf',
-      image:       { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
+    btn.disabled = true
+    showLoad('GENERATING PDF...')
+
+    try {
+      const id    = reportId || 'demo'
+      const token = sessionStorage.getItem('cib_token')
+      const res   = await fetch('/api/report-pdf?id=' + id, {
+        headers: { 'x-session-token': token }
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'HTTP ' + res.status)
+      }
+      const { pdf, filename } = await res.json()
+
+      const link    = document.createElement('a')
+      link.href     = 'data:application/pdf;base64,' + pdf
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      PortalAuth.showToast('PDF exported: ' + filename, 'success', 'toast-container')
+    } catch (e) {
+      PortalAuth.showToast('Export failed: ' + e.message, 'error', 'toast-container')
+    } finally {
+      btn.disabled = false
+      btn.innerHTML = origText
+      hideLoad()
     }
-    html2pdf().set(opt).from(root).save().then(function () {
-      root.style.display = 'none'
-      root.innerHTML = ''
-    })
   }
 
   function buildPDFHtml(r) {

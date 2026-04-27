@@ -468,11 +468,15 @@
 
 <div id="toast-container" class="toast-container"></div>
 
-<!-- Hidden PDF template rendered at export time -->
-<div id="pdf-template-root" style="display:none"></div>
+<!-- PDF generation loading overlay -->
+<div id="pdf-loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,10,20,.75);z-index:9000;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:44px;height:44px;border:4px solid rgba(201,168,76,.25);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div id="pdf-loading-label" style="font-family:'Roboto Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--gold)">LOADING...</div>
+  <div style="font-family:'Roboto',sans-serif;font-size:11px;color:var(--muted)">Please wait...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script src="/shared/scripts/portal-auth.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/reports/form/report-form.js"></script>
 </body>
 </html>

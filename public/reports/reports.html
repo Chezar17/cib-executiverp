@@ -121,6 +121,12 @@
 
 <div id="toast-container" class="toast-container"></div>
 
+<div id="api-loading" style="display:none;position:fixed;inset:0;background:rgba(5,10,20,.65);z-index:9000;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+  <div style="width:40px;height:40px;border:4px solid rgba(201,168,76,.25);border-top-color:#C9A84C;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div id="api-loading-label" style="font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:2px;color:#C9A84C">LOADING...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
 <script src="/shared/scripts/portal-auth.js"></script>
 <script src="/reports/reports.js"></script>
 </body>

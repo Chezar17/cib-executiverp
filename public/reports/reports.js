@@ -19,8 +19,21 @@
     }
   })
 
+  // ── Loading overlay helpers ──────────────────────────────
+  function showLoad(label) {
+    const el = document.getElementById('api-loading')
+    const lb = document.getElementById('api-loading-label')
+    if (el) el.style.display = 'flex'
+    if (lb) lb.textContent = label || 'LOADING...'
+  }
+  function hideLoad() {
+    const el = document.getElementById('api-loading')
+    if (el) el.style.display = 'none'
+  }
+
   // ── Load reports ────────────────────────────────────────
   async function loadReports() {
+    showLoad('LOADING REPORTS...')
     setTableBody('<tr><td colspan="8" class="loading-row">Loading reports...</td></tr>')
     try {
       const token = sessionStorage.getItem('cib_token')
@@ -35,6 +48,8 @@
     } catch (e) {
       setTableBody('<tr><td colspan="8" class="loading-row">Failed to load reports. Please try again.</td></tr>')
       PortalAuth.showToast('Failed to load reports: ' + e.message, 'error', 'toast-container')
+    } finally {
+      hideLoad()
     }
   }
 
@@ -109,6 +124,7 @@
   }
   window.confirmDelete = async function () {
     if (!pendingDeleteId) return
+    showLoad('DELETING...')
     try {
       const token = sessionStorage.getItem('cib_token')
       const res = await fetch('/api/reports/' + pendingDeleteId, {
@@ -120,6 +136,7 @@
       PortalAuth.showToast('Report deleted.', 'success', 'toast-container')
       loadReports()
     } catch (e) {
+      hideLoad()
       PortalAuth.showToast('Delete failed: ' + e.message, 'error', 'toast-container')
     }
   }
