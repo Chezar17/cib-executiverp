@@ -9,6 +9,7 @@
     "dev:local": "node scripts/local-dev-server.js"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^147.0.0",
     "@supabase/supabase-js": "^2.39.0",
     "puppeteer-core": "^24.42.0"
   }
