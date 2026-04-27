@@ -32,12 +32,25 @@
 
   // ── Auth + clock + idle timeout (via shared portal-auth.js) ──
   PortalAuth.init({
-    loginHref: 'Page_Login.html',
-    badgeEls:  ['badgeDisplay', 'sidebarBadge', 'dashWelcomeName'],
+    loginHref: '/Page_Login.html',
+    badgeEls:  ['badgeDisplay', 'sidebarBadge'],
+    nameEls:   ['dashWelcomeName', 'dashHeroOfficer'],
+    rankEls:   ['dashSessionRank'],
+    divisionEls: ['dashSessionDivision', 'dashDivisionLine'],
+    classificationEls: ['dashSessionClearance', 'dashStripClassification'],
+    clearanceTitleEls: ['dashClearanceAdjective'],
     clockEl:   'liveClock',
+    onReady: function (badge, session) {
+      var side = document.getElementById('sidebarSessionLabel')
+      if (side && session) {
+        var u = PortalAuth.formatClassificationUpper(session.classification)
+        var d = session.division || 'CIB'
+        side.textContent = u + ' \u00b7 ' + d + ' \u00b7 SECURE'
+      }
+    }
   });
 
-  function logout() { PortalAuth.logout('Page_Login.html'); }
+  function logout() { PortalAuth.logout(); }
 
   function showToast(msg, type) {
     PortalAuth.showToast(msg, type, 'inf-toast');

@@ -749,10 +749,13 @@ async function exportPDF() {
 
 // ── apply session defaults ────────────────────────────────────
 function applySessionDefaults() {
-  const badge    = sessionStorage.getItem('cib_badge')    || '';
-  const division = sessionStorage.getItem('cib_division') || 'CID';
-  const rank     = sessionStorage.getItem('cib_rank')     || '';
-  const name     = sessionStorage.getItem('cib_name')     || '';
+  const s = typeof PortalAuth !== 'undefined' && PortalAuth.getSession
+    ? PortalAuth.getSession()
+    : {}
+  const badge    = s.badge    || sessionStorage.getItem('cib_badge')    || '';
+  const division = s.division || sessionStorage.getItem('cib_division') || 'CID';
+  const rank     = s.rank     || sessionStorage.getItem('cib_rank')     || '';
+  const name     = s.name     || sessionStorage.getItem('cib_name')     || '';
   const today    = new Date().toISOString().split('T')[0];
 
   if (!getVal('date_of_offense')) setVal('date_of_offense', today);
@@ -769,6 +772,7 @@ function applySessionDefaults() {
 
 // ── init ──────────────────────────────────────────────────────
 PortalAuth.init({
+  loginHref: '/Page_Login.html',
   onReady(badge) {
     // Unhide main content
     const content = document.getElementById('portalContent');

@@ -9,7 +9,7 @@
 
   // ── Bootstrap ───────────────────────────────────────────
   PortalAuth.init({
-    loginHref:        '/login',
+    loginHref:        '/Page_Login.html',
     badgeEls:  ['badgeDisplay'],
     clockEl:   'liveClock',
     gateElementId:    'access-gate',

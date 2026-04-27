@@ -56,7 +56,7 @@
       <div class="nx-sidebar-user" id="sidebarBadge">—</div>
       <div class="nx-sidebar-session">
         <span class="nx-session-dot"></span>
-        <span>TOP SECRET · SECURE</span>
+        <span id="sidebarSessionLabel">—</span>
       </div>
     </div>
 
@@ -177,7 +177,7 @@
             <div class="dash-hero-title"><span>NEXUS</span></div>
             <div class="dash-hero-sub">
               Welcome back, <span id="dashWelcomeName" style="color:var(--gold);font-family:'Oswald',sans-serif;letter-spacing:3px;">—</span><br/>
-              You have Top Secret clearance · All activity is monitored
+              You have <span id="dashClearanceAdjective" style="color:var(--gold-light);font-family:'Oswald',sans-serif;letter-spacing:2px;">—</span> clearance · <span id="dashDivisionLine">—</span> · All activity is monitored
             </div>
           </div>
 
@@ -189,8 +189,16 @@
             </div>
             <div class="dash-session-divider"></div>
             <div class="dash-session-row">
+              <span class="dash-session-label">Rank</span>
+              <span class="dash-session-value white" id="dashSessionRank">—</span>
+            </div>
+            <div class="dash-session-row">
+              <span class="dash-session-label">Division</span>
+              <span class="dash-session-value white" id="dashSessionDivision">—</span>
+            </div>
+            <div class="dash-session-row">
               <span class="dash-session-label">Clearance</span>
-              <span class="dash-session-value gold">TOP SECRET</span>
+              <span class="dash-session-value gold" id="dashSessionClearance">—</span>
             </div>
             <div class="dash-session-row">
               <span class="dash-session-label">Modules</span>
@@ -213,7 +221,7 @@
           </div>
           <div class="dash-alert-cell">
             <div class="dash-alert-cell-label">Classification</div>
-            <div class="dash-alert-cell-value gold">Top Secret</div>
+            <div class="dash-alert-cell-value gold" id="dashStripClassification">—</div>
           </div>
           <div class="dash-alert-cell">
             <div class="dash-alert-cell-label">Session Timeout</div>
