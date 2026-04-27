@@ -52,7 +52,7 @@
   <!-- SIDEBAR -->
   <nav class="nx-sidebar">
     <div class="nx-sidebar-header">
-      <div class="nx-sidebar-label">Personnel</div>
+      <div class="nx-sidebar-label">Signed In As</div>
       <div class="nx-sidebar-user" id="sidebarBadge">—</div>
       <div class="nx-sidebar-session"><div class="nx-session-dot"></div><span id="sidebarClassification">—</span></div>
     </div>
@@ -291,40 +291,6 @@
   </div>
 </div>
 
-<!-- Modal: Add Income -->
-<div class="modal-overlay" id="modal-addinc">
-  <div class="modal-box" style="border-top-color:#27AE60;">
-    <div class="modal-header">
-      <div class="modal-title" style="color:#27AE60;">Add Income</div>
-      <button class="modal-close" onclick="closeModal('modal-addinc')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-alert" id="addinc-alert"></div>
-      <div style="background:rgba(39,174,96,0.06);border:1px solid rgba(39,174,96,0.2);border-left:3px solid #27AE60;padding:10px 14px;margin-bottom:16px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:#27AE60;line-height:1.6;">
-        The amount entered will be <b>added</b> to your personal card remaining balance.
-      </div>
-      <div class="f-group">
-        <label class="f-label" style="color:#27AE60;">Income Source / Description</label>
-        <input class="f-input" id="inc-desc" type="text" placeholder="e.g. Additional field allowance" style="border-color:rgba(39,174,96,0.3);"/>
-      </div>
-      <div class="f-row">
-        <div class="f-group">
-          <label class="f-label" style="color:#27AE60;">Date Received</label>
-          <input class="f-input" id="inc-date" type="date" style="border-color:rgba(39,174,96,0.3);"/>
-        </div>
-        <div class="f-group">
-          <label class="f-label" style="color:#27AE60;">Amount ($)</label>
-          <input class="f-input" id="inc-amount" type="number" min="1" placeholder="0" style="border-color:rgba(39,174,96,0.3);"/>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-action btn-outline btn-sm" onclick="closeModal('modal-addinc')">Cancel</button>
-      <button class="btn-action btn-sm" style="background:#27AE60;color:#fff;" onclick="submitIncome()">Record Income</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal: Confirm Delete -->
 <div class="modal-overlay" id="modal-confirm">
   <div class="modal-box modal-red">
@@ -343,6 +309,40 @@
 </div>
 
 <div id="fin-toast"></div>
+
+<!-- Modal: Edit Expense -->
+<div class="modal-overlay" id="modal-editexp">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Edit Expense</div>
+      <button class="modal-close" onclick="closeModal('modal-editexp')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="editexp-alert"></div>
+      <div class="f-group">
+        <label class="f-label">Description</label>
+        <input class="f-input" id="edit-exp-desc" type="text" placeholder="e.g. Surveillance equipment"/>
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label">Date of Expense</label>
+          <input class="f-input" id="edit-exp-date" type="date"/>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Amount ($)</label>
+          <input class="f-input" id="edit-exp-amount" type="number" min="1" placeholder="0"/>
+          <div class="f-error" id="edit-exp-amount-err">Exceeds available personal balance</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-action btn-outline btn-sm" onclick="closeModal('modal-editexp')">Cancel</button>
+      <button class="btn-action btn-green btn-sm" onclick="submitEditExpense()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+
 
 
 <script src="../shared/scripts/portal-auth.js"></script>
