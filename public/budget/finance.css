@@ -247,3 +247,8 @@ table.exp-table td.actions-col{display:flex;gap:6px;}
 .access-denied-icon{width:60px;height:60px;fill:var(--red-alert);opacity:0.4;margin:0 auto 20px;}
 .access-denied-title{font-family:'Oswald',sans-serif;font-size:20px;letter-spacing:4px;color:var(--red-alert);text-transform:uppercase;margin-bottom:10px;}
 .access-denied-sub{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);}
+/* INCOME ROW */
+table.exp-table tbody tr.income-row:hover{background:rgba(39,174,96,0.04);}
+table.exp-table td.income-col{color:#27AE60;font-size:11px;}
+.tbl-btn-inc-del{background:rgba(39,174,96,0.08);color:#27AE60;border:1px solid rgba(39,174,96,0.2);}
+.tbl-btn-inc-del:hover{background:rgba(39,174,96,0.16);}

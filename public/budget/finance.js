@@ -4,10 +4,12 @@ let mainBalance = null
 let expenseCards = []
 let currentDetailCardId = null
 let pendingExpenseCardId = null
+let pendingIncomeCardId = null
 
 const TOKEN = () => sessionStorage.getItem('cib_token')
 const BADGE  = () => sessionStorage.getItem('cib_badge')
 const CLASS  = () => sessionStorage.getItem('cib_classification') || 'confidential'
+const NAME   = () => sessionStorage.getItem('cib_name') || BADGE()
 
 const ALLOWED_CLASSES = ['top_secret','secret','confidential']
 const TS_ONLY = ['top_secret']
@@ -167,7 +169,8 @@ function renderCards() {
         </div>
         <div class="ec-footer">
           <button class="ec-btn ec-btn-view" onclick="openDetail('${card.id}')">View Expenses</button>
-          ${isMine ? `<button class="ec-btn ec-btn-add" onclick="openAddExpense('${card.id}')">+ Add Expense</button>` : ''}
+          ${isMine ? `<button class="ec-btn" style="background:rgba(39,174,96,0.12);color:#27AE60;border:1px solid rgba(39,174,96,0.3);" onclick="openAddIncome('${card.id}')">+ Income</button>` : ''}
+          ${isMine ? `<button class="ec-btn ec-btn-add" onclick="openAddExpense('${card.id}')">+ Expense</button>` : ''}
           ${isMine ? `<button class="ec-btn ec-btn-del" onclick="confirmDeleteCard('${card.id}')">✕</button>` : ''}
         </div>
       </div>
@@ -201,13 +204,18 @@ async function openDetail(cardId) {
   const card = expenseCards.find(c => c.id === cardId)
   if (!card) return
 
-  // Load expenses for this card
-  const res = await api('GET', `/api/finance-expenses?card_id=${cardId}`)
-  const expenses = res.ok ? (res.data.data || []) : []
+  // Load expenses and incomes for this card
+  const [expRes, incRes] = await Promise.all([
+    api('GET', `/api/finance-expenses?card_id=${cardId}`),
+    api('GET', `/api/finance-income?card_id=${cardId}`)
+  ])
+  const expenses = expRes.ok ? (expRes.data.data || []) : []
+  const incomes  = incRes.ok ? (incRes.data.data || []) : []
   const isMine   = card.owner_badge === BADGE()
   const bal      = card.remaining_balance || 0
   const initial  = card.personal_balance || 0
-  const totalSpent = expenses.reduce((s, e) => s + (e.amount||0), 0)
+  const totalSpent  = expenses.reduce((s, e) => s + (e.amount||0), 0)
+  const totalIncome = incomes.reduce((s, i) => s + (i.amount||0), 0)
 
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-back" onclick="showView('overview', document.getElementById('nav-overview'))">
@@ -224,48 +232,75 @@ async function openDetail(cardId) {
         <div class="detail-balance-label">Remaining Balance</div>
       </div>
     </div>
-    <div class="detail-stats">
+    <div class="detail-stats" style="grid-template-columns:repeat(4,1fr);">
       <div class="detail-stat">
         <div class="detail-stat-label">Initial Balance</div>
         <div class="detail-stat-value" style="color:var(--finance-light);">$${fmt(initial)}</div>
       </div>
       <div class="detail-stat">
+        <div class="detail-stat-label">Total Income Added</div>
+        <div class="detail-stat-value" style="color:#27AE60;">+$${fmt(totalIncome)}</div>
+      </div>
+      <div class="detail-stat">
         <div class="detail-stat-label">Total Expenses</div>
-        <div class="detail-stat-value" style="color:var(--red-alert);">$${fmt(totalSpent)}</div>
+        <div class="detail-stat-value" style="color:var(--red-alert);">-$${fmt(totalSpent)}</div>
       </div>
       <div class="detail-stat">
         <div class="detail-stat-label">Transactions</div>
-        <div class="detail-stat-value">${expenses.length}</div>
+        <div class="detail-stat-value">${expenses.length + incomes.length}</div>
       </div>
     </div>
     <div class="exp-table-wrap">
       <div class="exp-table-head">
         <div class="exp-table-title">Expense Transactions</div>
-        ${isMine ? `<button class="btn-action btn-red btn-sm" onclick="openAddExpense('${card.id}')">+ Add Expense</button>` : ''}
+        ${isMine ? `<div style="display:flex;gap:8px;">
+          <button class="btn-action btn-sm" style="background:rgba(39,174,96,0.15);color:#27AE60;border:1px solid rgba(39,174,96,0.4);" onclick="openAddIncome('${card.id}')">+ Add Income</button>
+          <button class="btn-action btn-red btn-sm" onclick="openAddExpense('${card.id}')">+ Add Expense</button>
+        </div>` : ''}
       </div>
-      ${expenses.length ? `
+      ${(expenses.length || incomes.length) ? (() => {
+        // Merge and sort all transactions by date desc
+        const allTx = [
+          ...incomes.map(i => ({ ...i, _type: 'income' })),
+          ...expenses.map(e => ({ ...e, _type: 'expense' }))
+        ].sort((a, b) => {
+          const da = new Date(a.income_date || a.expense_date)
+          const db = new Date(b.income_date || b.expense_date)
+          return db - da
+        })
+        return `
       <table class="exp-table">
         <thead><tr>
-          <th>#</th><th>Description</th><th>Date</th><th>Amount</th>
+          <th>Type</th><th>Description</th><th>Date</th><th>Amount</th>
           ${isMine ? '<th>Actions</th>' : ''}
         </tr></thead>
         <tbody>
-          ${expenses.map((e, i) => `<tr>
-            <td style="color:var(--muted);">${i+1}</td>
-            <td>${e.description}</td>
-            <td style="color:var(--muted);">${fmtDate(e.expense_date)}</td>
-            <td class="amount-col">- $${fmt(e.amount)}</td>
+          ${allTx.map((tx) => tx._type === 'income' ? `<tr>
+            <td><span style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 7px;background:rgba(39,174,96,0.12);color:#27AE60;border:1px solid rgba(39,174,96,0.3);">INCOME</span></td>
+            <td>${tx.description}</td>
+            <td style="color:var(--muted);">${fmtDate(tx.income_date)}</td>
+            <td style="color:#27AE60;font-size:11px;">+ $${fmt(tx.amount)}</td>
             ${isMine ? `<td class="actions-col">
-              <button class="tbl-btn tbl-btn-del" onclick="confirmDeleteExpense('${e.id}','${card.id}')">Delete</button>
+              <button class="tbl-btn tbl-btn-del" onclick="confirmDeleteIncome('${tx.id}','${card.id}')">Delete</button>
+            </td>` : ''}
+          </tr>` : `<tr>
+            <td><span style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 7px;background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.25);">EXPENSE</span></td>
+            <td>${tx.description}</td>
+            <td style="color:var(--muted);">${fmtDate(tx.expense_date)}</td>
+            <td class="amount-col">- $${fmt(tx.amount)}</td>
+            ${isMine ? `<td class="actions-col">
+              <button class="tbl-btn tbl-btn-del" onclick="confirmDeleteExpense('${tx.id}','${card.id}')">Delete</button>
             </td>` : ''}
           </tr>`).join('')}
         </tbody>
       </table>
-      <div class="exp-total-row">
-        <span class="exp-total-label">Total Expenses</span>
-        <span class="exp-total-value">- $${fmt(totalSpent)}</span>
-      </div>
-      ` : `<div class="exp-table-empty">No expenses recorded yet</div>`}
+      <div class="exp-total-row" style="gap:32px;">
+        <span style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:#27AE60;text-transform:uppercase;">Income + $${fmt(totalIncome)}</span>
+        <span style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red-alert);text-transform:uppercase;">Expenses - $${fmt(totalSpent)}</span>
+        <span class="exp-total-label">Net</span>
+        <span class="exp-total-value" style="color:${totalIncome - totalSpent >= 0 ? '#27AE60' : 'var(--red-alert)'};">${totalIncome - totalSpent >= 0 ? '+' : '-'} $${fmt(Math.abs(totalIncome - totalSpent))}</span>
+      </div>`
+      })() : `<div class="exp-table-empty">No transactions recorded yet</div>`}
     </div>
   `
 }
@@ -478,6 +513,70 @@ async function deleteExpense(expId, cardId) {
   }
 }
 
+
+// ── ADD INCOME ────────────────────────────────────────────────
+function openAddIncome(cardId) {
+  pendingIncomeCardId = cardId
+  document.getElementById('inc-desc').value   = ''
+  document.getElementById('inc-date').value   = new Date().toISOString().split('T')[0]
+  document.getElementById('inc-amount').value = ''
+  document.getElementById('addinc-alert').classList.remove('show')
+  openModal('modal-addinc')
+}
+
+async function submitIncome() {
+  const desc   = document.getElementById('inc-desc').value.trim()
+  const date   = document.getElementById('inc-date').value
+  const amount = parseFloat(document.getElementById('inc-amount').value)
+  const alertEl = document.getElementById('addinc-alert')
+  alertEl.classList.remove('show')
+
+  if (!desc)   { alertEl.textContent = 'Please describe the income source'; alertEl.classList.add('show'); return }
+  if (!date)   { alertEl.textContent = 'Please select a date'; alertEl.classList.add('show'); return }
+  if (!amount || amount <= 0) { alertEl.textContent = 'Please enter a valid amount'; alertEl.classList.add('show'); return }
+
+  const res = await api('POST', '/api/finance-income', {
+    card_id:     pendingIncomeCardId,
+    description: desc,
+    income_date: date,
+    amount
+  })
+
+  if (res.ok) {
+    closeModal('modal-addinc')
+    showToast('Income recorded · Balance updated', 'success')
+    await loadData()
+    if (document.getElementById('view-detail').classList.contains('active')) {
+      openDetail(currentDetailCardId)
+    } else {
+      renderCards()
+    }
+  } else {
+    alertEl.textContent = res.data.error || 'Failed to record income'
+    alertEl.classList.add('show')
+  }
+}
+
+// ── DELETE INCOME ─────────────────────────────────────────────
+function confirmDeleteIncome(incId, cardId) {
+  document.getElementById('confirm-title').textContent = 'Delete Income Entry'
+  document.getElementById('confirm-body').textContent  = 'Delete this income record? The amount will be deducted from your personal balance.'
+  document.getElementById('confirm-ok-btn').onclick = () => deleteIncome(incId, cardId)
+  openModal('modal-confirm')
+}
+
+async function deleteIncome(incId, cardId) {
+  const res = await api('DELETE', `/api/finance-income?id=${incId}`)
+  closeModal('modal-confirm')
+  if (res.ok) {
+    showToast('Income entry deleted', 'success')
+    await loadData()
+    openDetail(cardId)
+  } else {
+    showToast('Failed to delete income entry', 'error')
+  }
+}
+
 // ── LOGOUT ───────────────────────────────────────────────────
 function logout() { PortalAuth.logout() }
 
@@ -488,7 +587,7 @@ function showToast(msg, type) {
 
 // ── AUTH + CLOCK + IDLE TIMEOUT ───────────────────────────────
 PortalAuth.init({
-  badgeEls: ['badgeDisplay', 'sidebarBadge'],
+  badgeEls: ['badgeDisplay'],  // sidebarBadge is handled manually with name
   clockEl:  'liveClock',
   onReady:  function(badge) {
     const cls = CLASS()
@@ -508,6 +607,11 @@ PortalAuth.init({
     // Populate extra elements
     currentUser.badge = badge
     currentUser.classification = cls
+    currentUser.name = NAME()
+
+    // Show full name in sidebar header
+    const nameEl = document.getElementById('sidebarBadge')
+    if (nameEl) nameEl.textContent = NAME()
 
     const clsEl = document.getElementById('sidebarClassification')
     if (clsEl) clsEl.textContent = cls?.replace('_', ' ').toUpperCase() || '—'
