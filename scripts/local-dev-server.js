@@ -46,7 +46,8 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const filePath = resolveStaticFile(PUBLIC_DIR, url.pathname);
+    const lookupPath = route.mappedFile ? `/${route.mappedFile}` : url.pathname;
+    const filePath = resolveStaticFile(PUBLIC_DIR, lookupPath);
     if (!filePath) {
       res.statusCode = 404;
       res.end("Not found");
