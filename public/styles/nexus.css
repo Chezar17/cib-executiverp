@@ -255,6 +255,36 @@
   .lp-card.lp-orange .lp-open-btn{background:var(--orange);color:#fff;}
   .lp-open-btn-arrow{font-size:16px;font-family:monospace;}
 
+  /* Embedded external / internal content (Nexus document & intel panels) */
+  .lp-embed{
+    margin:0 0 12px;
+    border:1px solid var(--navy-border);
+    background:#0a0e18;
+    border-radius:4px;
+    overflow:hidden;
+    min-height:min(70vh,900px);
+  }
+  .lp-embed-frame{
+    display:block;
+    width:100%;
+    height:min(70vh,900px);
+    min-height:min(50vh,560px);
+    border:0;
+    background:#fff;
+  }
+  .lp-embed-bar{margin:0 0 16px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;}
+  .lp-embed-bar .lp-embed-hint{
+    font-family:'Roboto Mono',monospace;
+    font-size:8px;letter-spacing:1px;
+    color:var(--muted);
+    text-transform:uppercase;
+    opacity:0.65;
+  }
+  @media (max-width: 720px){
+    .lp-embed{min-height:50vh;}
+    .lp-embed-frame{height:min(55vh,640px);min-height:40vh;}
+  }
+
   .lp-info-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--navy-border);}
   .lp-info-cell{background:var(--navy-mid);padding:14px 18px;}
   .lp-info-cell-label{font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;opacity:0.55;}
