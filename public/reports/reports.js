@@ -95,7 +95,7 @@
 
   // ── Navigation ───────────────────────────────────────────
   window.editReport = function (id) {
-    window.location.href = '/portal/reports/form?id=' + id
+    window.location.href = 'form/report-form.html?id=' + id
   }
 
   // ── Delete modal ────────────────────────────────────────

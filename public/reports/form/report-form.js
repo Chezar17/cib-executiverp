@@ -244,7 +244,7 @@
       const json = await res.json()
       if (!reportId && json.report?.id) {
         reportId = json.report.id
-        history.replaceState({}, '', '/portal/reports/form?id=' + reportId)
+        history.replaceState({}, '', '?id=' + reportId)
         document.getElementById('formPageTitle').textContent = 'EDIT INVESTIGATION REPORT'
         document.getElementById('exportBtn').style.display = 'inline-flex'
       }
