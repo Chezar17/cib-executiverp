@@ -66,16 +66,14 @@
 }
 .field-group .req { color: #e74c3c; }
 
-.field-group input[type="text"],
-.field-group input[type="date"],
-.field-group input[type="url"],
+.field-group input:not([type="radio"]):not([type="checkbox"]),
 .field-group select,
 .field-group textarea {
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
   color: #fff; padding: 9px 12px; font-size: 13px; font-family: 'Roboto', sans-serif;
   outline: none; transition: border-color .2s; width: 100%; box-sizing: border-box;
 }
-.field-group input:focus,
+.field-group input:not([type="radio"]):not([type="checkbox"]):focus,
 .field-group select:focus,
 .field-group textarea:focus { border-color: var(--gold); }
 .field-group input::placeholder,

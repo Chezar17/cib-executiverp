@@ -26,6 +26,7 @@
         document.getElementById('exportBtn').style.display = 'inline-flex'
         loadReport(reportId)
       } else {
+        applyNewReportDefaults()
         renderVictimRows()
         renderSuspectRows()
         renderSuspectDetails()
@@ -36,6 +37,30 @@
       }
     }
   })
+
+  // ── New-report defaults from sessionStorage ─────────────
+  function applyNewReportDefaults() {
+    const name     = sessionStorage.getItem('cib_name')           || ''
+    const rank     = sessionStorage.getItem('cib_rank')           || ''
+    const division = sessionStorage.getItem('cib_division')       || ''
+
+    const now      = new Date()
+    const pad      = n => String(n).padStart(2, '0')
+    const todayISO = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+    const days     = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+    const todayDay = days[now.getDay()]
+
+    // Investigator name from session
+    const investigatorName = [rank, name].filter(Boolean).join(' ')
+    if (investigatorName) setVal('lead_investigators', investigatorName)
+
+    // Bureau from division
+    if (division) setVal('bureau_name', division)
+
+    // Date reported = today
+    setVal('date_reported', todayISO)
+    setVal('day_reported',  todayDay)
+  }
 
   // ── Tab switching ────────────────────────────────────────
   window.switchTab = function (btn, secId) {
