@@ -4,6 +4,16 @@ let mainBalance = null
 let expenseCards = []
 let currentDetailCardId = null
 let pendingExpenseCardId = null
+// Ledger state
+let _ledgerAllExpenses = []
+let _ledgerSearch = ''
+let _ledgerSortCol = 'expense_date'
+let _ledgerSortDir = 'desc'
+// Detail table state
+let _detailSearch = ''
+let _detailSortCol = 'expense_date'
+let _detailSortDir = 'desc'
+let _detailExpenses = []
 
 const TOKEN = () => sessionStorage.getItem('cib_token')
 const BADGE  = () => sessionStorage.getItem('cib_badge')
@@ -35,6 +45,7 @@ const VIEWS = {
   mycards:  { bc:'NEXUS · BUDGET LEDGER', title:'My Expense Card', sub:'Your personal allocated budget' },
   mainbal:  { bc:'NEXUS · BUDGET LEDGER', title:'Main Balance',    sub:'Top Secret · Budget administration' },
   detail:   { bc:'NEXUS · BUDGET LEDGER', title:'Expense Detail',  sub:'Transaction log · Personal card' },
+  ledger:   { bc:'NEXUS · BUDGET LEDGER', title:'Full Ledger',     sub:'All expense transactions across all cards' },
 }
 function showView(name, navEl) {
   document.querySelectorAll('.fin-panel').forEach(p => p.classList.remove('active'))
@@ -50,6 +61,7 @@ function showView(name, navEl) {
   if (name === 'overview') loadOverview()
   if (name === 'mycards')  renderMyCard()
   if (name === 'mainbal')  renderMainBalance()
+  if (name === 'ledger')   loadLedger()
 }
 
 // ── API HELPER ────────────────────────────────────────────────
@@ -195,21 +207,52 @@ function renderMyCard() {
 // ── DETAIL VIEW ───────────────────────────────────────────────
 async function openDetail(cardId) {
   currentDetailCardId = cardId
+  _detailSearch = ''
+  _detailSortCol = 'expense_date'
+  _detailSortDir = 'desc'
   showView('detail', null)
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'))
 
-  // Always use freshest card data after any mutation
   await loadData()
   const card = expenseCards.find(c => c.id === cardId)
   if (!card) return
 
-  // Load expenses for this card
   const res = await api('GET', `/api/finance-expenses?card_id=${cardId}`)
-  const expenses = res.ok ? (res.data.data || []) : []
-  const isMine   = card.owner_badge === BADGE()
-  const bal      = card.remaining_balance || 0
-  const initial  = card.personal_balance || 0
-  const totalSpent = expenses.reduce((s, e) => s + (e.amount||0), 0)
+  _detailExpenses = res.ok ? (res.data.data || []) : []
+  renderDetail(card)
+}
+
+function renderDetail(card) {
+  const isMine     = card.owner_badge === BADGE()
+  const bal        = card.remaining_balance || 0
+  const initial    = card.personal_balance || 0
+  const totalSpent = _detailExpenses.reduce((s, e) => s + (e.amount||0), 0)
+
+  // Filter + sort
+  const q = _detailSearch.toLowerCase()
+  let rows = _detailExpenses.filter(e =>
+    !q || e.description.toLowerCase().includes(q) ||
+    fmtDate(e.expense_date).toLowerCase().includes(q) ||
+    String(e.amount).includes(q)
+  )
+  rows = rows.slice().sort((a, b) => {
+    let av = a[_detailSortCol], bv = b[_detailSortCol]
+    if (_detailSortCol === 'amount') { av = +av; bv = +bv }
+    else { av = av || ''; bv = bv || '' }
+    if (av < bv) return _detailSortDir === 'asc' ? -1 : 1
+    if (av > bv) return _detailSortDir === 'asc' ? 1 : -1
+    return 0
+  })
+
+  function sortIcon(col) {
+    if (_detailSortCol !== col) return '<span style="opacity:0.3;margin-left:4px;">↕</span>'
+    return _detailSortDir === 'asc'
+      ? '<span style="color:var(--finance-light);margin-left:4px;">↑</span>'
+      : '<span style="color:var(--finance-light);margin-left:4px;">↓</span>'
+  }
+  function sortable(col, label) {
+    return `<th style="cursor:pointer;user-select:none;" onclick="detailSort('${col}')">${label}${sortIcon(col)}</th>`
+  }
 
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-back" onclick="showView('overview', document.getElementById('nav-overview'))">
@@ -237,22 +280,31 @@ async function openDetail(cardId) {
       </div>
       <div class="detail-stat">
         <div class="detail-stat-label">Transactions</div>
-        <div class="detail-stat-value">${expenses.length}</div>
+        <div class="detail-stat-value">${_detailExpenses.length}</div>
       </div>
     </div>
     <div class="exp-table-wrap">
-      <div class="exp-table-head">
+      <div class="exp-table-head" style="flex-wrap:wrap;gap:10px;">
         <div class="exp-table-title">Expense Transactions</div>
-        ${isMine ? `<button class="btn-action btn-red btn-sm" onclick="openAddExpense('${card.id}')">+ Add Expense</button>` : ''}
+        <div style="display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end;">
+          <div class="tbl-search-wrap">
+            <svg viewBox="0 0 24 24" class="tbl-search-icon"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input class="tbl-search-input" id="detail-search" type="text" placeholder="Search expenses..." value="${_detailSearch.replace(/"/g,'&quot;')}" oninput="detailSearchChange(this.value)"/>
+          </div>
+          ${isMine ? `<button class="btn-action btn-red btn-sm" onclick="openAddExpense('${card.id}')">+ Add Expense</button>` : ''}
+        </div>
       </div>
-      ${expenses.length ? `
+      ${rows.length ? `
       <table class="exp-table">
         <thead><tr>
-          <th>#</th><th>Description</th><th>Date</th><th>Amount</th>
+          <th>#</th>
+          ${sortable('description','Description')}
+          ${sortable('expense_date','Date')}
+          ${sortable('amount','Amount')}
           ${isMine ? '<th>Actions</th>' : ''}
         </tr></thead>
         <tbody>
-          ${expenses.map((e, i) => `<tr
+          ${rows.map((e, i) => `<tr
             data-exp-id="${e.id}"
             data-desc="${e.description.replace(/"/g,'&quot;')}"
             data-date="${e.expense_date?.split('T')[0]||''}"
@@ -269,12 +321,159 @@ async function openDetail(cardId) {
         </tbody>
       </table>
       <div class="exp-total-row">
+        ${q ? `<span style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);">${rows.length} of ${_detailExpenses.length} shown</span>` : ''}
         <span class="exp-total-label">Total Expenses</span>
         <span class="exp-total-value">- $${fmt(totalSpent)}</span>
       </div>
-      ` : `<div class="exp-table-empty">No expenses recorded yet</div>`}
+      ` : `<div class="exp-table-empty">${_detailExpenses.length ? 'No results match your search' : 'No expenses recorded yet'}</div>`}
     </div>
   `
+}
+
+function detailSort(col) {
+  if (_detailSortCol === col) {
+    _detailSortDir = _detailSortDir === 'asc' ? 'desc' : 'asc'
+  } else {
+    _detailSortCol = col
+    _detailSortDir = col === 'amount' ? 'desc' : 'desc'
+  }
+  const card = expenseCards.find(c => c.id === currentDetailCardId)
+  if (card) renderDetail(card)
+}
+
+function detailSearchChange(val) {
+  _detailSearch = val
+  const card = expenseCards.find(c => c.id === currentDetailCardId)
+  if (card) renderDetail(card)
+}
+
+// ── FULL LEDGER ───────────────────────────────────────────────
+async function loadLedger() {
+  await loadData()
+  // Fetch expenses from all cards in parallel
+  const fetches = expenseCards.map(card =>
+    api('GET', `/api/finance-expenses?card_id=${card.id}`).then(res => {
+      const expenses = res.ok ? (res.data.data || []) : []
+      return expenses.map(e => ({
+        ...e,
+        card_label: card.label || card.owner_badge,
+        card_owner: card.owner_badge
+      }))
+    })
+  )
+  const results = await Promise.all(fetches)
+  _ledgerAllExpenses = results.flat()
+  _ledgerSearch = ''
+  _ledgerSortCol = 'expense_date'
+  _ledgerSortDir = 'desc'
+  renderLedger()
+}
+
+function renderLedger() {
+  const total = _ledgerAllExpenses.reduce((s, e) => s + (e.amount||0), 0)
+  const q = _ledgerSearch.toLowerCase()
+  let rows = _ledgerAllExpenses.filter(e =>
+    !q || e.description.toLowerCase().includes(q) ||
+    (e.card_label || '').toLowerCase().includes(q) ||
+    (e.card_owner || '').toLowerCase().includes(q) ||
+    fmtDate(e.expense_date).toLowerCase().includes(q) ||
+    String(e.amount).includes(q)
+  )
+  rows = rows.slice().sort((a, b) => {
+    let av = a[_ledgerSortCol], bv = b[_ledgerSortCol]
+    if (_ledgerSortCol === 'amount') { av = +av; bv = +bv }
+    else if (_ledgerSortCol === 'card_label') { av = av || ''; bv = bv || '' }
+    else { av = av || ''; bv = bv || '' }
+    if (av < bv) return _ledgerSortDir === 'asc' ? -1 : 1
+    if (av > bv) return _ledgerSortDir === 'asc' ? 1 : -1
+    return 0
+  })
+
+  function sortIcon(col) {
+    if (_ledgerSortCol !== col) return '<span style="opacity:0.3;margin-left:4px;">↕</span>'
+    return _ledgerSortDir === 'asc'
+      ? '<span style="color:var(--finance-light);margin-left:4px;">↑</span>'
+      : '<span style="color:var(--finance-light);margin-left:4px;">↓</span>'
+  }
+  function sortable(col, label) {
+    return `<th style="cursor:pointer;user-select:none;" onclick="ledgerSort('${col}')">${label}${sortIcon(col)}</th>`
+  }
+
+  const el = document.getElementById('ledger-content')
+  if (!el) return
+
+  el.innerHTML = `
+    <div class="detail-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+      <div class="detail-stat">
+        <div class="detail-stat-label">Total Entries</div>
+        <div class="detail-stat-value">${_ledgerAllExpenses.length}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="detail-stat-label">Cards Active</div>
+        <div class="detail-stat-value" style="color:var(--gold);">${expenseCards.length}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="detail-stat-label">Total Spent</div>
+        <div class="detail-stat-value" style="color:var(--red-alert);">$${fmt(total)}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="detail-stat-label">Showing</div>
+        <div class="detail-stat-value" style="color:var(--muted);font-size:14px;">${rows.length} / ${_ledgerAllExpenses.length}</div>
+      </div>
+    </div>
+    <div class="exp-table-wrap">
+      <div class="exp-table-head" style="flex-wrap:wrap;gap:10px;">
+        <div class="exp-table-title">All Expense Transactions</div>
+        <div class="tbl-search-wrap">
+          <svg viewBox="0 0 24 24" class="tbl-search-icon"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input class="tbl-search-input" id="ledger-search" type="text" placeholder="Search by card, description, date..." value="${_ledgerSearch.replace(/"/g,'&quot;')}" oninput="ledgerSearchChange(this.value)"/>
+        </div>
+      </div>
+      ${rows.length ? `
+      <table class="exp-table">
+        <thead><tr>
+          <th>#</th>
+          ${sortable('card_label','Card / Agent')}
+          ${sortable('description','Description')}
+          ${sortable('expense_date','Date')}
+          ${sortable('amount','Amount')}
+        </tr></thead>
+        <tbody>
+          ${rows.map((e, i) => `<tr>
+            <td style="color:var(--muted);">${i+1}</td>
+            <td>
+              <div style="color:var(--white);font-size:10px;">${e.card_label}</div>
+              <div style="color:var(--muted);font-size:9px;letter-spacing:1px;">${e.card_owner}</div>
+            </td>
+            <td>${e.description}</td>
+            <td style="color:var(--muted);">${fmtDate(e.expense_date)}</td>
+            <td class="amount-col">- $${fmt(e.amount)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="exp-total-row">
+        ${q ? `<span style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);">${rows.length} of ${_ledgerAllExpenses.length} shown</span>` : ''}
+        <span class="exp-total-label">Grand Total</span>
+        <span class="exp-total-value">- $${fmt(total)}</span>
+      </div>
+      ` : `<div class="exp-table-empty">${_ledgerAllExpenses.length ? 'No results match your search' : 'No expenses recorded yet'}</div>`}
+    </div>
+  `
+}
+
+function ledgerSort(col) {
+  if (_ledgerSortCol === col) {
+    _ledgerSortDir = _ledgerSortDir === 'asc' ? 'desc' : 'asc'
+  } else {
+    _ledgerSortCol = col
+    _ledgerSortDir = 'desc'
+  }
+  renderLedger()
+}
+
+function ledgerSearchChange(val) {
+  _ledgerSearch = val
+  renderLedger()
 }
 
 // ── MAIN BALANCE PANEL (TS only) ──────────────────────────────
@@ -400,7 +599,10 @@ async function submitExpense() {
     await loadData()
     // Re-render wherever we are
     if (document.getElementById('view-detail').classList.contains('active')) {
-      openDetail(currentDetailCardId)
+      const expRes = await api('GET', `/api/finance-expenses?card_id=${currentDetailCardId}`)
+      _detailExpenses = expRes.ok ? (expRes.data.data || []) : []
+      const card = expenseCards.find(c => c.id === currentDetailCardId)
+      if (card) renderDetail(card)
     } else {
       renderCards()
     }
@@ -524,7 +726,11 @@ async function submitEditExpense() {
   if (res.ok) {
     closeModal('modal-editexp')
     showToast('Expense updated', 'success')
-    openDetail(_editExpenseCardId)
+    await loadData()
+    const expRes = await api('GET', `/api/finance-expenses?card_id=${_editExpenseCardId}`)
+    _detailExpenses = expRes.ok ? (expRes.data.data || []) : []
+    const card = expenseCards.find(c => c.id === _editExpenseCardId)
+    if (card) renderDetail(card)
   } else {
     alertEl.textContent = res.data.error || 'Failed to update expense'
     alertEl.classList.add('show')
@@ -544,8 +750,10 @@ async function deleteExpense(expId, cardId) {
   closeModal('modal-confirm')
   if (res.ok) {
     showToast('Expense deleted · Balance restored', 'success')
-    // openDetail re-fetches fresh data including updated remaining_balance
-    openDetail(cardId)
+    await loadData()
+    _detailExpenses = _detailExpenses.filter(e => e.id !== expId)
+    const card = expenseCards.find(c => c.id === cardId)
+    if (card) renderDetail(card)
   } else {
     showToast('Failed to delete expense', 'error')
   }

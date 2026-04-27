@@ -265,3 +265,12 @@ table.exp-table td.actions-col{display:flex;gap:6px;}
   background: rgba(201,168,76,0.12);
   border-color: var(--finance-light, #C9A84C);
 }
+
+/* ══════════════════════════
+   TABLE SEARCH BAR
+══════════════════════════ */
+.tbl-search-wrap{display:flex;align-items:center;gap:8px;background:#0A0F1E;border:1px solid var(--navy-border);padding:5px 12px;min-width:220px;}
+.tbl-search-wrap:focus-within{border-color:var(--finance-light);}
+.tbl-search-icon{width:13px;height:13px;fill:var(--muted);flex-shrink:0;}
+.tbl-search-input{background:transparent;border:none;outline:none;color:var(--white);font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;width:100%;}
+.tbl-search-input::placeholder{color:var(--muted);opacity:0.5;}
