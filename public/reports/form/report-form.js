@@ -525,8 +525,13 @@
   // Sync sub-arrays from DOM before save
   // ─────────────────────────────────────────────────────────
   function syncSubArraysFromDOM() {
-    // All changes are already synced via onchange handlers,
-    // but we make one final pass for textareas (they may need trim)
+    // Force-fire change event on any still-focused input/textarea/select
+    // so that the last edited field is captured before building the payload
+    const active = document.activeElement
+    if (active && ['INPUT','TEXTAREA','SELECT'].includes(active.tagName)) {
+      active.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+    // Final trim pass
     victims   = victims.map(sanitizeTrim)
     suspects  = suspects.map(sanitizeTrim)
     witnesses = witnesses.map(sanitizeTrim)
