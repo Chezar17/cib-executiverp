@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   const supabase = getSupabase()
 
   try {
-    if (!allowMethods(req, res, ['GET', 'POST', 'DELETE'])) return
+    if (!allowMethods(req, res, ['GET', 'POST', 'PATCH', 'DELETE'])) return
 
     // ── GET: All expenses for a card ──────────────────────────
     if (req.method === 'GET') {
@@ -91,6 +91,78 @@ export default async function handler(req, res) {
 
       if (error) throw error
       return res.status(201).json({ success: true, data: expense })
+    }
+
+
+    // ── PATCH: Edit existing expense ─────────────────────────
+    if (req.method === 'PATCH') {
+      const { id } = req.query
+      if (!id) return res.status(400).json({ error: 'Expense ID required' })
+
+      const { description, expense_date, amount } = req.body
+
+      if (!description)  return res.status(400).json({ error: 'Description required' })
+      if (!expense_date) return res.status(400).json({ error: 'Date required' })
+      if (!amount || amount <= 0) return res.status(400).json({ error: 'Valid amount required' })
+
+      // Fetch the expense to verify ownership
+      const { data: expense, error: expErr } = await supabase
+        .from('finance_expenses')
+        .select('id, card_id, amount')
+        .eq('id', id)
+        .eq('is_deleted', false)
+        .single()
+
+      if (expErr || !expense) return res.status(404).json({ error: 'Expense not found' })
+
+      // Verify card ownership
+      const { data: card } = await supabase
+        .from('finance_cards')
+        .select('owner_badge, personal_balance')
+        .eq('id', expense.card_id)
+        .eq('is_deleted', false)
+        .single()
+
+      if (!card) return res.status(404).json({ error: 'Card not found' })
+
+      if (card.owner_badge !== session.badge && session.classification !== 'top_secret') {
+        return res.status(403).json({ error: 'You can only edit your own expenses' })
+      }
+
+      // Validate new amount against remaining balance
+      // remaining = personal_balance - all OTHER expenses (excluding this one)
+      const { data: otherExp } = await supabase
+        .from('finance_expenses')
+        .select('amount')
+        .eq('card_id', expense.card_id)
+        .eq('is_deleted', false)
+        .neq('id', id)   // exclude current expense
+
+      const otherSpent = (otherExp || []).reduce((s, e) => s + (e.amount || 0), 0)
+      const maxAllowed = (card.personal_balance || 0) - otherSpent
+
+      if (amount > maxAllowed) {
+        return res.status(400).json({
+          error: `Amount exceeds available balance. Maximum allowed: $${maxAllowed.toLocaleString()}`
+        })
+      }
+
+      // Apply update
+      const { data: updated, error: updErr } = await supabase
+        .from('finance_expenses')
+        .update({
+          description,
+          expense_date,
+          amount,
+          updated_at: new Date().toISOString(),
+          updated_by: session.badge
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (updErr) throw updErr
+      return res.status(200).json({ success: true, data: updated })
     }
 
     // ── DELETE: Delete own expense ────────────────────────────
