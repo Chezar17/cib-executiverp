@@ -2,6 +2,7 @@
   "name": "cib-website",
   "version": "1.0.0",
   "description": "Central Investigation Bureau — CIB Web Portal",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "seed": "node scripts/seed-users.js",
