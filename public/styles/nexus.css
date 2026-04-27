@@ -256,6 +256,8 @@
   .lp-open-btn-arrow{font-size:16px;font-family:monospace;}
 
   /* Embedded external / internal content (Nexus document & intel panels) */
+  /* color-scheme: dark — hints UA + embedded docs (where supported) to prefer dark;
+     Google/Miro may still show light; user OS “dark mode” also affects @media prefers-color-scheme inside the iframe. */
   .lp-embed{
     margin:0 0 12px;
     border:1px solid var(--navy-border);
@@ -263,6 +265,7 @@
     border-radius:4px;
     overflow:hidden;
     min-height:min(70vh,900px);
+    color-scheme: dark;
   }
   .lp-embed-frame{
     display:block;
@@ -270,7 +273,8 @@
     height:min(70vh,900px);
     min-height:min(50vh,560px);
     border:0;
-    background:#fff;
+    color-scheme: dark;
+    background: var(--navy-mid);
   }
   .lp-embed-bar{margin:0 0 16px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;}
   .lp-embed-bar .lp-embed-hint{
