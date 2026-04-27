@@ -774,259 +774,298 @@ async function exportLedgerDocx() {
 
   showToast('Generating report...', 'info')
 
-  const {
-    Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-    AlignmentType, BorderStyle, WidthType, ShadingType,
-    HeadingLevel, Header, Footer, PageNumber, ImageRun,
-    VerticalAlign, PageOrientation
-  } = window.docx
-
-  // ── Helpers ────────────────────────────────────────────────
-  const border  = { style: BorderStyle.SINGLE, size: 1, color: 'C8C8C8' }
-  const borders = { top: border, bottom: border, left: border, right: border }
-  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
-  const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }
-
-  const cell = (text, opts = {}) => new TableCell({
-    borders: opts.borders || borders,
-    width: { size: opts.w || 2340, type: WidthType.DXA },
-    shading: opts.shade ? { fill: opts.shade, type: ShadingType.CLEAR } : undefined,
-    margins: { top: 90, bottom: 90, left: 130, right: 130 },
-    verticalAlign: VerticalAlign.CENTER,
-    children: [new Paragraph({
-      alignment: opts.align || AlignmentType.LEFT,
-      children: [new TextRun({
-        text: String(text),
-        font: 'Arial',
-        size: opts.size || 18,
-        bold: opts.bold || false,
-        color: opts.color || '1A1A1A',
-      })]
-    })]
-  })
-
-  const fmtAmt = n => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0 })
-  const now    = new Date()
-  const fmtNow = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
-  const fmtTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-
-  // ── Sort by date descending for the report ─────────────────
-  const sorted = _ledgerAllExpenses.slice().sort((a, b) =>
-    (b.expense_date || '').localeCompare(a.expense_date || ''))
-
-  const grandTotal = sorted.reduce((s, e) => s + (e.amount || 0), 0)
-
-  // ── Group by card for summary section ─────────────────────
-  const byCard = {}
-  sorted.forEach(e => {
-    const key = e.card_label || e.card_owner
-    if (!byCard[key]) byCard[key] = { label: key, owner: e.card_owner, total: 0, count: 0 }
-    byCard[key].total += e.amount || 0
-    byCard[key].count++
-  })
-
-  // ── Try to load the logo ───────────────────────────────────
-  let logoRun = null
   try {
-    const resp = await fetch('/images/cib-logo.png')
-    if (resp.ok) {
-      const buf = await resp.arrayBuffer()
-      logoRun = new ImageRun({
-        data: buf,
-        transformation: { width: 48, height: 48 },
-        type: 'png',
-      })
-    }
-  } catch (_) { /* logo optional */ }
+    const now     = new Date()
+    const fmtNow  = now.toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })
+    const fmtTime = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })
+    const fmtAmt  = n => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits:0 })
+    const xmlEsc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 
-  // ── PAGE: landscape A4 for wide table ─────────────────────
-  // docx-js swaps w/h for landscape, pass portrait dims
-  const pageW = 11906, pageH = 16838
-  const margin = 800
-  // Content width in landscape = pageH - 2*margin
-  const contentW = pageH - margin * 2  // ~15238 DXA
+    const sorted = _ledgerAllExpenses.slice().sort((a,b) =>
+      (b.expense_date||'').localeCompare(a.expense_date||''))
+    const grandTotal = sorted.reduce((s,e) => s+(e.amount||0), 0)
 
-  // Column widths for main table (sum = contentW)
-  // #, Card/Agent, Description, Date, Amount
-  const colW = [600, 3100, 6338, 2100, 3100]  // = 15238
-
-  // ── Header row ─────────────────────────────────────────────
-  const headerLabels = ['#', 'Card / Agent', 'Description', 'Date', 'Amount']
-  const headerRow = new TableRow({
-    tableHeader: true,
-    children: headerLabels.map((lbl, i) => cell(lbl, {
-      w: colW[i],
-      bold: true,
-      shade: '1C3A2A',
-      color: 'FFFFFF',
-      size: 17,
-      align: i === 4 ? AlignmentType.RIGHT : AlignmentType.LEFT,
-    }))
-  })
-
-  // ── Data rows ──────────────────────────────────────────────
-  const dataRows = sorted.map((e, i) => new TableRow({
-    children: [
-      cell(i + 1, { w: colW[0], color: '888888', align: AlignmentType.CENTER }),
-      new TableCell({
-        borders, width: { size: colW[1], type: WidthType.DXA },
-        margins: { top: 90, bottom: 90, left: 130, right: 130 },
-        children: [
-          new Paragraph({ children: [new TextRun({ text: e.card_label || '—', font: 'Arial', size: 18, bold: true, color: '1A1A1A' })] }),
-          new Paragraph({ children: [new TextRun({ text: e.card_owner || '', font: 'Arial', size: 15, color: '888888' })] }),
-        ]
-      }),
-      cell(e.description || '—', { w: colW[2] }),
-      cell(fmtDate(e.expense_date), { w: colW[3], color: '555555' }),
-      cell(fmtAmt(e.amount), { w: colW[4], align: AlignmentType.RIGHT, bold: true, color: 'C0392B' }),
-    ]
-  }))
-
-  // Total row
-  const totalRow = new TableRow({
-    children: [
-      cell('', { w: colW[0], borders: noBorders }),
-      cell('', { w: colW[1], borders: noBorders }),
-      cell('', { w: colW[2], borders: noBorders }),
-      cell('GRAND TOTAL', { w: colW[3], bold: true, shade: 'F5F5F5', align: AlignmentType.RIGHT }),
-      cell(fmtAmt(grandTotal), { w: colW[4], bold: true, shade: 'F5F5F5', color: 'C0392B', align: AlignmentType.RIGHT }),
-    ]
-  })
-
-  // ── Summary table ──────────────────────────────────────────
-  const summaryHeaderRow = new TableRow({
-    children: [
-      cell('Card / Agent', { w: 5000, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17 }),
-      cell('Badge', { w: 3000, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17 }),
-      cell('Transactions', { w: 2119, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17, align: AlignmentType.CENTER }),
-      cell('Total Spent', { w: 3000, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17, align: AlignmentType.RIGHT }),
-    ]
-  })
-  const summaryRows = Object.values(byCard).map(c => new TableRow({
-    children: [
-      cell(c.label, { w: 5000, bold: true }),
-      cell(c.owner, { w: 3000, color: '555555' }),
-      cell(c.count, { w: 2119, align: AlignmentType.CENTER }),
-      cell(fmtAmt(c.total), { w: 3000, align: AlignmentType.RIGHT, color: 'C0392B' }),
-    ]
-  }))
-
-  // ── Build document ─────────────────────────────────────────
-  const titleChildren = []
-
-  if (logoRun) {
-    titleChildren.push(new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 120 },
-      children: [logoRun]
-    }))
-  }
-
-  titleChildren.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 0, after: 60 },
-      children: [new TextRun({ text: 'CENTRAL INVESTIGATION BUREAU', font: 'Arial', size: 28, bold: true, color: '1C3A2A', allCaps: true })]
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 60 },
-      children: [new TextRun({ text: 'BUDGET LEDGER · FULL EXPENSE REPORT', font: 'Arial', size: 22, color: '27AE60', allCaps: true })]
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 60 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '27AE60', space: 6 } },
-      children: [new TextRun({ text: `Generated: ${fmtNow} at ${fmtTime}   ·   Prepared by: ${currentUser.name || currentUser.badge || '—'}`, font: 'Arial', size: 17, color: '888888' })]
-    }),
-    new Paragraph({ spacing: { after: 200 }, children: [] }),
-
-    // ── Summary heading ──────────────────────────────────────
-    new Paragraph({
-      spacing: { before: 0, after: 140 },
-      children: [new TextRun({ text: 'CARD SUMMARY', font: 'Arial', size: 22, bold: true, color: '1C3A2A', allCaps: true })]
-    }),
-    new Table({
-      width: { size: 13119, type: WidthType.DXA },
-      columnWidths: [5000, 3000, 2119, 3000],
-      rows: [summaryHeaderRow, ...summaryRows],
-    }),
-    new Paragraph({ spacing: { after: 300 }, children: [] }),
-
-    // ── Transactions heading ─────────────────────────────────
-    new Paragraph({
-      spacing: { before: 0, after: 140 },
-      children: [new TextRun({ text: 'ALL TRANSACTIONS', font: 'Arial', size: 22, bold: true, color: '1C3A2A', allCaps: true })]
-    }),
-    new Paragraph({
-      spacing: { after: 140 },
-      children: [new TextRun({ text: `${sorted.length} total expense records across ${Object.keys(byCard).length} card(s)`, font: 'Arial', size: 17, color: '555555' })]
-    }),
-    new Table({
-      width: { size: contentW, type: WidthType.DXA },
-      columnWidths: colW,
-      rows: [headerRow, ...dataRows, totalRow],
-    }),
-    new Paragraph({ spacing: { after: 300 }, children: [] }),
-
-    // ── Footer note ──────────────────────────────────────────
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC', space: 8 } },
-      spacing: { before: 200 },
-      children: [new TextRun({ text: 'CLASSIFIED · CIB INTERNAL USE ONLY · ALL TRANSACTIONS ARE LOGGED', font: 'Arial', size: 15, color: 'AAAAAA', allCaps: true })]
+    // Card summary
+    const byCard = {}
+    sorted.forEach(e => {
+      const k = e.card_label || e.card_owner
+      if (!byCard[k]) byCard[k] = { label:k, owner:e.card_owner, total:0, count:0 }
+      byCard[k].total += e.amount||0
+      byCard[k].count++
     })
-  )
 
-  const doc = new Document({
-    styles: {
-      default: { document: { run: { font: 'Arial', size: 20 } } }
-    },
-    sections: [{
-      properties: {
-        page: {
-          size: { width: pageW, height: pageH, orientation: PageOrientation.LANDSCAPE },
-          margin: { top: margin, right: margin, bottom: margin, left: margin }
-        }
-      },
-      headers: {
-        default: new Header({
-          children: [new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC', space: 6 } },
-            children: [new TextRun({ text: 'CIB · BUDGET LEDGER · CONFIDENTIAL', font: 'Arial', size: 16, color: 'AAAAAA', allCaps: true })]
-          })]
-        })
-      },
-      footers: {
-        default: new Footer({
-          children: [new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC', space: 6 } },
-            children: [
-              new TextRun({ text: 'Page ', font: 'Arial', size: 16, color: 'AAAAAA' }),
-              new TextRun({ children: [PageNumber.CURRENT], font: 'Arial', size: 16, color: 'AAAAAA' }),
-              new TextRun({ text: ' of ', font: 'Arial', size: 16, color: 'AAAAAA' }),
-              new TextRun({ children: [PageNumber.TOTAL_PAGES], font: 'Arial', size: 16, color: 'AAAAAA' }),
-            ]
-          })]
-        })
-      },
-      children: titleChildren
-    }]
-  })
+    // ── XML helpers ──────────────────────────────────────────
+    const run = (text, opts={}) => {
+      const rpr = [
+        opts.bold   ? '<w:b/>'                                : '',
+        opts.size   ? `<w:sz w:val="${opts.size}"/><w:szCs w:val="${opts.size}"/>` : '',
+        opts.color  ? `<w:color w:val="${opts.color}"/>`      : '',
+        opts.font   ? `<w:rFonts w:ascii="${opts.font}" w:hAnsi="${opts.font}"/>` : '<w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>',
+        opts.caps   ? '<w:caps/>'                             : '',
+      ].join('')
+      return `<w:r><w:rPr>${rpr}</w:rPr><w:t xml:space="preserve">${xmlEsc(text)}</w:t></w:r>`
+    }
 
-  // ── Download ───────────────────────────────────────────────
-  const buffer = await Packer.toBlob(doc)
-  const url    = URL.createObjectURL(buffer)
-  const a      = document.createElement('a')
-  a.href       = url
-  a.download   = `CIB_Expense_Report_${now.toISOString().split('T')[0]}.docx`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-  showToast('Report exported successfully', 'success')
+    const para = (children, opts={}) => {
+      const ppr = [
+        opts.align  ? `<w:jc w:val="${opts.align}"/>`          : '',
+        opts.space  ? `<w:spacing w:before="${opts.space.before||0}" w:after="${opts.space.after||0}"/>` : '',
+        opts.borderBottom ? `<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="6" w:color="${opts.borderBottom}"/></w:pBdr>` : '',
+        opts.borderTop    ? `<w:pBdr><w:top    w:val="single" w:sz="4" w:space="6" w:color="${opts.borderTop}"/></w:pBdr>`    : '',
+      ].join('')
+      return `<w:p><w:pPr>${ppr}</w:pPr>${children}</w:p>`
+    }
+
+    const tcPr = (w, shade='') =>
+      `<w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${shade?`<w:shd w:val="clear" w:color="auto" w:fill="${shade}"/>`:''}` +
+      `<w:tcMar><w:top w:w="90" w:type="dxa"/><w:bottom w:w="90" w:type="dxa"/><w:left w:w="130" w:type="dxa"/><w:right w:w="130" w:type="dxa"/></w:tcMar></w:tcPr>`
+
+    const tc = (content, w, shade='') =>
+      `<w:tc>${tcPr(w,shade)}${content}</w:tc>`
+
+    const borderXml = `<w:tblBorders>
+      <w:top    w:val="single" w:sz="2" w:space="0" w:color="C8C8C8"/>
+      <w:left   w:val="single" w:sz="2" w:space="0" w:color="C8C8C8"/>
+      <w:bottom w:val="single" w:sz="2" w:space="0" w:color="C8C8C8"/>
+      <w:right  w:val="single" w:sz="2" w:space="0" w:color="C8C8C8"/>
+      <w:insideH w:val="single" w:sz="2" w:space="0" w:color="C8C8C8"/>
+      <w:insideV w:val="single" w:sz="2" w:space="0" w:color="C8C8C8"/>
+    </w:tblBorders>`
+
+    // ── Summary table ────────────────────────────────────────
+    // Content width landscape A4 with 800 DXA margins = 16838 - 1600 = 15238
+    // Summary cols: 5000, 3000, 2119, 3000 = 13119 (centered-ish)
+    const summaryHeader = `<w:tr>
+      ${tc(para(run('Card / Agent', {bold:true,color:'FFFFFF',size:17})), 5000, '1C3A2A')}
+      ${tc(para(run('Badge',        {bold:true,color:'FFFFFF',size:17})), 3000, '1C3A2A')}
+      ${tc(para(run('Transactions', {bold:true,color:'FFFFFF',size:17}),'align:center'), 2119, '1C3A2A')}
+      ${tc(para(run('Total Spent',  {bold:true,color:'FFFFFF',size:17})), 3000, '1C3A2A')}
+    </w:tr>`
+
+    const summaryRows = Object.values(byCard).map(c => `<w:tr>
+      ${tc(para(run(c.label, {bold:true,size:18})), 5000)}
+      ${tc(para(run(c.owner, {color:'555555',size:17})), 3000)}
+      ${tc(para(run(c.count, {size:17}), {align:'center'}), 2119)}
+      ${tc(para(run(fmtAmt(c.total), {bold:true,color:'C0392B',size:18}), {align:'right'}), 3000)}
+    </w:tr>`).join('')
+
+    const summaryTable = `<w:tbl>
+      <w:tblPr><w:tblW w:w="13119" w:type="dxa"/>${borderXml}<w:tblLook w:val="0000"/></w:tblPr>
+      <w:tblGrid><w:gridCol w:w="5000"/><w:gridCol w:w="3000"/><w:gridCol w:w="2119"/><w:gridCol w:w="3000"/></w:tblGrid>
+      ${summaryHeader}${summaryRows}
+    </w:tbl>`
+
+    // ── Main transactions table ──────────────────────────────
+    // cols: 600, 3100, 6338, 2100, 3100 = 15238
+    const txHeader = `<w:tr>
+      ${tc(para(run('#',           {bold:true,color:'FFFFFF',size:17}), {align:'center'}), 600,  '1C3A2A')}
+      ${tc(para(run('Card / Agent',{bold:true,color:'FFFFFF',size:17})),                   3100, '1C3A2A')}
+      ${tc(para(run('Description', {bold:true,color:'FFFFFF',size:17})),                   6338, '1C3A2A')}
+      ${tc(para(run('Date',        {bold:true,color:'FFFFFF',size:17})),                   2100, '1C3A2A')}
+      ${tc(para(run('Amount',      {bold:true,color:'FFFFFF',size:17}), {align:'right'}),  3100, '1C3A2A')}
+    </w:tr>`
+
+    const txRows = sorted.map((e,i) => `<w:tr>
+      ${tc(para(run(i+1, {color:'888888',size:17}), {align:'center'}), 600)}
+      ${tc(`${para(run(e.card_label||'—', {bold:true,size:18}))}${para(run(e.card_owner||'', {color:'888888',size:15}))}`, 3100)}
+      ${tc(para(run(e.description||'—', {size:18})), 6338)}
+      ${tc(para(run(fmtDate(e.expense_date), {color:'555555',size:17})), 2100)}
+      ${tc(para(run(fmtAmt(e.amount), {bold:true,color:'C0392B',size:18}), {align:'right'}), 3100)}
+    </w:tr>`).join('')
+
+    const txTotalRow = `<w:tr>
+      ${tc(para(''), 600,  'F5F5F5')}
+      ${tc(para(''), 3100, 'F5F5F5')}
+      ${tc(para(''), 6338, 'F5F5F5')}
+      ${tc(para(run('GRAND TOTAL', {bold:true,size:17,caps:true}), {align:'right'}), 2100, 'F5F5F5')}
+      ${tc(para(run(fmtAmt(grandTotal), {bold:true,color:'C0392B',size:20}), {align:'right'}), 3100, 'F5F5F5')}
+    </w:tr>`
+
+    const txTable = `<w:tbl>
+      <w:tblPr><w:tblW w:w="15238" w:type="dxa"/>${borderXml}<w:tblLook w:val="0000"/></w:tblPr>
+      <w:tblGrid><w:gridCol w:w="600"/><w:gridCol w:w="3100"/><w:gridCol w:w="6338"/><w:gridCol w:w="2100"/><w:gridCol w:w="3100"/></w:tblGrid>
+      ${txHeader}${txRows}${txTotalRow}
+    </w:tbl>`
+
+    // ── Logo (optional) ──────────────────────────────────────
+    let logoXml  = ''
+    let logoRels = ''
+    let logoBytes = null
+    try {
+      const resp = await fetch('/images/cib-logo.png')
+      if (resp.ok) {
+        const ab = await resp.arrayBuffer()
+        logoBytes = ab
+        // 48x48 px → EMU: 1px = 9144 EMU
+        const cx = 48 * 9144, cy = 48 * 9144
+        logoXml = `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="80"/></w:pPr>
+          <w:r><w:rPr/><w:drawing>
+            <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+              <wp:extent cx="${cx}" cy="${cy}"/>
+              <wp:docPr id="1" name="logo"/>
+              <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                    <pic:nvPicPr><pic:cNvPr id="1" name="logo"/><pic:cNvPicPr/></pic:nvPicPr>
+                    <pic:blipFill>
+                      <a:blip r:embed="rIdLogo" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+                      <a:stretch><a:fillRect/></a:stretch>
+                    </pic:blipFill>
+                    <pic:spPr>
+                      <a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>
+                      <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                    </pic:spPr>
+                  </pic:pic>
+                </a:graphicData>
+              </a:graphic>
+            </wp:inline>
+          </w:drawing></w:r></w:p>`
+        logoRels = `<Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/>`
+      }
+    } catch(_) {}
+
+    // ── document.xml ────────────────────────────────────────
+    const body = [
+      logoXml,
+      para(run('CENTRAL INVESTIGATION BUREAU', {bold:true,color:'1C3A2A',size:28,caps:true}), {align:'center', space:{before:0,after:60}}),
+      para(run('BUDGET LEDGER · FULL EXPENSE REPORT', {color:'27AE60',size:22,caps:true}), {align:'center', space:{before:0,after:60}}),
+      para(run(`Generated: ${fmtNow} at ${fmtTime}   ·   Prepared by: ${xmlEsc(currentUser.name||currentUser.badge||'—')}`, {color:'888888',size:17}),
+           {align:'center', borderBottom:'CCCCCC', space:{before:0,after:60}}),
+      para('', {space:{after:200}}),
+
+      para(run('CARD SUMMARY', {bold:true,color:'1C3A2A',size:22,caps:true}), {space:{after:140}}),
+      summaryTable,
+      para('', {space:{after:300}}),
+
+      para(run('ALL TRANSACTIONS', {bold:true,color:'1C3A2A',size:22,caps:true}), {space:{after:140}}),
+      para(run(`${sorted.length} total expense record(s) across ${Object.keys(byCard).length} card(s)`, {color:'555555',size:17}), {space:{after:140}}),
+      txTable,
+      para('', {space:{after:300}}),
+
+      para(run('CLASSIFIED · CIB INTERNAL USE ONLY · ALL TRANSACTIONS ARE LOGGED', {color:'AAAAAA',size:15,caps:true}),
+           {align:'center', borderTop:'CCCCCC', space:{before:200,after:0}}),
+    ].join('\n')
+
+    const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+  mc:Ignorable="w14">
+<w:body>
+${body}
+<w:sectPr>
+  <w:headerReference w:type="default" r:id="rIdHdr"/>
+  <w:footerReference w:type="default" r:id="rIdFtr"/>
+  <w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>
+  <w:pgMar w:top="800" w:right="800" w:bottom="800" w:left="800" w:header="400" w:footer="400" w:gutter="0"/>
+</w:sectPr>
+</w:body>
+</w:document>`
+
+    const headerXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:p>
+    <w:pPr><w:jc w:val="right"/>
+      <w:pBdr><w:bottom w:val="single" w:sz="4" w:space="6" w:color="CCCCCC"/></w:pBdr>
+    </w:pPr>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:szCs w:val="16"/><w:color w:val="AAAAAA"/><w:caps/></w:rPr>
+      <w:t>CIB · Budget Ledger · Confidential</w:t>
+    </w:r>
+  </w:p>
+</w:hdr>`
+
+    const footerXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <w:p>
+    <w:pPr><w:jc w:val="right"/>
+      <w:pBdr><w:top w:val="single" w:sz="4" w:space="6" w:color="CCCCCC"/></w:pBdr>
+    </w:pPr>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:t xml:space="preserve">Page </w:t></w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:fldChar w:fldCharType="begin"/></w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:instrText xml:space="preserve"> PAGE </w:instrText></w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:fldChar w:fldCharType="end"/></w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:t xml:space="preserve"> of </w:t></w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:fldChar w:fldCharType="begin"/></w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:instrText xml:space="preserve"> NUMPAGES </w:instrText></w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="AAAAAA"/></w:rPr>
+      <w:fldChar w:fldCharType="end"/></w:r>
+  </w:p>
+</w:ftr>`
+
+    const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"  Target="styles.xml"/>
+  <Relationship Id="rIdHdr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>
+  <Relationship Id="rIdFtr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>
+  ${logoRels}
+</Relationships>`
+
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault><w:rPr>
+      <w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>
+      <w:sz w:val="20"/><w:szCs w:val="20"/>
+    </w:rPr></w:rPrDefault>
+  </w:docDefaults>
+</w:styles>`
+
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml"  ContentType="application/xml"/>
+  ${logoBytes ? '<Default Extension="png" ContentType="image/png"/>' : ''}
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/word/header1.xml"  ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>
+  <Override PartName="/word/footer1.xml"  ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>
+</Types>`
+
+    const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`
+
+    // ── Assemble ZIP ─────────────────────────────────────────
+    const zip = new JSZip()
+    zip.file('[Content_Types].xml',          contentTypesXml)
+    zip.file('_rels/.rels',                  rootRelsXml)
+    zip.file('word/document.xml',            documentXml)
+    zip.file('word/styles.xml',              stylesXml)
+    zip.file('word/header1.xml',             headerXml)
+    zip.file('word/footer1.xml',             footerXml)
+    zip.file('word/_rels/document.xml.rels', relsXml)
+    if (logoBytes) zip.file('word/media/logo.png', logoBytes)
+
+    const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `CIB_Expense_Report_${now.toISOString().split('T')[0]}.docx`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    showToast('Report exported successfully', 'success')
+
+  } catch(err) {
+    console.error('Export error:', err)
+    showToast('Export failed: ' + err.message, 'error')
+  }
 }
 
 // ── LOGOUT ───────────────────────────────────────────────────
