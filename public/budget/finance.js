@@ -92,6 +92,24 @@ async function loadData() {
 
 // ── OVERVIEW ──────────────────────────────────────────────────
 async function loadOverview() {
+  // Show skeleton immediately
+  document.getElementById('ovw-main-balance').innerHTML = '<span class="skel skel-text" style="width:100px;height:28px;display:inline-block;"></span>'
+  document.getElementById('stat-main').innerHTML       = '<span class="skel skel-text" style="width:70px;"></span>'
+  document.getElementById('stat-allocated').innerHTML  = '<span class="skel skel-text" style="width:70px;"></span>'
+  document.getElementById('stat-spent').innerHTML      = '<span class="skel skel-text" style="width:70px;"></span>'
+  document.getElementById('cards-container').innerHTML = [1,2,3].map(() => `
+    <div class="expense-card skel-card">
+      <div class="skel-card-header"><div class="skel skel-line" style="width:60%;"></div><div class="skel skel-badge"></div></div>
+      <div class="skel skel-line" style="width:40%;margin-top:18px;"></div>
+      <div class="skel skel-bar"></div>
+      <div class="skel-card-meta">
+        <div class="skel skel-line" style="width:28%;"></div>
+        <div class="skel skel-line" style="width:28%;"></div>
+        <div class="skel skel-line" style="width:28%;"></div>
+      </div>
+      <div class="skel skel-btn"></div>
+    </div>`).join('')
+
   await loadData()
 
   // Main balance card
@@ -188,11 +206,29 @@ function renderCards() {
 }
 
 // ── MY CARD ───────────────────────────────────────────────────
-function renderMyCard() {
-  const myCard = expenseCards.find(c => c.owner_badge === BADGE())
+async function renderMyCard() {
   const el = document.getElementById('mycard-content')
+  // Show skeleton while we wait for data
+  el.innerHTML = `
+    <div style="max-width:640px;">
+      <div class="skel-detail-hero">
+        <div><div class="skel skel-line" style="width:180px;height:18px;margin-bottom:10px;"></div>
+          <div class="skel skel-line" style="width:120px;"></div></div>
+        <div style="text-align:right"><div class="skel skel-line" style="width:100px;height:26px;margin-bottom:6px;"></div>
+          <div class="skel skel-line" style="width:70px;"></div></div>
+      </div>
+      <div class="skel-stat-row">
+        ${[1,2,3].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:60%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:80%;height:20px;"></div></div>`).join('')}
+      </div>
+      <div class="skel skel-line" style="width:100%;height:38px;margin-top:20px;border-radius:2px;"></div>
+      ${[1,2,3].map(() => `<div class="skel skel-table-row"></div>`).join('')}
+    </div>`
+
+  await loadData()
+  const myCard = expenseCards.find(c => c.owner_badge === BADGE())
+  const el2 = document.getElementById('mycard-content')
   if (!myCard) {
-    el.innerHTML = `<div class="empty-state" style="margin-top:40px;">
+    el2.innerHTML = `<div class="empty-state" style="margin-top:40px;">
       <svg class="empty-state-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
       <div class="empty-state-text">No personal expense card</div>
       <div class="empty-state-sub" style="margin-bottom:20px;">You have not created an expense card yet</div>
@@ -212,6 +248,27 @@ async function openDetail(cardId) {
   _detailSortDir = 'desc'
   showView('detail', null)
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'))
+
+  // Show skeleton immediately
+  document.getElementById('detail-content').innerHTML = `
+    <div class="skel skel-line" style="width:120px;margin-bottom:28px;"></div>
+    <div class="skel-detail-hero">
+      <div><div class="skel skel-line" style="width:200px;height:18px;margin-bottom:10px;"></div>
+        <div class="skel skel-line" style="width:140px;"></div></div>
+      <div style="text-align:right"><div class="skel skel-line" style="width:110px;height:28px;margin-bottom:6px;"></div>
+        <div class="skel skel-line" style="width:80px;"></div></div>
+    </div>
+    <div class="skel-stat-row">
+      ${[1,2,3].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:55%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:75%;height:20px;"></div></div>`).join('')}
+    </div>
+    <div class="exp-table-wrap" style="padding:20px 24px;margin-top:20px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+        <div class="skel skel-line" style="width:140px;height:14px;"></div>
+        <div class="skel skel-line" style="width:180px;height:28px;border-radius:2px;"></div>
+      </div>
+      <div class="skel skel-line" style="width:100%;height:38px;border-radius:2px;margin-bottom:2px;"></div>
+      ${[1,2,3,4,5].map(() => `<div class="skel skel-table-row"></div>`).join('')}
+    </div>`
 
   await loadData()
   const card = expenseCards.find(c => c.id === cardId)
@@ -349,6 +406,21 @@ function detailSearchChange(val) {
 
 // ── FULL LEDGER ───────────────────────────────────────────────
 async function loadLedger() {
+  // Show skeleton immediately
+  const el = document.getElementById('ledger-content')
+  if (el) el.innerHTML = `
+    <div class="skel-stat-row" style="margin-bottom:20px;">
+      ${[1,2,3,4].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:55%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:75%;height:22px;"></div></div>`).join('')}
+    </div>
+    <div class="exp-table-wrap" style="padding:20px 24px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+        <div class="skel skel-line" style="width:160px;height:14px;"></div>
+        <div class="skel skel-line" style="width:220px;height:28px;border-radius:2px;"></div>
+      </div>
+      <div class="skel skel-line" style="width:100%;height:38px;border-radius:2px;margin-bottom:2px;"></div>
+      ${[1,2,3,4,5,6,7].map(() => `<div class="skel skel-table-row"></div>`).join('')}
+    </div>`
+
   await loadData()
   // Fetch expenses from all cards in parallel
   const fetches = expenseCards.map(card =>
@@ -483,7 +555,23 @@ function ledgerSearchChange(val) {
 }
 
 // ── MAIN BALANCE PANEL (TS only) ──────────────────────────────
-function renderMainBalance() {
+async function renderMainBalance() {
+  const el = document.getElementById('mainbal-content')
+  // Show skeleton while session/data resolves
+  el.innerHTML = `
+    <div style="max-width:600px;margin-bottom:20px;">
+      <div class="skel-mainbal-card">
+        <div class="skel skel-line" style="width:140px;margin-bottom:16px;"></div>
+        <div class="skel skel-line" style="width:200px;height:36px;margin-bottom:10px;"></div>
+        <div class="skel skel-line" style="width:160px;margin-bottom:20px;"></div>
+        <div class="skel skel-line" style="width:100%;height:1px;margin-bottom:16px;"></div>
+        <div class="skel skel-line" style="width:80%;margin-bottom:10px;"></div>
+        <div class="skel skel-btn" style="width:160px;margin-top:16px;"></div>
+      </div>
+    </div>`
+
+  await loadData()
+
   if (!TS_ONLY.includes(CLASS())) {
     document.getElementById('mainbal-content').innerHTML = `
       <div class="access-denied">
