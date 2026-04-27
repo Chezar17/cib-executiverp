@@ -34,17 +34,18 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const { data, error } = await supabase
         .from('finance_cards')
-        .select('*, finance_expenses(amount)')
+        .select('*, finance_expenses(amount), finance_income(amount)')
         .eq('is_deleted', false)
         .order('created_at', { ascending: true })
 
       if (error) throw error
 
-      // Compute remaining_balance and total_spent per card
+      // Compute remaining_balance — income adds to balance, expenses subtract
       const enriched = (data || []).map(card => {
-        const total_spent = (card.finance_expenses || []).reduce((s, e) => s + (e.amount || 0), 0)
-        const remaining_balance = Math.max(0, (card.personal_balance || 0) - total_spent)
-        return { ...card, total_spent, remaining_balance, finance_expenses: undefined }
+        const total_spent  = (card.finance_expenses || []).reduce((s, e) => s + (e.amount || 0), 0)
+        const total_income = (card.finance_income   || []).reduce((s, i) => s + (i.amount || 0), 0)
+        const remaining_balance = Math.max(0, (card.personal_balance || 0) + total_income - total_spent)
+        return { ...card, total_spent, total_income, remaining_balance, finance_expenses: undefined, finance_income: undefined }
       })
 
       return res.status(200).json({ success: true, data: enriched })
