@@ -5,6 +5,10 @@
   "trailingSlash": false,
 
   "routes": [
+    { "src": "/api/finance-balance", "dest": "/api/finance?__f=balance" },
+    { "src": "/api/finance-cards", "dest": "/api/finance?__f=cards" },
+    { "src": "/api/finance-expenses", "dest": "/api/finance?__f=expenses" },
+    { "src": "/api/finance-income", "dest": "/api/finance?__f=income" },
     { "src": "/api/(.*)",  "dest": "/api/$1"       },
 
     { "src": "/",                "dest": "/public/index.html"           },
