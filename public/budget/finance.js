@@ -424,9 +424,15 @@ function renderLedger() {
     <div class="exp-table-wrap">
       <div class="exp-table-head" style="flex-wrap:wrap;gap:10px;">
         <div class="exp-table-title">All Expense Transactions</div>
-        <div class="tbl-search-wrap">
-          <svg viewBox="0 0 24 24" class="tbl-search-icon"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-          <input class="tbl-search-input" id="ledger-search" type="text" placeholder="Search by card, description, date..." value="${_ledgerSearch.replace(/"/g,'&quot;')}" oninput="ledgerSearchChange(this.value)"/>
+        <div style="display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end;">
+          <div class="tbl-search-wrap">
+            <svg viewBox="0 0 24 24" class="tbl-search-icon"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input class="tbl-search-input" id="ledger-search" type="text" placeholder="Search by card, description, date..." value="${_ledgerSearch.replace(/"/g,'&quot;')}" oninput="ledgerSearchChange(this.value)"/>
+          </div>
+          <button class="btn-action btn-outline btn-sm" onclick="exportLedgerDocx()" style="white-space:nowrap;display:flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Export Report
+          </button>
         </div>
       </div>
       ${rows.length ? `
@@ -757,6 +763,270 @@ async function deleteExpense(expId, cardId) {
   } else {
     showToast('Failed to delete expense', 'error')
   }
+}
+
+// ── EXPORT LEDGER TO DOCX ─────────────────────────────────────
+async function exportLedgerDocx() {
+  if (!_ledgerAllExpenses.length) {
+    showToast('No data to export', 'error')
+    return
+  }
+
+  showToast('Generating report...', 'info')
+
+  const {
+    Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+    AlignmentType, BorderStyle, WidthType, ShadingType,
+    HeadingLevel, Header, Footer, PageNumber, ImageRun,
+    VerticalAlign, PageOrientation
+  } = window.docx
+
+  // ── Helpers ────────────────────────────────────────────────
+  const border  = { style: BorderStyle.SINGLE, size: 1, color: 'C8C8C8' }
+  const borders = { top: border, bottom: border, left: border, right: border }
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
+  const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }
+
+  const cell = (text, opts = {}) => new TableCell({
+    borders: opts.borders || borders,
+    width: { size: opts.w || 2340, type: WidthType.DXA },
+    shading: opts.shade ? { fill: opts.shade, type: ShadingType.CLEAR } : undefined,
+    margins: { top: 90, bottom: 90, left: 130, right: 130 },
+    verticalAlign: VerticalAlign.CENTER,
+    children: [new Paragraph({
+      alignment: opts.align || AlignmentType.LEFT,
+      children: [new TextRun({
+        text: String(text),
+        font: 'Arial',
+        size: opts.size || 18,
+        bold: opts.bold || false,
+        color: opts.color || '1A1A1A',
+      })]
+    })]
+  })
+
+  const fmtAmt = n => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0 })
+  const now    = new Date()
+  const fmtNow = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+  const fmtTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
+  // ── Sort by date descending for the report ─────────────────
+  const sorted = _ledgerAllExpenses.slice().sort((a, b) =>
+    (b.expense_date || '').localeCompare(a.expense_date || ''))
+
+  const grandTotal = sorted.reduce((s, e) => s + (e.amount || 0), 0)
+
+  // ── Group by card for summary section ─────────────────────
+  const byCard = {}
+  sorted.forEach(e => {
+    const key = e.card_label || e.card_owner
+    if (!byCard[key]) byCard[key] = { label: key, owner: e.card_owner, total: 0, count: 0 }
+    byCard[key].total += e.amount || 0
+    byCard[key].count++
+  })
+
+  // ── Try to load the logo ───────────────────────────────────
+  let logoRun = null
+  try {
+    const resp = await fetch('/images/cib-logo.png')
+    if (resp.ok) {
+      const buf = await resp.arrayBuffer()
+      logoRun = new ImageRun({
+        data: buf,
+        transformation: { width: 48, height: 48 },
+        type: 'png',
+      })
+    }
+  } catch (_) { /* logo optional */ }
+
+  // ── PAGE: landscape A4 for wide table ─────────────────────
+  // docx-js swaps w/h for landscape, pass portrait dims
+  const pageW = 11906, pageH = 16838
+  const margin = 800
+  // Content width in landscape = pageH - 2*margin
+  const contentW = pageH - margin * 2  // ~15238 DXA
+
+  // Column widths for main table (sum = contentW)
+  // #, Card/Agent, Description, Date, Amount
+  const colW = [600, 3100, 6338, 2100, 3100]  // = 15238
+
+  // ── Header row ─────────────────────────────────────────────
+  const headerLabels = ['#', 'Card / Agent', 'Description', 'Date', 'Amount']
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: headerLabels.map((lbl, i) => cell(lbl, {
+      w: colW[i],
+      bold: true,
+      shade: '1C3A2A',
+      color: 'FFFFFF',
+      size: 17,
+      align: i === 4 ? AlignmentType.RIGHT : AlignmentType.LEFT,
+    }))
+  })
+
+  // ── Data rows ──────────────────────────────────────────────
+  const dataRows = sorted.map((e, i) => new TableRow({
+    children: [
+      cell(i + 1, { w: colW[0], color: '888888', align: AlignmentType.CENTER }),
+      new TableCell({
+        borders, width: { size: colW[1], type: WidthType.DXA },
+        margins: { top: 90, bottom: 90, left: 130, right: 130 },
+        children: [
+          new Paragraph({ children: [new TextRun({ text: e.card_label || '—', font: 'Arial', size: 18, bold: true, color: '1A1A1A' })] }),
+          new Paragraph({ children: [new TextRun({ text: e.card_owner || '', font: 'Arial', size: 15, color: '888888' })] }),
+        ]
+      }),
+      cell(e.description || '—', { w: colW[2] }),
+      cell(fmtDate(e.expense_date), { w: colW[3], color: '555555' }),
+      cell(fmtAmt(e.amount), { w: colW[4], align: AlignmentType.RIGHT, bold: true, color: 'C0392B' }),
+    ]
+  }))
+
+  // Total row
+  const totalRow = new TableRow({
+    children: [
+      cell('', { w: colW[0], borders: noBorders }),
+      cell('', { w: colW[1], borders: noBorders }),
+      cell('', { w: colW[2], borders: noBorders }),
+      cell('GRAND TOTAL', { w: colW[3], bold: true, shade: 'F5F5F5', align: AlignmentType.RIGHT }),
+      cell(fmtAmt(grandTotal), { w: colW[4], bold: true, shade: 'F5F5F5', color: 'C0392B', align: AlignmentType.RIGHT }),
+    ]
+  })
+
+  // ── Summary table ──────────────────────────────────────────
+  const summaryHeaderRow = new TableRow({
+    children: [
+      cell('Card / Agent', { w: 5000, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17 }),
+      cell('Badge', { w: 3000, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17 }),
+      cell('Transactions', { w: 2119, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17, align: AlignmentType.CENTER }),
+      cell('Total Spent', { w: 3000, bold: true, shade: '1C3A2A', color: 'FFFFFF', size: 17, align: AlignmentType.RIGHT }),
+    ]
+  })
+  const summaryRows = Object.values(byCard).map(c => new TableRow({
+    children: [
+      cell(c.label, { w: 5000, bold: true }),
+      cell(c.owner, { w: 3000, color: '555555' }),
+      cell(c.count, { w: 2119, align: AlignmentType.CENTER }),
+      cell(fmtAmt(c.total), { w: 3000, align: AlignmentType.RIGHT, color: 'C0392B' }),
+    ]
+  }))
+
+  // ── Build document ─────────────────────────────────────────
+  const titleChildren = []
+
+  if (logoRun) {
+    titleChildren.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 120 },
+      children: [logoRun]
+    }))
+  }
+
+  titleChildren.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 60 },
+      children: [new TextRun({ text: 'CENTRAL INVESTIGATION BUREAU', font: 'Arial', size: 28, bold: true, color: '1C3A2A', allCaps: true })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 60 },
+      children: [new TextRun({ text: 'BUDGET LEDGER · FULL EXPENSE REPORT', font: 'Arial', size: 22, color: '27AE60', allCaps: true })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 60 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '27AE60', space: 6 } },
+      children: [new TextRun({ text: `Generated: ${fmtNow} at ${fmtTime}   ·   Prepared by: ${currentUser.name || currentUser.badge || '—'}`, font: 'Arial', size: 17, color: '888888' })]
+    }),
+    new Paragraph({ spacing: { after: 200 }, children: [] }),
+
+    // ── Summary heading ──────────────────────────────────────
+    new Paragraph({
+      spacing: { before: 0, after: 140 },
+      children: [new TextRun({ text: 'CARD SUMMARY', font: 'Arial', size: 22, bold: true, color: '1C3A2A', allCaps: true })]
+    }),
+    new Table({
+      width: { size: 13119, type: WidthType.DXA },
+      columnWidths: [5000, 3000, 2119, 3000],
+      rows: [summaryHeaderRow, ...summaryRows],
+    }),
+    new Paragraph({ spacing: { after: 300 }, children: [] }),
+
+    // ── Transactions heading ─────────────────────────────────
+    new Paragraph({
+      spacing: { before: 0, after: 140 },
+      children: [new TextRun({ text: 'ALL TRANSACTIONS', font: 'Arial', size: 22, bold: true, color: '1C3A2A', allCaps: true })]
+    }),
+    new Paragraph({
+      spacing: { after: 140 },
+      children: [new TextRun({ text: `${sorted.length} total expense records across ${Object.keys(byCard).length} card(s)`, font: 'Arial', size: 17, color: '555555' })]
+    }),
+    new Table({
+      width: { size: contentW, type: WidthType.DXA },
+      columnWidths: colW,
+      rows: [headerRow, ...dataRows, totalRow],
+    }),
+    new Paragraph({ spacing: { after: 300 }, children: [] }),
+
+    // ── Footer note ──────────────────────────────────────────
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC', space: 8 } },
+      spacing: { before: 200 },
+      children: [new TextRun({ text: 'CLASSIFIED · CIB INTERNAL USE ONLY · ALL TRANSACTIONS ARE LOGGED', font: 'Arial', size: 15, color: 'AAAAAA', allCaps: true })]
+    })
+  )
+
+  const doc = new Document({
+    styles: {
+      default: { document: { run: { font: 'Arial', size: 20 } } }
+    },
+    sections: [{
+      properties: {
+        page: {
+          size: { width: pageW, height: pageH, orientation: PageOrientation.LANDSCAPE },
+          margin: { top: margin, right: margin, bottom: margin, left: margin }
+        }
+      },
+      headers: {
+        default: new Header({
+          children: [new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC', space: 6 } },
+            children: [new TextRun({ text: 'CIB · BUDGET LEDGER · CONFIDENTIAL', font: 'Arial', size: 16, color: 'AAAAAA', allCaps: true })]
+          })]
+        })
+      },
+      footers: {
+        default: new Footer({
+          children: [new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC', space: 6 } },
+            children: [
+              new TextRun({ text: 'Page ', font: 'Arial', size: 16, color: 'AAAAAA' }),
+              new TextRun({ children: [PageNumber.CURRENT], font: 'Arial', size: 16, color: 'AAAAAA' }),
+              new TextRun({ text: ' of ', font: 'Arial', size: 16, color: 'AAAAAA' }),
+              new TextRun({ children: [PageNumber.TOTAL_PAGES], font: 'Arial', size: 16, color: 'AAAAAA' }),
+            ]
+          })]
+        })
+      },
+      children: titleChildren
+    }]
+  })
+
+  // ── Download ───────────────────────────────────────────────
+  const buffer = await Packer.toBlob(doc)
+  const url    = URL.createObjectURL(buffer)
+  const a      = document.createElement('a')
+  a.href       = url
+  a.download   = `CIB_Expense_Report_${now.toISOString().split('T')[0]}.docx`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  showToast('Report exported successfully', 'success')
 }
 
 // ── LOGOUT ───────────────────────────────────────────────────
