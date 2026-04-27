@@ -10,7 +10,6 @@ import path                         from 'path'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const LOGO_PATH = path.join(__dirname, '../../public/images/cib-logo-pdf.png')
-
 function loadLogoBase64() {
   try {
     if (existsSync(LOGO_PATH)) {
@@ -21,7 +20,47 @@ function loadLogoBase64() {
   return null
 }
 
+/**
+ * Seal image for PDF watermark — try api/_lib/assets first (bundled with serverless),
+ * then public/ (local / monorepo).
+ * Chromium PDF: use one position:fixed <img> (repeats every page); ::before/background often missing.
+ */
+function loadWatermarkDataUrl() {
+  const candidates = [
+    path.join(__dirname, 'assets', 'cid-seal-watermark.png'),
+    path.join(__dirname, '../../public/images/cid-seal-watermark.png'),
+    path.join(process.cwd(), 'public', 'images', 'cid-seal-watermark.png'),
+  ]
+  for (const p of candidates) {
+    try {
+      if (existsSync(p)) {
+        const buf = readFileSync(p)
+        return 'data:image/png;base64,' + buf.toString('base64')
+      }
+    } catch (_) { /* next */ }
+  }
+  return null
+}
+
 const LOGO_SRC = loadLogoBase64()
+const WM_SRC = loadWatermarkDataUrl()
+
+/**
+ * div + background-image prints more reliably in Chromium PDF than <img> position:fixed alone.
+ * Single embed; fixed inset 0 = repeat on every physical sheet.
+ */
+function watermarkBodyHtml() {
+  if (!WM_SRC) return ''
+  // Behind .pdf-root (z-index). Fixed + background-image repeats on every PDF sheet in Chrome.
+  return (
+    '<div class="wm-layer" style="position:fixed;left:0;top:0;right:0;bottom:0;z-index:0;' +
+    'pointer-events:none;opacity:0.22;' +
+    "background-image:url('" +
+    WM_SRC +
+    "');background-size:52% auto;background-position:center center;background-repeat:no-repeat;" +
+    '-webkit-print-color-adjust:exact;print-color-adjust:exact" aria-hidden="true"></div>'
+  )
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 export function esc(s) {
@@ -49,9 +88,20 @@ const CSS = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; background: #fff; }
 a { color: #000; }
-.page { display: flex; flex-direction: column; min-height: 257mm; }
-.page-body { flex: 1; }
+/* Watermark: inline styles on .wm-layer (see watermarkBodyHtml); class hooks print colors */
+.wm-layer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pdf-root { position: relative; z-index: 1; isolation: auto; }
+/* block flow: keeps bureau bar inside page-body (was flex: footer jumped to top of next page) */
+.page { display: block; }
+.page-body { display: block; }
 .page-break { page-break-before: always; padding-top: 2mm; }
+.print-keep { break-inside: avoid; page-break-inside: avoid; }
+/* Avoid orphan section titles; allow large summary tables to split naturally */
+table.split-ok { page-break-inside: auto; }
+table.split-ok tr { break-inside: auto; page-break-inside: auto; }
+table.compact-avoid tr { break-inside: avoid; page-break-inside: avoid; }
+.narrative { orphans: 3; widows: 3; }
+.section-title { break-after: avoid; page-break-after: avoid; }
 .page-header {
   display: flex; justify-content: space-between; align-items: flex-end;
   border-bottom: 2px solid #000; padding-bottom: 3px; margin-bottom: 10px;
@@ -59,7 +109,9 @@ a { color: #000; }
 }
 .bureau-bar {
   display: flex; justify-content: space-between; align-items: flex-start;
-  margin-top: 14px; padding-top: 6px; border-top: 1px solid #ccc; font-size: 9pt;
+  margin-top: 18px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 9pt;
+  break-inside: avoid; page-break-inside: avoid; break-after: avoid;
+  clear: both;
 }
 .bureau-bar .pg { font-weight: bold; font-size: 10pt; }
 .sec-divider {
@@ -223,7 +275,7 @@ export function buildPDFDocument(r) {
   // 17. Victims summary
   if (r.victims && r.victims.length) {
     body += `<br/><div class="lbl" style="font-size:9pt">17. VICTIM(S)</div>
-    <table><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Welfare, Occupation</th></tr></thead><tbody>`
+    <table class="split-ok"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Welfare, Occupation</th></tr></thead><tbody>`
     r.victims.forEach(v => {
       body += `<tr><td>${esc(v.id_code || '')}</td><td>${esc(v.full_name || '')}</td><td>${esc(v.age || '')}</td><td>${esc(v.sex || '')}</td><td>${esc(v.race || '')}</td><td>${esc(v.telephone || '-')}</td><td>${esc(v.welfare_occupation || '')}</td></tr>`
       body += `<tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>Notes: ${esc(v.notes || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Welfare, Occupation<br/>${esc(v.welfare_occupation || '')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(v.family || '-')}</td></tr>`
@@ -234,7 +286,7 @@ export function buildPDFDocument(r) {
   // 18. Suspects summary
   if (r.suspects && r.suspects.length) {
     body += `<br/><div class="lbl" style="font-size:9pt">18. SUSPECT(S)</div>
-    <table><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Status, Welfare, Occupation</th></tr></thead><tbody>`
+    <table class="split-ok"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Status, Welfare, Occupation</th></tr></thead><tbody>`
     r.suspects.forEach(s => {
       body += `<tr><td>${esc(s.id_code || '')}</td><td>${esc(s.full_name || '')}</td><td>${esc(s.age || '')}</td><td>${esc(s.sex || '')}</td><td>${esc(s.race || '')}</td><td>${esc(s.telephone || '-')}</td><td>${esc(s.welfare_occupation || '')}</td></tr>`
       body += `<tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>${esc(s.telephone || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Status, Welfare, Occupation<br/>${esc(s.welfare_occupation || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(s.family || '-')}</td></tr>`
@@ -267,25 +319,26 @@ export function buildPDFDocument(r) {
       </div>
     </td>
   </tr></table>`
-  body += `</div>` // end page-body
   body += bureauBar('1')
+  body += `</div>` // end page-body
   body += `</div>` // end page
 
-  // ── SECTION B: DEBRIEF ────────────────────────────────────────────────
+  // ── SECTION B: DEBRIEF (one entry per page — no mid-paragraph “tanggung” cuts) ──
   if (r.debrief_entries && r.debrief_entries.length) {
     body += sectionDividerPage('B. Debrief of Incident')
-    body += `<div class="page page-break"><div class="page-body">${ph}`
-    body += `<div class="section-title">B. DEBRIEF OF INCIDENT</div>`
     r.debrief_entries.forEach((d, i) => {
-      body += `<table><tr>
+      body += `<div class="page page-break"><div class="page-body">${ph}`
+      if (i === 0) body += `<div class="section-title">B. DEBRIEF OF INCIDENT</div>`
+      body += `<div class="print-keep">`
+      body += `<table class="compact-avoid"><tr>
         <td style="width:40%"><div class="lbl">${i + 1}a. TITLE</div>${esc(d.title || '')}</td>
         <td><div class="lbl">b. DATE OF INCIDENT</div>${fmtDate(d.date_of_incident)}</td>
       </tr></table>`
-      body += `<div class="narrative">${esc(d.content || '')}</div><br/>`
+      body += `<div class="narrative">${esc(d.content || '')}</div><br/></div>`
+      body += bureauBar((i + 1).toString())
+      body += `</div>` // end page-body
+      body += `</div>` // end page
     })
-    body += `</div>` // end page-body
-    body += bureauBar('1')
-    body += `</div>` // end page
   }
 
   // ── SECTION C: SUSPECTS DETAIL ────────────────────────────────────────
@@ -316,8 +369,8 @@ export function buildPDFDocument(r) {
             : '<div class="mugshot-box">&ldquo;SUSPECT MUGSHOT/<br/>AVAILABLE PICTURE&rdquo;</div>'}
         </td>
       </tr></table>`
-      body += `</div>` // end page-body
       body += bureauBar((i + 1).toString())
+      body += `</div>` // end page-body
       body += `</div>` // end page
     })
   }
@@ -343,15 +396,16 @@ export function buildPDFDocument(r) {
         <td colspan="5"><div class="lbl">FAMILY</div>${esc(v.family || '-')}</td>
       </tr></table>`
       if (v.autopsy_by || v.autopsy_summary) {
+        body += `<div class="print-keep">`
         body += `<table style="margin-top:8px"><tr>
           <td><div class="lbl">AUTOPSY (g)</div>
             <div style="font-size:8pt;margin:4px 0">Autopsy Report &ndash; By: <strong>${esc(v.autopsy_by || '')}</strong></div>
           </td>
         </tr></table>`
-        body += `<div class="narrative" style="margin-top:6px">${esc(v.autopsy_summary || '')}</div>`
+        body += `<div class="narrative" style="margin-top:6px">${esc(v.autopsy_summary || '')}</div></div>`
       }
-      body += `</div>` // end page-body
       body += bureauBar((i + 1).toString())
+      body += `</div>` // end page-body
       body += `</div>` // end page
     })
   }
@@ -360,12 +414,13 @@ export function buildPDFDocument(r) {
   if (r.witnesses && r.witnesses.length) {
     body += sectionDividerPage('E. Witness')
     let pgCount = 1
-    const WITNESSES_PER_PAGE = 2
+    const WITNESSES_PER_PAGE = 1
     for (let i = 0; i < r.witnesses.length; i += WITNESSES_PER_PAGE) {
       const chunk = r.witnesses.slice(i, i + WITNESSES_PER_PAGE)
       body += `<div class="page page-break"><div class="page-body">${ph}`
       chunk.forEach(w => {
-        body += `<table><tr>
+        body += `<div class="print-keep">`
+        body += `<table class="compact-avoid"><tr>
           <td style="width:8%"><div class="lbl">No.</div>${esc(w.id_code || '')}</td>
           <td colspan="3" style="font-weight:bold;font-size:10pt">AFFIDAVIT</td>
         </tr><tr>
@@ -380,10 +435,10 @@ export function buildPDFDocument(r) {
         </tr></table>`
         body += `<div class="lbl" style="margin-top:5px">c. Content</div>`
         body += `<div class="narrative">${esc(w.content || '')}</div>`
-        body += `<div class="sign-line">[${esc(w.full_name || '')}]</div><br/>`
+        body += `<div class="sign-line">[${esc(w.full_name || '')}]</div><br/></div>`
       })
-      body += `</div>` // end page-body
       body += bureauBar(pgCount.toString())
+      body += `</div>` // end page-body
       body += `</div>` // end page
       pgCount++
     }
@@ -392,13 +447,14 @@ export function buildPDFDocument(r) {
   // ── SECTION F: EVIDENCES ──────────────────────────────────────────────
   if (r.evidences && r.evidences.length) {
     body += sectionDividerPage('F. Evidences')
-    const EVIDENCES_PER_PAGE = 2
+    const EVIDENCES_PER_PAGE = 1
     for (let i = 0; i < r.evidences.length; i += EVIDENCES_PER_PAGE) {
       const chunk = r.evidences.slice(i, i + EVIDENCES_PER_PAGE)
       const pg    = Math.floor(i / EVIDENCES_PER_PAGE) + 1
       body += `<div class="page page-break"><div class="page-body">${ph}`
       chunk.forEach(e => {
-        body += `<table><tr>
+        body += `<div class="print-keep">`
+        body += `<table class="compact-avoid"><tr>
           <td style="width:10%"><div class="lbl">Evidence ID</div>${esc(e.id_code || '')}</td>
           <td><div class="lbl">a. NAME OF EVIDENCE</div>${esc(e.name || '')}</td>
           <td style="width:15%"><div class="lbl">b. EVIDENCE WAS</div>${esc(e.was_status || '')}</td>
@@ -412,10 +468,10 @@ export function buildPDFDocument(r) {
           body += `<div style="width:180px;height:80px;border:1px solid #ccc;margin:4px 0;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888">Exhibit</div>`
         }
         body += `<div class="lbl">Summary of evidences</div>`
-        body += `<div class="narrative">${esc(e.summary || '')}</div><br/>`
+        body += `<div class="narrative">${esc(e.summary || '')}</div><br/></div>`
       })
-      body += `</div>` // end page-body
       body += bureauBar(pg.toString())
+      body += `</div>` // end page-body
       body += `</div>` // end page
     }
   }
@@ -424,16 +480,24 @@ export function buildPDFDocument(r) {
   body += sectionDividerPage('G. Closure')
   body += `<div class="page page-break"><div class="page-body">${ph}`
   body += `<div class="section-title">INVESTIGATION CLOSURE</div>`
-  if (r.closure_summary)
-    body += `<div class="lbl">I. Summary of Investigation</div><div class="narrative">${esc(r.closure_summary)}</div><br/>`
-  if (r.closure_forensic)
-    body += `<div class="lbl">II. Forensic Findings and Cause of Death</div><div class="narrative">${esc(r.closure_forensic)}</div><br/>`
-  if (r.closure_suspect_id)
-    body += `<div class="lbl">III. Suspect Identification and Culpability</div><div class="narrative">${esc(r.closure_suspect_id)}</div><br/>`
-  if (r.closure_final_disposition)
-    body += `<div class="lbl">IV. Final Disposition</div><div class="narrative">${esc(r.closure_final_disposition)}</div>`
+  if (r.closure_summary) {
+    body += `<div class="print-keep"><div class="lbl">I. Summary of Investigation</div>`
+    body += `<div class="narrative">${esc(r.closure_summary)}</div></div><br/>`
+  }
+  if (r.closure_forensic) {
+    body += `<div class="print-keep"><div class="lbl">II. Forensic Findings and Cause of Death</div>`
+    body += `<div class="narrative">${esc(r.closure_forensic)}</div></div><br/>`
+  }
+  if (r.closure_suspect_id) {
+    body += `<div class="print-keep"><div class="lbl">III. Suspect Identification and Culpability</div>`
+    body += `<div class="narrative">${esc(r.closure_suspect_id)}</div></div><br/>`
+  }
+  if (r.closure_final_disposition) {
+    body += `<div class="print-keep"><div class="lbl">IV. Final Disposition</div>`
+    body += `<div class="narrative">${esc(r.closure_final_disposition)}</div></div>`
+  }
 
-  body += `<table style="margin-top:12px"><tr>
+  body += `<table class="split-ok" style="margin-top:12px"><tr>
     <td style="width:20%"><div class="lbl">24a. TIME RECEIVED</div>${fmtDate(r.closure_time_received)}</td>
     <td style="width:20%"><div class="lbl">24b. TIME ARRIVED</div>${fmtDate(r.closure_time_arrived)}</td>
     <td style="width:18%"><div class="lbl">a. TYPE</div>
@@ -492,8 +556,8 @@ export function buildPDFDocument(r) {
       <div class="lbl" style="margin-top:4px">i. Date Referral Accepted</div>${fmtDate(r.detective_date_referral)}
     </td>
   </tr></table>`
-  body += `</div>` // end page-body
   body += bureauBar('1')
+  body += `</div>` // end page-body
   body += `</div>` // end closure page
 
   return `<!DOCTYPE html><html lang="en"><head>
@@ -501,7 +565,7 @@ export function buildPDFDocument(r) {
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>CID Investigation Report &mdash; ${esc(r.case_title || 'Draft')}</title>
 <style>${CSS}</style>
-</head><body><div class="pdf-root">${body}</div></body></html>`
+</head><body>${watermarkBodyHtml()}<div class="pdf-root">${body}</div></body></html>`
 }
 
 // ── Demo data (Trae Dackerwood) ────────────────────────────────────────────

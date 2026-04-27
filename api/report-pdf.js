@@ -107,13 +107,17 @@ export default async function handler(req, res) {
     browser = await launchBrowser()
 
     const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
+    await page.setContent(html, { waitUntil: 'load' })
+    await page.emulateMediaType('print')
+    // Small delay: fixed + background + blend layers settle before print.
+    await new Promise((r) => setTimeout(r, 150))
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
       displayHeaderFooter: false,
+      preferCSSPageSize: false,
     })
 
     const base64 = Buffer.from(pdfBuffer).toString('base64')

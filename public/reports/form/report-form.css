@@ -147,6 +147,7 @@ label {
   text-transform: uppercase;
 }
 .req { color: #C0392B; }
+.hint { color: #5c6a7a; font-size: 0.85em; font-weight: 400; }
 
 input[type="text"],
 input[type="date"],

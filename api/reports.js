@@ -6,6 +6,7 @@
 import { allowMethods }   from './_lib/http.js'
 import { requireSession } from './_lib/session.js'
 import { getSupabase }    from './_lib/supabase.js'
+import { getNextCaseNumber } from './_lib/ir-case-number.js'
 
 export default async function handler(req, res) {
   if (!allowMethods(req, res, ['GET', 'POST', 'OPTIONS'])) return
@@ -13,6 +14,16 @@ export default async function handler(req, res) {
   if (!session) return
 
   const supabase = getSupabase()
+
+  // ── GET: next case number (preview for new form) ─────────
+  if (req.method === 'GET' && (req.query?.nextCaseNumber === '1' || req.query?.next === '1')) {
+    try {
+      const next_case_number = await getNextCaseNumber(supabase)
+      return res.status(200).json({ next_case_number })
+    } catch (e) {
+      return res.status(500).json({ error: e?.message || 'Next case number failed' })
+    }
+  }
 
   // ── GET: list reports ────────────────────────────────────
   if (req.method === 'GET') {
@@ -37,8 +48,9 @@ export default async function handler(req, res) {
     } = req.body || {}
 
     // Sanitize main fields
+    const nextCase = await getNextCaseNumber(supabase)
     const row = {
-      case_number:              main.case_number              || null,
+      case_number:              nextCase,
       case_title:               main.case_title               || null,
       category:                 main.category                 || 'A',
       offense_type:             main.offense_type             || null,

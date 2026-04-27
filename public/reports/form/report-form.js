@@ -576,8 +576,7 @@ function buildPayload() {
 // ── validate required fields ─────────────────────────────────
 function validateForm() {
   const required = [
-    { id: 'case_title',  label: 'Case Title', section: 0 },
-    { id: 'case_number', label: 'Case No.',   section: 0 }
+    { id: 'case_title', label: 'Case Title', section: 0 }
   ];
   for (const f of required) {
     if (!getVal(f.id)) {
@@ -610,6 +609,9 @@ async function saveReport() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Save failed');
+    if (data.report?.case_number) {
+      setVal('case_number', data.report.case_number);
+    }
     if (!reportId && data.report?.id) {
       reportId = data.report.id;
       window.history.replaceState(null, '', `?id=${reportId}`);
@@ -747,7 +749,36 @@ async function exportPDF() {
   }
 }
 
-// ── apply session defaults ────────────────────────────────────
+// ── next case number (preview; server re-assigns on POST) ───
+async function prefetchNextCaseNumber() {
+  const el = document.getElementById('case_number');
+  if (el) {
+    el.readOnly = true;
+    el.setAttribute('aria-readonly', 'true');
+  }
+  try {
+    const token = sessionStorage.getItem('cib_token');
+    const res = await fetch('/api/reports?nextCaseNumber=1', {
+      headers: { 'x-session-token': token }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Next case number');
+    if (data.next_case_number) setVal('case_number', data.next_case_number);
+  } catch (e) {
+    setVal('case_number', '—');
+    if (el) el.title = e?.message || 'Will be assigned on save';
+  }
+}
+
+// ── weekday name for a YYYY-MM-DD string (avoids UTC shift) ───
+function dayNameForIsoDate(iso) {
+  if (!iso) return '';
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+// ── apply session-based defaults (new report) — all sections that fit ──
 function applySessionDefaults() {
   const s = typeof PortalAuth !== 'undefined' && PortalAuth.getSession
     ? PortalAuth.getSession()
@@ -757,12 +788,72 @@ function applySessionDefaults() {
   const rank     = s.rank     || sessionStorage.getItem('cib_rank')     || '';
   const name     = s.name     || sessionStorage.getItem('cib_name')     || '';
   const today    = new Date().toISOString().split('T')[0];
+  const leadLine = [rank, name].filter(Boolean).join(' ');
 
+  // Section A — classification
   if (!getVal('date_of_offense')) setVal('date_of_offense', today);
   if (!getVal('date_reported'))   setVal('date_reported',   today);
   if (!getVal('bureau_name'))     setVal('bureau_name',     division);
-  if (!getVal('lead_investigators') && rank && name) {
-    setVal('lead_investigators', `${rank} ${name}`);
+  if (!getVal('day_of_offense'))  setVal('day_of_offense',  dayNameForIsoDate(today));
+  if (!getVal('day_reported'))    setVal('day_reported',    dayNameForIsoDate(today));
+  if (!getVal('prosecutor'))      setVal('prosecutor',      'TBA');
+  if (!getVal('prosecutor_time_start')) setVal('prosecutor_time_start', today);
+
+  const agOk = ['VICE', 'CID', 'GRD', 'CMD'];
+  if (agOk.includes(division)) {
+    setVal('agency_code', division);
+  }
+
+  if (!getVal('lead_investigators') && leadLine) {
+    setVal('lead_investigators', leadLine);
+  }
+
+  const anyJur = getCheckboxValue('jur_lspd') || getCheckboxValue('jur_sast')
+    || getCheckboxValue('jur_lscs') || getCheckboxValue('jur_state');
+  if (!anyJur) setCheckbox('jur_lspd', true);
+
+  // Section B — first debrief entry (if blank)
+  if (debriefCount >= 1) {
+    if (!getVal('deb-title-1')) {
+      setVal('deb-title-1', 'Initial debrief / incident summary');
+    }
+    if (!getVal('deb-date-1')) setVal('deb-date-1', today);
+  }
+
+  // Section F — first evidence: retrieval date
+  if (evidenceCount >= 1 && !getVal('ev-date-1')) {
+    setVal('ev-date-1', today);
+  }
+
+  // Section E — first witness: occupation hint from role
+  if (witnessCount >= 1 && !getVal('wit-occ-1') && leadLine) {
+    setVal('wit-occ-1', `${leadLine} — ${division}`);
+  }
+
+  // Section D — first victim: neutral welfare (not Deceased as implicit first <option>)
+  const vicW1 = document.getElementById('vic-welfare-1');
+  if (vicW1 && victimCount >= 1 && vicW1.options?.length) {
+    const u = Array.from(vicW1.options).find(o => o.textContent.trim() === 'Unknown');
+    if (u) vicW1.value = u.value;
+  }
+
+  // Section G — closure: detective line + type + file opened
+  if (!getVal('closure_detective_name') && leadLine) {
+    setVal('closure_detective_name', leadLine);
+  }
+  if (!getVal('prosecutor_final_name')) {
+    setVal('prosecutor_final_name', 'TBA');
+  }
+  if (!getVal('detective_value_of_property')) {
+    setVal('detective_value_of_property', 'N/A');
+  }
+  if (!getVal('closure_time_received')) {
+    setVal('closure_time_received', today);
+  }
+  if (division === 'GRD') {
+    setRadio('closure_type', 'GRD');
+  } else {
+    setRadio('closure_type', 'CID');
   }
 
   // Badge display in topbar
@@ -791,6 +882,7 @@ PortalAuth.init({
       addWitness();
       addEvidence();
       applySessionDefaults();
+      prefetchNextCaseNumber();
     }
   }
 });

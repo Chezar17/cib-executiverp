@@ -57,8 +57,8 @@ export default async function handler(req, res) {
     const { victims = [], suspects = [], witnesses = [],
             evidences = [], debrief_entries = [], ...main } = req.body || {}
 
-    // Remove read-only cols before update
-    const { id: _id, created_at, updated_at, is_deleted, created_by, ...updateFields } = main
+    // Remove read-only cols before update (case_number assigned at create; do not change)
+    const { id: _id, case_number, created_at, updated_at, is_deleted, created_by, ...updateFields } = main
 
     const { error: upErr } = await supabase
       .from('investigation_reports')
