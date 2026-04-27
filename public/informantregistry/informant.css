@@ -53,7 +53,12 @@
     paste it inside .informant-grid, and fill in the fields.
     To remove: delete the entire card block.
   */
-  .informant-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .informant-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:18px;
+    align-items:stretch;
+  }
 
   /* ── Card entrance animation ── */
   @keyframes inf-card-in{
@@ -64,6 +69,9 @@
     background:var(--navy-card);border:1px solid var(--navy-border);
     border-top:3px solid var(--red-alert);
     display:flex;flex-direction:column;
+    min-height:0;
+    height:100%;
+    align-self:stretch;
     opacity:0;
     animation:inf-card-in 0.35s ease forwards;
   }
@@ -86,7 +94,14 @@
   .informant-codename{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--white);}
   .informant-id{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);margin-top:2px;}
   /* ── Field rows — vertical label over value, no stretching ── */
-  .informant-body{padding:14px 18px;display:flex;flex-direction:column;gap:0;flex:1;}
+  .informant-body{
+    padding:14px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    flex:1 1 auto;
+    min-height:0;
+  }
   .informant-rows{display:flex;flex-direction:column;gap:0;}
   .informant-row{
     display:flex;flex-direction:column;gap:2px;
@@ -99,6 +114,13 @@
   }
   .informant-row-value{
     font-size:11px;color:var(--white);line-height:1.55;
+    word-break:break-word;
+  }
+  .inf-field-clamp{
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+    overflow:hidden;
   }
 
   /* ── Task field — clamp long text, expand on click ── */
@@ -116,6 +138,18 @@
     opacity:0.7;transition:opacity 0.15s;
   }
   .inf-task-toggle:hover{opacity:1;}
+  .inf-notes-text{
+    font-size:10px;
+    line-height:1.55;
+    color:var(--gold-light);
+    font-style:italic;
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
+    overflow:hidden;
+    word-break:break-word;
+  }
+  .inf-notes-text.expanded{-webkit-line-clamp:unset;}
   .informant-footer{
     padding:12px 18px;border-top:1px solid var(--navy-border);
     display:flex;align-items:center;justify-content:space-between;

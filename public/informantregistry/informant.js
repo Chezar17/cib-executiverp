@@ -75,12 +75,12 @@
     if (r.handler) rowsHtml += `
       <div class="informant-row">
         <div class="informant-row-label">Handler</div>
-        <div class="informant-row-value">${esc(r.handler)}</div>
+        <div class="informant-row-value inf-field-clamp">${esc(r.handler)}</div>
       </div>`;
     if (r.gang) rowsHtml += `
       <div class="informant-row">
         <div class="informant-row-label">Affiliation</div>
-        <div class="informant-row-value">${esc(r.gang)}</div>
+        <div class="informant-row-value inf-field-clamp">${esc(r.gang)}</div>
       </div>`;
 
     if (r.task) {
@@ -93,11 +93,15 @@
       </div>`;
     }
 
-    if (r.notes) rowsHtml += `
+    if (r.notes) {
+      const nLong = r.notes.length > 100;
+      rowsHtml += `
       <div class="informant-row">
         <div class="informant-row-label">Notes</div>
-        <div class="informant-row-value" style="color:var(--gold-light);font-size:10px;font-style:italic;">${esc(r.notes)}</div>
+        <div class="inf-notes-text${nLong ? '' : ' expanded'}">${esc(r.notes)}</div>
+        ${nLong ? `<button type="button" class="inf-task-toggle" onclick="toggleTask(this)">&#9660; Show more</button>` : ''}
       </div>`;
+    }
 
     let auditHtml = '';
     if (r.created_by || r.edited_by) {
