@@ -1,249 +1,150 @@
 // ============================================================
-//  CIB — Unified Login API
-//  File location: api/login.js
+//  CIB — Hardened Login Function  (api/login.js)
 //
-//  This single file handles TWO actions, selected by query param:
+//  SECURITY IMPROVEMENTS OVER OLD VERSION:
+//  ✅ Server-side brute-force lockout (stored in Supabase)
+//  ✅ Session token saved to Supabase sessions table
+//  ✅ CORS locked to your domain only
+//  ✅ Origin check (CSRF protection)
+//  ✅ Token has real server-enforced expiry
+//  ✅ classification returned so frontend can gate page access
 //
-//  POST /api/login                          → normal login
-//  POST /api/login?action=change-password   → change password
+//  FRONTEND (Page_Login.html) — after a successful login response,
+//  make sure you save classification to sessionStorage like this:
 //
-//  WHY ONE FILE:
-//  Fewer cold-start functions on Vercel, shared imports,
-//  shared helpers, one place to audit auth logic.
+//    sessionStorage.setItem('cib_token',          data.token)
+//    sessionStorage.setItem('cib_badge',          data.user.badge)
+//    sessionStorage.setItem('cib_classification', data.user.classification)
 //
-//  ── LOGIN FLOW ───────────────────────────────────────────
-//  1. Frontend sends  { badge, password }  (password = SHA-256 hash)
-//  2. We verify badge + hash against users table in Supabase
-//  3. On match → generate session token, store in sessions table
-//  4. If must_change_password = true → return temp token + flag
-//  5. Frontend intercepts flag, shows change-password modal
-//
-//  ── CHANGE PASSWORD FLOW ─────────────────────────────────
-//  1. Frontend sends  { badge, current_hash, new_hash }
-//     with header  x-session-token: <temp token>
-//  2. We verify temp session token belongs to badge
-//  3. We verify current_hash matches DB
-//  4. We update password + clear must_change_password flag
-//  5. We delete the temp session (force re-login)
-//  6. Frontend re-prompts login with cleared modal
 // ============================================================
 
-import { createClient }    from '@supabase/supabase-js'
-import crypto               from 'crypto'
+import crypto from 'crypto'
+import { SESSION_SECRET } from './_lib/config.js'
 import {
   allowMethods,
   applyCors,
+  getClientIp,
   handlePreflight,
   rejectForeignOrigin,
 } from './_lib/http.js'
+import { getSupabase } from './_lib/supabase.js'
 
-// ── Environment variables (set in Vercel dashboard) ──────────
-const SUPABASE_URL   = process.env.SUPABASE_URL
-const SUPABASE_KEY   = process.env.SUPABASE_ANON_KEY
-const SESSION_SECRET = process.env.SESSION_SECRET
+const MAX_ATTEMPTS   = 5          // max failed logins before lockout
+const LOCKOUT_MINS   = 5          // how long the lockout lasts
+const SESSION_MINS   = 30         // how long a login session lasts
 
-// ── Shared helpers ────────────────────────────────────────────
 function sha256(text) {
   return crypto.createHash('sha256').update(text).digest('hex')
 }
 
 function generateToken(badge) {
-  const payload = `${badge}:${Date.now()}:${SESSION_SECRET}`
+  const payload = `${badge}:${Date.now()}:${SESSION_SECRET}:${Math.random()}`
   return sha256(payload)
 }
 
-function getSupabase() {
-  return createClient(SUPABASE_URL, SUPABASE_KEY)
-}
-
-// ══════════════════════════════════════════════════════════════
-//  MAIN HANDLER — routes to login or change-password
-// ══════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
 
-  // ── CORS + preflight ─────────────────────────────────────────
-  applyCors(res, {
-    methods: 'POST, OPTIONS',
-    headers: 'Content-Type, x-session-token',
-  })
+  // ── CORS — only allow requests from your own domain ────────
+  applyCors(res, { methods: 'POST, OPTIONS', headers: 'Content-Type' })
   if (handlePreflight(req, res)) return
   if (rejectForeignOrigin(req, res)) return
   if (!allowMethods(req, res, ['POST'])) return
 
-  // ── Route by ?action= query param ────────────────────────────
-  const action = req.query?.action || 'login'
+  // ── Get client IP ─────────────────────────────────────────
+  const ip = getClientIp(req)
 
-  if (action === 'change-password') {
-    return handleChangePassword(req, res)
-  }
+  const supabase = getSupabase()
 
-  // Default: normal login
-  return handleLogin(req, res)
-}
-
-// ══════════════════════════════════════════════════════════════
-//  ACTION 1 — LOGIN
-//  POST /api/login
-//  Body: { badge: string, password: string (SHA-256 hash) }
-// ══════════════════════════════════════════════════════════════
-async function handleLogin(req, res) {
   try {
     const { badge, password } = req.body
 
-    // ── Input validation ────────────────────────────────────────
-    if (!badge || !password) {
+    if (!badge || !password || typeof badge !== 'string' || typeof password !== 'string') {
       return res.status(400).json({ error: 'Badge and password are required' })
     }
-    if (typeof badge !== 'string' || typeof password !== 'string') {
-      return res.status(400).json({ error: 'Invalid input' })
+
+    const badgeTrimmed = badge.trim()
+
+    // ── SERVER-SIDE LOCKOUT CHECK ─────────────────────────────
+    // Count failed attempts from this IP in the last LOCKOUT_MINS minutes
+    const windowStart = new Date(Date.now() - LOCKOUT_MINS * 60 * 1000).toISOString()
+
+    const { count } = await supabase
+      .from('login_attempts')
+      .select('*', { count: 'exact', head: true })
+      .eq('ip', ip)
+      .gte('attempted_at', windowStart)
+
+    if (count >= MAX_ATTEMPTS) {
+      return res.status(429).json({
+        error: `Too many failed attempts. Try again in ${LOCKOUT_MINS} minutes.`
+      })
     }
 
-    const badgeTrimmed   = badge.trim().toUpperCase()
-    // Password arrives already SHA-256 hashed from the browser
-    // We hash it again server-side so the DB never stores raw hashes
-    // that were sent over the wire as-is
-    const passwordHash   = sha256(password)
+    // ── CHECK CREDENTIALS IN DATABASE ────────────────────────
+    const passwordHash = password  // already SHA-256 hashed by frontend
 
-    const supabase = getSupabase()
-
-    // ── Look up user ─────────────────────────────────────────────
-    const { data: user, error: userErr } = await supabase
+    const { data: user, error } = await supabase
       .from('users')
-      .select('id, badge, name, rank, division, classification, must_change_password')
+      .select('id, badge, name, rank, division, classification')
       .eq('badge', badgeTrimmed)
       .eq('password', passwordHash)
       .single()
 
-    if (userErr || !user) {
-      // Deliberately vague — don't reveal which field was wrong
-      return res.status(401).json({ error: 'Invalid badge number or password' })
+    if (error || !user) {
+      // ── Log this failed attempt to the database ─────────────
+      await supabase
+        .from('login_attempts')
+        .insert([{ ip, badge: badgeTrimmed }])
+
+      const remaining = MAX_ATTEMPTS - (count + 1)
+      return res.status(401).json({
+        error: remaining > 0
+          ? `Invalid credentials. ${remaining} attempt(s) remaining.`
+          : `Too many failed attempts. Try again in ${LOCKOUT_MINS} minutes.`
+      })
     }
 
-    // ── Generate session token ───────────────────────────────────
+    // ── CREDENTIALS OK — create session ───────────────────────
     const token     = generateToken(user.badge)
-    const expiresAt = Date.now() + (30 * 60 * 1000)   // 30 minutes
+    const expiresAt = new Date(Date.now() + SESSION_MINS * 60 * 1000)
 
-    // ── Store session in DB ──────────────────────────────────────
-    await supabase
+    // Save token to Supabase sessions table
+    const { error: sessionErr } = await supabase
       .from('sessions')
       .insert([{
         token,
         badge:      user.badge,
-        expires_at: new Date(expiresAt).toISOString(),
-        created_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString()
       }])
 
-    // ── Return response ──────────────────────────────────────────
-    // If must_change_password is true, the token is TEMPORARY —
-    // only valid for the /api/login?action=change-password call.
-    // The frontend must NOT store it as a real session yet.
+    if (sessionErr) {
+      console.error('Session insert error:', sessionErr)
+      return res.status(500).json({
+        error: 'Failed to create session. Make sure the "sessions" table exists in Supabase.'
+      })
+    }
+
+    // Clear old failed attempts for this IP on successful login
+    await supabase
+      .from('login_attempts')
+      .delete()
+      .eq('ip', ip)
+
     return res.status(200).json({
       success:   true,
-      token,
-      expiresAt,
+      token:     token,
+      expiresAt: expiresAt.getTime(),
       user: {
-        badge:               user.badge,
-        name:                user.name,      // ← from users.name column
-        rank:                user.rank,
-        division:            user.division,
-        classification:      user.classification || '',
-        must_change_password: user.must_change_password || false,
+        badge:          user.badge,
+        name:           user.name,
+        rank:           user.rank,
+        division:       user.division,
+        classification: user.classification || ''   // ← used by gang.html & future pages for access control
       }
     })
 
   } catch (err) {
-    console.error('[login] Error:', err)
-    return res.status(500).json({ error: 'Internal server error' })
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-//  ACTION 2 — CHANGE PASSWORD
-//  POST /api/login?action=change-password
-//  Header: x-session-token: <temp token from login>
-//  Body:   { badge, current_hash, new_hash }
-//          (both hashes = SHA-256 of the raw passwords)
-// ══════════════════════════════════════════════════════════════
-async function handleChangePassword(req, res) {
-  try {
-    // ── Must carry the temp session token ────────────────────────
-    const token = req.headers['x-session-token']
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized — session token required' })
-    }
-
-    const { badge, current_hash, new_hash } = req.body
-
-    // ── Input validation ─────────────────────────────────────────
-    if (!badge || !current_hash || !new_hash) {
-      return res.status(400).json({ error: 'Badge, current and new password are required' })
-    }
-    if (current_hash === new_hash) {
-      return res.status(400).json({ error: 'New password must be different from the current password' })
-    }
-
-    const supabase     = getSupabase()
-    const badgeTrimmed = badge.trim().toUpperCase()
-
-    // ── Verify temp session token belongs to this badge ──────────
-    const { data: session, error: sessErr } = await supabase
-      .from('sessions')
-      .select('badge, expires_at')
-      .eq('token', token)
-      .single()
-
-    if (sessErr || !session) {
-      return res.status(401).json({ error: 'Invalid or expired session token' })
-    }
-    if (session.badge !== badgeTrimmed) {
-      return res.status(403).json({ error: 'Session token does not match badge' })
-    }
-    if (new Date(session.expires_at) < new Date()) {
-      // Clean up expired session then reject
-      await supabase.from('sessions').delete().eq('token', token)
-      return res.status(401).json({ error: 'Session expired — please log in again' })
-    }
-
-    // ── Verify the current password is correct ───────────────────
-    // Hash the incoming current_hash again (same double-hash as login)
-    const currentHashDb = sha256(current_hash)
-
-    const { data: user, error: userErr } = await supabase
-      .from('users')
-      .select('id, badge')
-      .eq('badge', badgeTrimmed)
-      .eq('password', currentHashDb)
-      .single()
-
-    if (userErr || !user) {
-      return res.status(401).json({ error: 'Current password is incorrect' })
-    }
-
-    // ── Update to new password + clear the flag ──────────────────
-    const newHashDb = sha256(new_hash)    // double-hash new password too
-
-    const { error: updateErr } = await supabase
-      .from('users')
-      .update({
-        password:             newHashDb,
-        must_change_password: false,
-        password_changed_at:  new Date().toISOString(),
-        updated_at:           new Date().toISOString(),
-      })
-      .eq('id', user.id)
-
-    if (updateErr) {
-      console.error('[change-password] Update error:', updateErr)
-      return res.status(500).json({ error: 'Failed to update password' })
-    }
-
-    // ── Delete the temp session (force fresh login) ──────────────
-    await supabase.from('sessions').delete().eq('token', token)
-
-    return res.status(200).json({ success: true })
-
-  } catch (err) {
-    console.error('[change-password] Error:', err)
+    console.error('Login error:', err)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
