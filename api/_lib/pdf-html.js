@@ -5,8 +5,9 @@
  * headless-Chrome PDF rendering via puppeteer-core.
  */
 import { readFileSync, existsSync } from 'fs'
-import { fileURLToPath }            from 'url'
-import path                         from 'path'
+import { fileURLToPath } from 'url'
+import path from 'path'
+import { pdfPageMarginCssString, PDF_MARGIN_MM } from './pdf-layout.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const LOGO_PATH = path.join(__dirname, '../../public/images/cib-logo-pdf.png')
@@ -51,9 +52,18 @@ const WM_SRC = loadWatermarkDataUrl()
  */
 function watermarkBodyHtml() {
   if (!WM_SRC) return ''
-  // Behind .pdf-root (z-index). Fixed + background-image repeats on every PDF sheet in Chrome.
+  const m = PDF_MARGIN_MM
+  // Match @page inset so the seal does not paint into the margin band (looked like full-bleed text on p.2+).
   return (
-    '<div class="wm-layer" style="position:fixed;left:0;top:0;right:0;bottom:0;z-index:0;' +
+    '<div class="wm-layer" style="position:fixed;left:' +
+    m.left +
+    ';top:' +
+    m.top +
+    ';right:' +
+    m.right +
+    ';bottom:' +
+    m.bottom +
+    ';z-index:0;' +
     'pointer-events:none;opacity:0.22;' +
     "background-image:url('" +
     WM_SRC +
@@ -130,7 +140,7 @@ a { color: #000; }
 /* Watermark: inline styles on .wm-layer (see watermarkBodyHtml); class hooks print colors */
 .wm-layer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pdf-root { position: relative; z-index: 1; isolation: auto; }
-/* block flow: keeps bureau bar inside page-body (was flex: footer jumped to top of next page) */
+/* block flow for printable pages */
 .page { display: block; }
 .page-body { display: block; }
 .page-break { page-break-before: always; padding-top: 2mm; }
@@ -138,7 +148,9 @@ a { color: #000; }
 /* Flow sections: pack multiple short items per sheet; keep each card intact when possible */
 .debrief-entry-block,
 .evidence-card-block,
-.witness-affidavit-block {
+.witness-affidavit-block,
+.suspect-detail-block,
+.victim-detail-block {
   break-inside: avoid;
   page-break-inside: avoid;
   margin-bottom: 12px;
@@ -151,32 +163,77 @@ a { color: #000; }
   border-bottom: none;
   margin-bottom: 0;
 }
-/* Avoid orphan section titles; allow large summary tables to split naturally */
-table.split-ok { page-break-inside: auto; }
-table.split-ok tr { break-inside: auto; page-break-inside: auto; }
-table.compact-avoid tr { break-inside: avoid; page-break-inside: avoid; }
-.narrative { orphans: 3; widows: 3; }
-.section-title { break-after: avoid; page-break-after: avoid; }
-.page-header {
-  display: flex; justify-content: space-between; align-items: flex-end;
-  border-bottom: 2px solid #000; padding-bottom: 3px; margin-bottom: 10px;
-  font-size: 8pt; font-weight: bold; letter-spacing: 0.4px;
+.suspect-detail-block:last-child,
+.victim-detail-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
-.bureau-bar {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-top: 18px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 9pt;
-  break-inside: avoid; page-break-inside: avoid; break-after: avoid;
-  clear: both;
+/* Summary listing: table may span sheets; each tbody group stays intact */
+table.pdf-summary-table {
+  page-break-inside: auto;
+  break-inside: auto;
 }
-.bureau-bar .pg { font-weight: bold; font-size: 10pt; }
-.sec-divider {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  font-size: 24pt; font-weight: bold; letter-spacing: 3px;
+/* Whole discrete tables stay on one sheet when possible */
+table.pdf-solid-table {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.pdf-solid-table tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+/* Summary tables: each victim/suspect row-group stays intact */
+tbody.pdf-row-group {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+tbody.pdf-row-group tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+/* Legacy compact tables — rows do not split */
+table.compact-avoid tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .section-title {
   background: #000; color: #fff; padding: 3px 8px;
   font-size: 9pt; font-weight: bold; letter-spacing: 1px;
   margin: 14px 0 8px;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 2px solid #000; padding-bottom: 3px; margin-bottom: 10px;
+  font-size: 8pt; font-weight: bold; letter-spacing: 0.4px;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+/* Keeps CID header + section ribbon together and glued to the content that follows */
+.pdf-section-intro {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.pdf-section-intro + * {
+  break-before: avoid;
+  page-break-before: avoid;
+}
+.section-banner + .section-title {
+  break-before: avoid;
+  page-break-before: avoid;
+}
+.section-banner {
+  font-size: 11pt;
+  font-weight: bold;
+  letter-spacing: 0.6px;
+  color: #fff;
+  background: #111;
+  padding: 6px 10px;
+  margin: 0 0 10px 0;
+  border-radius: 2px;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 .lbl { font-size: 7pt; font-weight: bold; color: #333; margin-bottom: 2px; letter-spacing: 0.3px; }
 .chkbox {
@@ -208,6 +265,10 @@ td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: t
 .narrative {
   font-size: 9pt; line-height: 1.65; margin: 6px 0;
   text-align: justify; white-space: pre-wrap; word-break: break-word;
+  orphans: 3;
+  widows: 3;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .sign-line { border-top: 1px solid #000; margin-top: 18px; padding-top: 4px; font-size: 8pt; }
 .mugshot-box {
@@ -218,6 +279,8 @@ td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: t
 .cover {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 240mm; text-align: center;
+  page-break-after: always;
+  break-after: page;
 }
 .cover-logo   { width: 80px; height: auto; margin-bottom: 20px; }
 .cover-bureau { font-size: 16pt; font-weight: bold; letter-spacing: 3px; margin-bottom: 6px; }
@@ -228,7 +291,8 @@ td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: t
 }
 .cover-case   { font-size: 12pt; margin-top: 8px; }
 .hdr-logo     { width: 22px; height: auto; vertical-align: middle; margin-right: 5px; }
-@page { size: A4; margin: 20mm 15mm 20mm 15mm; }
+/* Same inset as api/report-pdf.js — @page ensures margins apply on every printed sheet (page 2+, not only the cover). */
+@page { size: A4; margin: ${pdfPageMarginCssString()}; }
 @media print { .page-break { page-break-before: always; } }
 `
 
@@ -240,18 +304,19 @@ function pageHeader(formId) {
   </div>`
 }
 
-function bureauBar(pg) {
-  const logoTag = LOGO_SRC
-    ? `<img class="hdr-logo" src="${LOGO_SRC}" alt="CIB"/>`
-    : ''
-  return `<div class="bureau-bar">
-    <div>${logoTag}<strong>CENTRAL INVESTIGATION BUREAU</strong><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;STATE OF SAN ANDREAS</div>
-    <div class="pg">${pg}</div>
-  </div>`
+function sectionBanner(label) {
+  return `<div class="section-banner">${esc(label)}</div>`
 }
 
-function sectionDividerPage(label) {
-  return `<div class="page page-break"><div class="sec-divider">${label}</div></div>`
+/** Header + section ribbon as one unit; stops banners orphaning onto an empty sheet (Chromium PDF). */
+function pdfSectionIntro(ph, bannerLabel) {
+  return `<div class="pdf-section-intro">${ph}${sectionBanner(bannerLabel)}</div>`
+}
+
+function pdfClosureIntro(ph) {
+  return `<div class="pdf-section-intro pdf-section-intro--closure">${ph}${sectionBanner(
+    'G. Closure'
+  )}<div class="section-title" style="margin-top:4px">Investigation closure</div></div>`
 }
 
 // ── Main builder ───────────────────────────────────────────────────────────
@@ -282,14 +347,10 @@ export function buildPDFDocument(r) {
     <div class="cover-case">Case: &ldquo;${esc(r.case_title || 'Untitled')}&rdquo;</div>
   </div>`
 
-  // ── SECTION DIVIDER: A ────────────────────────────────────────────────
-  body += sectionDividerPage('A. Classification')
+  // ── A. CLASSIFICATION (no extra page-break: cover already ends the sheet) ──
+  body += `<div class="page-body">${pdfSectionIntro(ph, 'A. Classification')}`
 
-  // ── PAGE 1: CLASSIFICATION ─────────────────────────────────────────────
-  body += `<div class="page page-break"><div class="page-body">${ph}`
-  body += `<div class="section-title">CASE CLASSIFICATION: CRIME AGAINST PERSON</div>`
-
-  body += `<table><tr>
+  body += `<table class="pdf-solid-table"><tr>
     <td style="width:32%"><div class="lbl">1. CATEGORY</div>
       ${chk(strEqCI(r.category, 'A'))}&nbsp;a.&nbsp;CATEGORY A &nbsp;
       ${chk(strEqCI(r.category, 'B'))}&nbsp;b.&nbsp;CATEGORY B &nbsp;
@@ -299,63 +360,67 @@ export function buildPDFDocument(r) {
     <td><div class="lbl">3. HIGHEST TYPE OF OFFENSE OR INCIDENT</div>${esc(r.offense_type || '')}</td>
   </tr></table>`
 
-  body += `<table><tr>
+  body += `<table class="pdf-solid-table"><tr>
     <td style="width:20%"><div class="lbl">4. MDW INCIDENT NUMBER</div>${esc(r.mdw_incident_number || '')}</td>
     <td style="width:20%"><div class="lbl">5. BUILDING NUMBER</div>${esc(r.building_number || '')}</td>
     <td><div class="lbl">6. ADDRESS</div>${esc(r.address || '')}</td>
   </tr></table>`
 
-  body += `<table><tr>
+  body += `<table class="pdf-solid-table"><tr>
     <td style="width:16%"><div class="lbl">7. NAME OF BUREAU</div>${esc(r.bureau_name || 'CID')}</td>
     <td style="width:16%"><div class="lbl">8. AGENCY/BUREAU CODE</div>${esc(r.agency_code || '')}</td>
     <td><div class="lbl">9. SPECIFIC LOCATION</div>${esc(r.specific_location || '')}</td>
   </tr></table>`
 
-  body += `<table><tr>
+  body += `<table class="pdf-solid-table"><tr>
     <td style="width:20%"><div class="lbl">10. LOCATION CODE</div>${esc(r.location_code || '')}</td>
     <td style="width:20%"><div class="lbl">11a. DATE OF OFFENSE/INCIDENT</div>${fmtDate(r.date_of_offense)}</td>
     <td style="width:20%"><div class="lbl">11a. TIME OF OFFENSE/INCIDENT</div>${esc(r.time_of_offense || '')}</td>
     <td><div class="lbl">12. DAY</div>${esc(r.day_of_offense || '')}</td>
   </tr></table>`
 
-  body += `<table><tr>
+  body += `<table class="pdf-solid-table"><tr>
     <td style="width:25%"><div class="lbl">13a. DATE REPORTED</div>${fmtDate(r.date_reported)}</td>
     <td style="width:20%"><div class="lbl">13b. DAY</div>${esc(r.day_reported || '')}</td>
     <td><div class="lbl">14. JURISDICTION (X)</div>${jurs}</td>
   </tr></table>`
 
-  body += `<table><tr>
+  body += `<table class="pdf-solid-table"><tr>
     <td><div class="lbl">15. LEAD INVESTIGATORS</div>${esc(r.lead_investigators || '')}</td>
     <td><div class="lbl">16a. PROSECUTOR</div>${esc(r.prosecutor || 'TBA')}</td>
     <td style="width:18%"><div class="lbl">16b. TIME START</div>${fmtDate(r.prosecutor_time_start)}</td>
     <td style="width:18%"><div class="lbl">16c. TIME END</div>${fmtDate(r.prosecutor_time_end)}</td>
   </tr></table>`
 
-  // 17. Victims summary
+  // 17. Victims summary — each victim row-group stays on one sheet when possible
   if (r.victims && r.victims.length) {
     body += `<br/><div class="lbl" style="font-size:9pt">17. VICTIM(S)</div>
-    <table class="split-ok"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Welfare, Occupation</th></tr></thead><tbody>`
+    <table class="pdf-summary-table"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Welfare, Occupation</th></tr></thead>`
     r.victims.forEach(v => {
-      body += `<tr><td>${esc(v.id_code || '')}</td><td>${esc(v.full_name || '')}</td><td>${esc(v.age || '')}</td><td>${esc(v.sex || '')}</td><td>${esc(v.race || '')}</td><td>${esc(v.telephone || '-')}</td><td>${esc(v.welfare_occupation || '')}</td></tr>`
-      body += `<tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>Notes: ${esc(v.notes || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Welfare, Occupation<br/>${esc(v.welfare_occupation || '')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(v.family || '-')}</td></tr>`
+      body += `<tbody class="pdf-row-group"><tr>
+      <td>${esc(v.id_code || '')}</td><td>${esc(v.full_name || '')}</td><td>${esc(v.age || '')}</td><td>${esc(v.sex || '')}</td><td>${esc(v.race || '')}</td><td>${esc(v.telephone || '-')}</td><td>${esc(v.welfare_occupation || '')}</td></tr>
+      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>Notes: ${esc(v.notes || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Welfare, Occupation<br/>${esc(v.welfare_occupation || '')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(v.family || '-')}</td></tr>
+      </tbody>`
     })
-    body += `</tbody></table>`
+    body += `</table>`
   }
 
   // 18. Suspects summary
   if (r.suspects && r.suspects.length) {
     body += `<br/><div class="lbl" style="font-size:9pt">18. SUSPECT(S)</div>
-    <table class="split-ok"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Status, Welfare, Occupation</th></tr></thead><tbody>`
+    <table class="pdf-summary-table"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Status, Welfare, Occupation</th></tr></thead>`
     r.suspects.forEach(s => {
-      body += `<tr><td>${esc(s.id_code || '')}</td><td>${esc(s.full_name || '')}</td><td>${esc(s.age || '')}</td><td>${esc(s.sex || '')}</td><td>${esc(s.race || '')}</td><td>${esc(s.telephone || '-')}</td><td>${esc(s.welfare_occupation || '')}</td></tr>`
-      body += `<tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>${esc(s.telephone || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Status, Welfare, Occupation<br/>${esc(s.welfare_occupation || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(s.family || '-')}</td></tr>`
-      body += `<tr><td colspan="7" style="font-size:7.5pt;color:#444">Interrogations: ${esc(s.interrogation_url || '-')}</td></tr>`
+      body += `<tbody class="pdf-row-group"><tr>
+      <td>${esc(s.id_code || '')}</td><td>${esc(s.full_name || '')}</td><td>${esc(s.age || '')}</td><td>${esc(s.sex || '')}</td><td>${esc(s.race || '')}</td><td>${esc(s.telephone || '-')}</td><td>${esc(s.welfare_occupation || '')}</td></tr>
+      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>${esc(s.telephone || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Status, Welfare, Occupation<br/>${esc(s.welfare_occupation || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(s.family || '-')}</td></tr>
+      <tr><td colspan="7" style="font-size:7.5pt;color:#444">Interrogations: ${esc(s.interrogation_url || '-')}</td></tr>
+      </tbody>`
     })
-    body += `</tbody></table>`
+    body += `</table>`
   }
 
   // 19-20 — individual checkboxes matching the form
-  body += `<table style="margin-top:8px"><tr>
+  body += `<table class="pdf-solid-table" style="margin-top:8px"><tr>
     <td style="width:50%;vertical-align:top">
       <div class="lbl">19. SUSPECT STATUS</div>
       <div style="font-size:8.5pt;line-height:1.9">
@@ -378,15 +443,14 @@ export function buildPDFDocument(r) {
       </div>
     </td>
   </tr></table>`
-  body += bureauBar('1')
-  body += `</div>` // end page-body
-  body += `</div>` // end page
+  body += `</div>`
 
-  // ── SECTION B: DEBRIEF — flow entries; short entries share a page (cards avoid split) ──
+  // ── SECTION B: DEBRIEF ──────────────────────────────────────────────────
   if (r.debrief_entries && r.debrief_entries.length) {
-    body += sectionDividerPage('B. Debrief of Incident')
-    body += `<div class="page page-break"><div class="page-body">${ph}`
-    body += `<div class="section-title">B. DEBRIEF OF INCIDENT</div>`
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
+      ph,
+      'B. Debrief of Incident'
+    )}`
     r.debrief_entries.forEach((d, i) => {
       body += `<div class="debrief-entry-block print-keep">`
       body += `<table class="compact-avoid"><tr>
@@ -396,22 +460,21 @@ export function buildPDFDocument(r) {
       body += `<div class="narrative">${esc(d.content || '')}</div>`
       body += `</div>`
     })
-    body += bureauBar('B')
     body += `</div>`
     body += `</div>`
   }
 
-  // ── SECTION C: SUSPECTS DETAIL ────────────────────────────────────────
+  // ── SECTION C: SUSPECTS DETAIL (continuous flow; multiple suspects per sheet when space allows) ──
   if (r.suspects && r.suspects.length) {
-    body += sectionDividerPage('C. Suspect')
     const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, 'C. Suspect')}`
     r.suspects.forEach((s, i) => {
       const L = (n) => ALPHA[(i * 5) + n] // 5 fields per suspect, progressive letters
-      body += `<div class="page page-break"><div class="page-body">${ph}`
+      body += `<div class="suspect-detail-block">`
       body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Suspect ID: ${esc(s.id_code || 's.' + (i + 1))}</div>`
-      body += `<table><tr>
+      body += `<table class="pdf-solid-table"><tr>
         <td style="width:60%">
-          <table style="border:none"><tr>
+          <table class="compact-avoid" style="border:none;width:100%"><tr>
             <td style="border:none"><div class="lbl">${L(0)}. Name</div>${esc(s.full_name || '')}</td>
             <td style="border:none"><div class="lbl">${L(1)}. Description</div>${esc(s.description || '')}</td>
           </tr><tr>
@@ -429,19 +492,19 @@ export function buildPDFDocument(r) {
             : '<div class="mugshot-box">&ldquo;SUSPECT MUGSHOT/<br/>AVAILABLE PICTURE&rdquo;</div>'}
         </td>
       </tr></table>`
-      body += bureauBar((i + 1).toString())
-      body += `</div>` // end page-body
-      body += `</div>` // end page
+      body += `</div>`
     })
+    body += `</div>`
+    body += `</div>`
   }
 
-  // ── SECTION D: VICTIMS DETAIL ─────────────────────────────────────────
+  // ── SECTION D: VICTIMS DETAIL ───────────────────────────────────────────
   if (r.victims && r.victims.length) {
-    body += sectionDividerPage('D. Victim')
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, 'D. Victim')}`
     r.victims.forEach((v, i) => {
-      body += `<div class="page page-break"><div class="page-body">${ph}`
+      body += `<div class="victim-detail-block">`
       body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Victim ID: ${esc(v.id_code || 'v.' + (i + 1))}</div>`
-      body += `<table><tr>
+      body += `<table class="pdf-solid-table"><tr>
         <td><div class="lbl">IDENTIFICATION (a)</div>
           First, Last Name, AKA<br/><strong>${esc(v.full_name || '')}</strong>
         </td>
@@ -457,24 +520,25 @@ export function buildPDFDocument(r) {
       </tr></table>`
       if (v.autopsy_by || v.autopsy_summary) {
         body += `<div class="print-keep">`
-        body += `<table style="margin-top:8px"><tr>
+        body += `<table class="pdf-solid-table" style="margin-top:8px"><tr>
           <td><div class="lbl">AUTOPSY (g)</div>
             <div style="font-size:8pt;margin:4px 0">Autopsy Report &ndash; By: <strong>${esc(v.autopsy_by || '')}</strong></div>
           </td>
         </tr></table>`
         body += `<div class="narrative" style="margin-top:6px">${esc(v.autopsy_summary || '')}</div></div>`
       }
-      body += bureauBar((i + 1).toString())
-      body += `</div>` // end page-body
-      body += `</div>` // end page
+      body += `</div>`
     })
+    body += `</div>`
+    body += `</div>`
   }
 
-  // ── SECTION E: WITNESSES — flow affidavits; short entries may share a page ──
+  // ── SECTION E: WITNESSES ────────────────────────────────────────────────
   if (r.witnesses && r.witnesses.length) {
-    body += sectionDividerPage('E. Witness')
-    body += `<div class="page page-break"><div class="page-body">${ph}`
-    body += `<div class="section-title">E. WITNESS AFFIDAVITS</div>`
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
+      ph,
+      'E. Witness affidavits'
+    )}`
     r.witnesses.forEach((w) => {
       body += `<div class="witness-affidavit-block print-keep">`
       body += `<table class="compact-avoid"><tr>
@@ -495,16 +559,13 @@ export function buildPDFDocument(r) {
       body += `<div class="sign-line">[${esc(w.full_name || '')}]</div>`
       body += `</div>`
     })
-    body += bureauBar('E')
     body += `</div>`
     body += `</div>`
   }
 
-  // ── SECTION F: EVIDENCES — flow cards; short items may share a page ──
+  // ── SECTION F: EVIDENCES ────────────────────────────────────────────────
   if (r.evidences && r.evidences.length) {
-    body += sectionDividerPage('F. Evidences')
-    body += `<div class="page page-break"><div class="page-body">${ph}`
-    body += `<div class="section-title">F. EVIDENCES</div>`
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, 'F. Evidences')}`
     r.evidences.forEach((e) => {
       body += `<div class="evidence-card-block print-keep">`
       body += `<table class="compact-avoid"><tr>
@@ -524,15 +585,12 @@ export function buildPDFDocument(r) {
       body += `<div class="narrative">${esc(e.summary || '')}</div>`
       body += `</div>`
     })
-    body += bureauBar('F')
     body += `</div>`
     body += `</div>`
   }
 
-  // ── SECTION G: CLOSURE ────────────────────────────────────────────────
-  body += sectionDividerPage('G. Closure')
-  body += `<div class="page page-break"><div class="page-body">${ph}`
-  body += `<div class="section-title">INVESTIGATION CLOSURE</div>`
+  // ── SECTION G: CLOSURE ──────────────────────────────────────────────────
+  body += `<div class="page page-break"><div class="page-body">${pdfClosureIntro(ph)}`
   if (r.closure_summary) {
     body += `<div class="print-keep"><div class="lbl">I. Summary of Investigation</div>`
     body += `<div class="narrative">${esc(r.closure_summary)}</div></div><br/>`
@@ -614,9 +672,8 @@ export function buildPDFDocument(r) {
     </td>
   </tr></table>`
   body += `</div>`
-  body += bureauBar('1')
-  body += `</div>` // end page-body
-  body += `</div>` // end closure page
+  body += `</div>`
+  body += `</div>`
 
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"/>

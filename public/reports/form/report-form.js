@@ -724,16 +724,6 @@ function populateForm(r) {
 }
 
 // ── API: export PDF ──────────────────────────────────────────
-function downloadTextFile(content, filename) {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 async function exportPDF() {
   if (!reportId) { PortalAuth.showToast('Save report first', 'error'); return; }
   const btn = document.getElementById('exportBtn');
@@ -742,36 +732,16 @@ async function exportPDF() {
   try {
     const token = sessionStorage.getItem('cib_token');
     const headers = { 'x-session-token': token };
-    const [reportRes, pdfRes] = await Promise.all([
-      fetch(`/api/reports/${reportId}`, { headers }),
-      fetch(`/api/report-pdf?id=${reportId}`, { headers })
-    ]);
-    const reportPayload = await reportRes.json();
+    const pdfRes = await fetch(`/api/report-pdf?id=${reportId}`, { headers });
     const pdfData = await pdfRes.json();
 
     if (!pdfRes.ok) throw new Error(pdfData.error || 'PDF generation failed');
-
-    if (reportRes.ok && reportPayload.report) {
-      const cn = reportPayload.report.case_number || reportId;
-      const safe = String(cn).replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'report';
-      downloadTextFile(
-        JSON.stringify(reportPayload.report, null, 2),
-        `CID-IR-${safe}-report-data.txt`
-      );
-    } else if (!reportRes.ok) {
-      console.warn('[exportPDF] Could not load report snapshot for .txt:', reportPayload?.error || reportRes.status);
-    }
 
     const a = document.createElement('a');
     a.href = `data:application/pdf;base64,${pdfData.base64}`;
     a.download = pdfData.filename || `CIB_IR_${reportId}.pdf`;
     a.click();
-    PortalAuth.showToast(
-      reportRes.ok && reportPayload.report
-        ? 'PDF and report data (.txt) downloaded'
-        : 'PDF downloaded',
-      'success'
-    );
+    PortalAuth.showToast('PDF downloaded', 'success');
   } catch (err) {
     PortalAuth.showToast('PDF failed: ' + err.message, 'error');
   } finally {
