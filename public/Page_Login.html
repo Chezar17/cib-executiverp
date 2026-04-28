@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -95,7 +95,6 @@
 
     </div><!-- /login-body -->
 
-
     <div class="login-footer-bar">
       <span class="login-footer-left">&copy; 2026 CENTRAL INVESTIGATION BUREAU</span>
       <span class="login-secure-badge"><span class="secure-dot"></span> ENCRYPTED CHANNEL</span>
@@ -103,14 +102,16 @@
 
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════
+     SURVEILLANCE OVERLAY
+══════════════════════════════════════════════════ -->
 <div id="surv-overlay">
-  <!-- Corner brackets -->
   <div class="surv-corner surv-corner-tr"></div>
   <div class="surv-corner surv-corner-bl"></div>
   <div class="surv-corner surv-corner-br"></div>
 
   <div class="surv-box">
-
     <div class="surv-topbar">
       <div class="surv-topbar-left">
         <div class="surv-topbar-dot"></div>
@@ -123,17 +124,14 @@
     </div>
 
     <div class="surv-body">
-
       <div class="surv-icon">
         <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1zm0 2.18l7 3.12V11c0 4.54-3.13 8.79-7 9.93C8.13 19.79 5 15.54 5 11V6.3l7-3.12zM11 7v2H9v2h2v2h2v-2h2V9h-2V7h-2z"/></svg>
       </div>
-
       <div class="surv-eyebrow">Restricted Access · CIB Secure Portal</div>
       <div class="surv-title">You Are Being Monitored</div>
       <div class="surv-subtitle">All activity on this portal is logged & traceable</div>
       <div class="surv-div"></div>
 
-      <!-- CHANNEL ENCRYPTION METER -->
       <div class="surv-threat-meter">
         <div class="surv-threat-top">
           <span class="surv-threat-label">Channel Encryption</span>
@@ -154,56 +152,32 @@
       </div>
 
       <div class="surv-main-cols">
-
-        <!-- LEFT: Animated data acquisition / download panel -->
         <div class="surv-acquire-panel">
-          <div class="surv-acquire-header">&#9654;  Acquiring Visitor Data &ndash; CIB INTEL SYSTEM</div>
-
-          <!-- Download item: Device Fingerprint -->
+          <div class="surv-acquire-header">&#9654;  Acquiring Visitor Data &ndash; CIB INTEL SYSTEM</div>
           <div class="dl-item">
             <div class="dl-item-top">
               <span class="dl-item-label">Hardware Data</span>
-              <span class="dl-item-size" id="dl-size-0" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">&ndash; KB / &ndash; KB</span>
-              <span class="dl-item-status" id="dl-status-0">QUEUED</span>
-            </div>
-            <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-0"></div></div>
-            <div class="dl-item-sub" id="dl-sub-0"></div>
-          </div>
-
-          <!-- Download item: Browser Profile -->
-          <div class="dl-item">
-            <div class="dl-item-top">
-              <span class="dl-item-label">Browser Profile</span>
-              <span class="dl-item-size" id="dl-size-1" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">&ndash; KB / &ndash; KB</span>
               <span class="dl-item-status" id="dl-status-1">QUEUED</span>
             </div>
             <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-1"></div></div>
             <div class="dl-item-sub" id="dl-sub-1"></div>
           </div>
-
-          <!-- Download item: Keystroke Pattern -->
           <div class="dl-item">
             <div class="dl-item-top">
-              <span class="dl-item-label">Keystroke Pattern</span>
-              <span class="dl-item-size" id="dl-size-2" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">&ndash; KB / &ndash; KB</span>
+              <span class="dl-item-label">Browser Profile</span>
               <span class="dl-item-status" id="dl-status-2">QUEUED</span>
             </div>
             <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-2"></div></div>
             <div class="dl-item-sub" id="dl-sub-2"></div>
           </div>
-
-          <!-- Download item: Session Metadata -->
           <div class="dl-item">
             <div class="dl-item-top">
-              <span class="dl-item-label">Session Metadata</span>
-              <span class="dl-item-size" id="dl-size-3" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);opacity:0.6;">&ndash; KB / &ndash; KB</span>
+              <span class="dl-item-label">Network Metadata</span>
               <span class="dl-item-status" id="dl-status-3">QUEUED</span>
             </div>
             <div class="dl-bar-track"><div class="dl-bar-fill" id="dl-bar-3"></div></div>
             <div class="dl-item-sub" id="dl-sub-3"></div>
           </div>
-
-          <!-- Overall progress -->
           <div class="surv-overall-progress">
             <div class="surv-overall-top">
               <span class="surv-overall-label" id="surv-overall-label">DATA ACQUISITION IN PROGRESS</span>
@@ -213,17 +187,12 @@
               <div class="surv-overall-bar-fill" id="surv-overall-bar"></div>
             </div>
           </div>
-
-          <!-- Packet stream log -->
           <div class="surv-packet-stream">
             <div id="packet-log"></div>
           </div>
-
         </div>
 
-        <!-- RIGHT: Warning + consequences -->
         <div style="display:flex;flex-direction:column;gap:10px;">
-
           <div class="surv-warning">
             <div class="surv-warning-title">Unauthorized Access Warning</div>
             <div class="surv-warning-text">
@@ -236,8 +205,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Timestamp + Status cells -->
           <div class="surv-status-row">
             <div class="surv-status-cell">
               <div class="surv-status-cell-label">Timestamp</div>
@@ -248,12 +215,9 @@
               <div class="surv-status-cell-val"><span style="color:var(--red-alert);">&#9654; MONITORED</span><span class="surv-tag">LIVE</span></div>
             </div>
           </div>
-
         </div>
+      </div>
 
-      </div><!-- /surv-main-cols -->
-
-      <!-- Consent + button -->
       <div class="surv-bottom-row">
         <label class="surv-consent" for="surv-check">
           <input type="checkbox" id="surv-check" onchange="survCheckChange()"/>
@@ -265,24 +229,23 @@
           I Understand &ndash;<br>Proceed to Portal
         </button>
       </div>
+    </div>
 
-    </div><!-- /surv-body -->
-
-    <!-- Legal strip -->
     <div class="surv-legal">
       CIB SECURE SYSTEM · SYS-AUTH v1.0 · ALL CONNECTIONS ARE ENCRYPTED AND LOGGED<br>
       CENTRAL INVESTIGATION BUREAU · STATE OF SAN ANDREAS · EST. 2026
     </div>
-
-  </div><!-- /surv-box -->
-</div><!-- /surv-overlay -->
+  </div>
+</div>
 
 
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
 
 
-
+<!-- ══════════════════════════════════════════════════
+     SECRET LOGIN MODAL
+══════════════════════════════════════════════════ -->
 <div id="secret-modal">
   <div class="secret-modal-box">
 
@@ -297,12 +260,12 @@
       <div class="secret-modal-sub">Enter your credentials to access the portal</div>
       <div class="secret-modal-divider"></div>
 
-      <!-- Badge Number -->
+      <!-- Badge / Name -->
       <div class="form-group">
         <label class="form-label" for="s-badge">Name</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
-            <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.35-2.33 6.49-5 7.93-2.67-1.44-5-4.58-5-7.93V7.18L12 5z"/></svg>
           </span>
           <input class="form-input" type="text" id="s-badge" placeholder="e.g. Elias Makya" autocomplete="off"/>
         </div>
@@ -314,13 +277,13 @@
         <label class="form-label" for="s-password">Password</label>
         <div class="form-input-wrap">
           <span class="form-input-icon">
-            <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
           </span>
           <input class="form-input" type="password" id="s-password" placeholder="Enter your password" autocomplete="off"/>
         </div>
       </div>
 
-      <!-- Attempt counter display -->
+      <!-- Attempt counter -->
       <div id="s-attempts-display" style="display:none;margin-bottom:10px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-align:right;text-transform:uppercase;"></div>
 
       <!-- Submit -->
@@ -331,7 +294,7 @@
         <div id="s-loginErrorMsg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
       </div>
 
-      <!-- Success overlay (hidden) -->
+      <!-- Success overlay -->
       <div id="s-success-overlay" style="display:none;position:absolute;inset:0;background:rgba(10,15,30,0.97);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:16px;border-top:3px solid #27AE60;">
         <div id="s-success-icon" style="width:64px;height:64px;border:2px solid #27AE60;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:successPulse 0.6s ease forwards;">
           <svg fill="currentColor" viewBox="0 0 24 24" style="width:32px;height:32px;fill:#27AE60;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -347,18 +310,253 @@
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════
+     CHANGE PASSWORD MODAL
+     Shown automatically when mustChangePassword === true
+     after a successful login.
+══════════════════════════════════════════════════ -->
+<div id="chpw-modal">
+  <div class="chpw-box">
+
+    <!-- top bar -->
+    <div class="chpw-topbar">
+      <div class="chpw-topbar-left">
+        <div class="chpw-topbar-dot"></div>
+        <span class="chpw-topbar-label">CIB · PASSWORD RESET REQUIRED</span>
+      </div>
+      <span style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(192,57,43,0.4);text-transform:uppercase;">SYS-AUTH v1.0</span>
+    </div>
+
+    <div class="chpw-body">
+
+      <!-- mandatory alert -->
+      <div class="chpw-alert">
+        <span class="chpw-alert-icon">&#9888;</span>
+        <div class="chpw-alert-text">
+          <b>Password Change Required</b>
+          Your account has been flagged by CIB Command. You must set a new password before accessing the portal. This action is mandatory and cannot be skipped.
+        </div>
+      </div>
+
+      <!-- Current password -->
+      <div class="form-group">
+        <label class="form-label" for="chpw-old">Current Password</label>
+        <div class="form-input-wrap">
+          <span class="form-input-icon">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+          </span>
+          <input class="form-input" type="password" id="chpw-old" placeholder="Enter current password" autocomplete="current-password"/>
+        </div>
+      </div>
+
+      <!-- New password -->
+      <div class="form-group">
+        <label class="form-label" for="chpw-new">New Password</label>
+        <div class="form-input-wrap">
+          <span class="form-input-icon">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+          </span>
+          <input class="form-input" type="password" id="chpw-new" placeholder="Enter new password" autocomplete="new-password" oninput="chpwStrength(this.value)"/>
+        </div>
+        <!-- strength bar -->
+        <div class="chpw-strength-wrap">
+          <div class="chpw-strength-bar-track">
+            <div class="chpw-strength-bar-fill" id="chpw-strength-fill"></div>
+          </div>
+          <span class="chpw-strength-label" id="chpw-strength-label">&nbsp;</span>
+        </div>
+      </div>
+
+      <!-- Verify new password -->
+      <div class="form-group">
+        <label class="form-label" for="chpw-verify">Verify New Password</label>
+        <div class="form-input-wrap">
+          <span class="form-input-icon">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </span>
+          <input class="form-input" type="password" id="chpw-verify" placeholder="Re-enter new password" autocomplete="new-password"/>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="chpw-error">
+        <div id="chpw-error-msg"></div>
+      </div>
+
+      <!-- Save button -->
+      <button class="login-btn" id="chpw-save-btn" onclick="handleChangePassword()" style="margin-top:16px;">
+        Save New Password
+      </button>
+
+      <!-- Success overlay (inside chpw-body) -->
+      <div id="chpw-success">
+        <div style="width:60px;height:60px;border:2px solid #27AE60;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:successPulse 0.6s ease forwards;">
+          <svg fill="#27AE60" viewBox="0 0 24 24" style="width:30px;height:30px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div style="font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:4px;color:#27AE60;text-transform:uppercase;text-align:center;">Password Updated</div>
+        <div style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-align:center;">Please log in again with your new password.</div>
+        <div style="width:180px;height:3px;background:rgba(39,174,96,0.15);position:relative;overflow:hidden;margin-top:4px;">
+          <div id="chpw-redirect-bar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:#27AE60;transition:width 2s linear;"></div>
+        </div>
+      </div>
+
+    </div><!-- /chpw-body -->
+  </div>
+</div>
+
+
 <script src="shared/scripts/site-ui.js"></script>
-
-
-
-
-
-
-
-
-
-
 <script src="scripts/login.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CHANGE PASSWORD — frontend logic
+// ═══════════════════════════════════════════════════════════
+
+// Holds the token + badge returned by the login endpoint
+// so we can use them in the change-password call.
+let _chpwToken = null
+let _chpwBadge = null
+
+/**
+ * Called by the existing login success handler (in login.js)
+ * when mustChangePassword === true.
+ *
+ * Usage (in login.js, where you currently do sessionStorage.setItem calls):
+ *   if (data.user.mustChangePassword) {
+ *     openChangePasswordModal(data.token, data.user.badge)
+ *   } else {
+ *     // proceed as normal
+ *   }
+ */
+function openChangePasswordModal(token, badge) {
+  _chpwToken = token
+  _chpwBadge = badge
+  // Reset form state
+  document.getElementById('chpw-old').value    = ''
+  document.getElementById('chpw-new').value    = ''
+  document.getElementById('chpw-verify').value = ''
+  chpwStrength('')
+  chpwSetError('')
+  document.getElementById('chpw-success').classList.remove('show')
+  document.getElementById('chpw-save-btn').disabled = false
+  document.getElementById('chpw-modal').classList.add('open')
+}
+
+// ── Password-strength indicator ───────────────────────────
+function chpwStrength(pw) {
+  const fill  = document.getElementById('chpw-strength-fill')
+  const label = document.getElementById('chpw-strength-label')
+  if (!pw) { fill.style.width='0%'; fill.style.background=''; label.textContent=''; return }
+
+  let score = 0
+  if (pw.length >= 8)  score++
+  if (pw.length >= 12) score++
+  if (/[A-Z]/.test(pw)) score++
+  if (/[0-9]/.test(pw)) score++
+  if (/[^A-Za-z0-9]/.test(pw)) score++
+
+  const map = [
+    { pct:'20%', color:'#C0392B', text:'VERY WEAK'  },
+    { pct:'40%', color:'#E67E22', text:'WEAK'       },
+    { pct:'60%', color:'#F1C40F', text:'FAIR'       },
+    { pct:'80%', color:'#27AE60', text:'STRONG'     },
+    { pct:'100%',color:'#1ABC9C', text:'VERY STRONG'},
+  ]
+  const s = map[Math.min(score, 4)]
+  fill.style.width      = s.pct
+  fill.style.background = s.color
+  label.textContent     = s.text
+  label.style.color     = s.color
+}
+
+// ── Error display ─────────────────────────────────────────
+function chpwSetError(msg) {
+  const box = document.getElementById('chpw-error')
+  const txt = document.getElementById('chpw-error-msg')
+  if (msg) { txt.textContent = msg; box.style.display = 'block' }
+  else     { txt.textContent = '';  box.style.display = 'none'  }
+}
+
+// ── SHA-256 helper (same as login.js uses) ────────────────
+async function sha256hex(str) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
+}
+
+// ── Main change-password handler ─────────────────────────
+async function handleChangePassword() {
+  const oldPw    = document.getElementById('chpw-old').value.trim()
+  const newPw    = document.getElementById('chpw-new').value
+  const verifyPw = document.getElementById('chpw-verify').value
+  const btn      = document.getElementById('chpw-save-btn')
+
+  chpwSetError('')
+
+  // ── Client-side validation ────────────────────────────
+  if (!oldPw)              return chpwSetError('CURRENT PASSWORD IS REQUIRED')
+  if (!newPw)              return chpwSetError('NEW PASSWORD IS REQUIRED')
+  if (newPw.length < 8)   return chpwSetError('NEW PASSWORD MUST BE AT LEAST 8 CHARACTERS')
+  if (newPw !== verifyPw)  return chpwSetError('PASSWORDS DO NOT MATCH')
+  if (oldPw === newPw)     return chpwSetError('NEW PASSWORD MUST DIFFER FROM CURRENT PASSWORD')
+
+  btn.disabled    = true
+  btn.textContent = 'SAVING...'
+
+  try {
+    const [oldHash, newHash] = await Promise.all([sha256hex(oldPw), sha256hex(newPw)])
+
+    const res = await fetch('/api/login?action=change-password', {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${_chpwToken}`
+      },
+      body: JSON.stringify({
+        badge:       _chpwBadge,
+        oldPassword: oldHash,
+        newPassword: newHash
+      })
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      btn.disabled    = false
+      btn.textContent = 'Save New Password'
+      return chpwSetError((data.error || 'UNKNOWN ERROR').toUpperCase())
+    }
+
+    // ── Success: show overlay, then redirect to login ─────
+    const successEl  = document.getElementById('chpw-success')
+    const redirectBar = document.getElementById('chpw-redirect-bar')
+    successEl.classList.add('show')
+
+    // Clear any stale session data — user must re-login
+    sessionStorage.clear()
+
+    // Animate redirect bar, then re-open the login modal
+    setTimeout(() => { redirectBar.style.width = '100%' }, 50)
+    setTimeout(() => {
+      document.getElementById('chpw-modal').classList.remove('open')
+      // Re-open the secret login modal so they can log in fresh
+      document.getElementById('secret-modal').classList.add('open')
+      document.getElementById('s-badge').value    = _chpwBadge || ''
+      document.getElementById('s-password').value = ''
+      document.getElementById('s-password').focus()
+      _chpwToken = null
+      _chpwBadge = null
+    }, 2200)
+
+  } catch (err) {
+    console.error('Change-password error:', err)
+    btn.disabled    = false
+    btn.textContent = 'Save New Password'
+    chpwSetError('NETWORK ERROR. PLEASE TRY AGAIN.')
+  }
+}
+</script>
+
 </body>
 </html>
-
