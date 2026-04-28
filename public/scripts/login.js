@@ -151,6 +151,16 @@ let sealClicks = 0;
         sessionStorage.setItem('cib_classification', result.user.classification || '');
         sessionStorage.setItem('cib_expires',        result.expiresAt);
 
+        // ── Password change required? ──────────────────────────
+        // If the admin flagged this account, stop here and show
+        // the change-password popup instead of redirecting.
+        if (result.user.mustChangePassword) {
+          sSetLoading(false);
+          closeSecretModal();
+          openChangePasswordModal(result.token, result.user.badge);
+          return;
+        }
+
         showSecretSuccess();
 
       } else {
