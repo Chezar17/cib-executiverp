@@ -142,6 +142,23 @@ let sealClicks = 0;
       if (response.ok && result.success) {
         secretFailedAttempts = 0;
         sessionStorage.removeItem('secretLockUntil');
+
+        // ── PASSWORD CHANGE REQUIRED CHECK ───────────────────
+        // If the server flags must_change_password, intercept login
+        // and show the change-password modal before granting access.
+        if (result.user.must_change_password) {
+          sSetLoading(false);
+          // Store badge temporarily so the change-pw call knows who is changing
+          _pendingChangePwBadge       = result.user.badge;
+          _pendingChangePwToken       = result.token;         // temp token to auth the change call
+          _pendingChangePwExpires     = result.expiresAt;
+          _pendingChangePwUser        = result.user;
+          closeSecretModal();
+          openChangePwModal();
+          return;
+        }
+
+        // Normal successful login — store session
         sessionStorage.setItem('cib_auth',           'true');
         sessionStorage.setItem('cib_token',          result.token);
         sessionStorage.setItem('cib_badge',          result.user.badge);
@@ -187,6 +204,160 @@ let sealClicks = 0;
     }, 50);
     setTimeout(() => { window.location.href = 'nexus.html'; }, 1400);
   }
+
+/* ── CHANGE PASSWORD MODAL ─────────────────────────────────────
+   Shown when the server returns must_change_password = true.
+   Calls the unified /api/login?action=change-password endpoint.
+───────────────────────────────────────────────────────────────── */
+let _pendingChangePwBadge   = null
+let _pendingChangePwToken   = null
+let _pendingChangePwExpires = null
+let _pendingChangePwUser    = null
+
+function openChangePwModal() {
+  const modal = document.getElementById('changepw-modal')
+  if (modal) modal.classList.add('open')
+  // Reset form state
+  ;['cpw-current','cpw-new','cpw-confirm'].forEach(id => {
+    const el = document.getElementById(id)
+    if (el) el.value = ''
+  })
+  cpwHideAlert()
+  const strengthBar   = document.getElementById('cpw-strength-bar')
+  const strengthLabel = document.getElementById('cpw-strength-label')
+  if (strengthBar)   strengthBar.style.width = '0%'
+  if (strengthLabel) strengthLabel.textContent = ''
+  setTimeout(() => {
+    const cur = document.getElementById('cpw-current')
+    if (cur) cur.focus()
+  }, 80)
+}
+
+function cpwHideAlert() {
+  const el = document.getElementById('cpw-alert')
+  if (el) el.style.display = 'none'
+}
+
+function cpwShowAlert(msg) {
+  const box = document.getElementById('cpw-alert')
+  const txt = document.getElementById('cpw-alert-msg')
+  if (box) box.style.display = 'block'
+  if (txt) txt.textContent   = msg
+}
+
+/* Password strength meter */
+function cpwCheckStrength() {
+  const pw  = document.getElementById('cpw-new')?.value || ''
+  const bar = document.getElementById('cpw-strength-bar')
+  const lbl = document.getElementById('cpw-strength-label')
+  if (!bar || !lbl) return
+
+  let score = 0
+  if (pw.length >= 8)                    score++
+  if (pw.length >= 12)                   score++
+  if (/[A-Z]/.test(pw))                  score++
+  if (/[0-9]/.test(pw))                  score++
+  if (/[^A-Za-z0-9]/.test(pw))           score++
+
+  const levels = [
+    { w:'0%',    c:'transparent',    t:'' },
+    { w:'25%',   c:'var(--red-alert)', t:'WEAK' },
+    { w:'50%',   c:'#E05A28',        t:'FAIR' },
+    { w:'75%',   c:'var(--gold)',     t:'GOOD' },
+    { w:'100%',  c:'#27AE60',        t:'STRONG' },
+  ]
+  const lvl = levels[Math.min(score, 4)]
+  bar.style.width      = lvl.w
+  bar.style.background = lvl.c
+  lbl.textContent      = lvl.t
+  lbl.style.color      = lvl.c
+}
+
+async function submitPasswordChange() {
+  cpwHideAlert()
+
+  const currentPw = document.getElementById('cpw-current')?.value || ''
+  const newPw     = document.getElementById('cpw-new')?.value     || ''
+  const confirmPw = document.getElementById('cpw-confirm')?.value || ''
+
+  if (!currentPw || !newPw || !confirmPw) {
+    cpwShowAlert('All fields are required.')
+    return
+  }
+  if (newPw !== confirmPw) {
+    cpwShowAlert('New passwords do not match.')
+    return
+  }
+  if (newPw.length < 8) {
+    cpwShowAlert('New password must be at least 8 characters.')
+    return
+  }
+  if (newPw === currentPw) {
+    cpwShowAlert('New password must be different from your current password.')
+    return
+  }
+
+  const btn = document.getElementById('cpw-submit-btn')
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...' }
+
+  try {
+    // Hash both passwords with SHA-256 before sending
+    const currentHash = await sha256(currentPw)
+    const newHash     = await sha256(newPw)
+
+    // ── Call the UNIFIED endpoint with ?action=change-password ──
+    const response = await fetch('/api/login?action=change-password', {
+      method:  'POST',
+      headers: {
+        'Content-Type':    'application/json',
+        'x-session-token': _pendingChangePwToken || '',  // temp token from login
+      },
+      body: JSON.stringify({
+        badge:        _pendingChangePwBadge,
+        current_hash: currentHash,
+        new_hash:     newHash,
+      })
+    })
+
+    const result = await response.json()
+
+    if (response.ok && result.success) {
+      // Show success state, then re-prompt login
+      const formStep    = document.getElementById('cpw-form-step')
+      const successStep = document.getElementById('cpw-success-step')
+      if (formStep)    formStep.style.display    = 'none'
+      if (successStep) successStep.style.display = 'block'
+
+      // Trigger redirect bar
+      setTimeout(() => {
+        const bar = document.getElementById('cpw-redirect-bar')
+        if (bar) bar.style.width = '100%'
+      }, 50)
+
+      // Clear pending state
+      _pendingChangePwBadge = _pendingChangePwToken = null
+
+      // Re-open login modal after 1.8s so user logs in fresh
+      setTimeout(() => {
+        const modal = document.getElementById('changepw-modal')
+        if (modal) modal.classList.remove('open')
+        // Reset success step for next time
+        if (formStep)    formStep.style.display    = 'block'
+        if (successStep) successStep.style.display = 'none'
+        openSecretModal()
+      }, 1800)
+
+    } else {
+      cpwShowAlert(result.error || 'Failed to change password. Please try again.')
+      if (btn) { btn.disabled = false; btn.textContent = 'Save New Password' }
+    }
+
+  } catch (err) {
+    cpwShowAlert('Connection error. Check your network and try again.')
+    console.error('Change password error:', err)
+    if (btn) { btn.disabled = false; btn.textContent = 'Save New Password' }
+  }
+}
 
 /* â”€â”€ helpers â”€â”€ */
 function rand(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
