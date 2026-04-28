@@ -79,8 +79,28 @@ export function fmtDate(d) {
   return parts[2] + '/' + parts[1] + '/' + parts[0]
 }
 
+/** Supabase/JSON sometimes sends booleans as strings; PDF needs stable truth test. */
+export function asPdfBool(v) {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0) return false
+  if (v === null || v === undefined) return false
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase()
+    if (s === '' || s === 'false' || s === 'f' || s === '0' || s === 'no' || s === 'n') return false
+    if (s === 'true' || s === 't' || s === '1' || s === 'yes' || s === 'y') return true
+    return false
+  }
+  return Boolean(v)
+}
+
+function strEqCI(a, b) {
+  return String(a ?? '').trim().toUpperCase() === String(b ?? '').trim().toUpperCase()
+}
+
 function chk(checked) {
-  return `<span class="chkbox${checked ? ' chkbox-on' : ''}">${checked ? '&#10003;' : ''}</span>`
+  const on = asPdfBool(checked)
+  // U+2713 prints reliably in Chromium PDF; avoid tiny box clipping the glyph
+  return `<span class="chkbox${on ? ' chkbox-on' : ''}" aria-hidden="true">${on ? '\u2713' : ''}</span>`
 }
 
 /** Form/API: case_referred_to is CSV (e.g. "LSPD,DOJ"). */
@@ -159,11 +179,19 @@ table.compact-avoid tr { break-inside: avoid; page-break-inside: avoid; }
 }
 .lbl { font-size: 7pt; font-weight: bold; color: #333; margin-bottom: 2px; letter-spacing: 0.3px; }
 .chkbox {
-  display: inline-block; width: 11px; height: 11px;
-  border: 1px solid #000; margin-right: 2px; text-align: center;
-  line-height: 11px; font-size: 8pt; vertical-align: middle;
+  display: inline-block; min-width: 13px; height: 13px;
+  border: 1px solid #000; margin-right: 3px; text-align: center;
+  line-height: 13px; font-size: 9pt; vertical-align: middle;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.chkbox-on { font-weight: bold; }
+.chkbox-on { font-weight: bold; font-family: Arial, Helvetica, sans-serif; }
+/* Keep closure checkbox tables together (was split-ok breaking between rows) */
+.closure-forms-wrap {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.closure-table { page-break-inside: avoid; break-inside: avoid; }
+table.closure-table tr { break-inside: avoid; page-break-inside: avoid; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
 th { background: #eee; border: 1px solid #000; padding: 3px 6px; font-size: 8pt; text-align: left; font-weight: bold; }
 td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: top; }
@@ -226,8 +254,8 @@ export function buildPDFDocument(r) {
       : 'DDMMYY') + ')'
 
   const ph  = pageHeader(formId)
-  const jurs = [['LSPD', r.jurisdiction_lspd], ['SAST', r.jurisdiction_sast],
-                ['LSCS', r.jurisdiction_lscs], ['STATE', r.jurisdiction_state]]
+  const jurs = [['LSPD', asPdfBool(r.jurisdiction_lspd)], ['SAST', asPdfBool(r.jurisdiction_sast)],
+                ['LSCS', asPdfBool(r.jurisdiction_lscs)], ['STATE', asPdfBool(r.jurisdiction_state)]]
     .map(([j, v]) => `${chk(v)}&nbsp;${j}`).join(' &nbsp;&nbsp; ')
 
   let body = ''
@@ -253,9 +281,9 @@ export function buildPDFDocument(r) {
 
   body += `<table><tr>
     <td style="width:32%"><div class="lbl">1. CATEGORY</div>
-      ${chk(r.category === 'A')}&nbsp;a.&nbsp;CATEGORY A &nbsp;
-      ${chk(r.category === 'B')}&nbsp;b.&nbsp;CATEGORY B &nbsp;
-      ${chk(r.category === 'C')}&nbsp;c.&nbsp;CATEGORY C
+      ${chk(strEqCI(r.category, 'A'))}&nbsp;a.&nbsp;CATEGORY A &nbsp;
+      ${chk(strEqCI(r.category, 'B'))}&nbsp;b.&nbsp;CATEGORY B &nbsp;
+      ${chk(strEqCI(r.category, 'C'))}&nbsp;c.&nbsp;CATEGORY C
     </td>
     <td style="width:16%"><div class="lbl">2. CASE NO.</div>${esc(r.case_number || '')}</td>
     <td><div class="lbl">3. HIGHEST TYPE OF OFFENSE OR INCIDENT</div>${esc(r.offense_type || '')}</td>
@@ -321,22 +349,22 @@ export function buildPDFDocument(r) {
     <td style="width:50%;vertical-align:top">
       <div class="lbl">19. SUSPECT STATUS</div>
       <div style="font-size:8.5pt;line-height:1.9">
-        ${chk(r.suspect_status === 'NOT_IDENTIFIED')}&nbsp;a. NOT IDENTIFIED<br/>
-        ${chk(r.suspect_status === 'GOVT_EMPLOYEE')}&nbsp;b. GOVERNMENT EMPLOYEE<br/>
-        ${chk(r.suspect_status === 'GOVT_CONTRACT')}&nbsp;c. GOVERNMENT CONTRACT<br/>
-        ${chk(r.suspect_status === 'CITATION')}&nbsp;d. CITATION ISSUED<br/>
-        ${chk(r.suspect_status === 'NON_GOVT')}&nbsp;d. NON-GOVERNMENT EMPLOYEE<br/>
-        ${chk(r.suspect_status === 'NA')}&nbsp;e. N/A
+        ${chk(strEqCI(r.suspect_status, 'NOT_IDENTIFIED'))}&nbsp;a. NOT IDENTIFIED<br/>
+        ${chk(strEqCI(r.suspect_status, 'GOVT_EMPLOYEE'))}&nbsp;b. GOVERNMENT EMPLOYEE<br/>
+        ${chk(strEqCI(r.suspect_status, 'GOVT_CONTRACT'))}&nbsp;c. GOVERNMENT CONTRACT<br/>
+        ${chk(strEqCI(r.suspect_status, 'CITATION'))}&nbsp;d. CITATION ISSUED<br/>
+        ${chk(strEqCI(r.suspect_status, 'NON_GOVT'))}&nbsp;d. NON-GOVERNMENT EMPLOYEE<br/>
+        ${chk(strEqCI(r.suspect_status, 'NA'))}&nbsp;e. N/A
       </div>
       ${r.suspect_notes ? `<div style="font-size:8pt;margin-top:4px">Notes:<br/>${esc(r.suspect_notes)}</div>` : ''}
     </td>
     <td style="vertical-align:top">
       <div class="lbl">20. DISPOSITION OF SUSPECT</div>
       <div style="font-size:8.5pt;line-height:1.9">
-        ${chk(r.suspect_disposition === 'ARRESTED')}&nbsp;a. ARRESTED<br/>
-        ${chk(r.suspect_disposition === 'NOT_ARRESTED')}&nbsp;b. NOT ARRESTED<br/>
-        ${chk(r.suspect_disposition === 'RELEASED')}&nbsp;c. RELEASED<br/>
-        ${chk(r.suspect_disposition === 'NA')}&nbsp;d. N/A
+        ${chk(strEqCI(r.suspect_disposition, 'ARRESTED'))}&nbsp;a. ARRESTED<br/>
+        ${chk(strEqCI(r.suspect_disposition, 'NOT_ARRESTED'))}&nbsp;b. NOT ARRESTED<br/>
+        ${chk(strEqCI(r.suspect_disposition, 'RELEASED'))}&nbsp;c. RELEASED<br/>
+        ${chk(strEqCI(r.suspect_disposition, 'NA'))}&nbsp;d. N/A
       </div>
     </td>
   </tr></table>`
@@ -512,12 +540,14 @@ export function buildPDFDocument(r) {
     body += `<div class="narrative">${esc(r.closure_final_disposition)}</div></div>`
   }
 
-  body += `<table class="split-ok" style="margin-top:12px"><tr>
+  body += `<div class="closure-forms-wrap">`
+
+  body += `<table class="closure-table" style="margin-top:12px"><tr>
     <td style="width:20%"><div class="lbl">24a. TIME RECEIVED</div>${fmtDate(r.closure_time_received)}</td>
     <td style="width:20%"><div class="lbl">24b. TIME ARRIVED</div>${fmtDate(r.closure_time_arrived)}</td>
     <td style="width:18%"><div class="lbl">a. TYPE</div>
-      ${chk(r.closure_type === 'CID')}&nbsp;CID &nbsp;&nbsp;
-      ${chk(r.closure_type === 'GRD')}&nbsp;GRD
+      ${chk(strEqCI(r.closure_type, 'CID'))}&nbsp;CID &nbsp;&nbsp;
+      ${chk(strEqCI(r.closure_type, 'GRD'))}&nbsp;GRD
     </td>
     <td><div class="lbl">b. SIGNATURE &mdash; d. DATE</div>${fmtDate(r.closure_date)}</td>
     <td style="width:20%"><div class="lbl">c. RETURNED TO SERVICE</div>${fmtDate(r.closure_returned_to_service)}</td>
@@ -526,7 +556,7 @@ export function buildPDFDocument(r) {
     <td colspan="3"></td>
   </tr></table>`
 
-  body += `<table style="margin-top:8px"><tr>
+  body += `<table class="closure-table" style="margin-top:8px"><tr>
     <td><div class="lbl">26. CASE REFERRED TO</div>
       <div style="font-size:8.5pt;line-height:1.8">
         ${chk(referredIncludes(r, 'LSPD'))}&nbsp;a. LSPD &nbsp;
@@ -539,9 +569,9 @@ export function buildPDFDocument(r) {
     </td>
     <td><div class="lbl">27. CASE STATUS</div>
       <div style="font-size:8.5pt;line-height:1.8">
-        ${chk(r.case_status === 'OPEN')}&nbsp;a. OPEN<br/>
-        ${chk(r.case_status === 'CLOSED')}&nbsp;b. CLOSED<br/>
-        ${chk(r.case_status === 'COLD')}&nbsp;c. COLD
+        ${chk(strEqCI(r.case_status, 'OPEN'))}&nbsp;a. OPEN<br/>
+        ${chk(strEqCI(r.case_status, 'CLOSED'))}&nbsp;b. CLOSED<br/>
+        ${chk(strEqCI(r.case_status, 'COLD'))}&nbsp;c. COLD
       </div>
     </td>
     <td><div class="lbl">28. PROSECUTOR</div>
@@ -550,27 +580,30 @@ export function buildPDFDocument(r) {
     </td>
   </tr></table>`
 
-  body += `<table style="margin-top:8px"><tr>
-    <td colspan="3"><div class="lbl">29. DETECTIVE STATUS</div></td>
-  </tr><tr>
-    <td><div class="lbl">b. HOW CLOSED</div>
-      ${chk(r.detective_how_closed === 'INACTIVE')}&nbsp;INACTIVE &nbsp;
-      ${chk(r.detective_how_closed === 'ARREST')}&nbsp;ARREST &nbsp;
-      ${chk(r.detective_how_closed === 'OTHER')}&nbsp;OTHER MEANS
+  body += `<table class="closure-table" style="margin-top:8px"><tr>
+    <td colspan="3"><div class="lbl">29. DETECTIVE STATUS</div>
+      <table style="width:100%;border-collapse:collapse;margin-top:6px;border:none"><tr style="border:none">
+    <td style="vertical-align:top;border:1px solid #000;width:33%"><div class="lbl">b. HOW CLOSED</div>
+      ${chk(strEqCI(r.detective_how_closed, 'INACTIVE'))}&nbsp;INACTIVE &nbsp;
+      ${chk(strEqCI(r.detective_how_closed, 'ARREST'))}&nbsp;ARREST &nbsp;
+      ${chk(strEqCI(r.detective_how_closed, 'OTHER'))}&nbsp;OTHER MEANS
     </td>
-    <td>
-      ${chk(r.detective_suspect_developed)}&nbsp;Suspect Developed &nbsp;
-      ${chk(r.detective_suspect_arrested)}&nbsp;Suspect Arrested<br/>
-      ${chk(r.detective_entered_forensics)}&nbsp;Entered Forensics &nbsp;
-      ${chk(r.detective_evidence_recovered)}&nbsp;Evidence Recovered<br/>
-      ${chk(r.detective_cleared_forensics)}&nbsp;Cleared Forensics
+    <td style="vertical-align:top;border:1px solid #000;width:34%">
+      ${chk(asPdfBool(r.detective_suspect_developed))}&nbsp;Suspect Developed &nbsp;
+      ${chk(asPdfBool(r.detective_suspect_arrested))}&nbsp;Suspect Arrested<br/>
+      ${chk(asPdfBool(r.detective_entered_forensics))}&nbsp;Entered Forensics &nbsp;
+      ${chk(asPdfBool(r.detective_evidence_recovered))}&nbsp;Evidence Recovered<br/>
+      ${chk(asPdfBool(r.detective_cleared_forensics))}&nbsp;Cleared Forensics
     </td>
-    <td>
+    <td style="vertical-align:top;border:1px solid #000;width:33%">
       <div class="lbl">f. Value of Property</div>${esc(r.detective_value_of_property || 'N/A')}<br/>
       <div class="lbl" style="margin-top:4px">h. Referred To</div>${esc(r.detective_referred_to || '-')}<br/>
       <div class="lbl" style="margin-top:4px">i. Date Referral Accepted</div>${fmtDate(r.detective_date_referral)}
     </td>
+      </tr></table>
+    </td>
   </tr></table>`
+  body += `</div>`
   body += bureauBar('1')
   body += `</div>` // end page-body
   body += `</div>` // end closure page
