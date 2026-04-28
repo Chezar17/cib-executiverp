@@ -19,6 +19,20 @@ const TOKEN = () => sessionStorage.getItem('cib_token')
 const BADGE  = () => sessionStorage.getItem('cib_badge')
 const CLASS  = () => sessionStorage.getItem('cib_classification') || 'confidential'
 
+// ── CACHE ────────────────────────────────────────────────────
+// Stores fetched data so switching sections never re-hits the API.
+// Call invalidateCache() after any create / edit / delete.
+const _dataCache = {}
+
+function invalidateCache(...keys) {
+  if (keys.length === 0) {
+    // invalidate everything
+    Object.keys(_dataCache).forEach(k => delete _dataCache[k])
+  } else {
+    keys.forEach(k => delete _dataCache[k])
+  }
+}
+
 const ALLOWED_CLASSES = ['top_secret','secret','confidential']
 const TS_ONLY = ['top_secret']
 
@@ -77,14 +91,26 @@ async function api(method, path, body) {
 }
 
 // ── LOAD DATA ─────────────────────────────────────────────────
-async function loadData() {
+async function loadData(force) {
+  // Return instantly if already loaded and not forced
+  if (!force && _dataCache.balance && _dataCache.cards) {
+    mainBalance  = _dataCache.balance
+    expenseCards = _dataCache.cards
+    return
+  }
   try {
     const [balRes, cardsRes] = await Promise.all([
       api('GET', '/api/finance-balance'),
       api('GET', '/api/finance-cards')
     ])
-    if (balRes.ok)   mainBalance  = balRes.data.data
-    if (cardsRes.ok) expenseCards = cardsRes.data.data || []
+    if (balRes.ok) {
+      mainBalance        = balRes.data.data
+      _dataCache.balance = mainBalance
+    }
+    if (cardsRes.ok) {
+      expenseCards      = cardsRes.data.data || []
+      _dataCache.cards  = expenseCards
+    }
   } catch(e) {
     showToast('Failed to load finance data', 'error')
   }
@@ -92,23 +118,25 @@ async function loadData() {
 
 // ── OVERVIEW ──────────────────────────────────────────────────
 async function loadOverview() {
-  // Show skeleton immediately
-  document.getElementById('ovw-main-balance').innerHTML = '<span class="skel skel-text" style="width:100px;height:28px;display:inline-block;"></span>'
-  document.getElementById('stat-main').innerHTML       = '<span class="skel skel-text" style="width:70px;"></span>'
-  document.getElementById('stat-allocated').innerHTML  = '<span class="skel skel-text" style="width:70px;"></span>'
-  document.getElementById('stat-spent').innerHTML      = '<span class="skel skel-text" style="width:70px;"></span>'
-  document.getElementById('cards-container').innerHTML = [1,2,3].map(() => `
-    <div class="expense-card skel-card">
-      <div class="skel-card-header"><div class="skel skel-line" style="width:60%;"></div><div class="skel skel-badge"></div></div>
-      <div class="skel skel-line" style="width:40%;margin-top:18px;"></div>
-      <div class="skel skel-bar"></div>
-      <div class="skel-card-meta">
-        <div class="skel skel-line" style="width:28%;"></div>
-        <div class="skel skel-line" style="width:28%;"></div>
-        <div class="skel skel-line" style="width:28%;"></div>
-      </div>
-      <div class="skel skel-btn"></div>
-    </div>`).join('')
+  // Only show skeleton on first load (no cached data yet)
+  if (!_dataCache.balance || !_dataCache.cards) {
+    document.getElementById('ovw-main-balance').innerHTML = '<span class="skel skel-text" style="width:100px;height:28px;display:inline-block;"></span>'
+    document.getElementById('stat-main').innerHTML       = '<span class="skel skel-text" style="width:70px;"></span>'
+    document.getElementById('stat-allocated').innerHTML  = '<span class="skel skel-text" style="width:70px;"></span>'
+    document.getElementById('stat-spent').innerHTML      = '<span class="skel skel-text" style="width:70px;"></span>'
+    document.getElementById('cards-container').innerHTML = [1,2,3].map(() => `
+      <div class="expense-card skel-card">
+        <div class="skel-card-header"><div class="skel skel-line" style="width:60%;"></div><div class="skel skel-badge"></div></div>
+        <div class="skel skel-line" style="width:40%;margin-top:18px;"></div>
+        <div class="skel skel-bar"></div>
+        <div class="skel-card-meta">
+          <div class="skel skel-line" style="width:28%;"></div>
+          <div class="skel skel-line" style="width:28%;"></div>
+          <div class="skel skel-line" style="width:28%;"></div>
+        </div>
+        <div class="skel skel-btn"></div>
+      </div>`).join('')
+  }
 
   await loadData()
 
@@ -208,21 +236,23 @@ function renderCards() {
 // ── MY CARD ───────────────────────────────────────────────────
 async function renderMyCard() {
   const el = document.getElementById('mycard-content')
-  // Show skeleton while we wait for data
-  el.innerHTML = `
-    <div style="max-width:640px;">
-      <div class="skel-detail-hero">
-        <div><div class="skel skel-line" style="width:180px;height:18px;margin-bottom:10px;"></div>
-          <div class="skel skel-line" style="width:120px;"></div></div>
-        <div style="text-align:right"><div class="skel skel-line" style="width:100px;height:26px;margin-bottom:6px;"></div>
-          <div class="skel skel-line" style="width:70px;"></div></div>
-      </div>
-      <div class="skel-stat-row">
-        ${[1,2,3].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:60%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:80%;height:20px;"></div></div>`).join('')}
-      </div>
-      <div class="skel skel-line" style="width:100%;height:38px;margin-top:20px;border-radius:2px;"></div>
-      ${[1,2,3].map(() => `<div class="skel skel-table-row"></div>`).join('')}
-    </div>`
+  // Show skeleton only on first load
+  if (!_dataCache.cards) {
+    el.innerHTML = `
+      <div style="max-width:640px;">
+        <div class="skel-detail-hero">
+          <div><div class="skel skel-line" style="width:180px;height:18px;margin-bottom:10px;"></div>
+            <div class="skel skel-line" style="width:120px;"></div></div>
+          <div style="text-align:right"><div class="skel skel-line" style="width:100px;height:26px;margin-bottom:6px;"></div>
+            <div class="skel skel-line" style="width:70px;"></div></div>
+        </div>
+        <div class="skel-stat-row">
+          ${[1,2,3].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:60%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:80%;height:20px;"></div></div>`).join('')}
+        </div>
+        <div class="skel skel-line" style="width:100%;height:38px;margin-top:20px;border-radius:2px;"></div>
+        ${[1,2,3].map(() => `<div class="skel skel-table-row"></div>`).join('')}
+      </div>`
+  }
 
   await loadData()
   const myCard = expenseCards.find(c => c.owner_badge === BADGE())
@@ -249,33 +279,42 @@ async function openDetail(cardId) {
   showView('detail', null)
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'))
 
-  // Show skeleton immediately
-  document.getElementById('detail-content').innerHTML = `
-    <div class="skel skel-line" style="width:120px;margin-bottom:28px;"></div>
-    <div class="skel-detail-hero">
-      <div><div class="skel skel-line" style="width:200px;height:18px;margin-bottom:10px;"></div>
-        <div class="skel skel-line" style="width:140px;"></div></div>
-      <div style="text-align:right"><div class="skel skel-line" style="width:110px;height:28px;margin-bottom:6px;"></div>
-        <div class="skel skel-line" style="width:80px;"></div></div>
-    </div>
-    <div class="skel-stat-row">
-      ${[1,2,3].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:55%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:75%;height:20px;"></div></div>`).join('')}
-    </div>
-    <div class="exp-table-wrap" style="padding:20px 24px;margin-top:20px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
-        <div class="skel skel-line" style="width:140px;height:14px;"></div>
-        <div class="skel skel-line" style="width:180px;height:28px;border-radius:2px;"></div>
+  // Show skeleton only if we don't have cached data for this card
+  const cacheKey = `expenses_${cardId}`
+  if (!_dataCache.cards || !_dataCache[cacheKey]) {
+    document.getElementById('detail-content').innerHTML = `
+      <div class="skel skel-line" style="width:120px;margin-bottom:28px;"></div>
+      <div class="skel-detail-hero">
+        <div><div class="skel skel-line" style="width:200px;height:18px;margin-bottom:10px;"></div>
+          <div class="skel skel-line" style="width:140px;"></div></div>
+        <div style="text-align:right"><div class="skel skel-line" style="width:110px;height:28px;margin-bottom:6px;"></div>
+          <div class="skel skel-line" style="width:80px;"></div></div>
       </div>
-      <div class="skel skel-line" style="width:100%;height:38px;border-radius:2px;margin-bottom:2px;"></div>
-      ${[1,2,3,4,5].map(() => `<div class="skel skel-table-row"></div>`).join('')}
-    </div>`
+      <div class="skel-stat-row">
+        ${[1,2,3].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:55%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:75%;height:20px;"></div></div>`).join('')}
+      </div>
+      <div class="exp-table-wrap" style="padding:20px 24px;margin-top:20px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+          <div class="skel skel-line" style="width:140px;height:14px;"></div>
+          <div class="skel skel-line" style="width:180px;height:28px;border-radius:2px;"></div>
+        </div>
+        <div class="skel skel-line" style="width:100%;height:38px;border-radius:2px;margin-bottom:2px;"></div>
+        ${[1,2,3,4,5].map(() => `<div class="skel skel-table-row"></div>`).join('')}
+      </div>`
+  }
 
   await loadData()
   const card = expenseCards.find(c => c.id === cardId)
   if (!card) return
 
-  const res = await api('GET', `/api/finance-expenses?card_id=${cardId}`)
-  _detailExpenses = res.ok ? (res.data.data || []) : []
+  // Use cached expenses if available, otherwise fetch and cache
+  if (_dataCache[cacheKey]) {
+    _detailExpenses = _dataCache[cacheKey]
+  } else {
+    const res = await api('GET', `/api/finance-expenses?card_id=${cardId}`)
+    _detailExpenses = res.ok ? (res.data.data || []) : []
+    _dataCache[cacheKey] = _detailExpenses
+  }
   renderDetail(card)
 }
 
@@ -406,22 +445,32 @@ function detailSearchChange(val) {
 
 // ── FULL LEDGER ───────────────────────────────────────────────
 async function loadLedger() {
-  // Show skeleton immediately
-  const el = document.getElementById('ledger-content')
-  if (el) el.innerHTML = `
-    <div class="skel-stat-row" style="margin-bottom:20px;">
-      ${[1,2,3,4].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:55%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:75%;height:22px;"></div></div>`).join('')}
-    </div>
-    <div class="exp-table-wrap" style="padding:20px 24px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
-        <div class="skel skel-line" style="width:160px;height:14px;"></div>
-        <div class="skel skel-line" style="width:220px;height:28px;border-radius:2px;"></div>
+  // Show skeleton only on first load
+  if (!_dataCache.ledger) {
+    const el = document.getElementById('ledger-content')
+    if (el) el.innerHTML = `
+      <div class="skel-stat-row" style="margin-bottom:20px;">
+        ${[1,2,3,4].map(() => `<div class="skel-stat-box"><div class="skel skel-line" style="width:55%;margin-bottom:8px;"></div><div class="skel skel-line" style="width:75%;height:22px;"></div></div>`).join('')}
       </div>
-      <div class="skel skel-line" style="width:100%;height:38px;border-radius:2px;margin-bottom:2px;"></div>
-      ${[1,2,3,4,5,6,7].map(() => `<div class="skel skel-table-row"></div>`).join('')}
-    </div>`
+      <div class="exp-table-wrap" style="padding:20px 24px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+          <div class="skel skel-line" style="width:160px;height:14px;"></div>
+          <div class="skel skel-line" style="width:220px;height:28px;border-radius:2px;"></div>
+        </div>
+        <div class="skel skel-line" style="width:100%;height:38px;border-radius:2px;margin-bottom:2px;"></div>
+        ${[1,2,3,4,5,6,7].map(() => `<div class="skel skel-table-row"></div>`).join('')}
+      </div>`
+  }
 
   await loadData()
+
+  // Use cached ledger data if available
+  if (_dataCache.ledger) {
+    _ledgerAllExpenses = _dataCache.ledger
+    renderLedger()
+    return
+  }
+
   // Fetch expenses from all cards in parallel
   const fetches = expenseCards.map(card =>
     api('GET', `/api/finance-expenses?card_id=${card.id}`).then(res => {
@@ -435,7 +484,8 @@ async function loadLedger() {
   )
   const results = await Promise.all(fetches)
   _ledgerAllExpenses = results.flat()
-  _ledgerSearch = ''
+  _dataCache.ledger  = _ledgerAllExpenses   // ← cache for next visit
+  _ledgerSearch  = ''
   _ledgerSortCol = 'expense_date'
   _ledgerSortDir = 'desc'
   renderLedger()
@@ -557,18 +607,20 @@ function ledgerSearchChange(val) {
 // ── MAIN BALANCE PANEL (TS only) ──────────────────────────────
 async function renderMainBalance() {
   const el = document.getElementById('mainbal-content')
-  // Show skeleton while session/data resolves
-  el.innerHTML = `
-    <div style="max-width:600px;margin-bottom:20px;">
-      <div class="skel-mainbal-card">
-        <div class="skel skel-line" style="width:140px;margin-bottom:16px;"></div>
-        <div class="skel skel-line" style="width:200px;height:36px;margin-bottom:10px;"></div>
-        <div class="skel skel-line" style="width:160px;margin-bottom:20px;"></div>
-        <div class="skel skel-line" style="width:100%;height:1px;margin-bottom:16px;"></div>
-        <div class="skel skel-line" style="width:80%;margin-bottom:10px;"></div>
-        <div class="skel skel-btn" style="width:160px;margin-top:16px;"></div>
-      </div>
-    </div>`
+  // Show skeleton only on first load
+  if (!_dataCache.balance) {
+    el.innerHTML = `
+      <div style="max-width:600px;margin-bottom:20px;">
+        <div class="skel-mainbal-card">
+          <div class="skel skel-line" style="width:140px;margin-bottom:16px;"></div>
+          <div class="skel skel-line" style="width:200px;height:36px;margin-bottom:10px;"></div>
+          <div class="skel skel-line" style="width:160px;margin-bottom:20px;"></div>
+          <div class="skel skel-line" style="width:100%;height:1px;margin-bottom:16px;"></div>
+          <div class="skel skel-line" style="width:80%;margin-bottom:10px;"></div>
+          <div class="skel skel-btn" style="width:160px;margin-top:16px;"></div>
+        </div>
+      </div>`
+  }
 
   await loadData()
 
@@ -640,7 +692,8 @@ async function submitNewCard() {
   if (res.ok) {
     closeModal('modal-newcard')
     showToast('Expense card created', 'success')
-    await loadData()
+    invalidateCache('balance', 'cards', 'ledger')
+    await loadData(true)
     renderCards()
     // Update stats
     const allocated = expenseCards.reduce((s,c) => s + (c.personal_balance||0), 0)
@@ -690,11 +743,13 @@ async function submitExpense() {
   if (res.ok) {
     closeModal('modal-addexp')
     showToast('Expense recorded', 'success')
-    await loadData()
+    invalidateCache('balance', 'cards', 'ledger', `expenses_${pendingExpenseCardId}`)
+    await loadData(true)
     // Re-render wherever we are
     if (document.getElementById('view-detail').classList.contains('active')) {
       const expRes = await api('GET', `/api/finance-expenses?card_id=${currentDetailCardId}`)
       _detailExpenses = expRes.ok ? (expRes.data.data || []) : []
+      _dataCache[`expenses_${currentDetailCardId}`] = _detailExpenses
       const card = expenseCards.find(c => c.id === currentDetailCardId)
       if (card) renderDetail(card)
     } else {
@@ -731,7 +786,8 @@ async function submitEditBalance() {
   if (res.ok) {
     closeModal('modal-editbal')
     showToast('Balance updated', 'success')
-    await loadData()
+    invalidateCache('balance', 'cards')
+    await loadData(true)
     renderMainBalance()
     loadOverview()
   } else {
@@ -754,7 +810,8 @@ async function deleteCard(cardId) {
   closeModal('modal-confirm')
   if (res.ok) {
     showToast('Card deleted · Balance returned to main budget', 'success')
-    await loadData()
+    invalidateCache('balance', 'cards', 'ledger', `expenses_${cardId}`)
+    await loadData(true)
     renderCards()
   } else {
     showToast('Failed to delete card', 'error')
@@ -820,9 +877,11 @@ async function submitEditExpense() {
   if (res.ok) {
     closeModal('modal-editexp')
     showToast('Expense updated', 'success')
-    await loadData()
+    invalidateCache('balance', 'cards', 'ledger', `expenses_${_editExpenseCardId}`)
+    await loadData(true)
     const expRes = await api('GET', `/api/finance-expenses?card_id=${_editExpenseCardId}`)
     _detailExpenses = expRes.ok ? (expRes.data.data || []) : []
+    _dataCache[`expenses_${_editExpenseCardId}`] = _detailExpenses
     const card = expenseCards.find(c => c.id === _editExpenseCardId)
     if (card) renderDetail(card)
   } else {
@@ -844,8 +903,10 @@ async function deleteExpense(expId, cardId) {
   closeModal('modal-confirm')
   if (res.ok) {
     showToast('Expense deleted · Balance restored', 'success')
-    await loadData()
+    invalidateCache('balance', 'cards', 'ledger', `expenses_${cardId}`)
+    await loadData(true)
     _detailExpenses = _detailExpenses.filter(e => e.id !== expId)
+    _dataCache[`expenses_${cardId}`] = _detailExpenses
     const card = expenseCards.find(c => c.id === cardId)
     if (card) renderDetail(card)
   } else {

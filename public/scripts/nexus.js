@@ -33,8 +33,8 @@
   // ── Auth + clock + idle timeout (via shared portal-auth.js) ──
   PortalAuth.init({
     loginHref: '/Page_Login.html',
-    badgeEls:  ['badgeDisplay', 'sidebarBadge'],
-    nameEls:   ['dashWelcomeName', 'dashHeroOfficer'],
+    badgeEls:  [],
+    nameEls:   ['dashWelcomeName', 'dashHeroOfficer', 'badgeDisplay', 'sidebarBadge'],
     rankEls:   ['dashSessionRank'],
     divisionEls: ['dashSessionDivision', 'dashDivisionLine'],
     classificationEls: ['dashSessionClearance', 'dashStripClassification'],
