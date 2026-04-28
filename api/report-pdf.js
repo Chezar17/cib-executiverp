@@ -1,7 +1,7 @@
 // ============================================================
 //  CIB – PDF Export API
 //  GET /api/report-pdf?id=<uuid>   → generate PDF for a saved report
-//  GET /api/report-pdf?id=demo     → generate PDF with built-in demo data
+//  GET /api/report-pdf?id=demo     → PDF smoke-test (empty shell; same field keys as form/API)
 //
 //  Vercel: uses @sparticuz/chromium (no system Chrome in serverless).
 //  Local:  uses Chrome/Edge from disk, or CHROME_PATH.

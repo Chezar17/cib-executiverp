@@ -83,6 +83,24 @@ function chk(checked) {
   return `<span class="chkbox${checked ? ' chkbox-on' : ''}">${checked ? '&#10003;' : ''}</span>`
 }
 
+/** Form/API: case_referred_to is CSV (e.g. "LSPD,DOJ"). */
+function referredIncludes(r, code) {
+  const raw = (r.case_referred_to || '').trim()
+  if (!raw) return false
+  const up = code.toUpperCase()
+  return raw.split(',').some((x) => x.trim().toUpperCase() === up)
+}
+
+/** Evidence: DB/form field evidence_was (legacy alias was_status). */
+function evidenceWas(e) {
+  return e?.evidence_was ?? e?.was_status ?? ''
+}
+
+/** Witness occupation: form saves welfare_occupation (legacy occupation). */
+function witnessOccupation(w) {
+  return w?.welfare_occupation ?? w?.occupation ?? ''
+}
+
 // ── CSS ────────────────────────────────────────────────────────────────────
 const CSS = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -96,6 +114,22 @@ a { color: #000; }
 .page-body { display: block; }
 .page-break { page-break-before: always; padding-top: 2mm; }
 .print-keep { break-inside: avoid; page-break-inside: avoid; }
+/* Flow sections: pack multiple short items per sheet; keep each card intact when possible */
+.debrief-entry-block,
+.evidence-card-block,
+.witness-affidavit-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+.debrief-entry-block:last-child,
+.evidence-card-block:last-child,
+.witness-affidavit-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
 /* Avoid orphan section titles; allow large summary tables to split naturally */
 table.split-ok { page-break-inside: auto; }
 table.split-ok tr { break-inside: auto; page-break-inside: auto; }
@@ -195,19 +229,6 @@ export function buildPDFDocument(r) {
   const jurs = [['LSPD', r.jurisdiction_lspd], ['SAST', r.jurisdiction_sast],
                 ['LSCS', r.jurisdiction_lscs], ['STATE', r.jurisdiction_state]]
     .map(([j, v]) => `${chk(v)}&nbsp;${j}`).join(' &nbsp;&nbsp; ')
-
-  const statusMap = {
-    NOT_IDENTIFIED: 'a. Not Identified', GOVT_EMPLOYEE: 'b. Government Employee',
-    GOVT_CONTRACT: 'c. Government Contract', CITATION: 'd. Citation Issued',
-    NON_GOVT: 'd. Non-Government Employee', NA: 'e. N/A',
-  }
-  const dispMap = {
-    ARRESTED: 'a. Arrested', NOT_ARRESTED: 'b. Not Arrested',
-    RELEASED: 'c. Released', NA: 'd. N/A',
-  }
-  const caseRefMap  = { LSPD: 'a. LSPD', LSCS: 'b. LSCS', SAST: 'c. SAST', DOJ: 'd. DOJ', DOC: 'e. DOC', NA: 'f. N/A' }
-  const caseStatMap = { OPEN: 'a. OPEN', CLOSED: 'b. CLOSED', COLD: 'c. COLD' }
-  const howMap      = { INACTIVE: 'INACTIVE', ARREST: 'ARREST', OTHER: 'OTHER MEANS' }
 
   let body = ''
 
@@ -323,22 +344,23 @@ export function buildPDFDocument(r) {
   body += `</div>` // end page-body
   body += `</div>` // end page
 
-  // ── SECTION B: DEBRIEF (one entry per page — no mid-paragraph “tanggung” cuts) ──
+  // ── SECTION B: DEBRIEF — flow entries; short entries share a page (cards avoid split) ──
   if (r.debrief_entries && r.debrief_entries.length) {
     body += sectionDividerPage('B. Debrief of Incident')
+    body += `<div class="page page-break"><div class="page-body">${ph}`
+    body += `<div class="section-title">B. DEBRIEF OF INCIDENT</div>`
     r.debrief_entries.forEach((d, i) => {
-      body += `<div class="page page-break"><div class="page-body">${ph}`
-      if (i === 0) body += `<div class="section-title">B. DEBRIEF OF INCIDENT</div>`
-      body += `<div class="print-keep">`
+      body += `<div class="debrief-entry-block print-keep">`
       body += `<table class="compact-avoid"><tr>
         <td style="width:40%"><div class="lbl">${i + 1}a. TITLE</div>${esc(d.title || '')}</td>
         <td><div class="lbl">b. DATE OF INCIDENT</div>${fmtDate(d.date_of_incident)}</td>
       </tr></table>`
-      body += `<div class="narrative">${esc(d.content || '')}</div><br/></div>`
-      body += bureauBar((i + 1).toString())
-      body += `</div>` // end page-body
-      body += `</div>` // end page
+      body += `<div class="narrative">${esc(d.content || '')}</div>`
+      body += `</div>`
     })
+    body += bureauBar('B')
+    body += `</div>`
+    body += `</div>`
   }
 
   // ── SECTION C: SUSPECTS DETAIL ────────────────────────────────────────
@@ -353,15 +375,15 @@ export function buildPDFDocument(r) {
         <td style="width:60%">
           <table style="border:none"><tr>
             <td style="border:none"><div class="lbl">${L(0)}. Name</div>${esc(s.full_name || '')}</td>
-            <td style="border:none"><div class="lbl">${L(1)}. Description</div>${esc(s.description || 'Short summary of the suspect')}</td>
+            <td style="border:none"><div class="lbl">${L(1)}. Description</div>${esc(s.description || '')}</td>
           </tr><tr>
             <td style="border:none"><div class="lbl">${L(2)}. DOB</div>${fmtDate(s.dob)}</td>
             <td style="border:none"><div class="lbl">${L(3)}. SEX</div>${esc(s.sex || '')}</td>
           </tr></table>
           <br/>
           <div class="lbl">${L(4)}. Interrogation</div>
-          <div style="font-size:8pt;margin:4px 0">Interrogation: &nbsp;${s.interrogation_url ? `<a href="${esc(s.interrogation_url)}">${esc(s.interrogation_url)}</a>` : '&ldquo;INTERROGATION URL&rdquo;'}</div>
-          <div class="narrative">${esc(s.interrogation_summary || '&ldquo;INTERROGATION SUMMARY&rdquo;')}</div>
+          <div style="font-size:8pt;margin:4px 0">Interrogation: &nbsp;${s.interrogation_url ? `<a href="${esc(s.interrogation_url)}">${esc(s.interrogation_url)}</a>` : ''}</div>
+          <div class="narrative">${esc(s.interrogation_summary || '')}</div>
         </td>
         <td style="width:40%;vertical-align:top;text-align:center">
           ${s.mugshot_url
@@ -410,17 +432,14 @@ export function buildPDFDocument(r) {
     })
   }
 
-  // ── SECTION E: WITNESSES ──────────────────────────────────────────────
+  // ── SECTION E: WITNESSES — flow affidavits; short entries may share a page ──
   if (r.witnesses && r.witnesses.length) {
     body += sectionDividerPage('E. Witness')
-    let pgCount = 1
-    const WITNESSES_PER_PAGE = 1
-    for (let i = 0; i < r.witnesses.length; i += WITNESSES_PER_PAGE) {
-      const chunk = r.witnesses.slice(i, i + WITNESSES_PER_PAGE)
-      body += `<div class="page page-break"><div class="page-body">${ph}`
-      chunk.forEach(w => {
-        body += `<div class="print-keep">`
-        body += `<table class="compact-avoid"><tr>
+    body += `<div class="page page-break"><div class="page-body">${ph}`
+    body += `<div class="section-title">E. WITNESS AFFIDAVITS</div>`
+    r.witnesses.forEach((w) => {
+      body += `<div class="witness-affidavit-block print-keep">`
+      body += `<table class="compact-avoid"><tr>
           <td style="width:8%"><div class="lbl">No.</div>${esc(w.id_code || '')}</td>
           <td colspan="3" style="font-weight:bold;font-size:10pt">AFFIDAVIT</td>
         </tr><tr>
@@ -431,49 +450,45 @@ export function buildPDFDocument(r) {
         </tr><tr>
           <td></td>
           <td><div class="lbl">d. Welfare</div>${esc(w.welfare || '')}</td>
-          <td colspan="2"><div class="lbl">e. Occupation</div>${esc(w.occupation || '')}</td>
+          <td colspan="2"><div class="lbl">e. Occupation</div>${esc(witnessOccupation(w))}</td>
         </tr></table>`
-        body += `<div class="lbl" style="margin-top:5px">c. Content</div>`
-        body += `<div class="narrative">${esc(w.content || '')}</div>`
-        body += `<div class="sign-line">[${esc(w.full_name || '')}]</div><br/></div>`
-      })
-      body += bureauBar(pgCount.toString())
-      body += `</div>` // end page-body
-      body += `</div>` // end page
-      pgCount++
-    }
+      body += `<div class="lbl" style="margin-top:5px">f. Content</div>`
+      body += `<div class="narrative">${esc(w.content || '')}</div>`
+      body += `<div class="sign-line">[${esc(w.full_name || '')}]</div>`
+      body += `</div>`
+    })
+    body += bureauBar('E')
+    body += `</div>`
+    body += `</div>`
   }
 
-  // ── SECTION F: EVIDENCES ──────────────────────────────────────────────
+  // ── SECTION F: EVIDENCES — flow cards; short items may share a page ──
   if (r.evidences && r.evidences.length) {
     body += sectionDividerPage('F. Evidences')
-    const EVIDENCES_PER_PAGE = 1
-    for (let i = 0; i < r.evidences.length; i += EVIDENCES_PER_PAGE) {
-      const chunk = r.evidences.slice(i, i + EVIDENCES_PER_PAGE)
-      const pg    = Math.floor(i / EVIDENCES_PER_PAGE) + 1
-      body += `<div class="page page-break"><div class="page-body">${ph}`
-      chunk.forEach(e => {
-        body += `<div class="print-keep">`
-        body += `<table class="compact-avoid"><tr>
+    body += `<div class="page page-break"><div class="page-body">${ph}`
+    body += `<div class="section-title">F. EVIDENCES</div>`
+    r.evidences.forEach((e) => {
+      body += `<div class="evidence-card-block print-keep">`
+      body += `<table class="compact-avoid"><tr>
           <td style="width:10%"><div class="lbl">Evidence ID</div>${esc(e.id_code || '')}</td>
           <td><div class="lbl">a. NAME OF EVIDENCE</div>${esc(e.name || '')}</td>
-          <td style="width:15%"><div class="lbl">b. EVIDENCE WAS</div>${esc(e.was_status || '')}</td>
+          <td style="width:15%"><div class="lbl">b. EVIDENCE WAS</div>${esc(evidenceWas(e))}</td>
           <td style="width:15%"><div class="lbl">c. STATUS OF EVIDENCE</div>${esc(e.evidence_status || '')}</td>
           <td style="width:18%"><div class="lbl">d. DATE OF RETRIEVAL</div>${fmtDate(e.date_of_retrieval)}</td>
         </tr></table>`
-        if (e.image_url) {
-          body += `<div class="lbl" style="margin-top:4px">l. IMAGE</div>
+      if (e.image_url) {
+        body += `<div class="lbl" style="margin-top:4px">l. IMAGE</div>
           <img src="${esc(e.image_url)}" style="max-width:180px;max-height:110px;border:1px solid #000;margin:4px 0;display:block" crossorigin="anonymous"/>`
-        } else {
-          body += `<div style="width:180px;height:80px;border:1px solid #ccc;margin:4px 0;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888">Exhibit</div>`
-        }
-        body += `<div class="lbl">Summary of evidences</div>`
-        body += `<div class="narrative">${esc(e.summary || '')}</div><br/></div>`
-      })
-      body += bureauBar(pg.toString())
-      body += `</div>` // end page-body
-      body += `</div>` // end page
-    }
+      } else {
+        body += `<div style="width:180px;height:80px;border:1px solid #ccc;margin:4px 0;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888">Exhibit</div>`
+      }
+      body += `<div class="lbl">Summary of evidences</div>`
+      body += `<div class="narrative">${esc(e.summary || '')}</div>`
+      body += `</div>`
+    })
+    body += bureauBar('F')
+    body += `</div>`
+    body += `</div>`
   }
 
   // ── SECTION G: CLOSURE ────────────────────────────────────────────────
@@ -514,12 +529,12 @@ export function buildPDFDocument(r) {
   body += `<table style="margin-top:8px"><tr>
     <td><div class="lbl">26. CASE REFERRED TO</div>
       <div style="font-size:8.5pt;line-height:1.8">
-        ${chk(r.case_referred_to === 'LSPD')}&nbsp;a. LSPD &nbsp;
-        ${chk(r.case_referred_to === 'LSCS')}&nbsp;b. LSCS &nbsp;
-        ${chk(r.case_referred_to === 'SAST')}&nbsp;c. SAST<br/>
-        ${chk(r.case_referred_to === 'DOJ')}&nbsp;d. DOJ &nbsp;
-        ${chk(r.case_referred_to === 'DOC')}&nbsp;e. DOC &nbsp;
-        ${chk(r.case_referred_to === 'NA')}&nbsp;f. N/A
+        ${chk(referredIncludes(r, 'LSPD'))}&nbsp;a. LSPD &nbsp;
+        ${chk(referredIncludes(r, 'LSCS'))}&nbsp;b. LSCS &nbsp;
+        ${chk(referredIncludes(r, 'SAST'))}&nbsp;c. SAST<br/>
+        ${chk(referredIncludes(r, 'DOJ'))}&nbsp;d. DOJ &nbsp;
+        ${chk(referredIncludes(r, 'DOC'))}&nbsp;e. DOC &nbsp;
+        ${chk(referredIncludes(r, 'NA'))}&nbsp;f. N/A
       </div>
     </td>
     <td><div class="lbl">27. CASE STATUS</div>
@@ -568,103 +583,61 @@ export function buildPDFDocument(r) {
 </head><body>${watermarkBodyHtml()}<div class="pdf-root">${body}</div></body></html>`
 }
 
-// ── Demo data (Trae Dackerwood) ────────────────────────────────────────────
+/** Smoke-test payload for ?id=demo — empty fields; keys align with form/API (no sample narrative). */
 export const DEMO_REPORT = {
-  case_number:        '0001',
-  case_title:         'Homicide of Trae Dackerwood',
-  category:           'A',
-  offense_type:       '1st DEGREE MURDER',
-  mdw_incident_number:'#310',
-  building_number:    'Not Identified',
-  address:            'Municipal Area',
-  bureau_name:        'CID',
-  agency_code:        'VICE',
-  specific_location:  'Rear of Mission Row Police Department (Primary) / Sandy Shores Office (Secondary)',
-  location_code:      'Not Identified',
-  date_of_offense:    '2026-03-07',
-  time_of_offense:    '02:15 UTC+7',
-  day_of_offense:     'Saturday',
-  date_reported:      '2026-03-07',
-  day_reported:       'Saturday',
-  jurisdiction_lspd:  true,
-  jurisdiction_sast:  true,
-  jurisdiction_lscs:  false,
+  case_number: null,
+  case_title: null,
+  category: 'A',
+  offense_type: null,
+  mdw_incident_number: null,
+  building_number: null,
+  address: null,
+  bureau_name: 'CID',
+  agency_code: null,
+  specific_location: null,
+  location_code: null,
+  date_of_offense: null,
+  time_of_offense: null,
+  day_of_offense: null,
+  date_reported: null,
+  day_reported: null,
+  jurisdiction_lspd: false,
+  jurisdiction_sast: false,
+  jurisdiction_lscs: false,
   jurisdiction_state: false,
-  lead_investigators: 'Detective II Julian Flux',
-  prosecutor:         'TBA',
+  lead_investigators: null,
+  prosecutor: null,
   prosecutor_time_start: null,
-  prosecutor_time_end:   null,
-  suspect_status:      'NON_GOVT',
-  suspect_disposition: 'ARRESTED',
-  suspect_notes:       'Government Employee, State of Freedom Regional Leader',
-
-  debrief_entries: [
-    {
-      title:           '"Victim before death"',
-      date_of_incident:'2026-03-07',
-      content: 'The victim, Trae Dackerwood, was a former gang member who served as an informant for Detective Tarsha Kim. Days before his death, he approached witness Scott Hawkes in a state of fear, revealing his compromised status and mentioning he overheard "Knuckle Money" (Nelson Moss) confess to shooting Officer Tarsha Kim.',
-    },
-    {
-      title:           '"Victim Body were found"',
-      date_of_incident:'2026-03-07',
-      content: 'On March 7th, 2026, at approximately 02:15 UTC+7, a headless body was discovered lying on its back near the railway tracks behind the Mission Row Headquarters (MRHQ).\n\nAt approximately 02:30 UTC+7, an unknown masked individual delivered a box to the Sandy Shores Sheriff Station and fled in one of three identified vehicles (Black Mercedes SUV, Green Nissan GTR R35, or another black vehicle). Upon inspection, the box was found to contain a severed human head.\n\nAn anonymous 911A transmission confirmed the head belonged to Trae Dackerwood and included a taunting message to "enjoy the ride, and wait for the \'game\'".',
-    },
-  ],
-
-  suspects: [
-    { id_code: 's.1', full_name: 'Nelson Moss AKA Knuckle Money', description: 'Short summary of the suspect', dob: null, sex: 'M', age: '-', race: 'AA', telephone: '-', welfare_occupation: '-', family: '-', interrogation_url: '', interrogation_summary: '"INTERROGATION SUMMARY"', mugshot_url: null },
-    { id_code: 's.2', full_name: 'Don Whymean', description: 'Short summary of the suspect', dob: null, sex: 'M', age: '-', race: 'AA', telephone: '-', welfare_occupation: '-', family: '-', interrogation_url: '', interrogation_summary: '"INTERROGATION SUMMARY"', mugshot_url: null },
-    { id_code: 's.3', full_name: 'Santigo Salvator', description: 'Short summary of the suspect', dob: null, sex: 'M', age: '-', race: 'AA', telephone: '-', welfare_occupation: '-', family: '-', interrogation_url: '', interrogation_summary: '"INTERROGATION SUMMARY"', mugshot_url: null },
-  ],
-
-  victims: [
-    {
-      id_code: 'v.1', full_name: 'Trae Dackerwood', age: '-', sex: 'M', race: 'AA',
-      telephone: '-', welfare_occupation: 'Deceased, Ex-Gang Member', notes: '-', family: '-',
-      autopsy_by: 'Dr. Ryu Ji Kenedy',
-      autopsy_summary: 'The forensic examination conducted by Dr. Ryu Ji Kenedy of the San Andreas Health Department identifies the victim as Trae Dackerwood, a male born on August 15, 2008. The autopsy concludes that the victim died from severe trauma caused by decapitation, which resulted in massive hemorrhage.\n\nAn examination of the cervical region indicates that the decapitation was carried out using a sharp-edged weapon or a heavy cutting instrument, leaving relatively clean cutting margins along the neck structures. Furthermore, the presence of significant blood loss suggests that this fatal injury occurred while the victim was still alive or shortly before his death.\n\nPrior to the mutilation, the victim suffered physical assault, evidenced by additional pre-mortem injuries. These include:\n\u2022 Stab Wound (Vulnus Punctum): Located on the right thigh, approximately 4 cm deep, which penetrated the muscle tissue and caused damage to surrounding blood vessels, leading to active bleeding and severe pain.\n\u2022 Incised Wound (Vulnus Scissum): Found on the abdomen, measuring about 6 cm in length and affecting the superficial layers of the skin and soft tissue, resulting in moderate bleeding and open wound exposure.\n\nThe victim was discovered in a dismembered condition, with the head separated from the body. Scene findings revealed that the victim\'s head was located in the Sandy Shores area, while the body was recovered behind the Mission Row Headquarters (MRHQ). The official time of death is recorded as March 7th, 2026, at 02:45 UTC +7, and the manner of death is officially classified as a Homicide.',
-    },
-  ],
-
-  witnesses: [
-    { id_code: 'w.1', full_name: 'Scott Hawkes', status: 'Witness of motives', welfare: 'Alive', occupation: 'Detective of CIB', content: 'According to the testimony provided by Scott Hawkes, it was revealed that several days prior to his death, the victim, Trae Dackerwood, approached the witness in a state of profound fear. Trae disclosed that his position as an informant for Officer Tarsha Kim had been compromised. The victim admitted that during his time living on Grove Street, he routinely reported all illegal activities conducted by the Ballas gang to Officer Tarsha.\n\nIn his statement, Scott Hawkes explained that Trae had been present during an internal conversation among Ballas members. There, Trae directly overheard a confession from a subject identified as "Knuckle Money." The subject openly stated, "I just shot a female Officer and she is now in a coma," a statement that directly refers to the current critical condition of Officer Tarsha Kim.\n\nThis testimony establishes a clear retaliatory motive for the brutal execution of Trae Dackerwood and identifies "Knuckle Money" as a primary suspect in both the homicide of the victim and the attempted murder of Officer Tarsha Kim.\n\nI hereby declare that the information stated above is true and accurate to the best of my knowledge and professional expertise.' },
-    { id_code: 'w.2', full_name: 'Meifanny Lorenta', status: 'Witness of possible killer', welfare: 'Alive', occupation: 'Detective of CIB', content: 'Pada saat Det. Meifanny Lorenta melakukan interogasi dengan Nelson Moss mengenai kidnapping terhadap Chief of Police, dia tiba-tiba berkata bahwa apakah kami akan menerima laporan ada orang yang meninggal beberapa jam kedepan, dan dia berharap kita bisa menemukan pelakunya.\n\nI hereby declare that the information stated above is true and accurate to the best of my knowledge and professional expertise.' },
-    { id_code: 'w.3', full_name: 'Marco Romano', status: 'Witness Evidence [e.2]', welfare: 'Alive', occupation: 'Deputy of LSCS', content: 'While several deputies were standing in front of the Sheriff Station, an unknown individual wearing all black clothing and a full-face mask approached the area while carrying a box. Behind the individual, three vehicles were observed nearby: a black Mercedes SUV, a green Nissan GTR R35, and another unidentified black vehicle.\n\nThe individual then placed the box in front of the Sheriff Station before entering one of the vehicles. Shortly after, all vehicles fled the scene heading towards East Joshua Road.\n\nDeputy Kennedy later opened the box to inspect its contents and discovered that it contained a severed human head. The suspects had already fled the area before deputies were able to identify or apprehend them.\n\nI hereby declare that the information stated above is true and accurate to the best of my knowledge and professional expertise.' },
-  ],
-
-  evidences: [
-    { id_code: 'e.1', name: 'Primary Crime Scene',                   was_status: 'Secured', evidence_status: 'Recovered', date_of_retrieval: '2026-03-07', image_url: null, summary: 'The victim was found at around 02.15 lying on his back beside the railway tracks behind MRHQ with no head and a lot of blood around him.' },
-    { id_code: 'e.2', name: 'Secondary Crime Scene',                 was_status: 'Secured', evidence_status: 'Recovered', date_of_retrieval: null,          image_url: null, summary: 'A head was found around 2:30 a.m. in a box in front of the Sandy Shores Sheriff Station.' },
-    { id_code: 'e.3', name: 'Reports on 911 about Head of victim',   was_status: 'Secured', evidence_status: 'Recovered', date_of_retrieval: null,          image_url: null, summary: 'Log 1 (911): "Sir, I saw a headless body behind MRPD."\nLog 2 (311): Request for detective presence at Sandy Shores Station by Edward Choi.\nLog 3 (911A): Anonymous — "The Head of Trae Deckerwood has been sent to front sheriff office. enjoy the ride, and wait for the \'game\'".' },
-    { id_code: 'e.4', name: 'Victim Phone',                          was_status: 'Secured', evidence_status: 'Recovered', date_of_retrieval: null,          image_url: null, summary: 'Digital evidence from Trae Dackerwood\'s mobile device confirmed that he was an active Confidential Informant (CI) for Detective Tarsha Kim, frequently providing intelligence on Ballas crimes.\n\nOn the day of his death, Trae made a call to Billie Joe Crownstone, and a missed call from Detective Tarsha Kim.' },
-    { id_code: 'e.5', name: 'DNA found on victim',                   was_status: 'Secured', evidence_status: 'Recovered', date_of_retrieval: null,          image_url: null, summary: 'DNA Analysis Report\nThe forensic analysis conducted at the Los Santos Medical Service on March 8, 2026, confirms with 99% certainty that complete sets of fingerprints belonging to three distinct individuals — Nelson Moss (s.1), Santigo Salvator (s.2), and Don Whymean (s.3) — were recovered directly from the body of Trae Dackerwood.' },
-  ],
-
-  closure_summary:
-    'The investigation into the death of Trae Dackerwood has concluded that the victim was the target of a premeditated and brutal retaliatory execution. Evidence indicates the homicide was a direct response to the victim\'s role as a Confidential Informant (CI) for Detective Tarsha Kim. Digital forensics from the victim\'s mobile device confirmed he frequently provided intelligence regarding the illegal activities of the Ballas gang.',
-  closure_forensic:
-    'According to the autopsy performed by Dr. Ryu Ji Kenedy, the cause of death was decapitation resulting in massive hemorrhage. The examination revealed the victim was alive during the initial assault, evidenced by: a 4 cm deep stab wound (Vulnus Punctum) on the right thigh; a 6 cm incised wound (Vulnus Scissum) on the abdomen; clean cutting margins in the cervical region. The victim\'s remains were recovered from two separate locations: the body behind the Mission Row Police Department, and the severed head delivered in a box to the Sandy Shores Sheriff Station.',
-  closure_suspect_id:
-    'The Criminal Investigation Division has identified three primary suspects: Nelson Moss (aka "Knuckle Money"), Santigo Salvator, and Don Whymean. Physical evidence: forensic analysis confirmed with 99% certainty fingerprints from all three suspects were recovered from the victim\'s body. Testimonial evidence: Scott Hawkes testified that the victim overheard Nelson Moss confessing to the shooting of Officer Tarsha Kim. Behavioral evidence: Nelson Moss predicted the victim\'s death during interrogation by Detective Meifanny Lorenta.',
-  closure_final_disposition:
-    'Based on the overwhelming physical and testimonial evidence, this case is classified as 1st Degree Murder. The suspects have been marked as Arrested. All evidence — including the victim\'s phone, identity card, and forensic DNA reports — has been secured and recovered. The case is officially referred to the Department of Justice (DOJ) for prosecution.',
-  closure_time_received:    null,
-  closure_time_arrived:     null,
-  closure_type:             'CID',
-  closure_detective_name:   'Julian Flux',
-  closure_date:             null,
+  prosecutor_time_end: null,
+  suspect_status: null,
+  suspect_disposition: null,
+  suspect_notes: null,
+  closure_summary: null,
+  closure_forensic: null,
+  closure_suspect_id: null,
+  closure_final_disposition: null,
+  closure_time_received: null,
+  closure_time_arrived: null,
+  closure_type: 'CID',
+  closure_detective_name: null,
+  closure_date: null,
   closure_returned_to_service: null,
-  case_referred_to:         'LSCS',
-  case_status:              'CLOSED',
-  prosecutor_final_name:    '-',
-  prosecutor_final_occupation: '-',
-  detective_how_closed:     null,
-  detective_suspect_developed:  false,
-  detective_suspect_arrested:   false,
-  detective_entered_forensics:  true,
-  detective_evidence_recovered: true,
-  detective_value_of_property:  'N/A',
-  detective_cleared_forensics:  true,
-  detective_referred_to:    '-',
-  detective_date_referral:  null,
+  case_referred_to: null,
+  case_status: 'OPEN',
+  prosecutor_final_name: null,
+  prosecutor_final_occupation: null,
+  detective_how_closed: null,
+  detective_suspect_developed: false,
+  detective_suspect_arrested: false,
+  detective_entered_forensics: false,
+  detective_evidence_recovered: false,
+  detective_value_of_property: null,
+  detective_cleared_forensics: false,
+  detective_referred_to: null,
+  detective_date_referral: null,
+  debrief_entries: [],
+  victims: [],
+  suspects: [],
+  witnesses: [],
+  evidences: [],
 }
