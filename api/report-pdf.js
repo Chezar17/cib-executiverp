@@ -12,6 +12,11 @@ import { launch, defaultArgs } from 'puppeteer-core'
 import { requireSession } from './_lib/session.js'
 import { getSupabase } from './_lib/supabase.js'
 import { buildPDFDocument, DEMO_REPORT } from './_lib/pdf-html.js'
+import {
+  PDF_HEADER_TEMPLATE,
+  buildPdfFooterTemplate,
+  loadFooterLogoDataUrl,
+} from './_lib/pdf-layout.js'
 
 const IS_VERCEL = process.env.VERCEL === '1'
 
@@ -115,9 +120,13 @@ export default async function handler(req, res) {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-      displayHeaderFooter: false,
-      preferCSSPageSize: false,
+      /* Empty margins: real inset comes from @page in pdf-html (consistent on all sheets). */
+      margin: { top: '0', bottom: '0', left: '0', right: '0' },
+      displayHeaderFooter: true,
+      headerTemplate: PDF_HEADER_TEMPLATE,
+      footerTemplate: buildPdfFooterTemplate(loadFooterLogoDataUrl()),
+      preferCSSPageSize: true,
+      scale: 1,
     })
 
     const base64 = Buffer.from(pdfBuffer).toString('base64')
