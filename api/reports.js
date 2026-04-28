@@ -170,13 +170,15 @@ function sanitizeWitness(w) {
   return {
     id_code: w.id_code || null, full_name: w.full_name || null,
     status: w.status || null, welfare: w.welfare || null,
-    occupation: w.occupation || null, content: w.content || null,
+    occupation: w.welfare_occupation ?? w.occupation ?? null,
+    content: w.content || null,
   }
 }
 function sanitizeEvidence(e) {
   return {
     id_code: e.id_code || null, name: e.name || null,
-    was_status: e.was_status || null, evidence_status: e.evidence_status || null,
+    was_status: e.was_status ?? e.evidence_was ?? null,
+    evidence_status: e.evidence_status || null,
     date_of_retrieval: e.date_of_retrieval || null,
     image_url: e.image_url || null, summary: e.summary || null,
   }

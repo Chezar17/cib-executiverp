@@ -99,8 +99,9 @@ function strEqCI(a, b) {
 
 function chk(checked) {
   const on = asPdfBool(checked)
-  // U+2713 prints reliably in Chromium PDF; avoid tiny box clipping the glyph
-  return `<span class="chkbox${on ? ' chkbox-on' : ''}" aria-hidden="true">${on ? '\u2713' : ''}</span>`
+  // ASCII "X" survives all Chromium PDF font stacks; unicode checkmarks can disappear in headless PDF
+  const mark = on ? '<span class="chk-mark">X</span>' : ''
+  return `<span class="chkbox${on ? ' chkbox-on' : ''}" aria-hidden="true">${mark}</span>`
 }
 
 /** Form/API: case_referred_to is CSV (e.g. "LSPD,DOJ"). */
@@ -185,6 +186,15 @@ table.compact-avoid tr { break-inside: avoid; page-break-inside: avoid; }
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .chkbox-on { font-weight: bold; font-family: Arial, Helvetica, sans-serif; }
+.chk-mark {
+  display: inline-block;
+  font-weight: bold;
+  font-size: 10pt;
+  line-height: 1;
+  color: #000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 /* Keep closure checkbox tables together (was split-ok breaking between rows) */
 .closure-forms-wrap {
   break-inside: avoid;
