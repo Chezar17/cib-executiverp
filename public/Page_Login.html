@@ -347,6 +347,112 @@
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════
+     CHANGE PASSWORD MODAL
+     Shown automatically when must_change_password = true
+══════════════════════════════════════════ -->
+<div id="changepw-modal">
+  <div class="secret-modal-box" style="border-top-color:#E8C97A;">
+
+    <div class="secret-modal-topbar" style="border-bottom-color:rgba(201,168,76,0.2);">
+      <span class="secret-modal-topleft" style="color:var(--gold);">CIB · PASSWORD CHANGE REQUIRED</span>
+      <!-- No close button — must complete this -->
+    </div>
+
+    <div class="secret-modal-body" style="position:relative;">
+
+      <!-- Step 1: change password form -->
+      <div id="cpw-form-step">
+        <div class="secret-modal-eyebrow" style="color:var(--gold);">Security Notice</div>
+        <div class="secret-modal-title" style="font-size:clamp(16px,4vw,20px);">Password Change Required</div>
+        <div class="secret-modal-sub" style="line-height:1.7;">
+          Your account is using a <b style="color:var(--gold);">default password</b> that has not been changed.<br>
+          You must set a new password before accessing the portal.
+        </div>
+        <div class="secret-modal-divider"></div>
+
+        <!-- Alert -->
+        <div id="cpw-alert" style="display:none;margin-bottom:14px;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.4);border-left:3px solid var(--red-alert);padding:10px 14px;">
+          <div id="cpw-alert-msg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
+        </div>
+
+        <!-- Current password -->
+        <div class="form-group">
+          <label class="form-label" for="cpw-current" style="color:var(--gold);">Current Password</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon">
+              <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+            </span>
+            <input class="form-input" type="password" id="cpw-current" placeholder="Your current password" autocomplete="off"/>
+          </div>
+        </div>
+
+        <!-- New password -->
+        <div class="form-group">
+          <label class="form-label" for="cpw-new" style="color:var(--gold);">New Password</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon">
+              <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+            </span>
+            <input class="form-input" type="password" id="cpw-new" placeholder="Choose a new password" autocomplete="new-password" oninput="cpwCheckStrength()"/>
+          </div>
+          <!-- Password strength bar -->
+          <div style="height:3px;background:rgba(201,168,76,0.1);margin-top:6px;overflow:hidden;">
+            <div id="cpw-strength-bar" style="height:100%;width:0%;transition:width 0.3s ease,background 0.3s ease;"></div>
+          </div>
+          <div id="cpw-strength-label" style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);margin-top:4px;text-transform:uppercase;"></div>
+        </div>
+
+        <!-- Confirm new password -->
+        <div class="form-group">
+          <label class="form-label" for="cpw-confirm" style="color:var(--gold);">Confirm New Password</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon">
+              <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+            </span>
+            <input class="form-input" type="password" id="cpw-confirm" placeholder="Re-enter new password" autocomplete="new-password"/>
+          </div>
+        </div>
+
+        <button class="login-btn" id="cpw-submit-btn" onclick="submitPasswordChange()" style="background:var(--gold);color:#0A0F1E;">
+          Save New Password
+        </button>
+      </div>
+
+      <!-- Step 2: success state -->
+      <div id="cpw-success-step" style="display:none;text-align:center;padding:20px 0;">
+        <div style="width:64px;height:64px;border:2px solid #27AE60;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg fill="currentColor" viewBox="0 0 24 24" style="width:32px;height:32px;fill:#27AE60;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:4px;color:#27AE60;text-transform:uppercase;margin-bottom:8px;">Password Updated</div>
+        <div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:20px;">Please log in again with your new password.</div>
+        <div style="width:200px;height:3px;background:rgba(39,174,96,0.15);position:relative;overflow:hidden;margin:0 auto;">
+          <div id="cpw-redirect-bar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:#27AE60;transition:width 1.5s linear;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+/* Change Password Modal — reuses secret-modal styles */
+#changepw-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(4,6,14,0.96);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+#changepw-modal.open { display: flex; }
+#cpw-strength-bar { border-radius: 0; }
+</style>
+
 <script src="shared/scripts/site-ui.js"></script>
 
 
