@@ -33,7 +33,7 @@
     <span class="topbar-sub">CIB Internal Intelligence Portal</span>
   </div>
   <div class="topbar-right">
-    <span class="topbar-badge-display">Logged in as: <span id="badgeDisplay">—</span></span>
+    <span class="topbar-badge-display"><span id="badgeDisplay">—</span></span>
     <span class="topbar-clock" id="liveClock">—</span>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
@@ -163,31 +163,31 @@
       <div id="panelBadge"></div>
     </div>
 
-    <!-- DASHBOARD PANEL — REDESIGNED -->
+    <!-- DASHBOARD PANEL -->
     <div class="nx-panel panel-active" id="panel-dashboard">
 
-      <!-- HERO SPLASH -->
+      <!-- HERO -->
       <div class="dash-hero">
         <div class="dash-hero-corner-bl"></div>
         <div class="dash-hero-inner">
 
-          <!-- Wordmark -->
           <div class="dash-hero-wordmark">
             <div class="dash-hero-eyebrow">Central Investigation Bureau · Internal Portal</div>
             <div class="dash-hero-title"><span>NEXUS</span></div>
             <div class="dash-hero-sub">
-              Welcome back, <span id="dashWelcomeName" style="color:var(--gold);font-family:'Oswald',sans-serif;letter-spacing:3px;">—</span><br/>
-              You have <span id="dashClearanceAdjective" style="color:var(--gold-light);font-family:'Oswald',sans-serif;letter-spacing:2px;">—</span> clearance · <span id="dashDivisionLine">—</span> · All activity is monitored
+              Welcome back, <span id="dashWelcomeName" style="color:var(--gold);font-family:'Oswald',sans-serif;letter-spacing:3px;">—</span>
+              &nbsp;·&nbsp; <span id="dashClearanceAdjective" style="color:var(--gold-light);font-family:'Oswald',sans-serif;letter-spacing:2px;">—</span> Clearance &nbsp;·&nbsp; <span id="dashDivisionLine">—</span>
             </div>
           </div>
 
           <!-- Session card -->
           <div class="dash-hero-session">
-            <div>
-              <div class="dash-session-label">Active Officer</div>
-              <div class="dash-officer-name" id="dashHeroOfficer">—</div>
+            <div class="dash-session-active" style="margin-bottom:12px;">
+              <div class="dash-session-active-dot"></div>
+              <span class="dash-session-active-text">Secure Session Active</span>
             </div>
-            <div class="dash-session-divider"></div>
+            <div class="dash-officer-name" id="dashHeroOfficer">—</div>
+            <div class="dash-session-divider" style="margin:10px 0;"></div>
             <div class="dash-session-row">
               <span class="dash-session-label">Rank</span>
               <span class="dash-session-value white" id="dashSessionRank">—</span>
@@ -200,20 +200,11 @@
               <span class="dash-session-label">Clearance</span>
               <span class="dash-session-value gold" id="dashSessionClearance">—</span>
             </div>
-            <div class="dash-session-row">
-              <span class="dash-session-label">Modules</span>
-              <span class="dash-session-value white">8 Available</span>
-            </div>
-            <div class="dash-session-divider"></div>
-            <div class="dash-session-active">
-              <div class="dash-session-active-dot"></div>
-              <span class="dash-session-active-text">Secure Session · Active</span>
-            </div>
           </div>
 
         </div>
 
-        <!-- Stats strip pinned to bottom of hero -->
+        <!-- Status strip -->
         <div class="dash-alert-strip">
           <div class="dash-alert-cell">
             <div class="dash-alert-cell-label">Portal Status</div>
@@ -225,11 +216,7 @@
           </div>
           <div class="dash-alert-cell">
             <div class="dash-alert-cell-label">Session Timeout</div>
-            <div class="dash-alert-cell-value white">30 min idle</div>
-          </div>
-          <div class="dash-alert-cell">
-            <div class="dash-alert-cell-label">Data Integrity</div>
-            <div class="dash-alert-cell-value green">Verified</div>
+            <div class="dash-alert-cell-value white">30 Min Idle</div>
           </div>
           <div class="dash-alert-cell">
             <div class="dash-alert-cell-label">Audit Logging</div>
