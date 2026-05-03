@@ -55,19 +55,20 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Session expired' })
     }
 
-    // Fetch GIU fields from users table
+    // Fetch GIU fields + classification from users table
     const { data: user } = await supabase
       .from('users')
-      .select('is_giu, callsign')
+      .select('is_giu, callsign, classification')
       .eq('badge', session.badge)
       .single()
 
-    // ✅ Token is valid — return badge + GIU access fields
+    // ✅ Token is valid — return badge + GIU access fields + classification
     return res.status(200).json({
-      success:  true,
-      badge:    session.badge,
-      is_giu:   user?.is_giu   || false,
-      callsign: user?.callsign  || null,
+      success:        true,
+      badge:          session.badge,
+      is_giu:         user?.is_giu         || false,
+      callsign:       user?.callsign        || null,
+      classification: user?.classification  || null,
     })
 
   } catch (err) {

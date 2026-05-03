@@ -307,40 +307,44 @@ async function api(method, path, body) {
 }
 
 // ── Auth init ─────────────────────────────────────────────
+// portal-auth.js already calls /api/verify-token and passes the full
+// response as `session`. No second fetch needed — reading directly
+// from session avoids the race condition that kept the gate stuck.
+// session shape from verify-token: { badge, is_giu, callsign, classification }
 PortalAuth.init({
   loginHref: '../Page_Login.html',
   nameEls:   [],
   onReady: async function(badge, session) {
-    // Re-verify to get is_giu and callsign
-    try {
-      const res  = await fetch('/api/verify-token', { headers: { 'x-session-token': TOKEN() } })
-      const data = await res.json()
-      if (!data.is_giu) {
-        // Not a GIU member — redirect to NEXUS
-        window.location.href = '../nexus.html'
-        return
-      }
-      const callsign = data.callsign || badge
-      sessionStorage.setItem('cib_is_giu', 'true')
-      sessionStorage.setItem('cib_callsign', callsign)
-      sessionStorage.setItem('cib_classification', session?.classification || '')
 
-      // Update UI
-      document.getElementById('dir-callsign-badge').textContent = callsign.toUpperCase()
-      const cls = (session?.classification || '').replace('_', ' ').toUpperCase()
-      document.getElementById('dir-session-label').textContent = cls + ' · GIU · SECURE'
-
-      // Show create button if TS
-      if (IS_TS()) {
-        document.getElementById('btn-new-directive').style.display = 'flex'
-      }
-
-      // Load data
-      await loadAllCallsigns()
-      await loadDirectives()
-    } catch(e) {
+    // ── GIU gate check ──────────────────────────────────────
+    // is_giu is already in the session portal-auth fetched — no second call
+    if (!session?.is_giu) {
       window.location.href = '../nexus.html'
+      return
     }
+
+    // ── Persist GIU fields to sessionStorage ────────────────
+    const callsign = session?.callsign || badge
+    sessionStorage.setItem('cib_is_giu',        'true')
+    sessionStorage.setItem('cib_callsign',       callsign)
+    // Normalise classification → lower_snake so IS_TS() works correctly
+    // e.g. "Top Secret" → "top_secret", "top_secret" stays "top_secret"
+    const rawCls = (session?.classification || '').toLowerCase().replace(/\s+/g, '_')
+    sessionStorage.setItem('cib_classification', rawCls)
+
+    // ── Update UI ────────────────────────────────────────────
+    document.getElementById('dir-callsign-badge').textContent = callsign.toUpperCase()
+    const clsDisplay = rawCls.replace(/_/g, ' ').toUpperCase()
+    document.getElementById('dir-session-label').textContent  = clsDisplay + ' · GIU · SECURE'
+
+    // Show "New Directive" button to Top Secret users
+    if (IS_TS()) {
+      document.getElementById('btn-new-directive').style.display = 'flex'
+    }
+
+    // ── Load page data ───────────────────────────────────────
+    await loadAllCallsigns()
+    await loadDirectives()
   }
 })
 
