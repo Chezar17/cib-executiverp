@@ -323,13 +323,40 @@ PortalAuth.init({
     let giuData = { is_giu: false, callsign: null, classification: null }
     try {
       const res = await fetch('/api/verify-token', {
-        headers: { 'x-session-token': TOKEN() }
+        headers: {
+          'x-session-token': TOKEN(),
+          'Cache-Control':   'no-cache, no-store',
+          'Pragma':          'no-cache'
+        },
+        cache: 'no-store'
       })
-      if (res.ok) giuData = await res.json()
+
+      if (res.status === 401) {
+        // Explicitly unauthorised — redirect to login
+        window.location.href = '../Page_Login.html'
+        return
+      }
+
+      if (res.ok) {
+        try {
+          giuData = await res.json()
+        } catch(parseErr) {
+          // 304 or empty body — body can't be parsed
+          // Fall back to sessionStorage values rather than kicking the user
+          giuData = {
+            is_giu:         sessionStorage.getItem('cib_is_giu') === 'true',
+            callsign:       sessionStorage.getItem('cib_callsign') || null,
+            classification: sessionStorage.getItem('cib_classification') || null,
+          }
+        }
+      }
     } catch(e) {
-      // Network error — fail closed, redirect away
-      window.location.href = '../nexus.html'
-      return
+      // Network failure — fall back to cached session, don't redirect
+      giuData = {
+        is_giu:         sessionStorage.getItem('cib_is_giu') === 'true',
+        callsign:       sessionStorage.getItem('cib_callsign') || null,
+        classification: sessionStorage.getItem('cib_classification') || null,
+      }
     }
 
     // ── GIU access check ─────────────────────────────────────

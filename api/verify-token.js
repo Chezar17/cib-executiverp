@@ -23,6 +23,9 @@ export default async function handler(req, res) {
     methods: 'GET, OPTIONS',
     headers: 'Content-Type, x-session-token',
   })
+  // Never cache auth responses — a stale 304 causes the gate to hang
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+  res.setHeader('Pragma', 'no-cache')
   if (handlePreflight(req, res)) return
   if (rejectForeignOrigin(req, res)) return
   if (!allowMethods(req, res, ['GET'])) return
