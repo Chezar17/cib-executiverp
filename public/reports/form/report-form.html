@@ -9,6 +9,7 @@
 <link rel="icon" href="/images/cib-logo.png" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/shared/styles/portal-shell.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css"/>
 <link rel="stylesheet" href="/reports/form/report-form.css"/>
 </head>
 <body>
@@ -444,6 +445,33 @@
 
 <div id="inf-toast" class="toast-container"></div>
 
+<div id="irPhotoModal" class="ir-photo-modal" aria-hidden="true">
+  <div class="ir-photo-modal-backdrop" onclick="closePhotoModal()" aria-hidden="true"></div>
+  <div class="ir-photo-modal-panel" role="dialog" aria-modal="true" aria-labelledby="irPhotoModalTitle" onclick="event.stopPropagation()">
+    <div class="ir-photo-modal-title" id="irPhotoModalTitle">Image from URL</div>
+    <p class="ir-photo-modal-hint">Paste a direct image HTTPS URL (same-origin avoids CORS issues for cropping).</p>
+    <div class="form-group ir-photo-modal-field">
+      <label for="irPhotoModalUrl">Image URL</label>
+      <input type="text" id="irPhotoModalUrl" autocomplete="off" spellcheck="false" placeholder="https://… or /images/local.png"/>
+    </div>
+    <div class="form-group ir-photo-modal-field ir-photo-modal-orient">
+      <span class="label-inline">Orientation (PDF frame)</span>
+      <label class="check-item"><input type="radio" name="irPhotoModalOrient" id="irPhotoModalOrientP" value="portrait" onchange="irPhotoModalOrientChanged()"/> Portrait</label>
+      <label class="check-item"><input type="radio" name="irPhotoModalOrient" id="irPhotoModalOrientL" value="landscape" onchange="irPhotoModalOrientChanged()"/> Landscape</label>
+    </div>
+    <div class="ir-photo-modal-actions ir-photo-modal-actions--top">
+      <button type="button" class="btn btn-ghost" onclick="irPhotoModalLoadPreview()">Load preview</button>
+    </div>
+    <div class="ir-photo-modal-crop-wrap">
+      <img id="irPhotoModalImg" alt="" style="max-width:100%;display:block"/>
+    </div>
+    <div class="ir-photo-modal-actions">
+      <button type="button" class="btn btn-ghost" onclick="closePhotoModal()">Cancel</button>
+      <button type="button" class="btn btn-gold" onclick="irPhotoModalSave()">Save image</button>
+    </div>
+  </div>
+</div>
+
 <div id="pdf-loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,10,20,.82);z-index:9000;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="width:44px;height:44px;border:4px solid rgba(201,168,76,.25);border-top-color:#C9A84C;border-radius:50%;animation:spin .8s linear infinite"></div>
   <div id="pdf-loading-label" style="font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;color:#C9A84C">LOADING...</div>
@@ -452,6 +480,7 @@
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script src="/shared/scripts/portal-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <script src="/reports/form/report-form.js"></script>
 </body>
 </html>
