@@ -147,6 +147,24 @@ export async function insertSubItems(supabase, reportId, { victims, suspects, wi
   if (inserts.length) await Promise.all(inserts)
 }
 
+/** Normalized crop { nx, ny, nw, nh } ∈ [0,1]; optional for PDF/UI framing. */
+function sanitizeNormCrop(c) {
+  if (!c || typeof c !== 'object') return null
+  const nx = Number(c.nx)
+  const ny = Number(c.ny)
+  const nw = Number(c.nw)
+  const nh = Number(c.nh)
+  if (![nx, ny, nw, nh].every((n) => Number.isFinite(n))) return null
+  if (nw < 1e-4 || nh < 1e-4 || nx < 0 || ny < 0 || nx + nw > 1.0001 || ny + nh > 1.0001) return null
+  return { nx, ny, nw, nh }
+}
+
+function sanitizePortraitLandscape(val, fallback) {
+  const s = String(val || '').toLowerCase()
+  if (s === 'landscape' || s === 'portrait') return s
+  return fallback
+}
+
 function sanitizeVictim(v) {
   return {
     id_code: v.id_code || null, full_name: v.full_name || null,
@@ -154,6 +172,9 @@ function sanitizeVictim(v) {
     telephone: v.telephone || null, welfare_occupation: v.welfare_occupation || null,
     notes: v.notes || null, family: v.family || null,
     autopsy_by: v.autopsy_by || null, autopsy_summary: v.autopsy_summary || null,
+    photo_url: v.photo_url || null,
+    photo_orientation: sanitizePortraitLandscape(v.photo_orientation, 'portrait'),
+    photo_crop: sanitizeNormCrop(v.photo_crop),
   }
 }
 function sanitizeSuspect(s) {
@@ -163,7 +184,10 @@ function sanitizeSuspect(s) {
     sex: s.sex || null, age: s.age || null, race: s.race || null,
     telephone: s.telephone || null, welfare_occupation: s.welfare_occupation || null,
     family: s.family || null, interrogation_url: s.interrogation_url || null,
-    interrogation_summary: s.interrogation_summary || null, mugshot_url: s.mugshot_url || null,
+    interrogation_summary: s.interrogation_summary || null,
+    mugshot_url: s.mugshot_url || null,
+    mugshot_orientation: sanitizePortraitLandscape(s.mugshot_orientation, 'portrait'),
+    mugshot_crop: sanitizeNormCrop(s.mugshot_crop),
   }
 }
 function sanitizeWitness(w) {
@@ -180,7 +204,10 @@ function sanitizeEvidence(e) {
     was_status: e.was_status ?? e.evidence_was ?? null,
     evidence_status: e.evidence_status || null,
     date_of_retrieval: e.date_of_retrieval || null,
-    image_url: e.image_url || null, summary: e.summary || null,
+    image_url: e.image_url || null,
+    image_orientation: sanitizePortraitLandscape(e.image_orientation, 'landscape'),
+    image_crop: sanitizeNormCrop(e.image_crop),
+    summary: e.summary || null,
   }
 }
 function sanitizeDebrief(d) {
