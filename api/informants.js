@@ -24,14 +24,26 @@ export default async function handler(req, res) {
     if (!allowMethods(req, res, ['GET', 'POST', 'PUT', 'DELETE'])) return
 
 
-    // ── GET: Load all informants (exclude soft-deleted) ────────
+    // ── GET: Load informants or directives ─────────────────────
     if (req.method === 'GET') {
-      const { data, error } = await supabase
+      // ?type=directive → return only directive records (gang = '__directive__')
+      // default         → return all non-directive informant records
+      const isDirective = req.query.type === 'directive'
+
+      let query = supabase
         .from('informants')
         .select('*')
         .eq('is_deleted', false)
-        .order('created_at', { ascending: true })
 
+      if (isDirective) {
+        query = query.eq('gang', '__directive__')
+      } else {
+        query = query.neq('gang', '__directive__')
+      }
+
+      query = query.order('created_at', { ascending: isDirective ? false : true })
+
+      const { data, error } = await query
       if (error) throw error
       return res.status(200).json({ success: true, data })
     }
@@ -97,7 +109,7 @@ export default async function handler(req, res) {
         .from('informants')
         .update({
           is_deleted: true,
-          deleted_by: deleted_by || 'Unknown',
+          deleted_by: session.badge,
           deleted_at: new Date().toISOString()
         })
         .eq('id', id)
