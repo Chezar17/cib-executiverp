@@ -4,21 +4,23 @@
  * Produces a self-contained HTML document with embedded CSS ready for
  * headless-Chrome PDF rendering via puppeteer-core.
  */
-import { readFileSync, existsSync } from 'fs'
-import { fileURLToPath } from 'url'
-import path from 'path'
-import { pdfPageMarginCssString, PDF_MARGIN_MM } from './pdf-layout.js'
+import { readFileSync, existsSync } from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
+import { pdfPageMarginCssString, PDF_MARGIN_MM } from "./pdf-layout.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const LOGO_PATH = path.join(__dirname, '../../public/images/cib-logo-pdf.png')
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const LOGO_PATH = path.join(__dirname, "../../public/images/cib-logo-pdf.png");
 function loadLogoBase64() {
   try {
     if (existsSync(LOGO_PATH)) {
-      const buf = readFileSync(LOGO_PATH)
-      return 'data:image/png;base64,' + buf.toString('base64')
+      const buf = readFileSync(LOGO_PATH);
+      return "data:image/png;base64," + buf.toString("base64");
     }
-  } catch (_) { /* ignore */ }
-  return null
+  } catch (_) {
+    /* ignore */
+  }
+  return null;
 }
 
 /**
@@ -28,108 +30,180 @@ function loadLogoBase64() {
  */
 function loadWatermarkDataUrl() {
   const candidates = [
-    path.join(__dirname, 'assets', 'cid-seal-watermark.png'),
-    path.join(__dirname, '../../public/images/cid-seal-watermark.png'),
-    path.join(process.cwd(), 'public', 'images', 'cid-seal-watermark.png'),
-  ]
+    path.join(__dirname, "assets", "cid-seal-watermark.png"),
+    path.join(__dirname, "../../public/images/cid-seal-watermark.png"),
+    path.join(process.cwd(), "public", "images", "cid-seal-watermark.png"),
+  ];
   for (const p of candidates) {
     try {
       if (existsSync(p)) {
-        const buf = readFileSync(p)
-        return 'data:image/png;base64,' + buf.toString('base64')
+        const buf = readFileSync(p);
+        return "data:image/png;base64," + buf.toString("base64");
       }
-    } catch (_) { /* next */ }
+    } catch (_) {
+      /* next */
+    }
   }
-  return null
+  return null;
 }
 
-const LOGO_SRC = loadLogoBase64()
-const WM_SRC = loadWatermarkDataUrl()
+const LOGO_SRC = loadLogoBase64();
+const WM_SRC = loadWatermarkDataUrl();
 
 /**
  * div + background-image prints more reliably in Chromium PDF than <img> position:fixed alone.
  * Single embed; fixed inset 0 = repeat on every physical sheet.
  */
 function watermarkBodyHtml() {
-  if (!WM_SRC) return ''
-  const m = PDF_MARGIN_MM
+  if (!WM_SRC) return "";
+  const m = PDF_MARGIN_MM;
   // Match @page inset so the seal does not paint into the margin band (looked like full-bleed text on p.2+).
   return (
     '<div class="wm-layer" style="position:fixed;left:' +
     m.left +
-    ';top:' +
+    ";top:" +
     m.top +
-    ';right:' +
+    ";right:" +
     m.right +
-    ';bottom:' +
+    ";bottom:" +
     m.bottom +
-    ';z-index:0;' +
-    'pointer-events:none;opacity:0.22;' +
+    ";z-index:0;" +
+    "pointer-events:none;opacity:0.22;" +
     "background-image:url('" +
     WM_SRC +
     "');background-size:52% auto;background-position:center center;background-repeat:no-repeat;" +
     '-webkit-print-color-adjust:exact;print-color-adjust:exact" aria-hidden="true"></div>'
-  )
+  );
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 export function esc(s) {
-  if (s === null || s === undefined) return ''
+  if (s === null || s === undefined) return "";
   return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 export function fmtDate(d) {
-  if (!d) return 'DD/MM/YYYY'
-  const parts = String(d).split('-')
-  if (parts.length !== 3) return String(d)
-  return parts[2] + '/' + parts[1] + '/' + parts[0]
+  if (!d) return "DD/MM/YYYY";
+  const parts = String(d).split("-");
+  if (parts.length !== 3) return String(d);
+  return parts[2] + "/" + parts[1] + "/" + parts[0];
+}
+
+/** Minimal escaping for remote URLs inside single-quoted CSS `url('...')` in HTML attributes. */
+function cssUrlForPdfAttr(href) {
+  if (!href) return "";
+  return String(href)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "%27")
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29");
+}
+
+function normalizePdfCrop(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const nx = Number(raw.nx);
+  const ny = Number(raw.ny);
+  const nw = Number(raw.nw);
+  const nh = Number(raw.nh);
+  if (![nx, ny, nw, nh].every((n) => Number.isFinite(n))) return null;
+  if (nw < 1e-4 || nh < 1e-4 || nx < 0 || ny < 0 || nx + nw > 1.0001 || ny + nh > 1.0001) return null;
+  return { nx, ny, nw, nh };
+}
+
+/**
+ * Fixed-size photo cell for PDF: only URL + optional normalized crop are stored.
+ * Uses background-image so Chromium prints the chosen crop predictably.
+ */
+function pdfFramedPhotoHtml(url, orientation, crop, portraitW, portraitH, landscapeW, landscapeH, fallbackInnerHtml) {
+  const landscape = orientation === "landscape";
+  const boxW = landscape ? landscapeW : portraitW;
+  const boxH = landscape ? landscapeH : portraitH;
+  if (!url) {
+    return `<div class="mugshot-box" style="width:${boxW}px;height:${boxH}px;max-width:100%">${fallbackInnerHtml}</div>`;
+  }
+  const u = cssUrlForPdfAttr(url);
+  const c = normalizePdfCrop(crop);
+  let bgSize;
+  let bgPos;
+  if (!c || (c.nw >= 0.999 && c.nh >= 0.999)) {
+    bgSize = "cover";
+    bgPos = "50% 50%";
+  } else {
+    const sx = (100 / c.nw).toFixed(6);
+    const sy = (100 / c.nh).toFixed(6);
+    const px = c.nw >= 0.999 ? 50 : (c.nx / (1 - c.nw)) * 100;
+    const py = c.nh >= 0.999 ? 50 : (c.ny / (1 - c.nh)) * 100;
+    bgSize = sx + "% " + sy + "%";
+    bgPos = px.toFixed(4) + "% " + py.toFixed(4) + "%";
+  }
+  return (
+    `<div class="pdf-framed-photo" style="display:inline-block;width:${boxW}px;height:${boxH}px;max-width:100%;border:1px solid #000;margin:auto;` +
+    `background-image:url('${u}');background-repeat:no-repeat;background-size:${bgSize};background-position:${bgPos};` +
+    `-webkit-print-color-adjust:exact;print-color-adjust:exact"></div>`
+  );
 }
 
 /** Supabase/JSON sometimes sends booleans as strings; PDF needs stable truth test. */
 export function asPdfBool(v) {
-  if (v === true || v === 1) return true
-  if (v === false || v === 0) return false
-  if (v === null || v === undefined) return false
-  if (typeof v === 'string') {
-    const s = v.trim().toLowerCase()
-    if (s === '' || s === 'false' || s === 'f' || s === '0' || s === 'no' || s === 'n') return false
-    if (s === 'true' || s === 't' || s === '1' || s === 'yes' || s === 'y') return true
-    return false
+  if (v === true || v === 1) return true;
+  if (v === false || v === 0) return false;
+  if (v === null || v === undefined) return false;
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    if (
+      s === "" ||
+      s === "false" ||
+      s === "f" ||
+      s === "0" ||
+      s === "no" ||
+      s === "n"
+    )
+      return false;
+    if (s === "true" || s === "t" || s === "1" || s === "yes" || s === "y")
+      return true;
+    return false;
   }
-  return Boolean(v)
+  return Boolean(v);
 }
 
 function strEqCI(a, b) {
-  return String(a ?? '').trim().toUpperCase() === String(b ?? '').trim().toUpperCase()
+  return (
+    String(a ?? "")
+      .trim()
+      .toUpperCase() ===
+    String(b ?? "")
+      .trim()
+      .toUpperCase()
+  );
 }
 
 function chk(checked) {
-  const on = asPdfBool(checked)
+  const on = asPdfBool(checked);
   // ASCII "X" survives all Chromium PDF font stacks; unicode checkmarks can disappear in headless PDF
-  const mark = on ? '<span class="chk-mark">X</span>' : ''
-  return `<span class="chkbox${on ? ' chkbox-on' : ''}" aria-hidden="true">${mark}</span>`
+  const mark = on ? '<span class="chk-mark">X</span>' : "";
+  return `<span class="chkbox${on ? " chkbox-on" : ""}" aria-hidden="true">${mark}</span>`;
 }
 
 /** Form/API: case_referred_to is CSV (e.g. "LSPD,DOJ"). */
 function referredIncludes(r, code) {
-  const raw = (r.case_referred_to || '').trim()
-  if (!raw) return false
-  const up = code.toUpperCase()
-  return raw.split(',').some((x) => x.trim().toUpperCase() === up)
+  const raw = (r.case_referred_to || "").trim();
+  if (!raw) return false;
+  const up = code.toUpperCase();
+  return raw.split(",").some((x) => x.trim().toUpperCase() === up);
 }
 
 /** Evidence: DB/form field evidence_was (legacy alias was_status). */
 function evidenceWas(e) {
-  return e?.evidence_was ?? e?.was_status ?? ''
+  return e?.evidence_was ?? e?.was_status ?? "";
 }
 
 /** Witness occupation: form saves welfare_occupation (legacy occupation). */
 function witnessOccupation(w) {
-  return w?.welfare_occupation ?? w?.occupation ?? ''
+  return w?.welfare_occupation ?? w?.occupation ?? "";
 }
 
 // ── CSS ────────────────────────────────────────────────────────────────────
@@ -294,129 +368,136 @@ td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: t
 /* Same inset as api/report-pdf.js — @page ensures margins apply on every printed sheet (page 2+, not only the cover). */
 @page { size: A4; margin: ${pdfPageMarginCssString()}; }
 @media print { .page-break { page-break-before: always; } }
-`
+`;
 
 // ── Page chrome helpers ────────────────────────────────────────────────────
 function pageHeader(formId) {
   return `<div class="page-header">
     <span>CRIMINAL INVESTIGATION DIVISION &ndash; STATE OF SAN ANDREAS</span>
     <span>${esc(formId)}</span>
-  </div>`
+  </div>`;
 }
 
 function sectionBanner(label) {
-  return `<div class="section-banner">${esc(label)}</div>`
+  return `<div class="section-banner">${esc(label)}</div>`;
 }
 
 /** Header + section ribbon as one unit; stops banners orphaning onto an empty sheet (Chromium PDF). */
 function pdfSectionIntro(ph, bannerLabel) {
-  return `<div class="pdf-section-intro">${ph}${sectionBanner(bannerLabel)}</div>`
+  return `<div class="pdf-section-intro">${ph}${sectionBanner(bannerLabel)}</div>`;
 }
 
 function pdfClosureIntro(ph) {
   return `<div class="pdf-section-intro pdf-section-intro--closure">${ph}${sectionBanner(
-    'G. Closure'
-  )}<div class="section-title" style="margin-top:4px">Investigation closure</div></div>`
+    "G. Closure",
+  )}<div class="section-title" style="margin-top:4px">Investigation closure</div></div>`;
 }
 
 // ── Main builder ───────────────────────────────────────────────────────────
 export function buildPDFDocument(r) {
-  const formId = 'FORM 0001 (CID/' +
+  const formId =
+    "FORM 0001 (CID/" +
     (r.date_of_offense
-      ? r.date_of_offense.replace(/-/g, '').slice(6) +
-        r.date_of_offense.replace(/-/g, '').slice(4, 6) +
+      ? r.date_of_offense.replace(/-/g, "").slice(6) +
+        r.date_of_offense.replace(/-/g, "").slice(4, 6) +
         r.date_of_offense.slice(2, 4)
-      : 'DDMMYY') + ')'
+      : "DDMMYY") +
+    ")";
 
-  const ph  = pageHeader(formId)
-  const jurs = [['LSPD', asPdfBool(r.jurisdiction_lspd)], ['SAST', asPdfBool(r.jurisdiction_sast)],
-                ['LSCS', asPdfBool(r.jurisdiction_lscs)], ['STATE', asPdfBool(r.jurisdiction_state)]]
-    .map(([j, v]) => `${chk(v)}&nbsp;${j}`).join(' &nbsp;&nbsp; ')
+  const ph = pageHeader(formId);
+  const jurs = [
+    ["LSPD", asPdfBool(r.jurisdiction_lspd)],
+    ["SAST", asPdfBool(r.jurisdiction_sast)],
+    ["LSCS", asPdfBool(r.jurisdiction_lscs)],
+    ["STATE", asPdfBool(r.jurisdiction_state)],
+  ]
+    .map(([j, v]) => `${chk(v)}&nbsp;${j}`)
+    .join(" &nbsp;&nbsp; ");
 
-  let body = ''
+  let body = "";
 
   // ── COVER ──────────────────────────────────────────────────────────────
   const coverLogo = LOGO_SRC
     ? `<img class="cover-logo" src="${LOGO_SRC}" alt="CIB Logo"/>`
-    : ''
+    : "";
   body += `<div class="page cover">
     ${coverLogo}
     <div class="cover-bureau">CENTRAL INVESTIGATION BUREAU</div>
     <div class="cover-state">STATE OF SAN ANDREAS</div>
     <div class="cover-title">INVESTIGATION REPORT</div>
-    <div class="cover-case">Case: &ldquo;${esc(r.case_title || 'Untitled')}&rdquo;</div>
-  </div>`
+    <div class="cover-case">Case: &ldquo;${esc(r.case_title || "Untitled")}&rdquo;</div>
+  </div>`;
 
   // ── A. CLASSIFICATION (no extra page-break: cover already ends the sheet) ──
-  body += `<div class="page-body">${pdfSectionIntro(ph, 'A. Classification')}`
+  body += `<div class="page-body">${pdfSectionIntro(ph, "A. Classification")}`;
 
   body += `<table class="pdf-solid-table"><tr>
     <td style="width:32%"><div class="lbl">1. CATEGORY</div>
-      ${chk(strEqCI(r.category, 'A'))}&nbsp;a.&nbsp;CATEGORY A &nbsp;
-      ${chk(strEqCI(r.category, 'B'))}&nbsp;b.&nbsp;CATEGORY B &nbsp;
-      ${chk(strEqCI(r.category, 'C'))}&nbsp;c.&nbsp;CATEGORY C
+      ${chk(strEqCI(r.category, "A"))}&nbsp;&nbsp;CATEGORY A <br/>
+      ${chk(strEqCI(r.category, "B"))}&nbsp;&nbsp;CATEGORY B <br/>
+      ${chk(strEqCI(r.category, "C"))}&nbsp;&nbsp;CATEGORY C <br/>
     </td>
-    <td style="width:16%"><div class="lbl">2. CASE NO.</div>${esc(r.case_number || '')}</td>
-    <td><div class="lbl">3. HIGHEST TYPE OF OFFENSE OR INCIDENT</div>${esc(r.offense_type || '')}</td>
-  </tr></table>`
+    <td style="width:16%"><div class="lbl">2. CASE NO.</div>${esc(r.case_number || "")}</td>
+    <td><div class="lbl">3. HIGHEST TYPE OF OFFENSE OR INCIDENT</div>${esc(r.offense_type || "")}</td>
+  </tr></table>`;
 
   body += `<table class="pdf-solid-table"><tr>
-    <td style="width:20%"><div class="lbl">4. MDW INCIDENT NUMBER</div>${esc(r.mdw_incident_number || '')}</td>
-    <td style="width:20%"><div class="lbl">5. BUILDING NUMBER</div>${esc(r.building_number || '')}</td>
-    <td><div class="lbl">6. ADDRESS</div>${esc(r.address || '')}</td>
-  </tr></table>`
+    <td style="width:20%"><div class="lbl">4. MDW INCIDENT NUMBER</div>${esc(r.mdw_incident_number || "")}</td>
+    <td style="width:20%"><div class="lbl">5. BUILDING NUMBER</div>${esc(r.building_number || "")}</td>
+    <td><div class="lbl">6. ADDRESS</div>${esc(r.address || "")}</td>
+  </tr></table>`;
 
   body += `<table class="pdf-solid-table"><tr>
-    <td style="width:16%"><div class="lbl">7. NAME OF BUREAU</div>${esc(r.bureau_name || 'CID')}</td>
-    <td style="width:16%"><div class="lbl">8. AGENCY/BUREAU CODE</div>${esc(r.agency_code || '')}</td>
-    <td><div class="lbl">9. SPECIFIC LOCATION</div>${esc(r.specific_location || '')}</td>
-  </tr></table>`
+    <td style="width:16%"><div class="lbl">7. NAME OF BUREAU</div>${esc(r.bureau_name || "CID")}</td>
+    <td style="width:16%"><div class="lbl">8. AGENCY/BUREAU CODE</div>${esc(r.agency_code || "")}</td>
+    <td><div class="lbl">9. SPECIFIC LOCATION</div>${esc(r.specific_location || "")}</td>
+  </tr></table>`;
 
   body += `<table class="pdf-solid-table"><tr>
-    <td style="width:20%"><div class="lbl">10. LOCATION CODE</div>${esc(r.location_code || '')}</td>
+    <td style="width:20%"><div class="lbl">10. LOCATION CODE</div>${esc(r.location_code || "")}</td>
     <td style="width:20%"><div class="lbl">11a. DATE OF OFFENSE/INCIDENT</div>${fmtDate(r.date_of_offense)}</td>
-    <td style="width:20%"><div class="lbl">11a. TIME OF OFFENSE/INCIDENT</div>${esc(r.time_of_offense || '')}</td>
-    <td><div class="lbl">12. DAY</div>${esc(r.day_of_offense || '')}</td>
-  </tr></table>`
+    <td style="width:20%"><div class="lbl">11a. TIME OF OFFENSE/INCIDENT</div>${esc(r.time_of_offense || "")}</td>
+    <td><div class="lbl">12. DAY</div>${esc(r.day_of_offense || "")}</td>
+  </tr></table>`;
 
   body += `<table class="pdf-solid-table"><tr>
     <td style="width:25%"><div class="lbl">13a. DATE REPORTED</div>${fmtDate(r.date_reported)}</td>
-    <td style="width:20%"><div class="lbl">13b. DAY</div>${esc(r.day_reported || '')}</td>
+    <td style="width:20%"><div class="lbl">13b. DAY</div>${esc(r.day_reported || "")}</td>
     <td><div class="lbl">14. JURISDICTION (X)</div>${jurs}</td>
-  </tr></table>`
+  </tr></table>`;
 
   body += `<table class="pdf-solid-table"><tr>
-    <td><div class="lbl">15. LEAD INVESTIGATORS</div>${esc(r.lead_investigators || '')}</td>
-    <td><div class="lbl">16a. PROSECUTOR</div>${esc(r.prosecutor || 'TBA')}</td>
+    <td><div class="lbl">15. LEAD INVESTIGATORS</div>${esc(r.lead_investigators || "")}</td>
+    <td><div class="lbl">16a. PROSECUTOR</div>${esc(r.prosecutor || "TBA")}</td>
     <td style="width:18%"><div class="lbl">16b. TIME START</div>${fmtDate(r.prosecutor_time_start)}</td>
     <td style="width:18%"><div class="lbl">16c. TIME END</div>${fmtDate(r.prosecutor_time_end)}</td>
-  </tr></table>`
+  </tr></table>`;
 
   // 17. Victims summary — each victim row-group stays on one sheet when possible
   if (r.victims && r.victims.length) {
     body += `<br/><div class="lbl" style="font-size:9pt">17. VICTIM(S)</div>
-    <table class="pdf-summary-table"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Welfare, Occupation</th></tr></thead>`
-    r.victims.forEach(v => {
+    <table class="pdf-summary-table"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Welfare, Occupation</th></tr></thead>`;
+    r.victims.forEach((v) => {
       body += `<tbody class="pdf-row-group"><tr>
-      <td>${esc(v.id_code || '')}</td><td>${esc(v.full_name || '')}</td><td>${esc(v.age || '')}</td><td>${esc(v.sex || '')}</td><td>${esc(v.race || '')}</td><td>${esc(v.telephone || '-')}</td><td>${esc(v.welfare_occupation || '')}</td></tr>
-      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>Notes: ${esc(v.notes || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Welfare, Occupation<br/>${esc(v.welfare_occupation || '')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(v.family || '-')}</td></tr>
-      </tbody>`
-    })
-    body += `</table>`
+      <td>${esc(v.id_code || "")}</td><td>${esc(v.full_name || "")}</td><td>${esc(v.age || "")}</td><td>${esc(v.sex || "")}</td><td>${esc(v.race || "")}</td><td>${esc(v.telephone || "-")}</td><td>${esc(v.welfare_occupation || "")}</td></tr>
+      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>Notes: ${esc(v.notes || "-")}</td><td colspan="3" style="font-size:7.5pt;color:#444">Welfare, Occupation<br/>${esc(v.welfare_occupation || "")}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(v.family || "-")}</td></tr>
+      </tbody>`;
+    });
+    body += `</table>`;
   }
 
   // 18. Suspects summary
   if (r.suspects && r.suspects.length) {
     body += `<br/><div class="lbl" style="font-size:9pt">18. SUSPECT(S)</div>
-    <table class="pdf-summary-table"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Status, Welfare, Occupation</th></tr></thead>`
-    r.suspects.forEach(s => {
+    <table class="pdf-summary-table"><thead><tr><th>ID CODE (a)</th><th>IDENTIFICATION (b)</th><th>AGE (c)</th><th>SEX (d)</th><th>RACE (e)</th><th>TELEPHONE (f)</th><th>Status, Welfare, Occupation</th></tr></thead>`;
+    r.suspects.forEach((s) => {
       body += `<tbody class="pdf-row-group"><tr>
-      <td>${esc(s.id_code || '')}</td><td>${esc(s.full_name || '')}</td><td>${esc(s.age || '')}</td><td>${esc(s.sex || '')}</td><td>${esc(s.race || '')}</td><td>${esc(s.telephone || '-')}</td><td>${esc(s.welfare_occupation || '')}</td></tr>
-      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>${esc(s.telephone || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">Status, Welfare, Occupation<br/>${esc(s.welfare_occupation || '-')}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(s.family || '-')}</td></tr>
-      <tr><td colspan="7" style="font-size:7.5pt;color:#444">Interrogations: ${esc(s.interrogation_url || '-')}</td></tr>
-      </tbody>`
-    })
-    body += `</table>`
+      <td>${esc(s.id_code || "")}</td><td>${esc(s.full_name || "")}</td><td>${esc(s.age || "")}</td><td>${esc(s.sex || "")}</td><td>${esc(s.race || "")}</td><td>${esc(s.telephone || "-")}</td><td>${esc(s.welfare_occupation || "")}</td></tr>
+      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>${esc(s.telephone || "-")}</td><td colspan="3" style="font-size:7.5pt;color:#444">Status, Welfare, Occupation<br/>${esc(s.welfare_occupation || "-")}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(s.family || "-")}</td></tr>
+      <tr><td colspan="7" style="font-size:7.5pt;color:#444">Interrogations: ${esc(s.interrogation_url || "-")}</td></tr>
+      </tbody>`;
+    });
+    body += `</table>`;
   }
 
   // 19-20 — individual checkboxes matching the form
@@ -424,237 +505,259 @@ export function buildPDFDocument(r) {
     <td style="width:50%;vertical-align:top">
       <div class="lbl">19. SUSPECT STATUS</div>
       <div style="font-size:8.5pt;line-height:1.9">
-        ${chk(strEqCI(r.suspect_status, 'NOT_IDENTIFIED'))}&nbsp;a. NOT IDENTIFIED<br/>
-        ${chk(strEqCI(r.suspect_status, 'GOVT_EMPLOYEE'))}&nbsp;b. GOVERNMENT EMPLOYEE<br/>
-        ${chk(strEqCI(r.suspect_status, 'GOVT_CONTRACT'))}&nbsp;c. GOVERNMENT CONTRACT<br/>
-        ${chk(strEqCI(r.suspect_status, 'CITATION'))}&nbsp;d. CITATION ISSUED<br/>
-        ${chk(strEqCI(r.suspect_status, 'NON_GOVT'))}&nbsp;d. NON-GOVERNMENT EMPLOYEE<br/>
-        ${chk(strEqCI(r.suspect_status, 'NA'))}&nbsp;e. N/A
+        ${chk(strEqCI(r.suspect_status, "NOT_IDENTIFIED"))}&nbsp;a. NOT IDENTIFIED<br/>
+        ${chk(strEqCI(r.suspect_status, "GOVT_EMPLOYEE"))}&nbsp;b. GOVERNMENT EMPLOYEE<br/>
+        ${chk(strEqCI(r.suspect_status, "GOVT_CONTRACT"))}&nbsp;c. GOVERNMENT CONTRACT<br/>
+        ${chk(strEqCI(r.suspect_status, "CITATION"))}&nbsp;d. CITATION ISSUED<br/>
+        ${chk(strEqCI(r.suspect_status, "NON_GOVT"))}&nbsp;d. NON-GOVERNMENT EMPLOYEE<br/>
+        ${chk(strEqCI(r.suspect_status, "NA"))}&nbsp;e. N/A
       </div>
-      ${r.suspect_notes ? `<div style="font-size:8pt;margin-top:4px">Notes:<br/>${esc(r.suspect_notes)}</div>` : ''}
+      ${r.suspect_notes ? `<div style="font-size:8pt;margin-top:4px">Notes:<br/>${esc(r.suspect_notes)}</div>` : ""}
     </td>
     <td style="vertical-align:top">
       <div class="lbl">20. DISPOSITION OF SUSPECT</div>
       <div style="font-size:8.5pt;line-height:1.9">
-        ${chk(strEqCI(r.suspect_disposition, 'ARRESTED'))}&nbsp;a. ARRESTED<br/>
-        ${chk(strEqCI(r.suspect_disposition, 'NOT_ARRESTED'))}&nbsp;b. NOT ARRESTED<br/>
-        ${chk(strEqCI(r.suspect_disposition, 'RELEASED'))}&nbsp;c. RELEASED<br/>
-        ${chk(strEqCI(r.suspect_disposition, 'NA'))}&nbsp;d. N/A
+        ${chk(strEqCI(r.suspect_disposition, "ARRESTED"))}&nbsp;a. ARRESTED<br/>
+        ${chk(strEqCI(r.suspect_disposition, "NOT_ARRESTED"))}&nbsp;b. NOT ARRESTED<br/>
+        ${chk(strEqCI(r.suspect_disposition, "RELEASED"))}&nbsp;c. RELEASED<br/>
+        ${chk(strEqCI(r.suspect_disposition, "NA"))}&nbsp;d. N/A
       </div>
     </td>
-  </tr></table>`
-  body += `</div>`
+  </tr></table>`;
+  body += `</div>`;
 
   // ── SECTION B: DEBRIEF ──────────────────────────────────────────────────
   if (r.debrief_entries && r.debrief_entries.length) {
     body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
       ph,
-      'B. Debrief of Incident'
-    )}`
+      "B. Debrief of Incident",
+    )}`;
     r.debrief_entries.forEach((d, i) => {
-      body += `<div class="debrief-entry-block print-keep">`
+      body += `<div class="debrief-entry-block print-keep">`;
       body += `<table class="compact-avoid"><tr>
-        <td style="width:40%"><div class="lbl">${i + 1}a. TITLE</div>${esc(d.title || '')}</td>
+        <td style="width:40%"><div class="lbl">${i + 1}a. TITLE</div>${esc(d.title || "")}</td>
         <td><div class="lbl">b. DATE OF INCIDENT</div>${fmtDate(d.date_of_incident)}</td>
-      </tr></table>`
-      body += `<div class="narrative">${esc(d.content || '')}</div>`
-      body += `</div>`
-    })
-    body += `</div>`
-    body += `</div>`
+      </tr></table>`;
+      body += `<div class="narrative">${esc(d.content || "")}</div>`;
+      body += `</div>`;
+    });
+    body += `</div>`;
+    body += `</div>`;
   }
 
   // ── SECTION C: SUSPECTS DETAIL (continuous flow; multiple suspects per sheet when space allows) ──
   if (r.suspects && r.suspects.length) {
-    const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, 'C. Suspect')}`
+    const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "C. Suspect")}`;
     r.suspects.forEach((s, i) => {
-      const L = (n) => ALPHA[(i * 5) + n] // 5 fields per suspect, progressive letters
-      body += `<div class="suspect-detail-block">`
-      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Suspect ID: ${esc(s.id_code || 's.' + (i + 1))}</div>`
+      const L = (n) => ALPHA[i * 5 + n]; // 5 fields per suspect, progressive letters
+      body += `<div class="suspect-detail-block">`;
+      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Suspect ID: ${esc(s.id_code || "s." + (i + 1))}</div>`;
       body += `<table class="pdf-solid-table"><tr>
         <td style="width:60%">
           <table class="compact-avoid" style="border:none;width:100%"><tr>
-            <td style="border:none"><div class="lbl">${L(0)}. Name</div>${esc(s.full_name || '')}</td>
-            <td style="border:none"><div class="lbl">${L(1)}. Description</div>${esc(s.description || '')}</td>
+            <td style="border:none"><div class="lbl">${L(0)}. Name</div>${esc(s.full_name || "")}</td>
+            <td style="border:none"><div class="lbl">${L(1)}. Description</div>${esc(s.description || "")}</td>
           </tr><tr>
             <td style="border:none"><div class="lbl">${L(2)}. DOB</div>${fmtDate(s.dob)}</td>
-            <td style="border:none"><div class="lbl">${L(3)}. SEX</div>${esc(s.sex || '')}</td>
+            <td style="border:none"><div class="lbl">${L(3)}. SEX</div>${esc(s.sex || "")}</td>
           </tr></table>
           <br/>
           <div class="lbl">${L(4)}. Interrogation</div>
-          <div style="font-size:8pt;margin:4px 0">Interrogation: &nbsp;${s.interrogation_url ? `<a href="${esc(s.interrogation_url)}">${esc(s.interrogation_url)}</a>` : ''}</div>
-          <div class="narrative">${esc(s.interrogation_summary || '')}</div>
+          <div style="font-size:8pt;margin:4px 0">Interrogation: &nbsp;${s.interrogation_url ? `<a href="${esc(s.interrogation_url)}">${esc(s.interrogation_url)}</a>` : ""}</div>
+          <div class="narrative">${esc(s.interrogation_summary || "")}</div>
         </td>
-        <td style="width:40%;vertical-align:top;text-align:center">
-          ${s.mugshot_url
-            ? `<img src="${esc(s.mugshot_url)}" style="max-width:120px;max-height:150px;border:1px solid #000"/>`
-            : '<div class="mugshot-box">&ldquo;SUSPECT MUGSHOT/<br/>AVAILABLE PICTURE&rdquo;</div>'}
-        </td>
-      </tr></table>`
-      body += `</div>`
-    })
-    body += `</div>`
-    body += `</div>`
+        <td style="width:40%;vertical-align:top;text-align:center">${pdfFramedPhotoHtml(
+          s.mugshot_url,
+          s.mugshot_orientation || "portrait",
+          s.mugshot_crop,
+          120,
+          150,
+          150,
+          120,
+          "&ldquo;SUSPECT MUGSHOT/<br/>AVAILABLE PICTURE&rdquo;",
+        )}</td>
+      </tr></table>`;
+      body += `</div>`;
+    });
+    body += `</div>`;
+    body += `</div>`;
   }
 
   // ── SECTION D: VICTIMS DETAIL ───────────────────────────────────────────
   if (r.victims && r.victims.length) {
-    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, 'D. Victim')}`
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "D. Victim")}`;
     r.victims.forEach((v, i) => {
-      body += `<div class="victim-detail-block">`
-      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Victim ID: ${esc(v.id_code || 'v.' + (i + 1))}</div>`
+      body += `<div class="victim-detail-block">`;
+      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Victim ID: ${esc(v.id_code || "v." + (i + 1))}</div>`;
       body += `<table class="pdf-solid-table"><tr>
+        <td style="width:62%;vertical-align:top;padding:8px">
+          <table class="pdf-solid-table" style="width:100%;margin:0"><tr>
         <td><div class="lbl">IDENTIFICATION (a)</div>
-          First, Last Name, AKA<br/><strong>${esc(v.full_name || '')}</strong>
+          First, Last Name, AKA<br/><strong>${esc(v.full_name || "")}</strong>
         </td>
-        <td style="width:10%"><div class="lbl">AGE (c)</div>${esc(v.age || '')}</td>
-        <td style="width:8%"><div class="lbl">SEX (d)</div>${esc(v.sex || '')}</td>
-        <td style="width:10%"><div class="lbl">RACE (e)</div>${esc(v.race || '')}</td>
-        <td style="width:16%"><div class="lbl">TELEPHONE (f)</div>${esc(v.telephone || '-')}</td>
+        <td style="width:10%"><div class="lbl">AGE (c)</div>${esc(v.age || "")}</td>
+        <td style="width:8%"><div class="lbl">SEX (d)</div>${esc(v.sex || "")}</td>
+        <td style="width:10%"><div class="lbl">RACE (e)</div>${esc(v.race || "")}</td>
+        <td style="width:16%"><div class="lbl">TELEPHONE (f)</div>${esc(v.telephone || "-")}</td>
       </tr><tr>
-        <td colspan="2"><div class="lbl">Welfare, Occupation</div>${esc(v.welfare_occupation || '')}</td>
-        <td colspan="3"><div class="lbl">Notes</div>${esc(v.notes || '-')}</td>
+        <td colspan="2"><div class="lbl">Welfare, Occupation</div>${esc(v.welfare_occupation || "")}</td>
+        <td colspan="3"><div class="lbl">Notes</div>${esc(v.notes || "-")}</td>
       </tr><tr>
-        <td colspan="5"><div class="lbl">FAMILY</div>${esc(v.family || '-')}</td>
-      </tr></table>`
+        <td colspan="5"><div class="lbl">FAMILY</div>${esc(v.family || "-")}</td>
+      </tr></table>`;
       if (v.autopsy_by || v.autopsy_summary) {
-        body += `<div class="print-keep">`
+        body += `<div class="print-keep">`;
         body += `<table class="pdf-solid-table" style="margin-top:8px"><tr>
           <td><div class="lbl">AUTOPSY (g)</div>
-            <div style="font-size:8pt;margin:4px 0">Autopsy Report &ndash; By: <strong>${esc(v.autopsy_by || '')}</strong></div>
+            <div style="font-size:8pt;margin:4px 0">Autopsy Report &ndash; By: <strong>${esc(v.autopsy_by || "")}</strong></div>
           </td>
-        </tr></table>`
-        body += `<div class="narrative" style="margin-top:6px">${esc(v.autopsy_summary || '')}</div></div>`
+        </tr></table>`;
+        body += `<div class="narrative" style="margin-top:6px">${esc(v.autopsy_summary || "")}</div></div>`;
       }
-      body += `</div>`
-    })
-    body += `</div>`
-    body += `</div>`
+      body += `</td><td style="width:38%;vertical-align:top;text-align:center;padding:8px">${pdfFramedPhotoHtml(
+        v.photo_url,
+        v.photo_orientation || "portrait",
+        v.photo_crop,
+        120,
+        150,
+        150,
+        120,
+        "&ldquo;VICTIM PHOTO/<br/>AVAILABLE PICTURE&rdquo;",
+      )}</td></tr></table>`;
+      body += `</div>`;
+    });
+    body += `</div>`;
+    body += `</div>`;
   }
 
   // ── SECTION E: WITNESSES ────────────────────────────────────────────────
   if (r.witnesses && r.witnesses.length) {
     body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
       ph,
-      'E. Witness affidavits'
-    )}`
+      "E. Witness affidavits",
+    )}`;
     r.witnesses.forEach((w) => {
-      body += `<div class="witness-affidavit-block print-keep">`
+      body += `<div class="witness-affidavit-block print-keep">`;
       body += `<table class="compact-avoid"><tr>
-          <td style="width:8%"><div class="lbl">No.</div>${esc(w.id_code || '')}</td>
+          <td style="width:8%"><div class="lbl">No.</div>${esc(w.id_code || "")}</td>
           <td colspan="3" style="font-weight:bold;font-size:10pt">AFFIDAVIT</td>
         </tr><tr>
           <td></td>
-          <td style="width:25%"><div class="lbl">a. Name</div>${esc(w.full_name || '')}</td>
-          <td style="width:20%"><div class="lbl">b. Witness ID Code</div>${esc(w.id_code || '')}</td>
-          <td><div class="lbl">c. Status</div>${esc(w.status || '')}</td>
+          <td style="width:25%"><div class="lbl">a. Name</div>${esc(w.full_name || "")}</td>
+          <td style="width:20%"><div class="lbl">b. Witness ID Code</div>${esc(w.id_code || "")}</td>
+          <td><div class="lbl">c. Status</div>${esc(w.status || "")}</td>
         </tr><tr>
           <td></td>
-          <td><div class="lbl">d. Welfare</div>${esc(w.welfare || '')}</td>
+          <td><div class="lbl">d. Welfare</div>${esc(w.welfare || "")}</td>
           <td colspan="2"><div class="lbl">e. Occupation</div>${esc(witnessOccupation(w))}</td>
-        </tr></table>`
-      body += `<div class="lbl" style="margin-top:5px">f. Content</div>`
-      body += `<div class="narrative">${esc(w.content || '')}</div>`
-      body += `<div class="sign-line">[${esc(w.full_name || '')}]</div>`
-      body += `</div>`
-    })
-    body += `</div>`
-    body += `</div>`
+        </tr></table>`;
+      body += `<div class="lbl" style="margin-top:5px">f. Content</div>`;
+      body += `<div class="narrative">${esc(w.content || "")}</div>`;
+      body += `<div class="sign-line">[${esc(w.full_name || "")}]</div>`;
+      body += `</div>`;
+    });
+    body += `</div>`;
+    body += `</div>`;
   }
 
   // ── SECTION F: EVIDENCES ────────────────────────────────────────────────
   if (r.evidences && r.evidences.length) {
-    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, 'F. Evidences')}`
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "F. Evidences")}`;
     r.evidences.forEach((e) => {
-      body += `<div class="evidence-card-block print-keep">`
+      body += `<div class="evidence-card-block print-keep">`;
       body += `<table class="compact-avoid"><tr>
-          <td style="width:10%"><div class="lbl">Evidence ID</div>${esc(e.id_code || '')}</td>
-          <td><div class="lbl">a. NAME OF EVIDENCE</div>${esc(e.name || '')}</td>
+          <td style="width:10%"><div class="lbl">Evidence ID</div>${esc(e.id_code || "")}</td>
+          <td><div class="lbl">a. NAME OF EVIDENCE</div>${esc(e.name || "")}</td>
           <td style="width:15%"><div class="lbl">b. EVIDENCE WAS</div>${esc(evidenceWas(e))}</td>
-          <td style="width:15%"><div class="lbl">c. STATUS OF EVIDENCE</div>${esc(e.evidence_status || '')}</td>
+          <td style="width:15%"><div class="lbl">c. STATUS OF EVIDENCE</div>${esc(e.evidence_status || "")}</td>
           <td style="width:18%"><div class="lbl">d. DATE OF RETRIEVAL</div>${fmtDate(e.date_of_retrieval)}</td>
-        </tr></table>`
-      if (e.image_url) {
-        body += `<div class="lbl" style="margin-top:4px">l. IMAGE</div>
-          <img src="${esc(e.image_url)}" style="max-width:180px;max-height:110px;border:1px solid #000;margin:4px 0;display:block" crossorigin="anonymous"/>`
-      } else {
-        body += `<div style="width:180px;height:80px;border:1px solid #ccc;margin:4px 0;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888">Exhibit</div>`
-      }
-      body += `<div class="lbl">Summary of evidences</div>`
-      body += `<div class="narrative">${esc(e.summary || '')}</div>`
-      body += `</div>`
-    })
-    body += `</div>`
-    body += `</div>`
+        </tr></table>`;
+      body += `<div class="lbl" style="margin-top:4px">l. IMAGE</div>`;
+      body += pdfFramedPhotoHtml(
+        e.image_url,
+        e.image_orientation || "landscape",
+        e.image_crop,
+        110,
+        180,
+        180,
+        110,
+        '<span style="font-size:8pt;color:#888">Exhibit</span>',
+      );
+      body += `<div class="lbl">Summary of evidences</div>`;
+      body += `<div class="narrative">${esc(e.summary || "")}</div>`;
+      body += `</div>`;
+    });
+    body += `</div>`;
+    body += `</div>`;
   }
 
   // ── SECTION G: CLOSURE ──────────────────────────────────────────────────
-  body += `<div class="page page-break"><div class="page-body">${pdfClosureIntro(ph)}`
+  body += `<div class="page page-break"><div class="page-body">${pdfClosureIntro(ph)}`;
   if (r.closure_summary) {
-    body += `<div class="print-keep"><div class="lbl">I. Summary of Investigation</div>`
-    body += `<div class="narrative">${esc(r.closure_summary)}</div></div><br/>`
+    body += `<div class="print-keep"><div class="lbl">I. Summary of Investigation</div>`;
+    body += `<div class="narrative">${esc(r.closure_summary)}</div></div><br/>`;
   }
   if (r.closure_forensic) {
-    body += `<div class="print-keep"><div class="lbl">II. Forensic Findings and Cause of Death</div>`
-    body += `<div class="narrative">${esc(r.closure_forensic)}</div></div><br/>`
+    body += `<div class="print-keep"><div class="lbl">II. Forensic Findings and Cause of Death</div>`;
+    body += `<div class="narrative">${esc(r.closure_forensic)}</div></div><br/>`;
   }
   if (r.closure_suspect_id) {
-    body += `<div class="print-keep"><div class="lbl">III. Suspect Identification and Culpability</div>`
-    body += `<div class="narrative">${esc(r.closure_suspect_id)}</div></div><br/>`
+    body += `<div class="print-keep"><div class="lbl">III. Suspect Identification and Culpability</div>`;
+    body += `<div class="narrative">${esc(r.closure_suspect_id)}</div></div><br/>`;
   }
   if (r.closure_final_disposition) {
-    body += `<div class="print-keep"><div class="lbl">IV. Final Disposition</div>`
-    body += `<div class="narrative">${esc(r.closure_final_disposition)}</div></div>`
+    body += `<div class="print-keep"><div class="lbl">IV. Final Disposition</div>`;
+    body += `<div class="narrative">${esc(r.closure_final_disposition)}</div></div>`;
   }
 
-  body += `<div class="closure-forms-wrap">`
+  body += `<div class="closure-forms-wrap">`;
 
   body += `<table class="closure-table" style="margin-top:12px"><tr>
     <td style="width:20%"><div class="lbl">24a. TIME RECEIVED</div>${fmtDate(r.closure_time_received)}</td>
     <td style="width:20%"><div class="lbl">24b. TIME ARRIVED</div>${fmtDate(r.closure_time_arrived)}</td>
     <td style="width:18%"><div class="lbl">a. TYPE</div>
-      ${chk(strEqCI(r.closure_type, 'CID'))}&nbsp;CID &nbsp;&nbsp;
-      ${chk(strEqCI(r.closure_type, 'GRD'))}&nbsp;GRD
+      ${chk(strEqCI(r.closure_type, "CID"))}&nbsp;CID &nbsp;&nbsp;
+      ${chk(strEqCI(r.closure_type, "GRD"))}&nbsp;GRD
     </td>
     <td><div class="lbl">b. SIGNATURE &mdash; d. DATE</div>${fmtDate(r.closure_date)}</td>
     <td style="width:20%"><div class="lbl">c. RETURNED TO SERVICE</div>${fmtDate(r.closure_returned_to_service)}</td>
   </tr><tr>
-    <td colspan="2"><div class="lbl">c. NAME</div>${esc(r.closure_detective_name || '')}</td>
+    <td colspan="2"><div class="lbl">c. NAME</div>${esc(r.closure_detective_name || "")}</td>
     <td colspan="3"></td>
-  </tr></table>`
+  </tr></table>`;
 
   body += `<table class="closure-table" style="margin-top:8px"><tr>
     <td><div class="lbl">26. CASE REFERRED TO</div>
       <div style="font-size:8.5pt;line-height:1.8">
-        ${chk(referredIncludes(r, 'LSPD'))}&nbsp;a. LSPD &nbsp;
-        ${chk(referredIncludes(r, 'LSCS'))}&nbsp;b. LSCS &nbsp;
-        ${chk(referredIncludes(r, 'SAST'))}&nbsp;c. SAST<br/>
-        ${chk(referredIncludes(r, 'DOJ'))}&nbsp;d. DOJ &nbsp;
-        ${chk(referredIncludes(r, 'DOC'))}&nbsp;e. DOC &nbsp;
-        ${chk(referredIncludes(r, 'NA'))}&nbsp;f. N/A
+        ${chk(referredIncludes(r, "LSPD"))}&nbsp;a. LSPD &nbsp;
+        ${chk(referredIncludes(r, "LSCS"))}&nbsp;b. LSCS &nbsp;
+        ${chk(referredIncludes(r, "SAST"))}&nbsp;c. SAST<br/>
+        ${chk(referredIncludes(r, "DOJ"))}&nbsp;d. DOJ &nbsp;
+        ${chk(referredIncludes(r, "DOC"))}&nbsp;e. DOC &nbsp;
+        ${chk(referredIncludes(r, "NA"))}&nbsp;f. N/A
       </div>
     </td>
     <td><div class="lbl">27. CASE STATUS</div>
       <div style="font-size:8.5pt;line-height:1.8">
-        ${chk(strEqCI(r.case_status, 'OPEN'))}&nbsp;a. OPEN<br/>
-        ${chk(strEqCI(r.case_status, 'CLOSED'))}&nbsp;b. CLOSED<br/>
-        ${chk(strEqCI(r.case_status, 'COLD'))}&nbsp;c. COLD
+        ${chk(strEqCI(r.case_status, "OPEN"))}&nbsp;a. OPEN<br/>
+        ${chk(strEqCI(r.case_status, "CLOSED"))}&nbsp;b. CLOSED<br/>
+        ${chk(strEqCI(r.case_status, "COLD"))}&nbsp;c. COLD
       </div>
     </td>
     <td><div class="lbl">28. PROSECUTOR</div>
-      a. Name: ${esc(r.prosecutor_final_name || '-')}<br/>
-      c. Occupation: ${esc(r.prosecutor_final_occupation || '-')}
+      a. Name: ${esc(r.prosecutor_final_name || "-")}<br/>
+      c. Occupation: ${esc(r.prosecutor_final_occupation || "-")}
     </td>
-  </tr></table>`
+  </tr></table>`;
 
   body += `<table class="closure-table" style="margin-top:8px"><tr>
     <td colspan="3"><div class="lbl">29. DETECTIVE STATUS</div>
       <table style="width:100%;border-collapse:collapse;margin-top:6px;border:none"><tr style="border:none">
     <td style="vertical-align:top;border:1px solid #000;width:33%"><div class="lbl">b. HOW CLOSED</div>
-      ${chk(strEqCI(r.detective_how_closed, 'INACTIVE'))}&nbsp;INACTIVE &nbsp;
-      ${chk(strEqCI(r.detective_how_closed, 'ARREST'))}&nbsp;ARREST &nbsp;
-      ${chk(strEqCI(r.detective_how_closed, 'OTHER'))}&nbsp;OTHER MEANS
+      ${chk(strEqCI(r.detective_how_closed, "INACTIVE"))}&nbsp;INACTIVE &nbsp;
+      ${chk(strEqCI(r.detective_how_closed, "ARREST"))}&nbsp;ARREST &nbsp;
+      ${chk(strEqCI(r.detective_how_closed, "OTHER"))}&nbsp;OTHER MEANS
     </td>
     <td style="vertical-align:top;border:1px solid #000;width:34%">
       ${chk(asPdfBool(r.detective_suspect_developed))}&nbsp;Suspect Developed &nbsp;
@@ -664,35 +767,35 @@ export function buildPDFDocument(r) {
       ${chk(asPdfBool(r.detective_cleared_forensics))}&nbsp;Cleared Forensics
     </td>
     <td style="vertical-align:top;border:1px solid #000;width:33%">
-      <div class="lbl">f. Value of Property</div>${esc(r.detective_value_of_property || 'N/A')}<br/>
-      <div class="lbl" style="margin-top:4px">h. Referred To</div>${esc(r.detective_referred_to || '-')}<br/>
+      <div class="lbl">f. Value of Property</div>${esc(r.detective_value_of_property || "N/A")}<br/>
+      <div class="lbl" style="margin-top:4px">h. Referred To</div>${esc(r.detective_referred_to || "-")}<br/>
       <div class="lbl" style="margin-top:4px">i. Date Referral Accepted</div>${fmtDate(r.detective_date_referral)}
     </td>
       </tr></table>
     </td>
-  </tr></table>`
-  body += `</div>`
-  body += `</div>`
-  body += `</div>`
+  </tr></table>`;
+  body += `</div>`;
+  body += `</div>`;
+  body += `</div>`;
 
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CID Investigation Report &mdash; ${esc(r.case_title || 'Draft')}</title>
+<title>CID Investigation Report &mdash; ${esc(r.case_title || "Draft")}</title>
 <style>${CSS}</style>
-</head><body>${watermarkBodyHtml()}<div class="pdf-root">${body}</div></body></html>`
+</head><body>${watermarkBodyHtml()}<div class="pdf-root">${body}</div></body></html>`;
 }
 
 /** Smoke-test payload for ?id=demo — empty fields; keys align with form/API (no sample narrative). */
 export const DEMO_REPORT = {
   case_number: null,
   case_title: null,
-  category: 'A',
+  category: "A",
   offense_type: null,
   mdw_incident_number: null,
   building_number: null,
   address: null,
-  bureau_name: 'CID',
+  bureau_name: "CID",
   agency_code: null,
   specific_location: null,
   location_code: null,
@@ -718,12 +821,12 @@ export const DEMO_REPORT = {
   closure_final_disposition: null,
   closure_time_received: null,
   closure_time_arrived: null,
-  closure_type: 'CID',
+  closure_type: "CID",
   closure_detective_name: null,
   closure_date: null,
   closure_returned_to_service: null,
   case_referred_to: null,
-  case_status: 'OPEN',
+  case_status: "OPEN",
   prosecutor_final_name: null,
   prosecutor_final_occupation: null,
   detective_how_closed: null,
@@ -740,4 +843,4 @@ export const DEMO_REPORT = {
   suspects: [],
   witnesses: [],
   evidences: [],
-}
+};

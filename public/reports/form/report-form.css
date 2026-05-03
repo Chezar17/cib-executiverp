@@ -253,6 +253,81 @@ select option      { background: #111827; }
 }
 .section-label::after { content: ''; flex: 1; height: 1px; background: #1E2D45; }
 
+/* ── Modal: URL + crop ── */
+.ir-photo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9120;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.ir-photo-modal.is-open { display: flex; }
+.ir-photo-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.88);
+  cursor: pointer;
+}
+.ir-photo-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(720px, 100%);
+  max-height: min(92vh, 900px);
+  overflow: auto;
+  background: #0F1928;
+  border: 1px solid #1E2D45;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+  padding: 20px 22px;
+}
+.ir-photo-modal-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #C9A84C;
+  margin-bottom: 8px;
+}
+.ir-photo-modal-hint {
+  font-size: 11px;
+  color: #6B7E9B;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.ir-photo-modal-field { margin-bottom: 12px; }
+.ir-photo-modal-field label { font-size: 10px; }
+.ir-photo-modal-field input[type="text"] {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: #0A0F1E;
+  border: 1px solid #243552;
+  color: #C8D8F0;
+  font-family: 'Courier Prime', monospace;
+  font-size: 11px;
+}
+.ir-photo-modal-orient .label-inline {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: #6B7E9B;
+  letter-spacing: 2px;
+  display: block;
+  margin-bottom: 8px;
+}
+.ir-photo-modal-orient .check-item { margin-right: 16px; }
+.ir-photo-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+.ir-photo-modal-actions--top { justify-content: flex-start; margin-top: 10px; }
+.ir-photo-modal-crop-wrap {
+  margin-top: 14px;
+  max-height: 52vh;
+  overflow: visible;
+  background: #050810;
+  border: 1px solid #243552;
+  min-height: 200px;
+}
+.ir-photo-modal-crop-wrap img { max-height: 52vh; display: block; }
+.ir-photo-modal-crop-wrap .cropper-container { max-height: 52vh; }
+
 /* ── Image Upload ── */
 .img-upload-area {
   border: 1px dashed #243552;
@@ -272,6 +347,17 @@ select option      { background: #111827; }
 .img-upload-area.has-image .img-preview-thumb  { display: block; }
 .img-upload-area.has-image .img-upload-icon,
 .img-upload-area.has-image p { display: none; }
+.photo-thumb-fill {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #1E2D45;
+  background-color: #0A0F1E;
+  background-repeat: no-repeat;
+  display: none;
+  aspect-ratio: 120 / 150;
+  min-height: 72px;
+}
+.img-upload-area.has-image .photo-thumb-fill { display: block; }
 .img-clear-btn {
   position: absolute; top: 6px; right: 6px;
   background: rgba(192,57,43,0.8); border: none; color: white; font-size: 10px;

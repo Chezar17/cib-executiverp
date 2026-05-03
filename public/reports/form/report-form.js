@@ -120,12 +120,14 @@ function addSuspect(data) {
     <div style="display:grid;grid-template-columns:130px 1fr;gap:14px;margin-bottom:12px">
       <div>
         <label style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#6B7E9B;letter-spacing:2px;display:block;margin-bottom:5px">MUGSHOT / PHOTO</label>
-        <div class="img-upload-area" id="sus-imgbox-${n}">
-          <button class="img-clear-btn" onclick="clearImage('sus-img-${n}','sus-imgbox-${n}',event)">✕</button>
-          <input type="file" accept="image/*" onchange="previewImage(this,'sus-img-${n}','sus-imgbox-${n}')">
+        <div class="img-upload-area" id="sus-imgbox-${n}" onclick="openPhotoModal('suspect',${n},event)">
+          <button type="button" class="img-clear-btn" onclick="clearPhotoRow('suspect',${n},event)">✕</button>
           <div class="img-upload-icon">📷</div>
-          <p>CLICK TO UPLOAD</p>
-          <img id="sus-img-${n}" class="img-preview-thumb" src="" alt="mugshot">
+          <p>CLICK TO SET URL</p>
+          <div id="sus-pthumb-${n}" class="photo-thumb-fill"></div>
+          <input type="hidden" id="sus-purl-${n}" value=""/>
+          <input type="hidden" id="sus-pori-${n}" value="portrait"/>
+          <input type="hidden" id="sus-pcrop-${n}" value=""/>
         </div>
       </div>
       <div>
@@ -171,6 +173,7 @@ function addSuspect(data) {
       <textarea id="sus-interro-${n}" rows="3" placeholder="Summary of interrogation if conducted...">${esc(data?.interrogation_summary)}</textarea>
     </div>`;
   document.getElementById('suspectContainer').appendChild(div);
+  syncPhotoRowFromData('suspect', n, data || {});
 }
 
 // ── SECTION D: Victims ───────────────────────────────────────
@@ -188,12 +191,14 @@ function addVictim(data) {
     <div style="display:grid;grid-template-columns:130px 1fr;gap:14px;margin-bottom:14px">
       <div>
         <label style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#6B7E9B;letter-spacing:2px;display:block;margin-bottom:5px">VICTIM PHOTO</label>
-        <div class="img-upload-area" id="vic-imgbox-${n}">
-          <button class="img-clear-btn" onclick="clearImage('vic-img-${n}','vic-imgbox-${n}',event)">✕</button>
-          <input type="file" accept="image/*" onchange="previewImage(this,'vic-img-${n}','vic-imgbox-${n}')">
+        <div class="img-upload-area" id="vic-imgbox-${n}" onclick="openPhotoModal('victim',${n},event)">
+          <button type="button" class="img-clear-btn" onclick="clearPhotoRow('victim',${n},event)">✕</button>
           <div class="img-upload-icon">📷</div>
-          <p>CLICK TO UPLOAD</p>
-          <img id="vic-img-${n}" class="img-preview-thumb" src="" alt="victim photo">
+          <p>CLICK TO SET URL</p>
+          <div id="vic-pthumb-${n}" class="photo-thumb-fill"></div>
+          <input type="hidden" id="vic-purl-${n}" value=""/>
+          <input type="hidden" id="vic-pori-${n}" value="portrait"/>
+          <input type="hidden" id="vic-pcrop-${n}" value=""/>
         </div>
       </div>
       <div>
@@ -255,6 +260,7 @@ function addVictim(data) {
       </div>
     </div>`;
   document.getElementById('victimContainer').appendChild(div);
+  syncPhotoRowFromData('victim', n, data || {});
 }
 
 // Helper: select welfare from stored string
@@ -328,34 +334,50 @@ function addEvidence(data) {
       <div class="repeat-item-id">EVIDENCE ID: e.${n}</div>
       <button class="btn-remove" onclick="removeItem('evidence-${n}')">REMOVE</button>
     </div>
-    <div class="form-grid form-grid-3" style="margin-bottom:10px">
-      <div class="form-group">
-        <label>Name of Evidence</label>
-        <input type="text" id="ev-name-${n}" placeholder="e.g. Primary Crime Scene" value="${esc(data?.name)}"/>
+    <div style="display:grid;grid-template-columns:130px 1fr;gap:14px;margin-bottom:12px">
+      <div>
+        <label style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#6B7E9B;letter-spacing:2px;display:block;margin-bottom:5px">EXHIBIT IMAGE</label>
+        <div class="img-upload-area" id="ev-imgbox-${n}" onclick="openPhotoModal('evidence',${n},event)">
+          <button type="button" class="img-clear-btn" onclick="clearPhotoRow('evidence',${n},event)">✕</button>
+          <div class="img-upload-icon">📷</div>
+          <p>CLICK TO SET URL</p>
+          <div id="ev-pthumb-${n}" class="photo-thumb-fill"></div>
+          <input type="hidden" id="ev-purl-${n}" value=""/>
+          <input type="hidden" id="ev-pori-${n}" value="${data?.image_orientation === 'portrait' ? 'portrait' : 'landscape'}"/>
+          <input type="hidden" id="ev-pcrop-${n}" value=""/>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Evidence Was</label>
-        <select id="ev-was-${n}">
-          <option ${selMatch(data?.evidence_was,'Secured')}>Secured</option>
-          <option ${selMatch(data?.evidence_was,'Unsecured')}>Unsecured</option>
-          <option ${selMatch(data?.evidence_was,'Destroyed')}>Destroyed</option>
-          <option ${selMatch(data?.evidence_was,'Lost')}>Lost</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Status of Evidence</label>
-        <select id="ev-status-${n}">
-          <option ${selMatch(data?.evidence_status,'Recovered')}>Recovered</option>
-          <option ${selMatch(data?.evidence_status,'Pending')}>Pending</option>
-          <option ${selMatch(data?.evidence_status,'Submitted to Lab')}>Submitted to Lab</option>
-          <option ${selMatch(data?.evidence_status,'Released')}>Released</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-grid form-grid-2" style="margin-bottom:10px">
-      <div class="form-group">
-        <label>Date of Retrieval</label>
-        <input type="date" id="ev-date-${n}" value="${esc(data?.date_of_retrieval)}"/>
+      <div>
+        <div class="form-grid form-grid-3" style="margin-bottom:10px">
+          <div class="form-group">
+            <label>Name of Evidence</label>
+            <input type="text" id="ev-name-${n}" placeholder="e.g. Primary Crime Scene" value="${esc(data?.name)}"/>
+          </div>
+          <div class="form-group">
+            <label>Evidence Was</label>
+            <select id="ev-was-${n}">
+              <option ${selMatch(data?.evidence_was,'Secured')}>Secured</option>
+              <option ${selMatch(data?.evidence_was,'Unsecured')}>Unsecured</option>
+              <option ${selMatch(data?.evidence_was,'Destroyed')}>Destroyed</option>
+              <option ${selMatch(data?.evidence_was,'Lost')}>Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status of Evidence</label>
+            <select id="ev-status-${n}">
+              <option ${selMatch(data?.evidence_status,'Recovered')}>Recovered</option>
+              <option ${selMatch(data?.evidence_status,'Pending')}>Pending</option>
+              <option ${selMatch(data?.evidence_status,'Submitted to Lab')}>Submitted to Lab</option>
+              <option ${selMatch(data?.evidence_status,'Released')}>Released</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid form-grid-2" style="margin-bottom:10px">
+          <div class="form-group">
+            <label>Date of Retrieval</label>
+            <input type="date" id="ev-date-${n}" value="${esc(data?.date_of_retrieval)}"/>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-group">
@@ -363,6 +385,7 @@ function addEvidence(data) {
       <textarea id="ev-summary-${n}" rows="3" placeholder="Detailed description of evidence found...">${esc(data?.summary)}</textarea>
     </div>`;
   document.getElementById('evidenceContainer').appendChild(div);
+  syncPhotoRowFromData('evidence', n, data || {});
 }
 
 // Helper: select match
@@ -380,27 +403,352 @@ function esc(v) {
     .replace(/"/g,'&quot;');
 }
 
-// ── image upload helpers ─────────────────────────────────────
-function previewImage(input, imgId, boxId) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById(imgId);
-    const box = document.getElementById(boxId);
-    img.src = e.target.result;
-    box.classList.add('has-image');
-  };
-  reader.readAsDataURL(file);
+// ── Remote image modal (Cropper.js) ──────────────────────────────────
+let irPhotoModalCropper = null;
+/** @type {{ kind: string, rowN: number } | null} */
+let irPhotoModalContext = null;
+
+function photoPrefix(kind) {
+  if (kind === 'suspect') return 'sus';
+  if (kind === 'victim') return 'vic';
+  return 'ev';
 }
 
-function clearImage(imgId, boxId, event) {
-  event.preventDefault(); event.stopPropagation();
-  const img = document.getElementById(imgId);
-  const box = document.getElementById(boxId);
-  img.src = ''; box.classList.remove('has-image');
-  const input = box.querySelector('input[type="file"]');
-  if (input) input.value = '';
+function storedImageTriple(kind, data) {
+  if (!data || typeof data !== 'object')
+    return { url: '', orientation: kind === 'evidence' ? 'landscape' : 'portrait', crop: null };
+  if (kind === 'suspect')
+    return {
+      url: data.mugshot_url || '',
+      orientation: String(data.mugshot_orientation || 'portrait').toLowerCase(),
+      crop: cropFromDb(data.mugshot_crop),
+    };
+  if (kind === 'victim')
+    return {
+      url: data.photo_url || '',
+      orientation: String(data.photo_orientation || 'portrait').toLowerCase(),
+      crop: cropFromDb(data.photo_crop),
+    };
+  return {
+    url: data.image_url || '',
+    orientation: String(data.image_orientation || 'landscape').toLowerCase(),
+    crop: cropFromDb(data.image_crop),
+  };
+}
+
+/** Normalize crop value from API (object or JSON string). */
+function cropFromDb(raw) {
+  if (raw == null || raw === '') return null;
+  if (typeof raw === 'object' && !Array.isArray(raw)) return isValidNormalizedCrop(raw) ? raw : null;
+  if (typeof raw === 'string') {
+    try {
+      const o = JSON.parse(raw);
+      return isValidNormalizedCrop(o) ? o : null;
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
+
+function isValidNormalizedCrop(o) {
+  if (!o || typeof o !== 'object') return false;
+  const nx = Number(o.nx);
+  const ny = Number(o.ny);
+  const nw = Number(o.nw);
+  const nh = Number(o.nh);
+  if (![nx, ny, nw, nh].every((x) => Number.isFinite(x))) return false;
+  if (nw < 1e-4 || nh < 1e-4 || nx < 0 || ny < 0 || nx + nw > 1.002 || ny + nh > 1.002) return false;
+  return true;
+}
+
+/** Clamp fractional crop so rounding/Cropper never exceeds bounds; keeps crop usable server-side. */
+function clampNormalizedCrop(pack) {
+  let nx = Number(pack.nx);
+  let ny = Number(pack.ny);
+  let nw = Number(pack.nw);
+  let nh = Number(pack.nh);
+  nx = Math.max(0, Math.min(nx, 1));
+  ny = Math.max(0, Math.min(ny, 1));
+  nw = Math.max(1e-4, Math.min(nw, 1 - nx));
+  nh = Math.max(1e-4, Math.min(nh, 1 - ny));
+  return { nx, ny, nw, nh };
+}
+
+function getCropperConstructor() {
+  const w = typeof window !== 'undefined' ? window : {};
+  const C = w.Cropper;
+  if (typeof C === 'function') return C;
+  if (C && typeof C.default === 'function') return C.default;
+  return null;
+}
+
+/** Cropper leaves wrappers on <img>; replace element before each init so cropping reliably works. */
+function ensureFreshModalImage() {
+  destroyIrPhotoCropper();
+  const wrap = document.querySelector('.ir-photo-modal-crop-wrap');
+  if (!wrap) return null;
+  wrap.innerHTML = '';
+  const nu = document.createElement('img');
+  nu.id = 'irPhotoModalImg';
+  nu.alt = '';
+  nu.style.cssText = 'max-width:100%;display:block';
+  wrap.appendChild(nu);
+  return nu;
+}
+
+function parseCropFromHidden(raw) {
+  const s = (raw ?? '').trim();
+  if (!s) return null;
+  try {
+    const o = JSON.parse(s);
+    return isValidNormalizedCrop(o) ? o : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function applyNormalizedCropBg(el, crop) {
+  if (!el) return;
+  if (!crop) {
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center center';
+    return;
+  }
+  const { nx, ny, nw, nh } = crop;
+  if (nw >= 0.999 && nh >= 0.999) {
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center center';
+    return;
+  }
+  const sx = (100 / nw).toFixed(6);
+  const sy = (100 / nh).toFixed(6);
+  const px = nw >= 0.999 ? 50 : (nx / (1 - nw)) * 100;
+  const py = nh >= 0.999 ? 50 : (ny / (1 - nh)) * 100;
+  el.style.backgroundSize = `${sx}% ${sy}%`;
+  el.style.backgroundPosition = `${px.toFixed(4)}% ${py.toFixed(4)}%`;
+}
+
+function renderPhotoThumb(kind, rowN) {
+  const p = photoPrefix(kind);
+  const thumb = document.getElementById(`${p}-pthumb-${rowN}`);
+  const urlEl = document.getElementById(`${p}-purl-${rowN}`);
+  const cropEl = document.getElementById(`${p}-pcrop-${rowN}`);
+  const oriEl = document.getElementById(`${p}-pori-${rowN}`);
+  const box = document.getElementById(
+    kind === 'suspect' ? `sus-imgbox-${rowN}` : kind === 'victim' ? `vic-imgbox-${rowN}` : `ev-imgbox-${rowN}`,
+  );
+  if (!thumb || !urlEl || !box) return;
+  const ori = ((oriEl && oriEl.value) || 'portrait').toLowerCase();
+  const landscape = ori === 'landscape';
+  if (kind === 'evidence') {
+    thumb.style.aspectRatio = landscape ? '180 / 110' : '110 / 180';
+  } else {
+    thumb.style.aspectRatio = landscape ? '150 / 120' : '120 / 150';
+  }
+  const url = (urlEl.value || '').trim();
+  const crop = parseCropFromHidden(cropEl ? cropEl.value : '');
+  if (!url) {
+    thumb.style.backgroundImage = '';
+    thumb.style.backgroundSize = '';
+    thumb.style.backgroundPosition = '';
+    box.classList.remove('has-image');
+    return;
+  }
+  box.classList.add('has-image');
+  thumb.style.backgroundImage = `url(${JSON.stringify(url)})`;
+  thumb.style.backgroundRepeat = 'no-repeat';
+  applyNormalizedCropBg(thumb, crop);
+}
+
+function syncPhotoRowFromData(kind, rowN, data) {
+  const p = photoPrefix(kind);
+  const u = document.getElementById(`${p}-purl-${rowN}`);
+  const o = document.getElementById(`${p}-pori-${rowN}`);
+  const c = document.getElementById(`${p}-pcrop-${rowN}`);
+  if (!u || !o || !c) return;
+  const t = storedImageTriple(kind, data);
+  u.value = t.url || '';
+  o.value = t.orientation === 'landscape' ? 'landscape' : 'portrait';
+  c.value = t.crop && isValidNormalizedCrop(t.crop) ? JSON.stringify(t.crop) : '';
+  renderPhotoThumb(kind, rowN);
+}
+
+function destroyIrPhotoCropper() {
+  if (irPhotoModalCropper) {
+    try {
+      irPhotoModalCropper.destroy();
+    } catch (_) {
+      /* ignore */
+    }
+    irPhotoModalCropper = null;
+  }
+}
+
+function modalAspectRatio() {
+  const orientL = document.getElementById('irPhotoModalOrientL');
+  const landscape = orientL && orientL.checked;
+  if (!irPhotoModalContext) return 1;
+  const { kind } = irPhotoModalContext;
+  if (kind === 'evidence') return landscape ? 180 / 110 : 110 / 180;
+  return landscape ? 150 / 120 : 120 / 150;
+}
+
+function irPhotoModalOrientChanged() {
+  if (!irPhotoModalCropper) return;
+  try {
+    irPhotoModalCropper.setAspectRatio(modalAspectRatio());
+  } catch (_) {
+    /* if ratio update fails, user can Reload preview */
+  }
+}
+
+function openPhotoModal(kind, rowN, evt) {
+  if (evt) {
+    evt.preventDefault();
+    evt.stopPropagation();
+  }
+  irPhotoModalContext = { kind, rowN };
+  const p = photoPrefix(kind);
+  const url = (document.getElementById(`${p}-purl-${rowN}`)?.value || '').trim();
+  const ori = (document.getElementById(`${p}-pori-${rowN}`)?.value || (kind === 'evidence' ? 'landscape' : 'portrait')).toLowerCase();
+
+  ensureFreshModalImage();
+
+  const urlInput = document.getElementById('irPhotoModalUrl');
+  if (urlInput) urlInput.value = url;
+
+  const rp = document.getElementById('irPhotoModalOrientP');
+  const rl = document.getElementById('irPhotoModalOrientL');
+  if (rp && rl) {
+    rp.checked = ori !== 'landscape';
+    rl.checked = ori === 'landscape';
+  }
+
+  const shell = document.getElementById('irPhotoModal');
+  if (shell) {
+    shell.classList.add('is-open');
+    shell.setAttribute('aria-hidden', 'false');
+  }
+  document.addEventListener('keydown', irPhotoModalEsc);
+
+  if (url) {
+    queueMicrotask(() => irPhotoModalLoadPreview());
+  }
+}
+
+function closePhotoModal() {
+  destroyIrPhotoCropper();
+  ensureFreshModalImage();
+  const shell = document.getElementById('irPhotoModal');
+  if (shell) {
+    shell.classList.remove('is-open');
+    shell.setAttribute('aria-hidden', 'true');
+  }
+  irPhotoModalContext = null;
+  document.removeEventListener('keydown', irPhotoModalEsc);
+}
+
+function irPhotoModalEsc(e) {
+  if (e.key === 'Escape') closePhotoModal();
+}
+
+function irPhotoModalLoadPreview() {
+  const url = document.getElementById('irPhotoModalUrl').value.trim();
+  if (!url) {
+    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
+      PortalAuth.showToast('Enter an image URL first', 'error');
+    return;
+  }
+  const CropperCtor = getCropperConstructor();
+  if (!CropperCtor) {
+    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
+      PortalAuth.showToast('Cropper.js failed to load (check network / CDN).', 'error');
+    return;
+  }
+  const img = ensureFreshModalImage();
+  if (!img) return;
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    try {
+      irPhotoModalCropper = new CropperCtor(img, {
+        aspectRatio: modalAspectRatio(),
+        viewMode: 1,
+        autoCropArea: 0.92,
+        responsive: true,
+        restore: false,
+      });
+    } catch (err) {
+      if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
+        PortalAuth.showToast('Cropper failed: ' + (err?.message || err), 'error');
+      return;
+    }
+    const ctx = irPhotoModalContext;
+    if (ctx && irPhotoModalCropper) {
+      const p = photoPrefix(ctx.kind);
+      const cropRaw = document.getElementById(`${p}-pcrop-${ctx.rowN}`)?.value;
+      const saved = parseCropFromHidden(cropRaw);
+      if (saved && img.naturalWidth && img.naturalHeight) {
+        irPhotoModalCropper.setData({
+          x: saved.nx * img.naturalWidth,
+          y: saved.ny * img.naturalHeight,
+          width: saved.nw * img.naturalWidth,
+          height: saved.nh * img.naturalHeight,
+        });
+      }
+    }
+  };
+  img.onerror = () => {
+    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
+      PortalAuth.showToast('Image failed to load (CORS or invalid URL). You can still save the URL without crop.', 'error');
+  };
+  img.src = url;
+}
+
+function irPhotoModalSave() {
+  const ctx = irPhotoModalContext;
+  if (!ctx) return closePhotoModal();
+  const url = document.getElementById('irPhotoModalUrl').value.trim();
+  if (!url) {
+    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast) PortalAuth.showToast('URL required', 'error');
+    return;
+  }
+  const orientL = document.getElementById('irPhotoModalOrientL');
+  const orient = orientL && orientL.checked ? 'landscape' : 'portrait';
+  const p = photoPrefix(ctx.kind);
+  const img = document.getElementById('irPhotoModalImg');
+  let cropStr = '';
+  if (irPhotoModalCropper && img && img.naturalWidth && img.naturalHeight) {
+    try {
+      const d = irPhotoModalCropper.getData(true);
+      const nx = d.x / img.naturalWidth;
+      const ny = d.y / img.naturalHeight;
+      const nw = d.width / img.naturalWidth;
+      const nh = d.height / img.naturalHeight;
+      const pack = clampNormalizedCrop({ nx, ny, nw, nh });
+      if (isValidNormalizedCrop(pack)) cropStr = JSON.stringify(pack);
+    } catch (_) {
+      /* leave empty */
+    }
+  }
+  document.getElementById(`${p}-purl-${ctx.rowN}`).value = url;
+  document.getElementById(`${p}-pori-${ctx.rowN}`).value = orient;
+  document.getElementById(`${p}-pcrop-${ctx.rowN}`).value = cropStr;
+  renderPhotoThumb(ctx.kind, ctx.rowN);
+  closePhotoModal();
+}
+
+function clearPhotoRow(kind, rowN, evt) {
+  evt.preventDefault();
+  evt.stopPropagation();
+  const p = photoPrefix(kind);
+  const u = document.getElementById(`${p}-purl-${rowN}`);
+  const o = document.getElementById(`${p}-pori-${rowN}`);
+  const c = document.getElementById(`${p}-pcrop-${rowN}`);
+  if (u) u.value = '';
+  if (o) o.value = kind === 'evidence' ? 'landscape' : 'portrait';
+  if (c) c.value = '';
+  renderPhotoThumb(kind, rowN);
 }
 
 // ── collect dynamic sections from DOM ───────────────────────
@@ -437,7 +785,9 @@ function collectSuspects() {
       interrogation_summary: getVal(`sus-interro-${n}`) || null,
       telephone           : null,
       family              : null,
-      mugshot_url         : null,
+      mugshot_url           : getVal(`sus-purl-${n}`) || null,
+      mugshot_orientation   : getVal(`sus-pori-${n}`) || 'portrait',
+      mugshot_crop          : parseCropFromHidden(getVal(`sus-pcrop-${n}`)),
       interrogation_url   : null
     });
   });
@@ -464,7 +814,10 @@ function collectVictims() {
       notes           : getVal(`vic-notes-${n}`) || null,
       family          : null,
       autopsy_by      : getVal(`vic-doctor-${n}`) || null,
-      autopsy_summary : getVal(`vic-autopsy-${n}`) || null
+      autopsy_summary : getVal(`vic-autopsy-${n}`) || null,
+      photo_url       : getVal(`vic-purl-${n}`) || null,
+      photo_orientation : getVal(`vic-pori-${n}`) || 'portrait',
+      photo_crop      : parseCropFromHidden(getVal(`vic-pcrop-${n}`)),
     });
   });
   return out;
@@ -502,7 +855,10 @@ function collectEvidences() {
       evidence_was     : getVal(`ev-was-${n}`) || null,
       evidence_status  : getVal(`ev-status-${n}`) || null,
       date_of_retrieval: getVal(`ev-date-${n}`) || null,
-      summary          : getVal(`ev-summary-${n}`) || null
+      summary          : getVal(`ev-summary-${n}`) || null,
+      image_url        : getVal(`ev-purl-${n}`) || null,
+      image_orientation : getVal(`ev-pori-${n}`) || 'landscape',
+      image_crop       : parseCropFromHidden(getVal(`ev-pcrop-${n}`)),
     });
   });
   return out;
