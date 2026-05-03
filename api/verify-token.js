@@ -55,10 +55,19 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Session expired' })
     }
 
-    // ✅ Token is valid — return user badge for the page to use
+    // Fetch GIU fields from users table
+    const { data: user } = await supabase
+      .from('users')
+      .select('is_giu, callsign')
+      .eq('badge', session.badge)
+      .single()
+
+    // ✅ Token is valid — return badge + GIU access fields
     return res.status(200).json({
-      success: true,
-      badge:   session.badge
+      success:  true,
+      badge:    session.badge,
+      is_giu:   user?.is_giu   || false,
+      callsign: user?.callsign  || null,
     })
 
   } catch (err) {

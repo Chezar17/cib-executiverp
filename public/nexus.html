@@ -28,7 +28,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <img class="topbar-logo" src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
-    <span class="topbar-brand">NEXUS</span>
+    <span class="topbar-brand" id="nexusBrandTrigger">NEXUS</span>
     <div class="topbar-divider"></div>
     <span class="topbar-sub">CIB Internal Intelligence Portal</span>
   </div>
@@ -556,10 +556,92 @@
 
 <div id="inf-toast" style="position:fixed;bottom:28px;right:28px;z-index:9000;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
+<!-- GIU SAP OVERLAY -->
+<div id="giu-overlay" aria-hidden="true">
+  <div id="giu-flash"></div>
+  <div id="giu-shell">
+    <div id="giu-topbar">
+      <div id="giu-topbar-left">
+        <div id="giu-sap-label">SAP &middot; SPECIAL ACCESS PROGRAM</div>
+        <div id="giu-sap-sublabel">COMPARTMENTED &middot; EYES ONLY &middot; GIU CLEARANCE REQUIRED</div>
+      </div>
+      <div id="giu-topbar-right">
+        <span id="giu-clock">&#8212;</span>
+        <button id="giu-exit-btn" onclick="exitGIU()">&#9664; EXIT SAP</button>
+      </div>
+    </div>
+    <div id="giu-class-banner">
+      <div class="giu-banner-dots"><span></span><span></span><span></span></div>
+      <div id="giu-banner-text">TS/SCI // SPECIAL ACCESS PROGRAM // GIU EYES ONLY // UNAUTHORIZED ACCESS IS A CAPITAL OFFENSE</div>
+      <div class="giu-banner-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div id="giu-main">
+      <div id="giu-header">
+        <div id="giu-logo-wrap">
+          <img id="giu-logo" src="images/GIU.png" alt="GIU" onerror="this.style.display='none'"/>
+          <div id="giu-logo-scan"></div>
+        </div>
+        <div id="giu-header-text">
+          <div id="giu-header-eyebrow">SPECIAL ACCESS PROGRAM &middot; ACTIVE</div>
+          <div id="giu-header-title">GANG INTELLIGENCE UNIT</div>
+          <div id="giu-header-sub">Los Santos Police Department &middot; Covert Operations Division</div>
+          <div id="giu-welcome-line">WELCOME, <span id="giu-callsign">&#8212;</span><span id="giu-welcome-cursor">&#9608;</span></div>
+        </div>
+      </div>
+      <div id="giu-defcon-wrap">
+        <div id="giu-defcon-label">CURRENT THREAT ASSESSMENT</div>
+        <div id="giu-defcon-row">
+          <div class="giu-defcon-level" data-level="1"><div class="giu-defcon-num">1</div><div class="giu-defcon-name">MAXIMUM</div></div>
+          <div class="giu-defcon-level" data-level="2"><div class="giu-defcon-num">2</div><div class="giu-defcon-name">SEVERE</div></div>
+          <div class="giu-defcon-level" data-level="3"><div class="giu-defcon-num">3</div><div class="giu-defcon-name">HIGH</div></div>
+          <div class="giu-defcon-level" data-level="4"><div class="giu-defcon-num">4</div><div class="giu-defcon-name">ELEVATED</div></div>
+          <div class="giu-defcon-level" data-level="5"><div class="giu-defcon-num">5</div><div class="giu-defcon-name">NORMAL</div></div>
+        </div>
+        <div id="giu-defcon-status-text">DEFCON <span id="giu-defcon-current">5</span> &mdash; <span id="giu-defcon-desc">NORMAL OPERATIONS</span></div>
+      </div>
+      <div id="giu-content-grid">
+        <div class="giu-section" id="giu-directives-section">
+          <div class="giu-section-header">
+            <div class="giu-section-eyebrow">GIU COMMAND &middot; STANDING ORDERS</div>
+            <div class="giu-section-title">ACTIVE DIRECTIVES</div>
+            <div class="giu-section-line"></div>
+          </div>
+          <div class="giu-section-body">
+            <p class="giu-section-desc">Operational directives issued by GIU Command to all active unit members. Directives supersede standard CIB protocols. Compliance is mandatory. Failure to execute constitutes a breach of special access obligations.</p>
+            <div class="giu-directive-tags">
+              <span class="giu-tag">GIU COMMAND ONLY</span>
+              <span class="giu-tag giu-tag-red">STANDING ORDERS</span>
+              <span class="giu-tag">COVERT OPS</span>
+            </div>
+            <a class="giu-btn" href="giu/directives.html">ACCESS DIRECTIVES <span class="giu-btn-arrow">&rsaquo;</span></a>
+          </div>
+        </div>
+        <div class="giu-section" id="giu-status-section">
+          <div class="giu-section-header">
+            <div class="giu-section-eyebrow">SAP &middot; SYSTEM STATUS</div>
+            <div class="giu-section-title">SESSION DETAILS</div>
+            <div class="giu-section-line"></div>
+          </div>
+          <div class="giu-status-grid">
+            <div class="giu-status-row"><span class="giu-status-label">Program</span><span class="giu-status-val">Gang Intelligence Unit</span></div>
+            <div class="giu-status-row"><span class="giu-status-label">Callsign</span><span class="giu-status-val giu-val-red" id="giu-status-callsign">&#8212;</span></div>
+            <div class="giu-status-row"><span class="giu-status-label">Classification</span><span class="giu-status-val giu-val-red">TS/SCI &middot; SAP</span></div>
+            <div class="giu-status-row"><span class="giu-status-label">Access Tier</span><span class="giu-status-val">GIU Compartmented</span></div>
+            <div class="giu-status-row"><span class="giu-status-label">Audit Log</span><span class="giu-status-val giu-val-active">&#9679; RECORDING</span></div>
+            <div class="giu-status-row"><span class="giu-status-label">Cover Protocol</span><span class="giu-status-val giu-val-active">&#9679; ACTIVE</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="giu-footer">
+      <span>GIU SAP &middot; GANG INTELLIGENCE UNIT &middot; LOS SANTOS POLICE DEPARTMENT &middot; ALL ACCESS IS LOGGED AND MONITORED</span>
+      <span id="giu-footer-right">TS/SCI // COMPARTMENTED // GIU EYES ONLY</span>
+    </div>
+  </div>
+</div>
+
 <script src="shared/scripts/portal-auth.js"></script>
 <script src="shared/scripts/site-ui.js"></script>
-
-
 <script src="scripts/nexus.js"></script>
 </body>
 </html>

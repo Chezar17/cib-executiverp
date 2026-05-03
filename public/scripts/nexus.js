@@ -58,3 +58,187 @@
 
   SiteUi.initPageFadeTransitions({ transitionMs: 400, skipInitialFadeIn: true });
   SiteUi.initScrollReveal();
+// ═══════════════════════════════════════════════════════════
+//  GIU — SPECIAL ACCESS PROGRAM
+//  Hidden mechanism: only users with is_giu=true can activate
+//  Triggered by clicking the NEXUS brand text in the topbar
+// ═══════════════════════════════════════════════════════════
+
+;(function () {
+
+  // DEFCON labels per level
+  const DEFCON_LABELS = {
+    1: 'MAXIMUM ALERT · ALL UNITS MOBILIZED',
+    2: 'SEVERE · HEIGHTENED READINESS',
+    3: 'HIGH · INCREASED SURVEILLANCE',
+    4: 'ELEVATED · PRECAUTIONARY POSTURE',
+    5: 'NORMAL OPERATIONS',
+  }
+
+  let _giuActive    = false
+  let _giuCallsign  = null
+  let _giuIsUnlocked = false
+  let _giuClockTimer = null
+  let _currentDefcon = 5
+
+  // ── Check GIU eligibility after PortalAuth loads ──────────
+  // We hook into verify-token response via sessionStorage.
+  // PortalAuth already called /api/verify-token; we need to
+  // re-read it once, then store is_giu in sessionStorage.
+  // We call it once on load — no new API file needed.
+
+  async function initGIU() {
+    const token = sessionStorage.getItem('cib_token')
+    if (!token) return
+
+    try {
+      const res  = await fetch('/api/verify-token', {
+        headers: { 'x-session-token': token }
+      })
+      if (!res.ok) return
+      const data = await res.json()
+
+      if (!data.is_giu) return  // not a GIU member — stop here, no UI hint
+
+      // User is GIU — store callsign and unlock the trigger
+      _giuCallsign   = data.callsign || '—'
+      _giuIsUnlocked = true
+      sessionStorage.setItem('cib_is_giu',    'true')
+      sessionStorage.setItem('cib_callsign',  _giuCallsign)
+
+      // Activate the hidden trigger on the NEXUS brand text
+      const trigger = document.getElementById('nexusBrandTrigger')
+      if (trigger) {
+        trigger.classList.add('giu-unlocked')
+        trigger.title = ''  // no tooltip — stays hidden
+        trigger.addEventListener('click', enterGIU)
+      }
+
+    } catch (e) {
+      // Silently fail — don't expose GIU existence to non-members
+    }
+  }
+
+  // ── Enter GIU SAP mode ────────────────────────────────────
+  function enterGIU() {
+    if (!_giuIsUnlocked || _giuActive) return
+    _giuActive = true
+
+    const overlay = document.getElementById('giu-overlay')
+    const flash   = document.getElementById('giu-flash')
+    if (!overlay) return
+
+    // 1. Flash to black
+    flash.classList.add('flashing')
+
+    setTimeout(() => {
+      // 2. Populate dynamic fields
+      populateGIU()
+
+      // 3. Show overlay (still behind flash)
+      overlay.removeAttribute('aria-hidden')
+      overlay.classList.add('giu-visible')
+
+      // 4. Fade flash out
+      flash.classList.remove('flashing')
+
+    }, 200)
+
+    // 5. Start GIU clock
+    startGIUClock()
+  }
+
+  // ── Exit GIU SAP mode ─────────────────────────────────────
+  window.exitGIU = function () {
+    if (!_giuActive) return
+
+    const overlay = document.getElementById('giu-overlay')
+    const flash   = document.getElementById('giu-flash')
+    if (!overlay) return
+
+    flash.classList.add('flashing')
+
+    setTimeout(() => {
+      overlay.classList.remove('giu-visible')
+      overlay.setAttribute('aria-hidden', 'true')
+      _giuActive = false
+      flash.classList.remove('flashing')
+    }, 200)
+
+    if (_giuClockTimer) { clearInterval(_giuClockTimer); _giuClockTimer = null }
+  }
+
+  // ── Populate callsign + status values ────────────────────
+  function populateGIU() {
+    const cs = _giuCallsign || '—'
+
+    // Welcome line callsign
+    const giuCs = document.getElementById('giu-callsign')
+    if (giuCs) {
+      giuCs.textContent = ''
+      // Typewriter effect for callsign
+      let i = 0
+      const chars = cs.toUpperCase().split('')
+      const timer = setInterval(() => {
+        if (i < chars.length) { giuCs.textContent += chars[i++] }
+        else clearInterval(timer)
+      }, 60)
+    }
+
+    // Status panel callsign
+    const sc = document.getElementById('giu-status-callsign')
+    if (sc) sc.textContent = cs.toUpperCase()
+
+    // Set DEFCON to stored value (default 5)
+    setDefcon(_currentDefcon, false)
+  }
+
+  // ── DEFCON selector ───────────────────────────────────────
+  function setDefcon(level, animate) {
+    _currentDefcon = level
+
+    document.querySelectorAll('.giu-defcon-level').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.level) === level)
+    })
+
+    const cur  = document.getElementById('giu-defcon-current')
+    const desc = document.getElementById('giu-defcon-desc')
+    if (cur)  cur.textContent  = level
+    if (desc) desc.textContent = DEFCON_LABELS[level] || ''
+
+    // Update defcon color on current number
+    const colors = { 1:'#c0392b', 2:'#e74c3c', 3:'#e67e22', 4:'#f39c12', 5:'#27ae60' }
+    if (cur) cur.style.color = colors[level] || '#fff'
+  }
+
+  // Make DEFCON levels clickable
+  document.addEventListener('click', function (e) {
+    const level = e.target.closest('.giu-defcon-level')
+    if (level && _giuActive) {
+      setDefcon(parseInt(level.dataset.level), true)
+    }
+  })
+
+  // ── GIU Clock ─────────────────────────────────────────────
+  function startGIUClock() {
+    function tick() {
+      const el = document.getElementById('giu-clock')
+      if (!el) return
+      const now = new Date()
+      el.textContent = now.toLocaleTimeString('en-US', {
+        hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'
+      })
+    }
+    tick()
+    _giuClockTimer = setInterval(tick, 1000)
+  }
+
+  // ── Init on DOM ready ─────────────────────────────────────
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGIU)
+  } else {
+    // PortalAuth may not have run yet — wait a beat
+    setTimeout(initGIU, 800)
+  }
+
+})()

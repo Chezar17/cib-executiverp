@@ -319,3 +319,480 @@
     .lp-info-strip{grid-template-columns:1fr;}
     
   }
+/* ═══════════════════════════════════════════════════════════
+   GIU — SPECIAL ACCESS PROGRAM OVERLAY
+   Activated only for users with is_giu = true
+   Entire overlay is hidden from DOM until activated
+════════════════════════════════════════════════════════════ */
+
+/* Hidden trigger — GIU users can interact, others cannot */
+#nexusBrandTrigger {
+  cursor: default;
+  user-select: none;
+}
+#nexusBrandTrigger.giu-unlocked {
+  cursor: pointer;
+  position: relative;
+}
+#nexusBrandTrigger.giu-unlocked::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(192,57,43,0.5);
+  animation: giuPulse 2.5s ease-in-out infinite;
+}
+@keyframes giuPulse {
+  0%,100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
+
+/* ── Flash transition layer ── */
+#giu-flash {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 10001;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+#giu-flash.flashing { opacity: 1; }
+
+/* ── Main overlay ── */
+#giu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Roboto Mono', monospace;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.02);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+#giu-overlay.giu-visible {
+  opacity: 1;
+  pointer-events: all;
+  transform: scale(1);
+}
+
+/* Scanline overlay effect */
+#giu-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 10005;
+}
+
+#giu-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── SAP Topbar ── */
+#giu-topbar {
+  background: #0a0000;
+  border-bottom: 1px solid rgba(192,57,43,0.3);
+  padding: 10px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+#giu-sap-label {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #c0392b;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+#giu-sap-sublabel {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(192,57,43,0.5);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+#giu-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+#giu-clock {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.4);
+}
+#giu-exit-btn {
+  background: transparent;
+  border: 1px solid rgba(192,57,43,0.4);
+  color: #c0392b;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+#giu-exit-btn:hover {
+  background: rgba(192,57,43,0.1);
+  border-color: #c0392b;
+}
+
+/* ── Classification Banner ── */
+#giu-class-banner {
+  background: #c0392b;
+  padding: 5px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+#giu-banner-text {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #fff;
+  text-transform: uppercase;
+  text-align: center;
+}
+.giu-banner-dots {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.giu-banner-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+}
+
+/* ── Main content area ── */
+#giu-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 36px 48px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── Header: Logo + Welcome ── */
+#giu-header {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+#giu-logo-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 130px;
+  height: 130px;
+}
+#giu-logo {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(192,57,43,0.4));
+  animation: giuLogoIn 0.8s ease both;
+}
+@keyframes giuLogoIn {
+  from { opacity:0; transform: scale(0.85); filter: drop-shadow(0 0 40px rgba(192,57,43,0.8)); }
+  to   { opacity:1; transform: scale(1);    filter: drop-shadow(0 0 18px rgba(192,57,43,0.4)); }
+}
+#giu-logo-scan {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(192,57,43,0.12) 50%,
+    transparent 100%
+  );
+  animation: scanline 3s linear infinite;
+  pointer-events: none;
+}
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+
+#giu-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#giu-header-eyebrow {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: rgba(192,57,43,0.7);
+  text-transform: uppercase;
+}
+#giu-header-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(28px,4vw,48px);
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1;
+}
+#giu-header-sub {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+}
+#giu-welcome-line {
+  font-family: 'Oswald', sans-serif;
+  font-size: 20px;
+  letter-spacing: 4px;
+  color: #c0392b;
+  text-transform: uppercase;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#giu-callsign {
+  color: #fff;
+}
+#giu-welcome-cursor {
+  color: #c0392b;
+  animation: blink 1s step-end infinite;
+  font-size: 16px;
+}
+
+/* ── DEFCON ── */
+#giu-defcon-wrap {
+  background: #080808;
+  border: 1px solid rgba(192,57,43,0.2);
+  padding: 24px 28px;
+}
+#giu-defcon-label {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(192,57,43,0.6);
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+#giu-defcon-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+}
+.giu-defcon-level {
+  flex: 1;
+  text-align: center;
+  padding: 14px 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  position: relative;
+}
+.giu-defcon-level:hover {
+  border-color: rgba(192,57,43,0.3);
+  background: rgba(192,57,43,0.04);
+}
+.giu-defcon-num {
+  font-family: 'Oswald', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.15);
+  line-height: 1;
+  transition: color 0.2s;
+}
+.giu-defcon-name {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+  margin-top: 5px;
+  transition: color 0.2s;
+}
+
+/* Active defcon states — color changes per level */
+.giu-defcon-level.active[data-level="1"] { background: rgba(192,57,43,0.12); border-color: #c0392b; }
+.giu-defcon-level.active[data-level="1"] .giu-defcon-num  { color: #c0392b; }
+.giu-defcon-level.active[data-level="1"] .giu-defcon-name { color: rgba(192,57,43,0.8); }
+
+.giu-defcon-level.active[data-level="2"] { background: rgba(231,76,60,0.1); border-color: #e74c3c; }
+.giu-defcon-level.active[data-level="2"] .giu-defcon-num  { color: #e74c3c; }
+.giu-defcon-level.active[data-level="2"] .giu-defcon-name { color: rgba(231,76,60,0.8); }
+
+.giu-defcon-level.active[data-level="3"] { background: rgba(230,126,34,0.1); border-color: #e67e22; }
+.giu-defcon-level.active[data-level="3"] .giu-defcon-num  { color: #e67e22; }
+.giu-defcon-level.active[data-level="3"] .giu-defcon-name { color: rgba(230,126,34,0.8); }
+
+.giu-defcon-level.active[data-level="4"] { background: rgba(243,156,18,0.1); border-color: #f39c12; }
+.giu-defcon-level.active[data-level="4"] .giu-defcon-num  { color: #f39c12; }
+.giu-defcon-level.active[data-level="4"] .giu-defcon-name { color: rgba(243,156,18,0.8); }
+
+.giu-defcon-level.active[data-level="5"] { background: rgba(39,174,96,0.08); border-color: #27ae60; }
+.giu-defcon-level.active[data-level="5"] .giu-defcon-num  { color: #27ae60; }
+.giu-defcon-level.active[data-level="5"] .giu-defcon-name { color: rgba(39,174,96,0.8); }
+
+#giu-defcon-status-text {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+}
+#giu-defcon-current { color: #c0392b; font-weight: 700; }
+#giu-defcon-desc    { color: rgba(255,255,255,0.6); }
+
+/* ── Two-column content grid ── */
+#giu-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── Sections ── */
+.giu-section {
+  background: #080808;
+  border: 1px solid rgba(192,57,43,0.15);
+  padding: 28px;
+}
+.giu-section-header {
+  margin-bottom: 20px;
+}
+.giu-section-eyebrow {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(192,57,43,0.6);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.giu-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #fff;
+}
+.giu-section-line {
+  width: 40px;
+  height: 1px;
+  background: rgba(192,57,43,0.5);
+  margin-top: 12px;
+}
+.giu-section-body {}
+.giu-section-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.8;
+  margin: 0 0 20px;
+  letter-spacing: 0.5px;
+}
+
+/* Tags */
+.giu-directive-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.giu-tag {
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.4);
+}
+.giu-tag-red {
+  border-color: rgba(192,57,43,0.4);
+  color: #c0392b;
+  background: rgba(192,57,43,0.07);
+}
+
+/* Directive button */
+.giu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #c0392b;
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 12px 28px;
+  text-decoration: none;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.giu-btn:hover {
+  background: #e74c3c;
+  box-shadow: 0 0 20px rgba(192,57,43,0.3);
+}
+.giu-btn-arrow { font-size: 18px; font-family: monospace; }
+
+/* Status grid */
+.giu-status-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.giu-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.giu-status-row:last-child { border-bottom: none; }
+.giu-status-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+.giu-status-val {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.7);
+}
+.giu-val-red    { color: #c0392b !important; }
+.giu-val-active { color: #27ae60 !important; font-size: 11px !important; letter-spacing: 2px !important; }
+
+/* ── SAP Footer ── */
+#giu-footer {
+  background: #050505;
+  border-top: 1px solid rgba(192,57,43,0.2);
+  padding: 9px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+}
+#giu-footer-right { color: rgba(192,57,43,0.5); }
+
+@media(max-width:900px) {
+  #giu-content-grid { grid-template-columns: 1fr; }
+  #giu-main { padding: 24px 20px; }
+  #giu-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+}
