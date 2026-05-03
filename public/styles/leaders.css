@@ -1,5 +1,5 @@
 body.page-visible{opacity:1;}
-  /* â•â• PAGE HERO â•â• */
+  /* ══ PAGE HERO ══ */
   .page-hero{position:relative;padding:72px 40px 60px;overflow:hidden;border-bottom:1px solid var(--navy-border);}
   .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,#0D1A35 0%,var(--navy) 65%);z-index:0;}
   .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;z-index:0;}
@@ -12,20 +12,20 @@ body.page-visible{opacity:1;}
   .hero-line{width:80px;height:2px;background:var(--gold);margin-bottom:20px;}
   .hero-desc{font-size:14px;color:var(--muted);max-width:580px;line-height:1.8;}
 
-  /* â•â• PAGE WRAP â•â• */
+  /* ══ PAGE WRAP ══ */
   .page-wrap{max-width:1200px;margin:0 auto;padding:64px 40px 80px;}
 
-  /* â•â• SECTION HEADER â•â• */
+  /* ══ SECTION HEADER ══ */
   .section-head{margin-bottom:48px;}
   .section-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;opacity:0.8;}
   .section-title{font-family:'Oswald',sans-serif;font-size:clamp(20px,3.5vw,32px);letter-spacing:4px;text-transform:uppercase;color:var(--white);}
   .section-rule{width:60px;height:2px;background:var(--gold);margin-top:14px;}
   .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--navy-border) 20%,var(--gold) 50%,var(--navy-border) 80%,transparent);margin:72px 0 0;}
 
-  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  /* ═══════════════════════════════════════════════════════
      LEADER CARDS
      3 cards across â€” large portrait + info below
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+  ═══════════════════════════════════════════════════════ */
   .leaders-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
 
   .leader-card{background:var(--navy-card);border:1px solid var(--navy-border);overflow:hidden;position:relative;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;}
@@ -118,10 +118,10 @@ body.page-visible{opacity:1;}
   }
   .leader-badge.gold{border-color:rgba(201,168,76,0.4);color:var(--gold);}
 
-  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  /* ═══════════════════════════════════════════════════════
      DEPARTMENT CARDS (click to expand)
-     Compact view â†’ click â†’ modal-style expanded overlay
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+     Compact view â†' click â†' modal-style expanded overlay
+  ═══════════════════════════════════════════════════════ */
   .dept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
 
   /* Compact card */
@@ -181,9 +181,9 @@ body.page-visible{opacity:1;}
   .dept-view-btn svg{width:10px;height:10px;fill:var(--gold);transition:transform 0.2s;}
   .dept-card:hover .dept-view-btn svg{transform:translateX(3px);}
 
-  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  /* ═══════════════════════════════════════════════════════
      DEPARTMENT MODAL (full-screen overlay)
-  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+  ═══════════════════════════════════════════════════════ */
   #dept-modal{
     position:fixed;inset:0;z-index:8000;
     background:rgba(5,8,18,0.9);
@@ -320,7 +320,7 @@ body.page-visible{opacity:1;}
   }
   .modal-info-val{font-size:12px;color:var(--white);}
 
-  /* â•â• ANIMATIONS â•â• */
+  /* ══ ANIMATIONS ══ */
   .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1);}
   .reveal.in-view{opacity:1;transform:translateY(0);}
   .reveal-d1{transition-delay:0.07s;}
@@ -328,7 +328,7 @@ body.page-visible{opacity:1;}
   .reveal-d3{transition-delay:0.21s;}
   .reveal-d4{transition-delay:0.28s;}
 
-  /* â•â• RESPONSIVE â•â• */
+  /* ══ RESPONSIVE ══ */
   @media(max-width:960px){
     .leaders-grid,.dept-grid{grid-template-columns:1fr 1fr;}
     .modal-body{grid-template-columns:1fr;}
@@ -344,7 +344,7 @@ body.page-visible{opacity:1;}
     .modal-logo-zone{display:none;}
   }
 
-  /* â•â• NEW: Commissioner Hero + Sub-grid + Bio Modal + Animations â•â• */
+  /* ══ NEW: Commissioner Hero + Sub-grid + Bio Modal + Animations ══ */
 
   /* Commissioner featured card â€” full width, horizontal */
   .commissioner-wrap{margin-bottom:28px;}
@@ -445,7 +445,7 @@ body.page-visible{opacity:1;}
   .section-rule::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);animation:ruleShimmer 2.8s ease 1s infinite;}
   @keyframes ruleShimmer{0%{transform:translateX(-100%);}100%{transform:translateX(200%);}}
 
-  /* â•â• PHOTOGRAPHER CREDIT LABEL â•â• */
+  /* ══ PHOTOGRAPHER CREDIT LABEL ══ */
   .photo-credit{
     position:absolute;
     bottom:8px;right:10px;
