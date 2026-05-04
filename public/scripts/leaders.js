@@ -68,7 +68,7 @@ SiteUi.initPageFadeTransitions({ transitionMs: 400 });
       about:    'The Los Santos Police Department (LSPD) is the municipal police force of the City of Los Santos and the largest single law enforcement agency in San Andreas by personnel count. Operating from Mission Row headquarters and multiple district stations, LSPD provides 24-hour urban patrol coverage, homicide investigation, narcotics enforcement, and specialized units including SWAT and K-9. The department contributes the largest proportion of personnel to CIB operations and maintains a close operational relationship with both the Bureau and the County Sheriff.',
       info: [
         { lbl: 'Founded',       val: 'City of Los Santos Municipal Authority' },
-        { lbl: 'Commanding',    val: 'Chief of Police Luke Osborne' },
+        { lbl: 'Commanding',    val: 'Chief of Police Gwen Naladipha' },
         { lbl: 'Personnel',     val: 'Largest Dept in San Andreas' },
         { lbl: 'HQ',            val: 'Mission Row, Los Santos' },
         { lbl: 'Oversight',     val: 'Los Santos City Council' },
@@ -177,28 +177,28 @@ SiteUi.initPageFadeTransitions({ transitionMs: 400 });
 // â”€â”€ BIOGRAPHY DATA â€” Edit text here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BIOS = {
   gunner:{
-    rank:'Commissioner Â· Highest Rank',name:'Andrew Gunner',dept:'San Andreas State Trooper',
-    badge:'SAST Â· Commissioner',initials:'AG',img:'images/SAST_Gunner1.jpg',
+    rank:'Commissioner · Highest Rank',name:'Andrew Gunner',dept:'San Andreas State Trooper',
+    badge:'SAST · Commissioner',initials:'AG',img:'images/SAST_Gunner1.jpg',
     bio1:'Commissioner Andrew Gunner serves as the supreme commanding officer of all law enforcement agencies operating within the State of San Andreas, including the San Andreas State Trooper, the Los Santos County Sheriff\'s Office, and the Los Santos Police Department. He holds ultimate strategic authority over the Central Investigation Bureau and its sub-divisions.',
     bio2:'Commissioner Gunner is known for his uncompromising stance on organized crime and his instrumental role in the formation of the CIB as a dedicated intelligence and investigation division within the SAPD structure. Under his directive, the Bureau has significantly expanded its operational capacity since its founding in 2026.',
-    service:[{year:'2026 â€“ Present',role:'Commissioner, San Andreas State Trooper'},{year:'2024 â€“ 2026',role:'Deputy Commissioner, SAST'},{year:'2020 â€“ 2024',role:'Director of State Law Enforcement Operations'},{year:'2015 â€“ 2020',role:'Senior Commander, SAST Northern Division'}],
-    info:[{lbl:'Full Name',val:'Andrew Gunner'},{lbl:'Rank',val:'Commissioner'},{lbl:'Department',val:'San Andreas State Trooper'},{lbl:'Authority',val:'Statewide â€” Supreme Command'},{lbl:'Jurisdiction',val:'State of San Andreas'},{lbl:'CIB Relation',val:'Direct Oversight'},{lbl:'Status',val:'Active Duty'}]
+    service:[{year:'Feb 2026 – Present',role:'Commissioner, San Andreas State Trooper'}],
+    info:[{lbl:'Full Name',val:'Andrew Gunner'},{lbl:'Rank',val:'Commissioner'},{lbl:'Department',val:'San Andreas State Trooper'},{lbl:'Authority',val:'Statewide — Supreme Command'},{lbl:'Jurisdiction',val:'State of San Andreas'},{lbl:'CIB Relation',val:'Direct Oversight'},{lbl:'Status',val:'Active Duty'}]
   },
   wesley:{
-    rank:'Sheriff Â· County Commander',name:'Kevin Wesley',dept:'Los Santos County Sheriff\'s Office',
-    badge:'LCSO Â· Sheriff',initials:'KW',img:'images/LSCS_Kevin1.jpg',
+    rank:'Sheriff · County Commander',name:'Kevin Wesley',dept:'Los Santos County Sheriff\'s Office',
+    badge:'LCSO · Sheriff',initials:'KW',img:'images/LSCS_Kevin1.jpg',
     bio1:'Sheriff Kevin Wesley commands the Los Santos County Sheriff\'s Office, overseeing law enforcement operations across Los Santos County and Blaine County. He is responsible for county-wide civil authority, rural law enforcement, and coordination with state and city departments on joint operations.',
-    bio2:'Sheriff Wesley has been a longstanding partner of the Central Investigation Bureau, providing jurisdictional support across Blaine County regions and rural San Andreas â€” areas critical to CIB Gang Recon Division field operations targeting narcotics routes and gang activity outside city limits.',
-    service:[{year:'2023 â€“ Present',role:'Sheriff, Los Santos County Sheriff\'s Office'},{year:'2019 â€“ 2023',role:'Undersheriff, LCSO'},{year:'2014 â€“ 2019',role:'Captain, LCSO Blaine County Division'},{year:'2009 â€“ 2014',role:'Lieutenant, LCSO Patrol Division'}],
-    info:[{lbl:'Full Name',val:'Kevin Wesley'},{lbl:'Rank',val:'Sheriff'},{lbl:'Department',val:'Los Santos County Sheriff'},{lbl:'Authority',val:'County-Wide Â· Civil Command'},{lbl:'Jurisdiction',val:'LS County Â· Blaine County'},{lbl:'CIB Relation',val:'CID Partner Â· Field Support'},{lbl:'Status',val:'Active Duty'}]
+    bio2:'Sheriff Wesley has been a longstanding partner of the Central Investigation Bureau, providing jurisdictional support across Blaine County regions and rural San Andreas — areas critical to CIB Gang Recon Division field operations targeting narcotics routes and gang activity outside city limits.',
+    service:[{year:'Feb 2026 – Present',role:'Sheriff, LSCS'}],
+    info:[{lbl:'Full Name',val:'Kevin Wesley'},{lbl:'Rank',val:'Sheriff'},{lbl:'Department',val:'Los Santos County Sheriff'},{lbl:'Authority',val:'County-Wide · Civil Command'},{lbl:'Jurisdiction',val:'LS County · Blaine County'},{lbl:'CIB Relation',val:'CID Partner · Field Support'},{lbl:'Status',val:'Active Duty'}]
   },
   osborne:{
-    rank:'Chief of Police Â· City Command',name:'Luke Osborne',dept:'Los Santos Police Department',
-    badge:'LSPD Â· Chief of Police',initials:'LO',img:'images/LSPD_Luke1.jpg',
-    bio1:'Chief of Police Luke Osborne commands the Los Santos Police Department, the primary metropolitan law enforcement body for the City of Los Santos. His jurisdiction encompasses all LSPD precincts, specialized units, and tactical divisions operating within city limits, including SWAT, Narcotics, and the Homicide Division.',
-    bio2:'Chief Osborne has been a strong institutional supporter of the CIB since its establishment, facilitating inter-agency cooperation between LSPD units and CIB detectives during joint investigations and emergency response situations. He has publicly championed intelligence-led policing as the future of urban law enforcement in San Andreas.',
-    service:[{year:'2022 â€“ Present',role:'Chief of Police, LSPD'},{year:'2018 â€“ 2022',role:'Assistant Chief, LSPD'},{year:'2013 â€“ 2018',role:'Commander, LSPD Organized Crime Division'},{year:'2007 â€“ 2013',role:'Captain, LSPD Central Division'}],
-    info:[{lbl:'Full Name',val:'Luke Osborne'},{lbl:'Rank',val:'Chief of Police'},{lbl:'Department',val:'Los Santos Police Department'},{lbl:'Authority',val:'Metropolitan Â· City Command'},{lbl:'Jurisdiction',val:'City of Los Santos'},{lbl:'CIB Relation',val:'CIB Partner Â· Joint Operations'},{lbl:'Status',val:'Active Duty'}]
+    rank:'Chief of Police · City Command',name:'Gwen Naladipha',dept:'Los Santos Police Department',
+    badge:'LSPD · Chief of Police',initials:'GN',img:'images/LSPD_Gwen1.jpg',
+    bio1:'Chief of Police Gwen Naladipha commands the Los Santos Police Department, the primary metropolitan law enforcement body for the City of Los Santos. His jurisdiction encompasses all LSPD precincts, specialized units, and tactical divisions operating within city limits, including SWAT, GRD Division, and the CID Division.',
+    bio2:'Chief Naladipha has been a strong institutional supporter of the CIB since its establishment, facilitating inter-agency cooperation between LSPD units and CIB detectives during joint investigations and emergency response situations. She has publicly championed intelligence-led policing as the future of urban law enforcement in San Andreas.',
+    service:[{year:'May 2026 - Present',role:'Chief of Police, LSPD'},{year:'Feb 2026 - May 2026',role:'Commander Trooper Basic Patrol, SASP'}],
+    info:[{lbl:'Full Name',val:'Gwen Naladipha'},{lbl:'Rank',val:'Chief of Police'},{lbl:'Department',val:'Los Santos Police Department'},{lbl:'Authority',val:'Metropolitan · City Command'},{lbl:'Jurisdiction',val:'City of Los Santos'},{lbl:'CIB Relation',val:'CIB Partner · Joint Operations'},{lbl:'Status',val:'Active Duty'}]
   }
 };
 
