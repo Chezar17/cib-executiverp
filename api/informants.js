@@ -79,13 +79,29 @@ export default async function handler(req, res) {
     //  INFORMANT CRUD (unchanged from original)
     // ═══════════════════════════════════════════════════════
 
-    // ── GET: Load informants ────────────────────────────────
+    // ── GET: Load informants / chat messages ─────────────────
     if (req.method === 'GET') {
+      const chatId = req.query.chat
+
+      // ?chat=directiveId → return chat messages for that directive
+      if (chatId) {
+        const { data, error } = await supabase
+          .from('informants')
+          .select('*')
+          .eq('gang', `__chat__:${chatId}`)
+          .eq('is_deleted', false)
+          .order('code', { ascending: true }) // code = ISO timestamp
+        if (error) throw error
+        return res.status(200).json({ success: true, data })
+      }
+
+      // default → all non-directive, non-chat records
       const { data, error } = await supabase
         .from('informants')
         .select('*')
         .eq('is_deleted', false)
         .neq('gang', '__directive__')
+        .not('gang', 'like', '__chat__%')
         .order('created_at', { ascending: true })
       if (error) throw error
       return res.status(200).json({ success: true, data })

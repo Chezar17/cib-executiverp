@@ -48,12 +48,9 @@
 
 <!-- ── CLASSIFICATION TICKER ── -->
 <div class="dir-class-banner">
-  <div class="dir-class-track">
-    <span>TS/SCI // GIU SPECIAL ACCESS PROGRAM // EYES ONLY // UNAUTHORIZED ACCESS IS A CAPITAL OFFENSE</span>
-    <span>GIU DIRECTIVES // STANDING ORDERS // COMPLIANCE MANDATORY // ALL ACTIVITY LOGGED</span>
-    <span>TS/SCI // GIU SPECIAL ACCESS PROGRAM // EYES ONLY // UNAUTHORIZED ACCESS IS A CAPITAL OFFENSE</span>
-    <span>GIU DIRECTIVES // STANDING ORDERS // COMPLIANCE MANDATORY // ALL ACTIVITY LOGGED</span>
-  </div>
+  <div class="dir-banner-dots"><span></span><span></span><span></span></div>
+  <div class="dir-banner-text">TS/SCI // GIU SPECIAL ACCESS PROGRAM // EYES ONLY // UNAUTHORIZED ACCESS IS A CAPITAL OFFENSE</div>
+  <div class="dir-banner-dots"><span></span><span></span><span></span></div>
 </div>
 
 <!-- ── LAYOUT ── -->
@@ -257,10 +254,10 @@
 </div>
 
 <!-- ════════════════════════════════════════════════
-     DETAIL / VIEW MODAL (all cleared users)
+     DETAIL / VIEW MODAL (all cleared users) + CHAT
 ════════════════════════════════════════════════ -->
 <div class="dir-modal-overlay" id="detailModal">
-  <div class="dir-modal" style="max-width:620px;">
+  <div class="dir-modal" style="max-width:680px;">
     <div class="dir-modal-topbar">
       <div class="dir-modal-topbar-left">
         <div class="dir-modal-dot" style="background:var(--gold);animation:none;"></div>
@@ -271,6 +268,26 @@
     <div class="dir-modal-body" id="detailBody" style="font-family:var(--mono);font-size:11px;line-height:1.8;">
       <!-- filled by JS -->
     </div>
+
+    <!-- CHAT THREAD -->
+    <div class="dir-chat-section" id="chatSection">
+      <div class="dir-chat-header">
+        <span class="dir-chat-title">Field Log / Discussion</span>
+        <span class="dir-chat-count" id="chatCount">0</span>
+      </div>
+      <div class="dir-chat-loading" id="chatLoading">Loading messages...</div>
+      <div class="dir-chat-thread" id="chatThread">
+        <div class="dir-chat-empty" id="chatEmpty">No messages yet. Be the first to log.</div>
+      </div>
+      <div class="dir-chat-compose">
+        <input class="dir-chat-input" id="chatInput" type="text"
+          placeholder="Post a field update, note, or comment..."
+          maxlength="400"
+          onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+        <button class="dir-chat-send" id="chatSendBtn" onclick="sendChatMsg()">Post</button>
+      </div>
+    </div>
+
     <div class="dir-modal-submit-row">
       <button class="dir-modal-cancel" onclick="closeDetailModal()">Close</button>
     </div>
@@ -859,6 +876,152 @@ document.addEventListener('keydown', e => {
     closeCreateModal(); closeUpdateModal(); closeDetailModal()
   }
 })
+
+// ── Button loading state helpers ──────────────────────────
+function setBtnLoading(btn, loading, label) {
+  if (!btn) return
+  if (loading) {
+    btn.dataset.origText = btn.textContent
+    btn.textContent = label || 'Working...'
+    btn.classList.add('btn-loading')
+    btn.disabled = true
+  } else {
+    btn.textContent = btn.dataset.origText || btn.textContent
+    btn.classList.remove('btn-loading')
+    btn.disabled = false
+  }
+}
+
+// ── CHAT ─────────────────────────────────────────────────
+// Messages reuse the informants table:
+//   gang    = '__chat__:{directiveId}'   ← sentinel used by GET filter
+//   name    = callsign of poster
+//   task    = message text
+//   handler = badge of poster
+//   code    = ISO timestamp (used as sort key)
+//   status  = 'chat'
+
+let _chatDirectiveId = null
+
+async function loadChat(directiveId) {
+  _chatDirectiveId = directiveId
+  const loadEl   = document.getElementById('chatLoading')
+  const threadEl = document.getElementById('chatThread')
+  const emptyEl  = document.getElementById('chatEmpty')
+  const countEl  = document.getElementById('chatCount')
+
+  loadEl.classList.add('show')
+  threadEl.querySelectorAll('.dir-chat-msg').forEach(m => m.remove())
+
+  try {
+    const res = await apiFetch('GET', `/api/informants?chat=${encodeURIComponent(directiveId)}`)
+    if (!res.ok) throw new Error('Failed to load')
+
+    const msgs = (res.data?.data || []).sort((a,b) => new Date(a.code) - new Date(b.code))
+    countEl.textContent = msgs.length
+
+    if (!msgs.length) {
+      emptyEl.style.display = 'block'
+    } else {
+      emptyEl.style.display = 'none'
+      const myCallsign = (sessionStorage.getItem('cib_callsign') || '').toUpperCase()
+      msgs.forEach(m => threadEl.appendChild(buildChatMsg(m, myCallsign)))
+      threadEl.scrollTop = threadEl.scrollHeight
+    }
+  } catch(e) {
+    emptyEl.style.display = 'block'
+    emptyEl.textContent = 'Could not load messages.'
+  } finally {
+    loadEl.classList.remove('show')
+  }
+}
+
+function buildChatMsg(m, myCallsign) {
+  const el   = document.createElement('div')
+  const name = (m.name || '').toUpperCase()
+  const isOwn = name === myCallsign
+  el.className = 'dir-chat-msg' + (isOwn ? ' msg-own' : '')
+
+  const ts = m.code ? new Date(m.code).toLocaleString('en-GB', {
+    day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'
+  }) : '—'
+
+  el.innerHTML = `
+    <div class="dir-chat-msg-meta">
+      <span class="dir-chat-msg-author">${escHtml(name)}</span>
+      <span class="dir-chat-msg-time">${ts}</span>
+    </div>
+    <div class="dir-chat-msg-text">${escHtml(m.task || '')}</div>`
+  return el
+}
+
+async function sendChatMsg() {
+  const input   = document.getElementById('chatInput')
+  const sendBtn = document.getElementById('chatSendBtn')
+  const text    = input.value.trim()
+  if (!text || !_chatDirectiveId) return
+
+  const callsign = sessionStorage.getItem('cib_callsign') || CALLSIGN()
+  setBtnLoading(sendBtn, true, '...')
+  input.disabled = true
+
+  try {
+    const res = await apiFetch('POST', '/api/informants', {
+      code:    new Date().toISOString(),
+      name:    callsign,
+      handler: BADGE(),
+      gang:    `__chat__:${_chatDirectiveId}`,
+      task:    text,
+      notes:   '',
+      status:  'chat'
+    })
+    if (!res.ok) throw new Error('Send failed')
+
+    input.value = ''
+    const emptyEl  = document.getElementById('chatEmpty')
+    const threadEl = document.getElementById('chatThread')
+    const countEl  = document.getElementById('chatCount')
+    emptyEl.style.display = 'none'
+
+    const myCallsign = (callsign || '').toUpperCase()
+    const msg = res.data?.data || { code: new Date().toISOString(), name: callsign, task: text }
+    threadEl.appendChild(buildChatMsg(msg, myCallsign))
+    threadEl.scrollTop = threadEl.scrollHeight
+
+    const current = parseInt(countEl.textContent) || 0
+    countEl.textContent = current + 1
+  } catch(e) {
+    showToast('Failed to send message', 'error')
+  } finally {
+    setBtnLoading(sendBtn, false)
+    input.disabled = false
+    input.focus()
+  }
+}
+
+async function apiFetch(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN() }
+  }
+  if (body) opts.body = JSON.stringify(body)
+  const res  = await fetch(path, opts)
+  const data = await res.json().catch(() => ({}))
+  return { ok: res.ok, status: res.status, data }
+}
+
+// Patch openDetailModal to load chat whenever the modal opens
+const _origOpenDetail = openDetailModal
+window.openDetailModal = function(id) {
+  _origOpenDetail(id)
+  const threadEl = document.getElementById('chatThread')
+  threadEl.querySelectorAll('.dir-chat-msg').forEach(m => m.remove())
+  document.getElementById('chatEmpty').style.display = 'block'
+  document.getElementById('chatEmpty').textContent = 'No messages yet. Be the first to log.'
+  document.getElementById('chatCount').textContent = '0'
+  document.getElementById('chatInput').value = ''
+  loadChat(id)
+}
 </script>
 
 </body>
