@@ -13,6 +13,11 @@
 //  PUT    /api/informants?type=directive           → update directive  [top_secret only]
 //  DELETE /api/informants?type=directive&id=xxx   → delete directive  [top_secret only]
 //
+//  GET    /api/informants?type=member             → fetch all members (full_name redacted for secret)
+//  POST   /api/informants?type=member             → create member     [top_secret only]
+//  PUT    /api/informants?type=member             → update member     [top_secret only]
+//  DELETE /api/informants?type=member&id=xxx      → delete member     [top_secret only]
+//
 //  DIRECTIVES use the informants table with gang = '__directive__'
 //  Extra fields stored in task (JSON stringified):
 //  {
@@ -70,10 +75,10 @@ export default async function handler(req, res) {
     if (!allowMethods(req, res, ['GET', 'POST', 'PUT', 'DELETE'])) return
 
     const isDirective = req.query.type === 'directive'
+    const isMember    = req.query.type === 'member'
 
-    if (isDirective) {
-      return handleDirective(req, res, supabase, session)
-    }
+    if (isDirective) return handleDirective(req, res, supabase, session)
+    if (isMember)    return handleMember(req, res, supabase, session)
 
     // ═══════════════════════════════════════════════════════
     //  INFORMANT CRUD (unchanged from original)
@@ -332,6 +337,162 @@ async function handleDirective(req, res, supabase, session) {
 
     if (error) throw error
 
+    return res.status(200).json({ success: true })
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' })
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  GIU MEMBER CRUD
+//  Reuses the informants table with gang = '__member__'
+//  Data stored in task (JSON):
+//  {
+//    callsign,               ← display name / operative handle
+//    full_name,              ← real name — REDACTED for secret cls
+//    biography,              ← background text
+//    expertise,              ← comma-separated tags
+//    photo_filename,         ← e.g. "phantom.jpg" → served from /images/
+//    added_by,               ← callsign of creator
+//  }
+//
+//  Classification gate:
+//    top_secret  → full CRUD + sees full_name
+//    secret      → GET only, full_name is redacted
+//    anything else → 403
+// ═══════════════════════════════════════════════════════════
+async function handleMember(req, res, supabase, session) {
+  const userMeta = await getUserClassification(supabase, session.badge)
+  const cls      = (userMeta.classification || '').toLowerCase()
+  const isTS     = cls === TOP_SECRET
+
+  if (cls !== TOP_SECRET && cls !== SECRET) {
+    return res.status(403).json({ error: 'Insufficient clearance to access GIU member registry.' })
+  }
+
+  // ── GET: Fetch all members ────────────────────────────────
+  if (req.method === 'GET') {
+    const { data, error } = await supabase
+      .from('informants')
+      .select('*')
+      .eq('gang', '__member__')
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+
+    const parsed = (data || []).map(row => {
+      const m = safeParseJson(row.task)
+      // Redact full_name for non-top-secret users
+      if (!isTS) m.full_name = null
+      return { ...row, _member: m }
+    })
+
+    return res.status(200).json({ success: true, data: parsed })
+  }
+
+  // Write operations: top_secret only
+  if (!isTS) {
+    return res.status(403).json({ error: 'Only TOP SECRET personnel can modify GIU member records.' })
+  }
+
+  // ── POST: Create new member ───────────────────────────────
+  if (req.method === 'POST') {
+    const { callsign, full_name, biography, expertise, photo_filename } = req.body
+
+    if (!callsign || !callsign.trim()) {
+      return res.status(400).json({ error: 'Callsign is required.' })
+    }
+
+    const creatorCallsign = userMeta.callsign || session.badge
+
+    const payload = {
+      callsign:       callsign.trim().toUpperCase(),
+      full_name:      full_name      || null,
+      biography:      biography      || null,
+      expertise:      expertise      || null,
+      photo_filename: photo_filename || null,
+      added_by:       creatorCallsign,
+    }
+
+    const { data, error } = await supabase
+      .from('informants')
+      .insert([{
+        code:       `MBR-${Date.now()}`,   // unique code
+        name:       callsign.trim().toUpperCase(),
+        gang:       '__member__',
+        handler:    session.badge,
+        notes:      creatorCallsign,
+        status:     'active',
+        task:       JSON.stringify(payload),
+        is_deleted: false,
+      }])
+      .select()
+      .single()
+
+    if (error) throw error
+    return res.status(201).json({ success: true, data: { ...data, _member: payload } })
+  }
+
+  // ── PUT: Update member ────────────────────────────────────
+  if (req.method === 'PUT') {
+    const { id, callsign, full_name, biography, expertise, photo_filename } = req.body
+    if (!id) return res.status(400).json({ error: 'ID is required.' })
+
+    if (!callsign || !callsign.trim()) {
+      return res.status(400).json({ error: 'Callsign is required.' })
+    }
+
+    // Fetch current row to merge
+    const { data: existing } = await supabase
+      .from('informants')
+      .select('task')
+      .eq('id', id)
+      .eq('gang', '__member__')
+      .single()
+
+    const current = safeParseJson(existing?.task) || {}
+
+    const updatedPayload = {
+      ...current,
+      callsign:       callsign.trim().toUpperCase(),
+      full_name:      full_name      !== undefined ? full_name      : current.full_name,
+      biography:      biography      !== undefined ? biography      : current.biography,
+      expertise:      expertise      !== undefined ? expertise      : current.expertise,
+      photo_filename: photo_filename !== undefined ? photo_filename : current.photo_filename,
+    }
+
+    const { data, error } = await supabase
+      .from('informants')
+      .update({
+        name: callsign.trim().toUpperCase(),
+        task: JSON.stringify(updatedPayload),
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return res.status(200).json({ success: true, data: { ...data, _member: updatedPayload } })
+  }
+
+  // ── DELETE: Soft delete member ────────────────────────────
+  if (req.method === 'DELETE') {
+    const { id } = req.query
+    if (!id) return res.status(400).json({ error: 'ID is required.' })
+
+    const { error } = await supabase
+      .from('informants')
+      .update({
+        is_deleted: true,
+        deleted_by: session.badge,
+        deleted_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('gang', '__member__')
+
+    if (error) throw error
     return res.status(200).json({ success: true })
   }
 

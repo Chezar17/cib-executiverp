@@ -95,6 +95,18 @@
     </div>
   </div>
 
+  <!-- Section tabs — shown after auth -->
+  <div class="dir-section-tabs" id="dirSectionTabs" style="display:none;">
+    <button class="dir-section-tab active" id="tabDirectives" onclick="switchTab('directives', this)">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+      Directives
+    </button>
+    <button class="dir-section-tab" id="tabMembers" onclick="switchTab('members', this)">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      GIU Members
+    </button>
+  </div>
+
   <!-- Toolbar -->
   <div class="dir-toolbar" id="dirToolbar" style="display:none;">
     <div class="dir-filter-group">
@@ -126,6 +138,31 @@
       <div class="skel-line short"></div><div class="skel-line med"></div>
       <div class="skel-line full"></div>
     </div>
+  </div>
+
+
+  <!-- ════════════════════
+       GIU MEMBERS SECTION
+  ════════════════════ -->
+  <div id="membersSection" style="display:none;">
+
+    <!-- Members toolbar -->
+    <div class="dir-toolbar" id="membersToolbar">
+      <span class="dir-members-count" id="membersCount">— members</span>
+      <div class="dir-toolbar-sep"></div>
+      <button class="dir-new-btn hidden" id="btnNewMember" onclick="openMemberModal()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Add Member
+      </button>
+    </div>
+
+    <!-- Members grid -->
+    <div class="dir-members-grid" id="membersGrid">
+      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
+      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
+      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line full"></div></div>
+    </div>
+
   </div>
 
 </div><!-- /dir-layout -->
@@ -294,6 +331,82 @@
   </div>
 </div>
 
+
+<!-- ════════════════════════════════════════════════
+     CREATE / EDIT MEMBER MODAL (top_secret only)
+════════════════════════════════════════════════ -->
+<div class="dir-modal-overlay" id="memberModal">
+  <div class="dir-modal" style="border-top-color:var(--gold);max-width:620px;">
+    <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
+      <div class="dir-modal-topbar-left">
+        <div class="dir-modal-dot" style="background:var(--gold);animation:none;"></div>
+        <span class="dir-modal-label" style="color:var(--gold);" id="memberModalLabel">GIU · ADD MEMBER</span>
+      </div>
+      <button class="dir-modal-close" onclick="closeMemberModal()">✕</button>
+    </div>
+    <div class="dir-modal-body">
+
+      <div class="dir-form-row">
+        <div class="dir-form-group">
+          <label class="dir-form-label" style="color:var(--gold);">Callsign <span style="color:var(--red);">*</span></label>
+          <input class="dir-form-input" type="text" id="mCallsign" placeholder="e.g. PHANTOM" style="text-transform:uppercase;"/>
+        </div>
+        <div class="dir-form-group">
+          <label class="dir-form-label" style="color:var(--gold);">Full Name</label>
+          <input class="dir-form-input" type="text" id="mFullName" placeholder="e.g. Diraj Lakota"/>
+          <div class="dir-form-hint">Not visible to Secret clearance users</div>
+        </div>
+      </div>
+
+      <div class="dir-form-group">
+        <label class="dir-form-label" style="color:var(--gold);">Biography</label>
+        <textarea class="dir-form-textarea" id="mBio" rows="3"
+          placeholder="Operational background, history, field experience..."></textarea>
+      </div>
+
+      <div class="dir-form-group">
+        <label class="dir-form-label" style="color:var(--gold);">Expertise</label>
+        <input class="dir-form-input" type="text" id="mExpertise" placeholder="e.g. Surveillance, Interrogation, Intel Analysis"/>
+        <div class="dir-form-hint">Separate multiple skills with commas — each becomes a tag</div>
+      </div>
+
+      <div class="dir-form-group">
+        <label class="dir-form-label" style="color:var(--gold);">Photo Filename</label>
+        <input class="dir-form-input" type="text" id="mPhoto" placeholder="e.g. phantom.jpg"/>
+        <div class="dir-form-hint">Place the 1:1 photo in your <code style="color:var(--gold);font-size:10px;">/images/</code> folder, then enter the filename here</div>
+      </div>
+
+    </div>
+    <div class="dir-modal-error" id="memberModalError"></div>
+    <div class="dir-modal-submit-row">
+      <button class="dir-modal-cancel" onclick="closeMemberModal()">Cancel</button>
+      <button class="dir-modal-submit" id="memberModalSubmit" onclick="submitMember()"
+        style="background:var(--gold);color:#000;">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MEMBER DETAIL MODAL (read-only for secret)
+════════════════════════════════════════════════ -->
+<div class="dir-modal-overlay" id="memberDetailModal">
+  <div class="dir-modal" style="border-top-color:var(--gold);max-width:540px;">
+    <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
+      <div class="dir-modal-topbar-left">
+        <div class="dir-modal-dot" style="background:var(--gold);animation:none;"></div>
+        <span class="dir-modal-label" style="color:var(--gold);">GIU · MEMBER FILE — <span id="memberDetailCallsign">—</span></span>
+      </div>
+      <button class="dir-modal-close" onclick="closeMemberDetailModal()">✕</button>
+    </div>
+    <div class="dir-modal-body" id="memberDetailBody">
+      <!-- filled by JS -->
+    </div>
+    <div class="dir-modal-submit-row">
+      <button class="dir-modal-cancel" onclick="closeMemberDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="dir-toast"></div>
 
@@ -349,6 +462,12 @@ PortalAuth.init({
 
     startDirClock()
     await loadDirectives()
+
+    // Show section tabs + "Add Member" button for TS
+    document.getElementById('dirSectionTabs').style.display = 'flex'
+    if (_isTopSecret) {
+      document.getElementById('btnNewMember').classList.remove('hidden')
+    }
   }
 })
 
@@ -874,7 +993,14 @@ document.getElementById('detailModal').addEventListener('click', function(e) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeCreateModal(); closeUpdateModal(); closeDetailModal()
+    closeMemberModal(); closeMemberDetailModal()
   }
+})
+document.getElementById('memberModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMemberModal()
+})
+document.getElementById('memberDetailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMemberDetailModal()
 })
 
 // ── Button loading state helpers ──────────────────────────
@@ -1021,6 +1147,269 @@ async function apiFetch(method, path, body) {
   const res  = await fetch(path, opts)
   const data = await res.json().catch(() => ({}))
   return { ok: res.ok, status: res.status, data }
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  GIU MEMBERS — uses /api/informants?type=member
+// ════════════════════════════════════════════════════════════
+
+let _allMembers     = []
+let _editingMemberId = null
+let _membersLoaded  = false
+
+// ── Section tab switcher ──────────────────────────────────
+function switchTab(tab, el) {
+  document.querySelectorAll('.dir-section-tab').forEach(b => b.classList.remove('active'))
+  if (el) el.classList.add('active')
+
+  const dirGrid     = document.getElementById('dirGrid')
+  const dirToolbar  = document.getElementById('dirToolbar')
+  const membersEl   = document.getElementById('membersSection')
+
+  if (tab === 'directives') {
+    dirGrid.style.display    = ''
+    dirToolbar.style.display = 'flex'
+    membersEl.style.display  = 'none'
+  } else {
+    dirGrid.style.display    = 'none'
+    dirToolbar.style.display = 'none'
+    membersEl.style.display  = ''
+    if (!_membersLoaded) loadMembers()
+  }
+}
+
+// ── API ───────────────────────────────────────────────────
+async function loadMembers() {
+  _membersLoaded = true
+  const grid = document.getElementById('membersGrid')
+  grid.innerHTML = `
+    <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
+    <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line full"></div></div>`
+
+  try {
+    const res  = await apiFetch('GET', '/api/informants?type=member')
+    if (!res.ok) throw new Error(res.data?.error || 'Fetch failed')
+    _allMembers = res.data.data || []
+    renderMembers()
+  } catch (e) {
+    grid.innerHTML = `<div class="dir-empty" style="grid-column:1/-1;"><div class="dir-empty-title">Load Error</div><div class="dir-empty-sub">${escHtml(e.message)}</div></div>`
+  }
+}
+
+// ── Render member cards ───────────────────────────────────
+function renderMembers() {
+  const grid     = document.getElementById('membersGrid')
+  const countEl  = document.getElementById('membersCount')
+  if (countEl) countEl.textContent = `${_allMembers.length} member${_allMembers.length !== 1 ? 's' : ''}`
+
+  if (!_allMembers.length) {
+    grid.innerHTML = `<div class="dir-empty" style="grid-column:1/-1;">
+      <div class="dir-empty-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+      <div class="dir-empty-title">No Members on Record</div>
+      <div class="dir-empty-sub">${_isTopSecret ? 'Add the first GIU member using the button above.' : 'No GIU members have been registered yet.'}</div>
+    </div>`
+    return
+  }
+
+  grid.innerHTML = _allMembers.map((m, i) => buildMemberCard(m, i)).join('')
+}
+
+function buildMemberCard(row, index) {
+  const m         = row._member || {}
+  const callsign  = escHtml(m.callsign || row.name || '—')
+  const hasPhoto  = !!m.photo_filename
+  const photoSrc  = hasPhoto ? `../images/${escHtml(m.photo_filename)}` : null
+  const tags      = (m.expertise || '').split(',').map(e => e.trim()).filter(Boolean)
+  const tagHTML   = tags.map(t => `<span class="dir-member-tag">${escHtml(t)}</span>`).join('')
+
+  // full_name: top_secret sees it, secret sees [REDACTED]
+  const nameLine = _isTopSecret && m.full_name
+    ? `<div class="dir-member-fullname">${escHtml(m.full_name)}</div>`
+    : _isTopSecret
+      ? '' // TS but no name set
+      : `<div class="dir-member-fullname redacted">[ FULL NAME REDACTED ]</div>`
+
+  const tsBadge  = !_isTopSecret ? '' : `<span class="dir-member-ts-label">TS EYES ONLY</span>`
+
+  const tsActions = _isTopSecret
+    ? `<button class="dir-card-btn" onclick="openEditMember('${row.id}')" style="color:var(--gold);border-color:rgba(201,168,76,0.2);">Edit</button>
+       <button class="dir-card-btn" onclick="confirmDeleteMember('${row.id}')" style="color:rgba(192,57,43,0.6);">Delete</button>`
+    : ''
+
+  return `
+    <div class="dir-member-card" style="animation-delay:${index * 50}ms">
+      <div class="dir-member-photo-wrap">
+        ${hasPhoto
+          ? `<img class="dir-member-photo" src="${photoSrc}" alt="${callsign}" onerror="this.parentElement.innerHTML='<div class=\"dir-member-photo-placeholder\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\"/></svg></div>'"/>`
+          : `<div class="dir-member-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
+        }
+      </div>
+      <div class="dir-member-info">
+        <div class="dir-member-callsign">${callsign}</div>
+        ${nameLine}
+        ${tsBadge}
+      </div>
+      ${m.biography ? `<div class="dir-member-bio">${escHtml(m.biography)}</div>` : ''}
+      ${tags.length ? `<div class="dir-member-tags">${tagHTML}</div>` : ''}
+      <div class="dir-card-actions">
+        <button class="dir-card-btn" onclick="openMemberDetail('${row.id}')">View File</button>
+        ${tsActions}
+      </div>
+    </div>`
+}
+
+// ── Member detail modal ───────────────────────────────────
+function openMemberDetail(id) {
+  const row = _allMembers.find(x => x.id === id)
+  if (!row) return
+  const m = row._member || {}
+
+  document.getElementById('memberDetailCallsign').textContent = m.callsign || '—'
+
+  const hasPhoto = !!m.photo_filename
+  const photoSrc = hasPhoto ? `../images/${escHtml(m.photo_filename)}` : null
+
+  const tags    = (m.expertise || '').split(',').map(e => e.trim()).filter(Boolean)
+  const tagHTML = tags.map(t => `<span class="dir-member-tag">${escHtml(t)}</span>`).join('')
+
+  const fullNameRow = _isTopSecret
+    ? `<div class="dir-member-detail-row">
+        <div class="dir-member-detail-label">Full Name</div>
+        <div class="dir-member-detail-val">${escHtml(m.full_name || '—')}</div>
+       </div>`
+    : `<div class="dir-member-detail-row">
+        <div class="dir-member-detail-label">Full Name</div>
+        <div class="dir-member-detail-val redacted">[ REDACTED — INSUFFICIENT CLEARANCE ]</div>
+       </div>`
+
+  document.getElementById('memberDetailBody').innerHTML = `
+    <div class="dir-member-detail-photo-wrap">
+      ${hasPhoto
+        ? `<img class="dir-member-detail-photo" src="${photoSrc}" alt="${escHtml(m.callsign || '')}"/>`
+        : `<div class="dir-member-detail-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
+      }
+    </div>
+    ${fullNameRow}
+    <div class="dir-member-detail-row">
+      <div class="dir-member-detail-label">Callsign</div>
+      <div class="dir-member-detail-val" style="color:var(--gold);letter-spacing:2px;">${escHtml(m.callsign || '—')}</div>
+    </div>
+    ${m.biography ? `<div class="dir-member-detail-row">
+      <div class="dir-member-detail-label">Biography</div>
+      <div class="dir-member-detail-val" style="line-height:1.8;">${escHtml(m.biography)}</div>
+    </div>` : ''}
+    ${tags.length ? `<div class="dir-member-detail-row">
+      <div class="dir-member-detail-label">Expertise</div>
+      <div class="dir-member-tags" style="margin-top:4px;">${tagHTML}</div>
+    </div>` : ''}
+    <div class="dir-member-detail-row" style="opacity:0.4;">
+      <div class="dir-member-detail-label">Added by</div>
+      <div class="dir-member-detail-val">${escHtml(m.added_by || '—')}</div>
+    </div>`
+
+  document.getElementById('memberDetailModal').classList.add('open')
+}
+function closeMemberDetailModal() { document.getElementById('memberDetailModal').classList.remove('open') }
+
+// ── Create / Edit modal ───────────────────────────────────
+function openMemberModal() {
+  if (!_isTopSecret) return
+  _editingMemberId = null
+  document.getElementById('mCallsign').value  = ''
+  document.getElementById('mFullName').value  = ''
+  document.getElementById('mBio').value       = ''
+  document.getElementById('mExpertise').value = ''
+  document.getElementById('mPhoto').value     = ''
+  document.getElementById('memberModalLabel').textContent  = 'GIU · ADD MEMBER'
+  document.getElementById('memberModalSubmit').textContent = 'Add Member'
+  document.getElementById('memberModalSubmit').onclick     = submitMember
+  setModalError('memberModalError', '')
+  document.getElementById('memberModal').classList.add('open')
+  setTimeout(() => document.getElementById('mCallsign').focus(), 80)
+}
+
+function openEditMember(id) {
+  if (!_isTopSecret) return
+  const row = _allMembers.find(x => x.id === id)
+  if (!row) return
+  const m = row._member || {}
+
+  _editingMemberId = id
+  document.getElementById('mCallsign').value  = m.callsign       || ''
+  document.getElementById('mFullName').value  = m.full_name      || ''
+  document.getElementById('mBio').value       = m.biography      || ''
+  document.getElementById('mExpertise').value = m.expertise      || ''
+  document.getElementById('mPhoto').value     = m.photo_filename || ''
+  document.getElementById('memberModalLabel').textContent  = 'GIU · EDIT MEMBER — ' + (m.callsign || '')
+  document.getElementById('memberModalSubmit').textContent = 'Save Changes'
+  document.getElementById('memberModalSubmit').onclick     = submitMember
+  setModalError('memberModalError', '')
+  document.getElementById('memberModal').classList.add('open')
+}
+
+function closeMemberModal() {
+  document.getElementById('memberModal').classList.remove('open')
+  _editingMemberId = null
+}
+
+async function submitMember() {
+  const callsign  = document.getElementById('mCallsign').value.trim().toUpperCase()
+  const full_name = document.getElementById('mFullName').value.trim()
+  const biography = document.getElementById('mBio').value.trim()
+  const expertise = document.getElementById('mExpertise').value.trim()
+  const photo     = document.getElementById('mPhoto').value.trim()
+
+  if (!callsign) return setModalError('memberModalError', 'CALLSIGN IS REQUIRED')
+
+  const btn = document.getElementById('memberModalSubmit')
+  setBtnLoading(btn, true, _editingMemberId ? 'Saving...' : 'Adding...')
+
+  const body = { callsign, full_name, biography, expertise, photo_filename: photo }
+  if (_editingMemberId) body.id = _editingMemberId
+
+  const method = _editingMemberId ? 'PUT' : 'POST'
+
+  try {
+    const res = await apiFetch(method, '/api/informants?type=member', body)
+    if (!res.ok) throw new Error(res.data?.error || 'Request failed')
+
+    if (_editingMemberId) {
+      const idx = _allMembers.findIndex(x => x.id === _editingMemberId)
+      if (idx !== -1) _allMembers[idx] = res.data.data
+    } else {
+      _allMembers.push(res.data.data)
+    }
+
+    renderMembers()
+    closeMemberModal()
+    showToast(_editingMemberId ? 'Member updated.' : 'Member added.', 'success')
+  } catch (e) {
+    setModalError('memberModalError', e.message.toUpperCase())
+    setBtnLoading(btn, false)
+  }
+}
+
+// ── Delete member ─────────────────────────────────────────
+function confirmDeleteMember(id) {
+  if (!_isTopSecret) return
+  const row = _allMembers.find(x => x.id === id)
+  if (!row) return
+  const m = row._member || {}
+  if (!confirm(`Remove GIU member "${m.callsign || id}" from the registry?\n\nThis cannot be undone.`)) return
+  doDeleteMember(id)
+}
+
+async function doDeleteMember(id) {
+  try {
+    const res = await apiFetch('DELETE', `/api/informants?type=member&id=${id}`)
+    if (!res.ok) throw new Error(res.data?.error || 'Delete failed')
+    _allMembers = _allMembers.filter(x => x.id !== id)
+    renderMembers()
+    showToast('Member removed from registry.', 'info')
+  } catch (e) {
+    showToast('Delete failed: ' + e.message, 'error')
+  }
 }
 
 // Patch openDetailModal to load chat whenever the modal opens
