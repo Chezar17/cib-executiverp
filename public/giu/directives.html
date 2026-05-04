@@ -501,13 +501,9 @@ function buildCard(d, index) {
         ${escHtml(dir.outcome_note)}
        </div>` : ''
 
-  // Edit is only shown to the user who originally issued the directive.
-  // d.notes stores the issuer's callsign (set on create by the backend).
-  const isIssuer = _isTopSecret && (d.notes || '').toLowerCase() === (_userCallsign || '').toLowerCase()
-
   const tsActions = _isTopSecret
     ? `<button class="dir-card-btn" onclick="openUpdateModal('${d.id}')">Update</button>
-       ${isIssuer ? `<button class="dir-card-btn" onclick="openEditModal('${d.id}')" style="color:var(--gold);border-color:rgba(201,168,76,0.2);">Edit</button>` : ''}
+       <button class="dir-card-btn" onclick="openEditModal('${d.id}')" style="color:var(--gold);border-color:rgba(201,168,76,0.2);">Edit</button>
        <button class="dir-card-btn" onclick="confirmDelete('${d.id}')" style="color:rgba(192,57,43,0.6);">Delete</button>`
     : ''
 
@@ -669,19 +665,11 @@ async function submitCreateDirective() {
   }
 }
 
-// ── EDIT MODAL — only the user who issued the directive can edit it ──
+// ── EDIT MODAL (re-use create modal for editing title/desc/etc) ──
 function openEditModal(id) {
   if (!_isTopSecret) return
   const d = _allDirectives.find(x => x.id === id)
   if (!d) return
-
-  // d.notes = issuer callsign set at create time. Compare case-insensitively.
-  const isIssuer = (d.notes || '').toLowerCase() === (_userCallsign || '').toLowerCase()
-  if (!isIssuer) {
-    showToast('Only the issuing officer can edit this directive.', 'error')
-    return
-  }
-
   const dir = d._directive || {}
 
   document.getElementById('dTitle').value    = d.name || ''
@@ -926,6 +914,7 @@ async function loadChat(directiveId) {
   threadEl.querySelectorAll('.dir-chat-msg').forEach(m => m.remove())
 
   try {
+    // Use getToken() directly — apiFetch wraps token automatically
     const res  = await fetch(`/api/informants?chat=${encodeURIComponent(directiveId)}`, {
       headers: { 'x-session-token': getToken() }
     })
@@ -940,7 +929,7 @@ async function loadChat(directiveId) {
       emptyEl.textContent   = 'No messages yet. Be the first to log.'
     } else {
       emptyEl.style.display = 'none'
-      // Compare uppercase so "Viper" === "VIPER" for own-message highlight
+      // _userCallsign is always set by onReady before any modal can open
       const myCallsign = (_userCallsign || '').toUpperCase()
       msgs.forEach(m => threadEl.appendChild(buildChatMsg(m, myCallsign)))
       threadEl.scrollTop = threadEl.scrollHeight
@@ -978,7 +967,7 @@ async function sendChatMsg() {
   const text    = input.value.trim()
   if (!text || !_chatDirectiveId) return
 
-  // _userCallsign is always set in onReady — this is what shows in Field Log
+  // _userCallsign is set in onReady — always use that
   const callsign = _userCallsign || sessionStorage.getItem('cib_badge') || '—'
   const badge    = sessionStorage.getItem('cib_badge') || ''
 
@@ -988,8 +977,8 @@ async function sendChatMsg() {
   try {
     const res = await apiFetch('POST', '/api/informants', {
       code:    new Date().toISOString(),   // ISO timestamp used as sort key
-      name:    callsign,                   // callsign — shown in Field Log author
-      handler: badge,                      // badge stored internally, not displayed
+      name:    callsign,
+      handler: badge,
       gang:    `__chat__:${_chatDirectiveId}`,
       task:    text,
       notes:   '',
@@ -1003,8 +992,7 @@ async function sendChatMsg() {
     const countEl  = document.getElementById('chatCount')
     emptyEl.style.display = 'none'
 
-    // Optimistic append — use callsign so it matches what the server stored
-    const myCallsign = callsign.toUpperCase()
+    const myCallsign = (callsign || '').toUpperCase()
     const msg = res.data?.data || { code: new Date().toISOString(), name: callsign, task: text }
     threadEl.appendChild(buildChatMsg(msg, myCallsign))
     threadEl.scrollTop = threadEl.scrollHeight
@@ -1020,13 +1008,13 @@ async function sendChatMsg() {
   }
 }
 
-// ── Central fetch helper ───────────────────────────────────
+// ── Central fetch helper — uses getToken() which is always defined ──
 async function apiFetch(method, path, body) {
   const opts = {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'x-session-token': getToken()   // ← was TOKEN() which doesn't exist
+      'x-session-token': getToken()        // ← fixed: was TOKEN() which doesn't exist
     }
   }
   if (body) opts.body = JSON.stringify(body)
