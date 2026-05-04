@@ -914,23 +914,29 @@ async function loadChat(directiveId) {
   threadEl.querySelectorAll('.dir-chat-msg').forEach(m => m.remove())
 
   try {
-    const res = await apiFetch('GET', `/api/informants?chat=${encodeURIComponent(directiveId)}`)
+    // Use getToken() directly — apiFetch wraps token automatically
+    const res  = await fetch(`/api/informants?chat=${encodeURIComponent(directiveId)}`, {
+      headers: { 'x-session-token': getToken() }
+    })
     if (!res.ok) throw new Error('Failed to load')
+    const json = await res.json()
 
-    const msgs = (res.data?.data || []).sort((a,b) => new Date(a.code) - new Date(b.code))
+    const msgs = (json.data || []).sort((a, b) => new Date(a.code) - new Date(b.code))
     countEl.textContent = msgs.length
 
     if (!msgs.length) {
       emptyEl.style.display = 'block'
+      emptyEl.textContent   = 'No messages yet. Be the first to log.'
     } else {
       emptyEl.style.display = 'none'
-      const myCallsign = (sessionStorage.getItem('cib_callsign') || '').toUpperCase()
+      // _userCallsign is always set by onReady before any modal can open
+      const myCallsign = (_userCallsign || '').toUpperCase()
       msgs.forEach(m => threadEl.appendChild(buildChatMsg(m, myCallsign)))
       threadEl.scrollTop = threadEl.scrollHeight
     }
   } catch(e) {
     emptyEl.style.display = 'block'
-    emptyEl.textContent = 'Could not load messages.'
+    emptyEl.textContent   = 'Could not load messages.'
   } finally {
     loadEl.classList.remove('show')
   }
@@ -961,21 +967,24 @@ async function sendChatMsg() {
   const text    = input.value.trim()
   if (!text || !_chatDirectiveId) return
 
-  const callsign = sessionStorage.getItem('cib_callsign') || CALLSIGN()
+  // _userCallsign is set in onReady — always use that
+  const callsign = _userCallsign || sessionStorage.getItem('cib_badge') || '—'
+  const badge    = sessionStorage.getItem('cib_badge') || ''
+
   setBtnLoading(sendBtn, true, '...')
   input.disabled = true
 
   try {
     const res = await apiFetch('POST', '/api/informants', {
-      code:    new Date().toISOString(),
+      code:    new Date().toISOString(),   // ISO timestamp used as sort key
       name:    callsign,
-      handler: BADGE(),
+      handler: badge,
       gang:    `__chat__:${_chatDirectiveId}`,
       task:    text,
       notes:   '',
       status:  'chat'
     })
-    if (!res.ok) throw new Error('Send failed')
+    if (!res.ok) throw new Error(res.data?.error || 'Send failed')
 
     input.value = ''
     const emptyEl  = document.getElementById('chatEmpty')
@@ -991,7 +1000,7 @@ async function sendChatMsg() {
     const current = parseInt(countEl.textContent) || 0
     countEl.textContent = current + 1
   } catch(e) {
-    showToast('Failed to send message', 'error')
+    showToast('Failed to send message: ' + e.message, 'error')
   } finally {
     setBtnLoading(sendBtn, false)
     input.disabled = false
@@ -999,10 +1008,14 @@ async function sendChatMsg() {
   }
 }
 
+// ── Central fetch helper — uses getToken() which is always defined ──
 async function apiFetch(method, path, body) {
   const opts = {
     method,
-    headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN() }
+    headers: {
+      'Content-Type': 'application/json',
+      'x-session-token': getToken()        // ← fixed: was TOKEN() which doesn't exist
+    }
   }
   if (body) opts.body = JSON.stringify(body)
   const res  = await fetch(path, opts)
