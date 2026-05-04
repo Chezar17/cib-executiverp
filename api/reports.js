@@ -7,49 +7,76 @@ import { allowMethods }   from './_lib/http.js'
 import { requireSession } from './_lib/session.js'
 import { getSupabase }    from './_lib/supabase.js'
 import { getNextCaseNumber } from './_lib/ir-case-number.js'
+import { jsonApiError } from './_lib/api-error.js'
+
+function actorFrom(req, session) {
+  return req.headers['x-actor'] || session.badge || null
+}
+
+/** Server-owned audit fields for ir_* child rows (never trust client). */
+function irSubRowAudit(actor) {
+  const now = new Date().toISOString()
+  return {
+    created_by: actor,
+    modified_at: now,
+    modified_by: actor,
+    updated_at: now,
+    is_deleted: false,
+  }
+}
 
 export default async function handler(req, res) {
-  if (!allowMethods(req, res, ['GET', 'POST', 'OPTIONS'])) return
-  const session = await requireSession(req, res)
-  if (!session) return
+  try {
+    if (!allowMethods(req, res, ['GET', 'POST', 'OPTIONS'])) return
+    const session = await requireSession(req, res)
+    if (!session) return
 
-  const supabase = getSupabase()
+    const supabase = getSupabase()
 
-  // ── GET: next case number (preview for new form) ─────────
-  if (req.method === 'GET' && (req.query?.nextCaseNumber === '1' || req.query?.next === '1')) {
-    try {
-      const next_case_number = await getNextCaseNumber(supabase)
-      return res.status(200).json({ next_case_number })
-    } catch (e) {
-      return res.status(500).json({ error: e?.message || 'Next case number failed' })
+    // ── GET: next case number (preview for new form) ─────────
+    if (req.method === 'GET' && (req.query?.nextCaseNumber === '1' || req.query?.next === '1')) {
+      try {
+        const next_case_number = await getNextCaseNumber(supabase)
+        return res.status(200).json({ next_case_number })
+      } catch (e) {
+        return jsonApiError(res, 500, e?.message || 'Next case number failed', {
+          cause: e,
+          context: 'reports GET nextCaseNumber',
+        })
+      }
     }
-  }
 
-  // ── GET: list reports ────────────────────────────────────
-  if (req.method === 'GET') {
-    const { data, error } = await supabase
-      .from('investigation_reports')
-      .select('id,case_number,case_title,category,offense_type,date_of_offense,case_status,lead_investigators,created_at')
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: false })
+    // ── GET: list reports ────────────────────────────────────
+    if (req.method === 'GET') {
+      const { data, error } = await supabase
+        .from('investigation_reports')
+        .select(
+          'id,case_number,case_title,category,offense_type,date_of_offense,case_status,lead_investigators,created_at,created_by,updated_at,modified_at,modified_by,is_deleted',
+        )
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: false })
 
-    if (error) return res.status(500).json({ error: error.message })
-    return res.status(200).json({ reports: data || [] })
-  }
+      if (error) {
+        return jsonApiError(res, 500, 'Failed to list investigation reports', {
+          supabase: error,
+          context: 'reports GET list',
+        })
+      }
+      return res.status(200).json({ reports: data || [] })
+    }
 
-  // ── POST: create new report ──────────────────────────────
-  if (req.method === 'POST') {
-    const {
-      // Sub-item arrays (extracted before inserting main row)
-      victims = [], suspects = [], witnesses = [],
-      evidences = [], debrief_entries = [],
-      // Everything else goes into the main table
-      ...main
-    } = req.body || {}
+    // ── POST: create new report ──────────────────────────────
+    if (req.method === 'POST') {
+      const {
+        victims = [], suspects = [], witnesses = [],
+        evidences = [], debrief_entries = [],
+        ...main
+      } = req.body || {}
 
-    // Sanitize main fields
-    const nextCase = await getNextCaseNumber(supabase)
-    const row = {
+      const nextCase = await getNextCaseNumber(supabase)
+      const actor = actorFrom(req, session)
+      const nowIso = new Date().toISOString()
+      const row = {
       case_number:              nextCase,
       case_title:               main.case_title               || null,
       category:                 main.category                 || 'A',
@@ -101,50 +128,89 @@ export default async function handler(req, res) {
       detective_referred_to:    main.detective_referred_to    || null,
       detective_date_referral:  main.detective_date_referral  || null,
       is_deleted:               false,
-      created_by:               req.headers['x-actor']        || session.badge || null,
+      created_by:               actor,
+      modified_at:              nowIso,
+      modified_by:              actor,
     }
 
-    const { data: report, error: mainErr } = await supabase
-      .from('investigation_reports')
-      .insert(row)
-      .select()
-      .single()
+      const { data: report, error: mainErr } = await supabase
+        .from('investigation_reports')
+        .insert(row)
+        .select()
+        .single()
 
-    if (mainErr) return res.status(500).json({ error: mainErr.message })
-    const reportId = report.id
+      if (mainErr) {
+        return jsonApiError(res, 500, 'Failed to insert investigation report', {
+          supabase: mainErr,
+          context: 'reports POST insert main',
+        })
+      }
+      const reportId = report.id
 
-    // Insert sub-items
-    await insertSubItems(supabase, reportId, { victims, suspects, witnesses, evidences, debrief_entries })
+      try {
+        await insertSubItems(
+          supabase,
+          reportId,
+          { victims, suspects, witnesses, evidences, debrief_entries },
+          actor,
+        )
+      } catch (e) {
+        return jsonApiError(res, 500, e?.message || 'Failed to save related rows (victims/suspects/etc.)', {
+          cause: e,
+          context: 'reports POST insertSubItems',
+          ...(e?.supabase && { supabase: e.supabase }),
+        })
+      }
 
-    return res.status(201).json({ report })
+      return res.status(201).json({ report })
+    }
+  } catch (e) {
+    return jsonApiError(res, 500, e?.message || 'Unexpected error in reports handler', {
+      cause: e,
+      context: 'reports handler',
+    })
   }
 }
 
-export async function insertSubItems(supabase, reportId, { victims, suspects, witnesses, evidences, debrief_entries }) {
+export async function insertSubItems(
+  supabase,
+  reportId,
+  { victims, suspects, witnesses, evidences, debrief_entries },
+  actor,
+) {
+  const audit = irSubRowAudit(actor)
   const inserts = []
 
   if (victims?.length)
     inserts.push(supabase.from('ir_victims').insert(
-      victims.map((v, i) => ({ ...sanitizeVictim(v), report_id: reportId, sort_order: i }))
+      victims.map((v, i) => ({ ...sanitizeVictim(v), ...audit, report_id: reportId, sort_order: i })),
     ))
   if (suspects?.length)
     inserts.push(supabase.from('ir_suspects').insert(
-      suspects.map((s, i) => ({ ...sanitizeSuspect(s), report_id: reportId, sort_order: i }))
+      suspects.map((s, i) => ({ ...sanitizeSuspect(s), ...audit, report_id: reportId, sort_order: i })),
     ))
   if (witnesses?.length)
     inserts.push(supabase.from('ir_witnesses').insert(
-      witnesses.map((w, i) => ({ ...sanitizeWitness(w), report_id: reportId, sort_order: i }))
+      witnesses.map((w, i) => ({ ...sanitizeWitness(w), ...audit, report_id: reportId, sort_order: i })),
     ))
   if (evidences?.length)
     inserts.push(supabase.from('ir_evidences').insert(
-      evidences.map((e, i) => ({ ...sanitizeEvidence(e), report_id: reportId, sort_order: i }))
+      evidences.map((e, i) => ({ ...sanitizeEvidence(e), ...audit, report_id: reportId, sort_order: i })),
     ))
   if (debrief_entries?.length)
     inserts.push(supabase.from('ir_debrief_entries').insert(
-      debrief_entries.map((d, i) => ({ ...sanitizeDebrief(d), report_id: reportId, sort_order: i }))
+      debrief_entries.map((d, i) => ({ ...sanitizeDebrief(d), ...audit, report_id: reportId, sort_order: i })),
     ))
 
-  if (inserts.length) await Promise.all(inserts)
+  if (inserts.length) {
+    const results = await Promise.all(inserts)
+    const bad = results.find((r) => r?.error)
+    if (bad?.error) {
+      const err = new Error(bad.error.message || bad.error.details || 'Database rejected sub-item insert')
+      err.supabase = bad.error
+      throw err
+    }
+  }
 }
 
 /** Normalized crop { nx, ny, nw, nh } ∈ [0,1]; optional for PDF/UI framing. */

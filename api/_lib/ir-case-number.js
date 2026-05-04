@@ -25,7 +25,11 @@ export async function getNextCaseNumber(supabase) {
     .from('investigation_reports')
     .select('case_number')
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    const e = new Error(error.message || 'Supabase error reading investigation_reports.case_number')
+    e.supabase = error
+    throw e
+  }
   let max = 0
   for (const r of data || []) {
     max = Math.max(max, parseCaseNumberString(r.case_number))
