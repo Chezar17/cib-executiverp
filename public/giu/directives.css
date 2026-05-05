@@ -1532,3 +1532,126 @@ body.page-visible > :not(#access-gate) {
 }
 
 /* Phase hint warning state handled inline via JS */
+
+/* ═══════════════════════════════════════════════
+   BRIEFING — PHASE ACCUMULATION REDESIGN
+═══════════════════════════════════════════════ */
+
+/* ── Phase header (top of intel pane) ── */
+.wm-brief-phase-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+.wm-brief-phase-eyebrow {
+  font-family: var(--mono);
+  font-size: 8px; letter-spacing: 4px;
+  color: var(--red); text-transform: uppercase;
+  margin-bottom: 6px; opacity: 0.9;
+}
+.wm-brief-phase-objective {
+  font-family: var(--display);
+  font-size: 17px; letter-spacing: 2px;
+  color: var(--off-white); text-transform: uppercase;
+  line-height: 1.25;
+  border-bottom: 2px solid var(--red);
+  padding-bottom: 8px; margin-bottom: 6px;
+}
+.wm-brief-phase-obj-notes {
+  font-family: var(--mono);
+  font-size: 10px; line-height: 1.6;
+  color: rgba(240,237,228,0.5);
+  max-height: 48px; overflow: hidden;
+}
+
+/* ── Accumulating markers list ── */
+.wm-brief-markers-list {
+  flex: 1; overflow-y: auto;
+  padding: 12px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* Individual marker item that slides in */
+.wm-brief-marker-item {
+  border: 1px solid rgba(255,255,255,0.07);
+  border-left: 3px solid var(--pin-color, #888);
+  background: rgba(255,255,255,0.03);
+  padding: 10px 12px;
+  animation: markerReveal 0.35s ease both;
+}
+@keyframes markerReveal {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.wm-brief-marker-item-top {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 5px;
+}
+.wm-brief-marker-num {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  color: #fff; flex-shrink: 0;
+}
+.wm-brief-marker-type {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 2px;
+}
+.wm-brief-marker-phase {
+  margin-left: auto;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 1px;
+  color: var(--muted); opacity: 0.6;
+}
+.wm-brief-marker-label {
+  font-family: var(--display); font-size: 13px; letter-spacing: 1px;
+  color: var(--off-white); text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.wm-brief-marker-desc {
+  font-family: var(--mono); font-size: 10px; line-height: 1.6;
+  color: rgba(240,237,228,0.5);
+}
+.wm-brief-marker-dir {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  color: var(--gold); margin-top: 6px; opacity: 0.8;
+}
+
+/* ── Brief map pins (persistent layer) ── */
+.wm-brief-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: none;
+  animation: pinReveal 0.4s ease both;
+}
+@keyframes pinReveal {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.wm-brief-pin-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  color: #fff; border: 2px solid rgba(255,255,255,0.25);
+  box-shadow: 0 0 10px currentColor;
+}
+.wm-brief-pin.is-objective .wm-brief-pin-dot {
+  width: 28px; height: 28px; font-size: 12px;
+  box-shadow: 0 0 18px var(--pin-color, #E74C3C), 0 0 40px rgba(231,76,60,0.3);
+}
+.wm-brief-pin-label {
+  font-family: var(--mono);
+  font-size: 8px; letter-spacing: 1px;
+  color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  white-space: nowrap; margin-top: 3px;
+  background: rgba(0,0,0,0.6); padding: 1px 5px;
+  max-width: 100px; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Intel pane flex layout override ── */
+.wm-brief-intel-pane {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
