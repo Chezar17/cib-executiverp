@@ -600,6 +600,12 @@
 <!-- Toast -->
 <div id="dir-toast"></div>
 
+<!-- Background music for briefing mode -->
+<audio id="briefingMusic" loop preload="auto">
+  <source src="../audio/briefing_music.mp3" type="audio/mpeg"/>
+  <source src="../audio/briefing_music.ogg" type="audio/ogg"/>
+</audio>
+
 <!-- ═══════════════════════════════════════════════════════
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
@@ -2241,10 +2247,29 @@ function startBriefing() {
   _briefMarkerStep = 0
   document.getElementById('wmBriefingOverlay').classList.add('open')
   renderBriefPhase()
+
+  // ── Play briefing background music ────────────────────────
+  const music = document.getElementById('briefingMusic')
+  if (music) {
+    music.volume = 0.35   // 35% volume — adjust to your preference (0.0 to 1.0)
+    music.currentTime = 0
+    music.play().catch(() => {
+      // Browser may block autoplay until user has interacted — clicking
+      // "Start Briefing" counts as interaction, so this should work fine.
+      console.warn('Briefing music could not autoplay.')
+    })
+  }
 }
 
 function closeBriefing() {
   document.getElementById('wmBriefingOverlay').classList.remove('open')
+
+  // ── Stop briefing music ────────────────────────────────────
+  const music = document.getElementById('briefingMusic')
+  if (music) {
+    music.pause()
+    music.currentTime = 0
+  }
 }
 
 // Called by Next / Back buttons
