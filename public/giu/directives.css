@@ -1299,7 +1299,24 @@ body.page-visible > :not(#access-gate) {
   background: #000;
   overflow: hidden;
 }
+/* The zoomable group: image + pins + spotlight all live here so they scale together */
+.wm-brief-map-group {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  transition: transform 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+/* Markers layer fills the whole group so left/top % match the image */
+#wmbMarkersLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
 .wm-brief-map-img {
+  position: absolute;
+  inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
   object-position: center;
