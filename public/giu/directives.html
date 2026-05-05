@@ -189,6 +189,11 @@
         </div>
         <div class="warmap-toolbar-sep"></div>
         <span class="warmap-marker-count" id="wmMarkerCount">— markers</span>
+        <div class="warmap-toolbar-sep"></div>
+        <span class="warmap-toolbar-label" style="font-size:9px;opacity:0.6;">Phase</span>
+        <div class="warmap-type-btns" id="wmPhaseFilterBtns" style="gap:4px;">
+          <button class="wm-phase-filter-btn active" data-phase="all" onclick="setPhaseFilter('all',this)">All</button>
+        </div>
         <button class="warmap-place-btn" id="wmPlaceBtn" onclick="togglePlaceMode()">&#43; Place Marker</button>
         <button class="warmap-brief-btn" onclick="startBriefing()">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
@@ -497,14 +502,32 @@
       <div class="dir-form-row">
         <div class="dir-form-group">
           <label class="dir-form-label">Marker Type</label>
-          <select class="dir-form-select" id="wmType">
-            <option value="objective">Objective</option>
-            <option value="hostile">Hostile Zone</option>
-            <option value="intel">Intel Point</option>
-            <option value="staging">Staging Area</option>
-            <option value="extraction">Extraction</option>
+          <select class="dir-form-select" id="wmType" onchange="wmTypeChanged()">
+            <option value="objective">&#11044; Objective</option>
+            <option value="hostile">&#11044; Hostile Zone</option>
+            <option value="intel">&#11044; Intel Point</option>
+            <option value="staging">&#11044; Staging Area</option>
+            <option value="extraction">&#11044; Extraction</option>
           </select>
         </div>
+        <div class="dir-form-group">
+          <label class="dir-form-label">Phase <span style="color:var(--red);">*</span></label>
+          <select class="dir-form-select" id="wmPhase">
+            <option value="1">Phase 1</option>
+            <option value="2">Phase 2</option>
+            <option value="3">Phase 3</option>
+            <option value="4">Phase 4</option>
+            <option value="5">Phase 5</option>
+            <option value="6">Phase 6</option>
+            <option value="7">Phase 7</option>
+            <option value="8">Phase 8</option>
+          </select>
+          <div class="dir-form-hint" id="wmPhaseHint" style="color:rgba(231,76,60,0.7);display:none;">
+            &#9888; This phase already has an Objective. Each phase allows only one Objective marker.
+          </div>
+        </div>
+      </div>
+      <div class="dir-form-row">
         <div class="dir-form-group">
           <label class="dir-form-label">Link to Directive</label>
           <select class="dir-form-select" id="wmDirective">
@@ -565,10 +588,11 @@
         <div class="wm-brief-intel-eyebrow">
           <div class="wm-brief-type-dot" id="wmbTypeDot"></div>
           <span id="wmbTypeLabel">—</span>
+          <span class="wm-phase-badge" id="wmbPhaseBadge" style="display:none;"></span>
           <span style="margin-left:auto;font-size:8px;letter-spacing:2px;color:var(--muted);" id="wmbAddedBy"></span>
         </div>
         <div class="wm-brief-intel-title" id="wmbTitle">—</div>
-        <div class="wm-brief-intel-sub" id="wmbSubtitle"></div>
+        <div class="wm-brief-intel-sub" id="wmbSubtitle" style="display:none;"></div>
       </div>
       <div class="wm-brief-intel-body">
         <div class="wm-brief-intel-desc" id="wmbDesc"></div>
@@ -1622,7 +1646,8 @@ window.openDetailModal = function(id) {
 // ── State ─────────────────────────────────────────────────
 let _allMarkers       = []
 let _wmLoaded         = false
-let _wmPlacing        = false        // placing mode
+let _wmPlacing        = false
+let _wmPhaseFilter = 'all'  // 'all' or integer phase number        // placing mode
 let _wmPendingX       = null         // % coordinates of pending click
 let _wmPendingY       = null
 let _wmEditingId      = null
@@ -1698,8 +1723,79 @@ async function loadWarmap() {
     _allMarkers = res.data.data || []
     renderMarkers()
     populateDirectiveDropdown()
+  populatePhaseFilter()
   } catch(e) {
     showToast('War Map: ' + e.message, 'error')
+  }
+}
+
+// ── Phase filter ─────────────────────────────────────────
+function setPhaseFilter(phase, el) {
+  _wmPhaseFilter = phase === 'all' ? 'all' : parseInt(phase, 10)
+  document.querySelectorAll('.wm-phase-filter-btn').forEach(b => b.classList.remove('active'))
+  if (el) el.classList.add('active')
+  renderMarkers()
+}
+
+function populatePhaseFilter() {
+  const container = document.getElementById('wmPhaseFilterBtns')
+  if (!container) return
+  // Collect all unique phases from markers
+  const phases = [...new Set(
+    _allMarkers.map(m => (m._marker || {}).phase).filter(p => p !== null && p !== undefined)
+  )].sort((a,b) => a - b)
+
+  // Rebuild — keep the "All" button
+  container.innerHTML = '<button class="wm-phase-filter-btn active" data-phase="all" onclick="setPhaseFilter('all',this)">All</button>'
+  phases.forEach(p => {
+    const btn = document.createElement('button')
+    btn.className = 'wm-phase-filter-btn'
+    btn.dataset.phase = p
+    btn.textContent = `P${p}`
+    btn.title = `Phase ${p}`
+    btn.onclick = () => {
+      document.querySelectorAll('.wm-phase-filter-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      setPhaseFilter(p, btn)
+    }
+    container.appendChild(btn)
+  })
+
+  // Also update the phase select in the marker modal (add phases not yet in list)
+  const maxPhase = Math.max(8, ...(phases.length ? phases : [0])) + 1
+  const sel = document.getElementById('wmPhase')
+  if (sel) {
+    const currentMax = sel.options.length
+    for (let i = currentMax + 1; i <= maxPhase; i++) {
+      const opt = document.createElement('option')
+      opt.value = i
+      opt.textContent = `Phase ${i}`
+      sel.appendChild(opt)
+    }
+  }
+}
+
+// ── Warn if selected phase+type combination already has an objective ─
+function wmTypeChanged() {
+  checkPhaseObjectiveConflict()
+}
+
+function checkPhaseObjectiveConflict() {
+  const type     = document.getElementById('wmType')?.value
+  const phaseVal = document.getElementById('wmPhase')?.value
+  const hint     = document.getElementById('wmPhaseHint')
+  if (!hint || !type || !phaseVal) return
+  const phase = parseInt(phaseVal, 10)
+
+  if (type === 'objective') {
+    const conflict = _allMarkers.some(m => {
+      if (_wmEditingId && m.id === _wmEditingId) return false
+      const mk = m._marker || {}
+      return mk.marker_type === 'objective' && mk.phase === phase
+    })
+    hint.style.display = conflict ? 'block' : 'none'
+  } else {
+    hint.style.display = 'none'
   }
 }
 
@@ -1823,7 +1919,14 @@ function setupWmPanDrag() {
 function renderMarkers() {
   renderMarkersDOM()
   const count = document.getElementById('wmMarkerCount')
-  if (count) count.textContent = `${_allMarkers.length} marker${_allMarkers.length !== 1 ? 's' : ''}`
+  if (count) {
+    const total   = _allMarkers.length
+    const visible = _wmPhaseFilter === 'all'
+      ? total
+      : _allMarkers.filter(m => (m._marker || {}).phase === _wmPhaseFilter).length
+    const phaseLabel = _wmPhaseFilter === 'all' ? '' : ` · Phase ${_wmPhaseFilter}`
+    count.textContent = `${visible} marker${visible !== 1 ? 's' : ''}${phaseLabel}`
+  }
 }
 
 function renderMarkersDOM() {
@@ -1833,7 +1936,11 @@ function renderMarkersDOM() {
 
   container.innerHTML = ''
 
-  _allMarkers.forEach(m => {
+  const visibleMarkers = _wmPhaseFilter === 'all'
+    ? _allMarkers
+    : _allMarkers.filter(m => (m._marker || {}).phase === _wmPhaseFilter)
+
+  visibleMarkers.forEach(m => {
     const mk = m._marker || {}
     const x  = mk.x || 0
     const y  = mk.y || 0
@@ -1854,9 +1961,11 @@ function renderMarkersDOM() {
     pin.style.left   = absX + 'px'
     pin.style.top    = absY + 'px'
 
+    const phaseLabel = mk.phase !== null && mk.phase !== undefined ? `P${mk.phase}` : ''
     pin.innerHTML = `
       <div class="wm-pin" style="background:${color};color:${color};">
         <div class="wm-pin-inner"></div>
+        ${phaseLabel ? `<div class="wm-pin-phase">${phaseLabel}</div>` : ''}
       </div>
       <div class="wm-label">${escHtml(mk.label || '—')}</div>
       ${mk.directive_code ? `<div class="wm-dir-badge">${escHtml(mk.directive_code)}</div>` : ''}
@@ -1886,11 +1995,12 @@ function showWmTooltip(m, e) {
   const dir   = mk.directive_code ? `<div class="wm-tooltip-dir">&#9654; Linked to: ${escHtml(mk.directive_code)}</div>` : ''
   const desc  = mk.description   ? `<div class="wm-tooltip-body">${escHtml(mk.description).substring(0,140)}${mk.description.length > 140 ? '…' : ''}${dir}</div>` : (dir ? `<div class="wm-tooltip-body">${dir}</div>` : '')
 
+  const phaseStr = mk.phase !== null && mk.phase !== undefined ? ` · Phase ${mk.phase}` : ''
   tooltip.innerHTML = `
     <div class="wm-tooltip-header">
       <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
       <div>
-        <div class="wm-tooltip-type">${WM_TYPE_LABELS[type] || type}</div>
+        <div class="wm-tooltip-type">${WM_TYPE_LABELS[type] || type}${phaseStr}</div>
         <div class="wm-tooltip-label">${escHtml(mk.label || '—')}</div>
       </div>
     </div>
@@ -1940,6 +2050,16 @@ function openWmModal() {
   const dirSel = document.getElementById('wmDirective')
   if (dirSel) dirSel.value = ''
 
+  // Pre-fill phase — use current filter if a specific phase is active, else 1
+  const phaseSel = document.getElementById('wmPhase')
+  if (phaseSel) {
+    phaseSel.value = (_wmPhaseFilter !== 'all') ? _wmPhaseFilter : 1
+    phaseSel.onchange = checkPhaseObjectiveConflict
+  }
+
+  // Check for conflict right away
+  checkPhaseObjectiveConflict()
+
   setModalError('wmMarkerError', '')
   document.getElementById('wmMarkerModalLabel').textContent = 'GIU · MARK LOCATION'
   document.getElementById('wmMarkerSubmit').textContent = 'Pin Location'
@@ -1969,6 +2089,12 @@ function openWmEditModal(id) {
   if (typeEl) typeEl.value = mk.marker_type || 'intel'
   const dirSel = document.getElementById('wmDirective')
   if (dirSel) dirSel.value = mk.directive_id || ''
+  const phaseSel = document.getElementById('wmPhase')
+  if (phaseSel) {
+    phaseSel.value = mk.phase || 1
+    phaseSel.onchange = checkPhaseObjectiveConflict
+  }
+  checkPhaseObjectiveConflict()
 
   const coordEl = document.getElementById('wmCoordDisplay')
   if (coordEl) coordEl.textContent = `X:${(mk.x||0).toFixed(1)}% / Y:${(mk.y||0).toFixed(1)}%`
@@ -2009,6 +2135,20 @@ async function submitWmMarker() {
   btn.disabled = true; btn.textContent = _wmEditingId ? 'Saving…' : 'Pinning…'
 
   try {
+    const phase = parseInt(document.getElementById('wmPhase')?.value || '1', 10)
+
+    // Client-side objective conflict check before sending
+    if (type === 'objective') {
+      const conflict = _allMarkers.some(m => {
+        if (_wmEditingId && m.id === _wmEditingId) return false
+        const mk = m._marker || {}
+        return mk.marker_type === 'objective' && mk.phase === phase
+      })
+      if (conflict) {
+        return setModalError('wmMarkerError', `PHASE ${phase} ALREADY HAS AN OBJECTIVE MARKER`)
+      }
+    }
+
     const body = {
       x:              _wmPendingX,
       y:              _wmPendingY,
@@ -2017,6 +2157,7 @@ async function submitWmMarker() {
       description:    desc || null,
       directive_id:   dirId,
       directive_code: dirCode,
+      phase,
     }
 
     if (_wmEditingId) {
@@ -2033,6 +2174,7 @@ async function submitWmMarker() {
     }
 
     renderMarkers()
+    populatePhaseFilter()
     closeWmModal()
   } catch(e) {
     setModalError('wmMarkerError', e.message.toUpperCase())
@@ -2050,6 +2192,7 @@ async function deleteWmMarker(id) {
     if (!res.ok) throw new Error(res.data?.error || 'Delete failed')
     _allMarkers = _allMarkers.filter(x => x.id !== id)
     renderMarkers()
+    populatePhaseFilter()
     showToast('Marker removed.', 'info')
   } catch(e) {
     showToast('Remove failed: ' + e.message, 'error')
@@ -2073,9 +2216,53 @@ window.openWmEditModal = function(id) {
 }
 
 // ── BRIEFING MODE ─────────────────────────────────────────
+// Build phase-sorted briefing sequence
+function getBriefingSequence() {
+  // Group markers by phase, sort phases numerically, unphased at end
+  const phased   = {}
+  const unphased = []
+
+  // Use phase filter if active
+  const src = _wmPhaseFilter === 'all'
+    ? _allMarkers
+    : _allMarkers.filter(m => (m._marker || {}).phase === _wmPhaseFilter)
+
+  src.forEach(m => {
+    const ph = (m._marker || {}).phase
+    if (ph !== null && ph !== undefined) {
+      if (!phased[ph]) phased[ph] = []
+      phased[ph].push(m)
+    } else {
+      unphased.push(m)
+    }
+  })
+
+  // Sort markers within each phase: objective first, then others
+  const order = ['objective','hostile','intel','staging','extraction']
+  const sortPhase = arr => [...arr].sort((a,b) => {
+    const ai = order.indexOf((a._marker||{}).marker_type)
+    const bi = order.indexOf((b._marker||{}).marker_type)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+  })
+
+  const sequence = []
+  Object.keys(phased).sort((a,b) => parseInt(a)-parseInt(b)).forEach(ph => {
+    sortPhase(phased[ph]).forEach(m => sequence.push({ ...m, _briefPhase: parseInt(ph) }))
+  })
+  unphased.forEach(m => sequence.push({ ...m, _briefPhase: null }))
+  return sequence
+}
+
+let _briefSequence = []  // set on startBriefing
+
 function startBriefing() {
   if (!_allMarkers.length) {
     showToast('No markers on the war map. Place some markers first.', 'info')
+    return
+  }
+  _briefSequence = getBriefingSequence()
+  if (!_briefSequence.length) {
+    showToast('No markers match the current phase filter.', 'info')
     return
   }
   _briefIndex = 0
@@ -2088,21 +2275,23 @@ function closeBriefing() {
 }
 
 function briefNav(dir) {
-  _briefIndex = Math.max(0, Math.min(_allMarkers.length - 1, _briefIndex + dir))
+  _briefIndex = Math.max(0, Math.min(_briefSequence.length - 1, _briefIndex + dir))
   renderBriefSlide()
 }
 
 function renderBriefSlide() {
-  const total = _allMarkers.length
-  const m     = _allMarkers[_briefIndex]
+  const total = _briefSequence.length
+  const m     = _briefSequence[_briefIndex]
   if (!m) return
   const mk    = m._marker || {}
   const type  = mk.marker_type || 'intel'
   const color = WM_TYPE_COLORS[type] || '#888'
   const typeLbl = WM_TYPE_LABELS[type] || type
+  const phase = m._briefPhase
 
-  // Counter
-  document.getElementById('wmbCounter').textContent = `${_briefIndex + 1} / ${total}`
+  // Counter — show phase context
+  const phaseCtx = phase !== null && phase !== undefined ? ` · Phase ${phase}` : ''
+  document.getElementById('wmbCounter').textContent = `${_briefIndex + 1} / ${total}${phaseCtx}`
 
   // Spotlight position on the map
   const spotlight = document.getElementById('wmbSpotlight')
@@ -2121,6 +2310,17 @@ function renderBriefSlide() {
   document.getElementById('wmbTypeLabel').textContent    = typeLbl.toUpperCase()
   document.getElementById('wmbTitle').textContent        = mk.label || '—'
   document.getElementById('wmbTitle').style.borderBottom = `2px solid ${color}`
+
+  // Phase badge in briefing header
+  const phaseBadge = document.getElementById('wmbPhaseBadge')
+  if (phaseBadge) {
+    if (phase !== null && phase !== undefined) {
+      phaseBadge.textContent    = `Phase ${phase}`
+      phaseBadge.style.display  = 'inline-flex'
+    } else {
+      phaseBadge.style.display  = 'none'
+    }
+  }
 
   // Added by
   const addedByEl = document.getElementById('wmbAddedBy')
@@ -2148,9 +2348,18 @@ function renderBriefSlide() {
   // Nav buttons
   document.getElementById('wmbPrev').disabled = _briefIndex === 0
   const nextBtn = document.getElementById('wmbNext')
+
+  // Show "next phase" hint if next marker is a different phase
+  const nextM = _briefSequence[_briefIndex + 1]
+  const nextPhase = nextM ? (nextM._briefPhase || null) : null
+  const curPhase  = phase
+
   if (_briefIndex === total - 1) {
     nextBtn.textContent = 'End Briefing'
     nextBtn.onclick = closeBriefing
+  } else if (nextPhase !== null && nextPhase !== curPhase) {
+    nextBtn.textContent = `Phase ${nextPhase} →`
+    nextBtn.onclick = () => briefNav(1)
   } else {
     nextBtn.textContent = 'Next →'
     nextBtn.onclick = () => briefNav(1)
