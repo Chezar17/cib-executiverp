@@ -2261,6 +2261,7 @@ function startBriefing() {
   _briefPhases     = buildBriefPhases()
   _briefPhaseIdx   = 0
   _briefMarkerStep = 0
+  resetBriefMapZoom()
   document.getElementById('wmBriefingOverlay').classList.add('open')
   renderBriefPhase()
 
@@ -2281,6 +2282,7 @@ function startBriefing() {
 
 function closeBriefing() {
   document.getElementById('wmBriefingOverlay').classList.remove('open')
+  resetBriefMapZoom()
 
   // ── Stop briefing music ────────────────────────────────────
   const music = document.getElementById('briefingMusic')
@@ -2414,6 +2416,14 @@ function renderBriefPhase() {
     coordsEl.textContent = `X:${sp.x.toFixed(1)}  Y:${sp.y.toFixed(1)}`
   }
 
+  // ── Zoom briefing map to active marker ───────────────────────
+  const isPhaseObj = _briefMarkerStep === 0  // we're showing the phase objective
+  if (sp.x != null && sp.y != null) {
+    zoomBriefMapTo(sp.x, sp.y, isPhaseObj)
+  } else {
+    resetBriefMapZoom()
+  }
+
   // ── Accumulating marker list ──────────────────────────────
   renderBriefMarkersList(phase, revealedNonObj)
 
@@ -2446,6 +2456,34 @@ function renderBriefPhase() {
     nextBtn.textContent = `Next ›`
     nextBtn.onclick     = () => briefNav(1)
   }
+}
+
+// ── Briefing map zoom-into-marker ─────────────────────────────
+// Smoothly pans & zooms the briefing map image so the active
+// marker is centred and magnified. x/y are percentages (0-100).
+function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
+  const img = document.querySelector('.wm-brief-map-img')
+  if (!img) return
+
+  // Zoom level: a bit more dramatic for the phase objective reveal
+  const scale  = isPhaseObjective ? 2.4 : 2.0
+
+  // Convert % position to the offset needed to centre that point.
+  // When the image is scaled from its centre (transform-origin: center),
+  // we need to shift it so that the target point lands at the viewport centre.
+  // Offset = (50 - xPct) / 100 * imageWidth   (in percent-of-image units)
+  // But since we're working with transform translate on a 100%-size image,
+  // we express the shift as a percentage of the element width/height.
+  const tx = (50 - xPct)   // % of image width  to shift
+  const ty = (50 - yPct)   // % of image height to shift
+
+  img.style.transform = `scale(${scale}) translate(${tx}%, ${ty}%)`
+}
+
+// Reset zoom (used when closing briefing or on phase start at step 0)
+function resetBriefMapZoom() {
+  const img = document.querySelector('.wm-brief-map-img')
+  if (img) img.style.transform = 'scale(1) translate(0%, 0%)'
 }
 
 // Render all revealed markers for this phase on the brief map

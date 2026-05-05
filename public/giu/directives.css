@@ -1305,6 +1305,9 @@ body.page-visible > :not(#access-gate) {
   object-position: center;
   opacity: 0.55;
   filter: contrast(1.1) brightness(0.8);
+  transform-origin: center center;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
 }
 .wm-brief-spotlight {
   position: absolute;
