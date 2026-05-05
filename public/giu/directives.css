@@ -1683,3 +1683,80 @@ body.page-visible > :not(#access-gate) {
   flex-direction: column !important;
   overflow: hidden !important;
 }
+
+/* ════════════════════════════════════════════════════════════
+   BRIEFING — MUSIC VOLUME CONTROL
+════════════════════════════════════════════════════════════ */
+
+.wm-brief-volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+  margin-right: 4px;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+.wm-brief-volume:hover {
+  opacity: 1;
+}
+
+.wm-brief-vol-icon {
+  width: 14px; height: 14px;
+  fill: rgba(255,255,255,0.7);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: fill 0.15s;
+}
+.wm-brief-vol-icon:hover { fill: #fff; }
+
+.wm-brief-vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 2px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  /* Filled track via gradient, updated by JS */
+  background-image: linear-gradient(var(--red), var(--red));
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0s;
+}
+.wm-brief-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(192,57,43,0.6);
+  box-shadow: 0 0 4px rgba(192,57,43,0.5);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.wm-brief-vol-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(192,57,43,0.8);
+}
+.wm-brief-vol-slider::-moz-range-thumb {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(192,57,43,0.6);
+  cursor: pointer;
+}
+.wm-brief-vol-slider::-moz-range-progress {
+  background: var(--red);
+  height: 2px;
+  border-radius: 2px;
+}
+
+.wm-brief-vol-label {
+  font-family: var(--mono);
+  font-size: 9px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.45);
+  width: 28px; text-align: right;
+  flex-shrink: 0;
+}

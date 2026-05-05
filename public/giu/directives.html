@@ -555,6 +555,16 @@
       <div class="wm-brief-title">GIU Operational Brief</div>
       <div class="wm-brief-counter" id="wmbCounter">Phase 0 / 0</div>
     </div>
+    <div class="wm-brief-volume">
+      <svg class="wm-brief-vol-icon" id="wmbVolIcon" viewBox="0 0 24 24" onclick="toggleMute()" title="Click to mute/unmute">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+      </svg>
+      <input class="wm-brief-vol-slider" id="wmbVolSlider" type="range"
+        min="0" max="100" value="40"
+        oninput="setBriefingVolume(this.value)"
+        title="Music Volume"/>
+      <span class="wm-brief-vol-label" id="wmbVolLabel">40%</span>
+    </div>
     <button class="wm-brief-close" onclick="closeBriefing()">End Briefing</button>
   </div>
   <div class="wm-brief-body">
@@ -2249,13 +2259,15 @@ function startBriefing() {
   renderBriefPhase()
 
   // ── Play briefing background music ────────────────────────
-  const music = document.getElementById('briefingMusic')
+  const music  = document.getElementById('briefingMusic')
+  const slider = document.getElementById('wmbVolSlider')
+  const label  = document.getElementById('wmbVolLabel')
   if (music) {
-    music.volume = 0.35   // 35% volume — adjust to your preference (0.0 to 1.0)
+    const vol = slider ? parseInt(slider.value) / 100 : 0.40
+    music.volume     = vol
     music.currentTime = 0
+    if (label && slider) label.textContent = slider.value + '%'
     music.play().catch(() => {
-      // Browser may block autoplay until user has interacted — clicking
-      // "Start Briefing" counts as interaction, so this should work fine.
       console.warn('Briefing music could not autoplay.')
     })
   }
@@ -2269,6 +2281,50 @@ function closeBriefing() {
   if (music) {
     music.pause()
     music.currentTime = 0
+  }
+}
+
+// ── Music volume controls ──────────────────────────────────
+let _prevVolume = 40  // remember volume before mute
+
+function setBriefingVolume(val) {
+  const music  = document.getElementById('briefingMusic')
+  const label  = document.getElementById('wmbVolLabel')
+  const slider = document.getElementById('wmbVolSlider')
+  const v = parseInt(val)
+  if (music) music.volume = v / 100
+  if (label) label.textContent = v + '%'
+  if (v > 0) _prevVolume = v
+  // Keep red fill track in sync
+  if (slider) slider.style.backgroundSize = v + '% 100%'
+  updateVolIcon(v)
+}
+
+function toggleMute() {
+  const slider = document.getElementById('wmbVolSlider')
+  if (!slider) return
+  const cur = parseInt(slider.value)
+  if (cur > 0) {
+    _prevVolume = cur
+    slider.value = 0
+  } else {
+    slider.value = _prevVolume
+  }
+  setBriefingVolume(slider.value)
+}
+
+function updateVolIcon(v) {
+  const icon = document.getElementById('wmbVolIcon')
+  if (!icon) return
+  if (v === 0) {
+    // Muted icon
+    icon.innerHTML = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>'
+  } else if (v < 50) {
+    // Low volume icon
+    icon.innerHTML = '<path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>'
+  } else {
+    // Full volume icon
+    icon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>'
   }
 }
 
