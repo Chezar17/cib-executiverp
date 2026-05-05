@@ -200,8 +200,8 @@
       <div class="warmap-canvas-wrap not-placing" id="wmCanvas" onclick="wmCanvasClick(event)" onmousemove="wmMouseMove(event)" onmouseleave="wmMouseLeave()">
 
         <!-- The map image -->
-        <img class="warmap-img" id="wmMapImg" src="../images/warmap.png" alt="Los Santos War Map"
-          onerror="this.src='warmap.png'"/>
+        <img class="warmap-img" id="wmMapImg" src="../images/warmap.jpg" alt="Los Santos War Map"
+          onerror="this.src='warmap.jpg'"/>
 
         <!-- Crosshair ghost while placing -->
         <div class="warmap-crosshair" id="wmCrosshair"></div>
@@ -547,7 +547,7 @@
   <div class="wm-brief-body">
     <!-- Left: map -->
     <div class="wm-brief-map-pane">
-      <img class="wm-brief-map-img" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'"/>
+      <img class="wm-brief-map-img" src="../images/warmap.jpg" alt="Map" onerror="this.src='warmap.jpg'"/>
       <div class="wm-brief-grid"></div>
       <div class="wm-brief-corner tl"></div>
       <div class="wm-brief-corner tr"></div>
@@ -2036,6 +2036,7 @@ async function submitWmMarker() {
     closeWmModal()
   } catch(e) {
     setModalError('wmMarkerError', e.message.toUpperCase())
+  } finally {
     btn.disabled = false; btn.textContent = origText
   }
 }
