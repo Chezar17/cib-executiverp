@@ -1244,59 +1244,39 @@ body.page-visible > :not(#access-gate) {
 /* ════════════════════════════════════════════════════════════
    BRIEFING MODE — fullscreen operational overlay
 ════════════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════════════
-   BRIEFING MODE — Phase-accumulate layout
-   Left : tactical map, dots accumulate per phase
-   Right: scrollable card feed, phase header pinned at top
-════════════════════════════════════════════════════════════ */
-
 .wm-briefing-overlay {
   position: fixed; inset: 0; z-index: 800;
-  background: #000;
+  background: rgba(0,0,0,0.97);
   display: none; flex-direction: column;
-  animation: briefIn 0.35s ease both;
+  animation: briefIn 0.4s ease both;
 }
 .wm-briefing-overlay.open { display: flex; }
 @keyframes briefIn {
-  from { opacity: 0; transform: scale(1.01); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* ── Top bar ── */
 .wm-brief-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 28px;
-  border-bottom: 1px solid rgba(192,57,43,0.25);
-  background: #05030A;
-  flex-shrink: 0;
+  padding: 16px 32px;
+  border-bottom: 1px solid rgba(192,57,43,0.2);
 }
-.wm-brief-topbar-left  { display: flex; align-items: center; gap: 14px; }
-.wm-brief-topbar-right { display: flex; align-items: center; gap: 20px; }
+.wm-brief-topbar-left {
+  display: flex; align-items: center; gap: 14px;
+}
 .wm-brief-signal {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--red);
   animation: modalDotBlink 0.8s step-end infinite;
-  flex-shrink: 0;
 }
 .wm-brief-title {
   font-family: var(--display); font-size: 13px;
-  letter-spacing: 6px; text-transform: uppercase; color: var(--red);
-}
-/* Phase pill in topbar */
-.wm-brief-phase-pill {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
-  text-transform: uppercase; padding: 3px 10px;
-  background: rgba(192,57,43,0.12);
-  border: 1px solid rgba(192,57,43,0.4);
+  letter-spacing: 6px; text-transform: uppercase;
   color: var(--red);
 }
 .wm-brief-counter {
   font-family: var(--mono); font-size: 10px;
-  letter-spacing: 2px; color: var(--muted);
-}
-.wm-brief-phase-progress {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: 2px; color: rgba(255,255,255,0.3);
+  letter-spacing: 3px; color: var(--muted);
 }
 .wm-brief-close {
   font-family: var(--mono); font-size: 9px;
@@ -1307,230 +1287,178 @@ body.page-visible > :not(#access-gate) {
 }
 .wm-brief-close:hover { border-color: var(--red); color: var(--red); }
 
-/* ── Body split ── */
-.wm-brief-body { flex: 1; display: flex; overflow: hidden; }
+.wm-brief-body {
+  flex: 1; display: flex;
+  overflow: hidden;
+}
 
-/* ── Map pane (left) ── */
+/* Left: map with single highlighted marker */
 .wm-brief-map-pane {
-  flex: 0 0 52%;
-  position: relative; background: #000; overflow: hidden;
+  flex: 0 0 55%;
+  position: relative;
+  background: #000;
+  overflow: hidden;
 }
 .wm-brief-map-img {
   width: 100%; height: 100%;
-  object-fit: cover; object-position: center;
-  opacity: 0.5; filter: contrast(1.1) brightness(0.75);
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.55;
+  filter: contrast(1.1) brightness(0.8);
 }
+.wm-brief-spotlight {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+}
+.wm-brief-spotlight-ring {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(201,168,76,0.6);
+  animation: spotPulse 1.5s ease-out infinite;
+}
+@keyframes spotPulse {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.wm-brief-spotlight-dot {
+  position: absolute; top: 50%; left: 50%;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--gold);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px rgba(201,168,76,0.8);
+}
+
+/* crosshair lines from spotlight to map center */
 .wm-brief-grid {
-  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  position: absolute; inset: 0; z-index: 3;
+  pointer-events: none;
   background:
     linear-gradient(rgba(192,57,43,0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(192,57,43,0.04) 1px, transparent 1px);
   background-size: 60px 60px;
 }
+
 .wm-brief-corner { position: absolute; width: 24px; height: 24px; z-index: 4; }
-.wm-brief-corner.tl { top:12px;   left:12px;  border-top:1px solid rgba(192,57,43,0.4); border-left:1px solid rgba(192,57,43,0.4); }
-.wm-brief-corner.tr { top:12px;  right:12px;  border-top:1px solid rgba(192,57,43,0.4); border-right:1px solid rgba(192,57,43,0.4); }
-.wm-brief-corner.bl { bottom:12px; left:12px; border-bottom:1px solid rgba(192,57,43,0.4); border-left:1px solid rgba(192,57,43,0.4); }
-.wm-brief-corner.br { bottom:12px; right:12px;border-bottom:1px solid rgba(192,57,43,0.4); border-right:1px solid rgba(192,57,43,0.4); }
+.wm-brief-corner.tl { top: 12px; left: 12px; border-top: 1px solid rgba(192,57,43,0.4); border-left: 1px solid rgba(192,57,43,0.4); }
+.wm-brief-corner.tr { top: 12px; right: 12px; border-top: 1px solid rgba(192,57,43,0.4); border-right: 1px solid rgba(192,57,43,0.4); }
+.wm-brief-corner.bl { bottom: 12px; left: 12px; border-bottom: 1px solid rgba(192,57,43,0.4); border-left: 1px solid rgba(192,57,43,0.4); }
+.wm-brief-corner.br { bottom: 12px; right: 12px; border-bottom: 1px solid rgba(192,57,43,0.4); border-right: 1px solid rgba(192,57,43,0.4); }
 
-/* Accumulating map dots */
-@keyframes briefDotIn {
-  from { opacity: 0; transform: translate(-50%,-50%) scale(0.4); }
-  to   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-}
-.wm-brief-dot {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  z-index: 5;
-  pointer-events: none;
-}
-.wm-brief-dot-ring {
-  position: absolute; top: 50%; left: 50%;
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1.5px solid;
-  transform: translate(-50%,-50%);
-  opacity: 0.5;
-}
-.wm-brief-dot-center {
-  position: absolute; top: 50%; left: 50%;
-  width: 10px; height: 10px; border-radius: 50%;
-  transform: translate(-50%,-50%);
-}
-.wm-brief-dot-pulse {
-  position: absolute; top: 50%; left: 50%;
-  width: 32px; height: 32px; border-radius: 50%;
-  border: 2px solid;
-  transform: translate(-50%,-50%);
-  animation: spotPulse 2s ease-out infinite;
-  opacity: 0.6;
-}
-.wm-brief-dot-label {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--mono);
-  font-size: 8px;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,0.7);
-  white-space: nowrap;
-  background: rgba(0,0,0,0.7);
-  padding: 1px 5px;
-  pointer-events: none;
-}
-.wm-brief-dot-objective .wm-brief-dot-center {
-  width: 14px; height: 14px;
-}
-@keyframes spotPulse {
-  0%   { transform: translate(-50%,-50%) scale(0.8); opacity: 0.6; }
-  100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+.wm-brief-coords {
+  position: absolute; bottom: 14px; right: 14px; z-index: 10;
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 2px; color: rgba(201,168,76,0.6);
 }
 
-/* ── Intel pane (right) ── */
+/* Right: intel panel */
 .wm-brief-intel-pane {
   flex: 1;
   display: flex; flex-direction: column;
   border-left: 1px solid rgba(192,57,43,0.15);
-  overflow: hidden;
-  background: #05030A;
-}
-
-/* Pinned phase header */
-.wm-brief-phase-header {
-  padding: 20px 28px 14px;
-  border-bottom: 1px solid rgba(192,57,43,0.2);
-  background: rgba(192,57,43,0.05);
-  flex-shrink: 0;
-}
-.wm-brief-phase-header-label {
-  font-family: var(--display);
-  font-size: 22px; letter-spacing: 6px;
-  text-transform: uppercase; color: var(--red);
-  line-height: 1;
-}
-.wm-brief-phase-header-sub {
-  font-family: var(--mono); font-size: 10px;
-  letter-spacing: 2px; color: var(--muted);
-  margin-top: 5px;
-}
-
-/* Scrollable card feed */
-.wm-brief-feed {
-  flex: 1;
   overflow-y: auto;
-  padding: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
 }
 
-/* ── Brief Card (wmbc) ── */
-.wmbc {
-  padding: 18px 28px;
+.wm-brief-intel-header {
+  padding: 24px 32px 16px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
-  border-left: 3px solid var(--card-color, #888);
-  animation: wmbcIn 0.35s ease both;
-  background: transparent;
-  transition: background 0.2s;
 }
-.wmbc:hover { background: rgba(255,255,255,0.02); }
-@keyframes wmbcIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-/* Objective card gets extra emphasis */
-.wmbc-objective {
-  background: rgba(192,57,43,0.05);
-  border-left-width: 4px;
-}
-.wmbc-header {
+.wm-brief-intel-eyebrow {
+  font-family: var(--mono); font-size: 8px;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: rgba(192,57,43,0.7); margin-bottom: 10px;
   display: flex; align-items: center; gap: 8px;
+}
+.wm-brief-type-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.wm-brief-intel-title {
+  font-family: var(--display); font-size: 26px;
+  letter-spacing: 5px; text-transform: uppercase;
+  color: var(--white); line-height: 1;
   margin-bottom: 8px;
 }
-.wmbc-type-dot {
-  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-}
-.wmbc-type-label {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: 3px; text-transform: uppercase;
-}
-.wmbc-coord {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: 1px; color: rgba(255,255,255,0.25);
-  margin-left: auto;
-}
-.wmbc-added-by {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: 1px; color: rgba(255,255,255,0.25);
-}
-.wmbc-title {
-  font-family: var(--display); font-size: 18px;
-  letter-spacing: 4px; text-transform: uppercase;
-  color: var(--white); margin-bottom: 8px; line-height: 1.1;
-}
-.wmbc-desc {
-  font-family: var(--mono); font-size: 11px;
-  line-height: 1.8; color: rgba(240,237,228,0.6);
-  margin-bottom: 10px; letter-spacing: 0.3px;
-}
-.wmbc-directive {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px;
-  background: rgba(201,168,76,0.06);
-  border: 1px solid rgba(201,168,76,0.18);
-  border-left: 3px solid var(--gold);
-  margin-top: 8px;
-}
-.wmbc-directive-label {
-  font-family: var(--mono); font-size: 8px;
-  letter-spacing: 3px; color: rgba(201,168,76,0.55);
-  text-transform: uppercase; flex-shrink: 0;
-}
-.wmbc-directive-code {
-  font-family: var(--display); font-size: 13px;
-  letter-spacing: 2px; color: var(--gold);
+.wm-brief-intel-sub {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 2px; color: var(--muted);
 }
 
-/* ── Nav bar (bottom of feed pane) ── */
+.wm-brief-intel-body {
+  padding: 20px 32px;
+  flex: 1;
+}
+.wm-brief-intel-desc {
+  font-family: var(--mono); font-size: 12px;
+  line-height: 1.9; letter-spacing: 0.3px;
+  color: rgba(240,237,228,0.75);
+  margin-bottom: 20px;
+}
+.wm-brief-intel-field {
+  display: flex; gap: 12px; align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.wm-brief-intel-field-label {
+  font-family: var(--mono); font-size: 8px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  width: 100px; flex-shrink: 0;
+}
+.wm-brief-intel-field-val {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 1px; color: var(--text);
+}
+
+.wm-brief-directive-link {
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-left: 3px solid var(--gold);
+}
+.wm-brief-directive-link-label {
+  font-family: var(--mono); font-size: 8px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(201,168,76,0.6); margin-bottom: 6px;
+}
+.wm-brief-directive-link-code {
+  font-family: var(--display); font-size: 16px;
+  letter-spacing: 3px; color: var(--gold);
+}
+
+/* Nav buttons */
 .wm-brief-nav {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 28px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 32px;
   border-top: 1px solid rgba(255,255,255,0.05);
-  flex-shrink: 0;
-  background: #05030A;
-}
-.wm-brief-nav-progress {
-  flex: 1; height: 2px;
-  background: rgba(255,255,255,0.06);
-  position: relative; overflow: hidden;
-}
-.wm-brief-nav-fill {
-  position: absolute; left: 0; top: 0; height: 100%;
-  background: var(--red); transition: width 0.5s ease;
 }
 .wm-brief-nav-btn {
   font-family: var(--display); font-size: 10px;
   letter-spacing: 3px; text-transform: uppercase;
-  padding: 9px 24px; cursor: pointer; border: none;
-  background: var(--red); color: #fff;
-  transition: background 0.15s;
-  white-space: nowrap;
+  padding: 8px 22px; cursor: pointer;
+  transition: all 0.15s;
 }
-.wm-brief-nav-btn:hover { background: var(--red-bright); }
-/* Phase transition — gold accent */
-.wm-brief-nav-btn.wm-brief-nav-phase {
-  background: var(--gold); color: #000;
-}
-.wm-brief-nav-btn.wm-brief-nav-phase:hover { background: #e0c060; }
-/* End briefing — dim */
-.wm-brief-nav-btn.wm-brief-nav-end {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.15);
+.wm-brief-nav-prev {
+  background: none; border: 1px solid var(--line-dim);
   color: var(--muted);
 }
-.wm-brief-nav-btn.wm-brief-nav-end:hover {
-  background: rgba(192,57,43,0.15);
-  border-color: var(--red); color: var(--red);
+.wm-brief-nav-prev:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+.wm-brief-nav-prev:disabled { opacity: 0.25; cursor: not-allowed; }
+.wm-brief-nav-next {
+  background: var(--red); border: none; color: #fff;
+}
+.wm-brief-nav-next:hover:not(:disabled) { background: var(--red-bright); }
+.wm-brief-nav-next:disabled { opacity: 0.4; cursor: not-allowed; }
+.wm-brief-nav-progress {
+  flex: 1;
+  height: 2px; background: rgba(255,255,255,0.06);
+  position: relative; overflow: hidden;
+}
+.wm-brief-nav-fill {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: var(--red); transition: width 0.4s ease;
 }
 
 @media (max-width: 700px) {
@@ -1538,3 +1466,69 @@ body.page-visible > :not(#access-gate) {
   .wm-brief-map-pane { flex: 0 0 200px; }
   .warmap-toolbar { padding: 8px 16px; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   WAR MAP — PHASE SYSTEM
+════════════════════════════════════════════════════════════ */
+
+/* Phase filter buttons row */
+.warmap-phase-btns {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.warmap-phase-filter-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.45);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.warmap-phase-filter-btn:hover {
+  border-color: rgba(201,168,76,0.35);
+  color: var(--gold-light, #e0c97f);
+}
+.warmap-phase-filter-btn.active {
+  background: rgba(201,168,76,0.12);
+  border-color: var(--gold, #C9A84C);
+  color: var(--gold, #C9A84C);
+}
+
+/* Phase badge on map pin */
+.wm-phase-badge {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(201,168,76,0.5);
+  color: var(--gold, #C9A84C);
+  font-family: var(--mono, monospace);
+  font-size: 8px;
+  letter-spacing: 1px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+/* Phase badge in briefing intel pane */
+.wm-brief-phase-badge {
+  display: inline-block;
+  margin: 6px 0 10px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--gold, #C9A84C);
+  font-family: var(--mono, monospace);
+  font-size: 9px;
+  letter-spacing: 3px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+}
+
+/* Phase hint warning state handled inline via JS */
