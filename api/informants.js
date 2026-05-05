@@ -583,7 +583,7 @@ async function handleWarmap(req, res, supabase, session) {
   if (req.method === 'POST') {
     const {
       x, y, marker_type, label, description,
-      directive_id, directive_code, phase
+      directive_id, directive_code
     } = req.body
 
     if (x === undefined || y === undefined) {
@@ -591,28 +591,6 @@ async function handleWarmap(req, res, supabase, session) {
     }
     if (!label || !label.trim()) {
       return res.status(400).json({ error: 'Marker label is required.' })
-    }
-
-    const phaseNum = phase ? parseInt(phase, 10) : null
-
-    // ── Enforce: one objective marker per phase ───────────────
-    if (marker_type === 'objective' && phaseNum !== null) {
-      const { data: existing } = await supabase
-        .from('informants')
-        .select('task')
-        .eq('gang', '__warmap__')
-        .eq('is_deleted', false)
-
-      const conflict = (existing || []).some(row => {
-        const mk = safeParseJson(row.task)
-        return mk.marker_type === 'objective' && mk.phase === phaseNum
-      })
-
-      if (conflict) {
-        return res.status(409).json({
-          error: `Phase ${phaseNum} already has an Objective marker. Each phase can only have one objective.`
-        })
-      }
     }
 
     const callsign = userMeta.callsign || session.badge
@@ -626,7 +604,6 @@ async function handleWarmap(req, res, supabase, session) {
       directive_id:   directive_id   || null,
       directive_code: directive_code || null,
       added_by:       callsign,
-      phase:          phaseNum,
     }
 
     const { data, error } = await supabase
@@ -650,7 +627,7 @@ async function handleWarmap(req, res, supabase, session) {
 
   // ── PUT: Update marker ────────────────────────────────────
   if (req.method === 'PUT') {
-    const { id, x, y, marker_type, label, description, directive_id, directive_code, phase } = req.body
+    const { id, x, y, marker_type, label, description, directive_id, directive_code } = req.body
     if (!id) return res.status(400).json({ error: 'ID is required.' })
 
     const { data: existing } = await supabase
@@ -662,38 +639,15 @@ async function handleWarmap(req, res, supabase, session) {
 
     const current = safeParseJson(existing?.task) || {}
 
-    // One objective per phase check on edit too
-    if (marker_type === 'objective' && phase !== undefined) {
-      const phaseNum = parseInt(phase, 10)
-      const { data: existing } = await supabase
-        .from('informants')
-        .select('id, task')
-        .eq('gang', '__warmap__')
-        .eq('is_deleted', false)
-
-      const conflict = (existing || []).some(row => {
-        if (row.id === id) return false  // skip self
-        const mk = safeParseJson(row.task)
-        return mk.marker_type === 'objective' && mk.phase === phaseNum
-      })
-
-      if (conflict) {
-        return res.status(409).json({
-          error: `Phase ${phaseNum} already has an Objective marker. Each phase can only have one objective.`
-        })
-      }
-    }
-
     const updatedPayload = {
       ...current,
-      ...(x              !== undefined ? { x: parseFloat(x) }            : {}),
-      ...(y              !== undefined ? { y: parseFloat(y) }            : {}),
-      ...(marker_type    !== undefined ? { marker_type }                 : {}),
-      ...(label          !== undefined ? { label: label.trim() }         : {}),
-      ...(description    !== undefined ? { description }                 : {}),
-      ...(directive_id   !== undefined ? { directive_id }                : {}),
-      ...(directive_code !== undefined ? { directive_code }              : {}),
-      ...(phase          !== undefined ? { phase: parseInt(phase, 10) }  : {}),
+      ...(x              !== undefined ? { x: parseFloat(x) }       : {}),
+      ...(y              !== undefined ? { y: parseFloat(y) }       : {}),
+      ...(marker_type    !== undefined ? { marker_type }            : {}),
+      ...(label          !== undefined ? { label: label.trim() }    : {}),
+      ...(description    !== undefined ? { description }            : {}),
+      ...(directive_id   !== undefined ? { directive_id }           : {}),
+      ...(directive_code !== undefined ? { directive_code }         : {}),
     }
 
     const rowUpdates = { task: JSON.stringify(updatedPayload) }
