@@ -37,7 +37,7 @@
 //  Extra fields stored in task (JSON stringified):
 //  {
 //    x, y,                  ← position as % of map width/height (0–100)
-//    marker_type,           ← 'objective'|'intel'|'staging'|'hostile'|'extraction'
+//    marker_type,           ← 'objective'|'intel'|'staging'|'hostile'|'extraction'|'contact'
 //    label,                 ← short display label
 //    description,           ← detailed briefing notes
 //    directive_id,          ← optional linked directive UUID
@@ -541,7 +541,7 @@ function pickDirectiveFields(obj) {
 //  Data stored in task (JSON):
 //  {
 //    x, y,              ← position 0–100% of map
-//    marker_type,       ← objective|intel|staging|hostile|extraction
+//    marker_type,       ← objective|intel|staging|hostile|extraction|contact
 //    label,             ← short name shown on pin
 //    description,       ← briefing notes
 //    directive_id,      ← optional UUID of linked directive

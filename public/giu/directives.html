@@ -186,6 +186,7 @@
           <button class="warmap-type-btn"        data-type="intel"      onclick="setMarkerType('intel',this)">&#9679; Intel</button>
           <button class="warmap-type-btn"        data-type="staging"    onclick="setMarkerType('staging',this)">&#9679; Staging</button>
           <button class="warmap-type-btn"        data-type="extraction" onclick="setMarkerType('extraction',this)">&#9679; Extraction</button>
+          <button class="warmap-type-btn"        data-type="contact"    onclick="setMarkerType('contact',this)">&#9679; Contact</button>
         </div>
         <div class="warmap-toolbar-sep"></div>
         <span class="warmap-marker-count" id="wmMarkerCount">— markers</span>
@@ -219,12 +220,13 @@
           <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#3498DB;"></div>Intel Point</div>
           <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#27AE60;"></div>Staging Area</div>
           <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#9B59B6;"></div>Extraction</div>
+          <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#1ABC9C;"></div>Contact</div>
         </div>
 
         <!-- Zoom controls -->
         <div class="warmap-zoom-controls">
-          <button class="warmap-zoom-btn" onclick="wmZoom(0.5)">+</button>
-          <button class="warmap-zoom-btn" onclick="wmZoom(-0.5)">−</button>
+          <button class="warmap-zoom-btn" onclick="wmZoom(1)">+</button>
+          <button class="warmap-zoom-btn" onclick="wmZoom(-1)">−</button>
           <button class="warmap-reset-btn" onclick="wmResetView()" title="Reset view">⊙</button>
         </div>
 
@@ -508,6 +510,7 @@
             <option value="intel">Intel Point</option>
             <option value="staging">Staging Area</option>
             <option value="extraction">Extraction</option>
+            <option value="contact">Contact</option>
           </select>
         </div>
         <div class="dir-form-group">
@@ -1667,6 +1670,7 @@ const WM_TYPE_COLORS = {
   intel:      '#3498DB',
   staging:    '#27AE60',
   extraction: '#9B59B6',
+  contact:    '#1ABC9C',
 }
 
 const WM_TYPE_LABELS = {
@@ -1675,6 +1679,7 @@ const WM_TYPE_LABELS = {
   intel:      'Intel Point',
   staging:    'Staging Area',
   extraction: 'Extraction',
+  contact:    'Contact',
 }
 
 // ── Section tab integration ───────────────────────────────
@@ -1788,7 +1793,7 @@ function wmCanvasClick(e) {
 
 // ── Zoom / pan ────────────────────────────────────────────
 function wmZoom(delta) {
-  _wmScale = Math.max(0.4, Math.min(10, _wmScale + delta))
+  _wmScale = Math.max(0.4, Math.min(20, _wmScale + delta))
   applyWmTransform()
 }
 
@@ -1840,7 +1845,8 @@ function setupWmPanDrag() {
 
   canvas.addEventListener('wheel', e => {
     e.preventDefault()
-    wmZoom(e.deltaY > 0 ? -0.25 : 0.25)
+    const delta = e.deltaY > 0 ? -0.5 : 0.5
+    wmZoom(delta * Math.max(1, _wmScale * 0.15))
   }, { passive: false })
 }
 
