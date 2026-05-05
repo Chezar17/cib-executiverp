@@ -105,6 +105,10 @@
       <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
       GIU Members
     </button>
+    <button class="dir-section-tab" id="tabWarmap" onclick="switchTab('warmap', this)">
+      <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+      War Map
+    </button>
   </div>
 
   <!-- Toolbar -->
@@ -164,6 +168,70 @@
     </div>
 
   </div>
+
+
+
+  <!-- ════════════════════
+       WAR MAP SECTION
+  ════════════════════ -->
+  <div id="warmapSection" style="display:none;">
+    <div class="warmap-shell">
+
+      <!-- Toolbar -->
+      <div class="warmap-toolbar">
+        <span class="warmap-toolbar-label">&#9679; Mark Type</span>
+        <div class="warmap-type-btns">
+          <button class="warmap-type-btn active" data-type="objective"  onclick="setMarkerType('objective',this)">&#9679; Objective</button>
+          <button class="warmap-type-btn"        data-type="hostile"    onclick="setMarkerType('hostile',this)">&#9679; Hostile</button>
+          <button class="warmap-type-btn"        data-type="intel"      onclick="setMarkerType('intel',this)">&#9679; Intel</button>
+          <button class="warmap-type-btn"        data-type="staging"    onclick="setMarkerType('staging',this)">&#9679; Staging</button>
+          <button class="warmap-type-btn"        data-type="extraction" onclick="setMarkerType('extraction',this)">&#9679; Extraction</button>
+        </div>
+        <div class="warmap-toolbar-sep"></div>
+        <span class="warmap-marker-count" id="wmMarkerCount">— markers</span>
+        <button class="warmap-place-btn" id="wmPlaceBtn" onclick="togglePlaceMode()">&#43; Place Marker</button>
+        <button class="warmap-brief-btn" onclick="startBriefing()">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+          Start Briefing
+        </button>
+      </div>
+
+      <!-- Map canvas -->
+      <div class="warmap-canvas-wrap not-placing" id="wmCanvas" onclick="wmCanvasClick(event)" onmousemove="wmMouseMove(event)" onmouseleave="wmMouseLeave()">
+
+        <!-- The map image -->
+        <img class="warmap-img" id="wmMapImg" src="../images/warmap.jpg" alt="Los Santos War Map"
+          onerror="this.src='warmap.jpg'"/>
+
+        <!-- Crosshair ghost while placing -->
+        <div class="warmap-crosshair" id="wmCrosshair"></div>
+
+        <!-- Legend -->
+        <div class="warmap-legend">
+          <div class="wm-legend-title">&#9673; Legend</div>
+          <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#E74C3C;"></div>Objective</div>
+          <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#E67E22;"></div>Hostile Zone</div>
+          <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#3498DB;"></div>Intel Point</div>
+          <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#27AE60;"></div>Staging Area</div>
+          <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#9B59B6;"></div>Extraction</div>
+        </div>
+
+        <!-- Zoom controls -->
+        <div class="warmap-zoom-controls">
+          <button class="warmap-zoom-btn" onclick="wmZoom(0.2)">+</button>
+          <button class="warmap-zoom-btn" onclick="wmZoom(-0.2)">−</button>
+          <button class="warmap-reset-btn" onclick="wmResetView()" title="Reset view">⊙</button>
+        </div>
+
+        <!-- Marker tooltip (shown on hover) -->
+        <div class="wm-tooltip" id="wmTooltip" style="display:none;"></div>
+
+        <!-- Markers injected here by JS -->
+        <div id="wmMarkersContainer"></div>
+
+      </div><!-- /wmCanvas -->
+    </div><!-- /warmap-shell -->
+  </div><!-- /warmapSection -->
 
 </div><!-- /dir-layout -->
 
@@ -403,6 +471,121 @@
     </div>
     <div class="dir-modal-submit-row">
       <button class="dir-modal-cancel" onclick="closeMemberDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     WAR MAP — ADD / EDIT MARKER MODAL
+════════════════════════════════════════════════ -->
+<div class="dir-modal-overlay" id="wmMarkerModal">
+  <div class="dir-modal wm-modal">
+    <div class="dir-modal-topbar">
+      <div class="dir-modal-topbar-left">
+        <div class="dir-modal-dot"></div>
+        <span class="dir-modal-label" id="wmMarkerModalLabel">GIU · MARK LOCATION</span>
+      </div>
+      <button class="dir-modal-close" onclick="closeWmModal()">✕</button>
+    </div>
+    <div class="dir-modal-body">
+
+      <div class="dir-form-group">
+        <label class="dir-form-label">Marker Label <span style="color:var(--red);">*</span></label>
+        <input class="dir-form-input" type="text" id="wmLabel" placeholder="e.g. Ballas HQ, Overwatch Point Alpha"/>
+      </div>
+
+      <div class="dir-form-row">
+        <div class="dir-form-group">
+          <label class="dir-form-label">Marker Type</label>
+          <select class="dir-form-select" id="wmType">
+            <option value="objective">Objective</option>
+            <option value="hostile">Hostile Zone</option>
+            <option value="intel">Intel Point</option>
+            <option value="staging">Staging Area</option>
+            <option value="extraction">Extraction</option>
+          </select>
+        </div>
+        <div class="dir-form-group">
+          <label class="dir-form-label">Link to Directive</label>
+          <select class="dir-form-select" id="wmDirective">
+            <option value="">— None —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dir-form-group">
+        <label class="dir-form-label">Briefing Notes</label>
+        <textarea class="dir-form-textarea" id="wmDesc" rows="3"
+          placeholder="Intel about this location, objectives, threats, entry points..."></textarea>
+      </div>
+
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.6;">
+        Coordinates: <span id="wmCoordDisplay" style="color:var(--gold);">—</span>
+      </div>
+
+    </div>
+    <div class="dir-modal-error" id="wmMarkerError"></div>
+    <div class="dir-modal-submit-row">
+      <button class="dir-modal-cancel" onclick="closeWmModal()">Cancel</button>
+      <button class="dir-modal-submit" id="wmMarkerSubmit" onclick="submitWmMarker()">Pin Location</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     BRIEFING MODE OVERLAY
+════════════════════════════════════════════════ -->
+<div class="wm-briefing-overlay" id="wmBriefingOverlay">
+  <div class="wm-brief-topbar">
+    <div class="wm-brief-topbar-left">
+      <div class="wm-brief-signal"></div>
+      <div class="wm-brief-title">GIU Operational Brief</div>
+      <div class="wm-brief-counter" id="wmbCounter">0 / 0</div>
+    </div>
+    <button class="wm-brief-close" onclick="closeBriefing()">End Briefing</button>
+  </div>
+  <div class="wm-brief-body">
+    <!-- Left: map -->
+    <div class="wm-brief-map-pane">
+      <img class="wm-brief-map-img" src="../images/warmap.jpg" alt="Map" onerror="this.src='warmap.jpg'"/>
+      <div class="wm-brief-grid"></div>
+      <div class="wm-brief-corner tl"></div>
+      <div class="wm-brief-corner tr"></div>
+      <div class="wm-brief-corner bl"></div>
+      <div class="wm-brief-corner br"></div>
+      <div class="wm-brief-spotlight" id="wmbSpotlight">
+        <div class="wm-brief-spotlight-ring"></div>
+        <div class="wm-brief-spotlight-dot"></div>
+      </div>
+      <div class="wm-brief-coords" id="wmbCoords"></div>
+    </div>
+    <!-- Right: intel -->
+    <div class="wm-brief-intel-pane">
+      <div class="wm-brief-intel-header">
+        <div class="wm-brief-intel-eyebrow">
+          <div class="wm-brief-type-dot" id="wmbTypeDot"></div>
+          <span id="wmbTypeLabel">—</span>
+          <span style="margin-left:auto;font-size:8px;letter-spacing:2px;color:var(--muted);" id="wmbAddedBy"></span>
+        </div>
+        <div class="wm-brief-intel-title" id="wmbTitle">—</div>
+        <div class="wm-brief-intel-sub" id="wmbSubtitle"></div>
+      </div>
+      <div class="wm-brief-intel-body">
+        <div class="wm-brief-intel-desc" id="wmbDesc"></div>
+        <div id="wmbDirectiveBlock" style="display:none;">
+          <div class="wm-brief-directive-link">
+            <div class="wm-brief-directive-link-label">Linked Directive</div>
+            <div class="wm-brief-directive-link-code" id="wmbDirCode"></div>
+          </div>
+        </div>
+      </div>
+      <div class="wm-brief-nav">
+        <button class="wm-brief-nav-btn wm-brief-nav-prev" id="wmbPrev" onclick="briefNav(-1)" disabled>&#8592; Prev</button>
+        <div class="wm-brief-nav-progress">
+          <div class="wm-brief-nav-fill" id="wmbFill"></div>
+        </div>
+        <button class="wm-brief-nav-btn wm-brief-nav-next" id="wmbNext" onclick="briefNav(1)">Next &#8594;</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1424,6 +1607,578 @@ window.openDetailModal = function(id) {
   document.getElementById('chatInput').value = ''
   loadChat(id)
 }
+
+
+// ════════════════════════════════════════════════════════════
+//  WAR MAP — markers on the Los Santos tactical map
+//  API: /api/informants?type=warmap
+//  Both top_secret and secret can CRUD markers.
+//  Markers are linked to directives optionally.
+//
+//  Zoom/pan is CSS transform-based (no canvas needed).
+//  Briefing mode walks through all markers sequentially.
+// ════════════════════════════════════════════════════════════
+
+// ── State ─────────────────────────────────────────────────
+let _allMarkers       = []
+let _wmLoaded         = false
+let _wmPlacing        = false        // placing mode
+let _wmPendingX       = null         // % coordinates of pending click
+let _wmPendingY       = null
+let _wmEditingId      = null
+let _wmMarkerType     = 'objective'  // currently selected type
+let _wmScale          = 1
+let _wmTx             = 0            // pan offset px
+let _wmTy             = 0
+let _wmDragging       = false
+let _wmDragStartX     = 0
+let _wmDragStartY     = 0
+let _wmDragStartTx    = 0
+let _wmDragStartTy    = 0
+let _briefIndex       = 0
+
+const WM_TYPE_COLORS = {
+  objective:  '#E74C3C',
+  hostile:    '#E67E22',
+  intel:      '#3498DB',
+  staging:    '#27AE60',
+  extraction: '#9B59B6',
+}
+
+const WM_TYPE_LABELS = {
+  objective:  'Objective',
+  hostile:    'Hostile Zone',
+  intel:      'Intel Point',
+  staging:    'Staging Area',
+  extraction: 'Extraction',
+}
+
+// ── Section tab integration ───────────────────────────────
+// Patch switchTab to also handle warmap
+const _origSwitchTab = window.switchTab
+window.switchTab = function(tab, el) {
+  // Hide warmap section unless we're switching to it
+  const wmSection = document.getElementById('warmapSection')
+
+  if (tab === 'warmap') {
+    document.querySelectorAll('.dir-section-tab').forEach(b => b.classList.remove('active'))
+    if (el) el.classList.add('active')
+    document.getElementById('dirGrid').style.display    = 'none'
+    document.getElementById('dirToolbar').style.display = 'none'
+    document.getElementById('membersSection').style.display = 'none'
+    if (wmSection) wmSection.style.display = ''
+    if (!_wmLoaded) loadWarmap()
+    setupWmPanDrag()
+  } else {
+    if (wmSection) wmSection.style.display = 'none'
+    _origSwitchTab(tab, el)
+  }
+}
+
+// ── API helpers ───────────────────────────────────────────
+async function wmApiFetch(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-session-token': getToken()
+    }
+  }
+  if (body) opts.body = JSON.stringify(body)
+  const res  = await fetch(path, opts)
+  const data = await res.json().catch(() => ({}))
+  return { ok: res.ok, status: res.status, data }
+}
+
+async function loadWarmap() {
+  _wmLoaded = true
+  try {
+    const res = await wmApiFetch('GET', '/api/informants?type=warmap')
+    if (!res.ok) throw new Error(res.data?.error || 'Failed to load markers')
+    _allMarkers = res.data.data || []
+    renderMarkers()
+    populateDirectiveDropdown()
+  } catch(e) {
+    showToast('War Map: ' + e.message, 'error')
+  }
+}
+
+// ── Marker type selector ──────────────────────────────────
+function setMarkerType(type, el) {
+  _wmMarkerType = type
+  document.querySelectorAll('.warmap-type-btn').forEach(b => b.classList.remove('active'))
+  if (el) el.classList.add('active')
+}
+
+// ── Place mode ────────────────────────────────────────────
+function togglePlaceMode() {
+  _wmPlacing = !_wmPlacing
+  const canvas = document.getElementById('wmCanvas')
+  const btn    = document.getElementById('wmPlaceBtn')
+  const cross  = document.getElementById('wmCrosshair')
+  if (_wmPlacing) {
+    canvas.classList.remove('not-placing')
+    btn.classList.add('placing')
+    btn.textContent = '✕ Cancel Placement'
+    if (cross) cross.style.display = 'block'
+  } else {
+    canvas.classList.add('not-placing')
+    btn.classList.remove('placing')
+    btn.textContent = '+ Place Marker'
+    if (cross) cross.style.display = 'none'
+  }
+}
+
+function wmMouseMove(e) {
+  const cross = document.getElementById('wmCrosshair')
+  if (!cross || !_wmPlacing) return
+  const rect = document.getElementById('wmCanvas').getBoundingClientRect()
+  cross.style.left = (e.clientX - rect.left) + 'px'
+  cross.style.top  = (e.clientY - rect.top)  + 'px'
+}
+
+function wmMouseLeave() {
+  const cross = document.getElementById('wmCrosshair')
+  if (cross) cross.style.display = 'none'
+}
+
+function wmCanvasClick(e) {
+  if (!_wmPlacing) return
+  if (e.target.closest('.wm-marker')) return  // clicked a marker
+
+  const canvas = document.getElementById('wmCanvas')
+  const img    = document.getElementById('wmMapImg')
+  const rect   = canvas.getBoundingClientRect()
+  const imgRect = img.getBoundingClientRect()
+
+  // Convert click to % of the image
+  const xPct = ((e.clientX - imgRect.left) / imgRect.width  * 100).toFixed(2)
+  const yPct = ((e.clientY - imgRect.top)  / imgRect.height * 100).toFixed(2)
+
+  _wmPendingX = parseFloat(xPct)
+  _wmPendingY = parseFloat(yPct)
+
+  openWmModal()
+}
+
+// ── Zoom / pan ────────────────────────────────────────────
+function wmZoom(delta) {
+  _wmScale = Math.max(0.4, Math.min(4, _wmScale + delta))
+  applyWmTransform()
+}
+
+function wmResetView() {
+  _wmScale = 1; _wmTx = 0; _wmTy = 0
+  applyWmTransform()
+}
+
+function applyWmTransform() {
+  const img = document.getElementById('wmMapImg')
+  if (!img) return
+  img.style.transform = `translate(-50%, -50%) scale(${_wmScale}) translate(${_wmTx}px, ${_wmTy}px)`
+  // Also reposition all markers
+  renderMarkersDOM()
+}
+
+function setupWmPanDrag() {
+  const canvas = document.getElementById('wmCanvas')
+  if (!canvas || canvas._panSetup) return
+  canvas._panSetup = true
+
+  canvas.addEventListener('mousedown', e => {
+    if (_wmPlacing) return
+    if (e.target.closest('.wm-marker') || e.target.closest('.warmap-legend') || e.target.closest('.warmap-zoom-controls')) return
+    _wmDragging = true
+    _wmDragStartX  = e.clientX
+    _wmDragStartY  = e.clientY
+    _wmDragStartTx = _wmTx
+    _wmDragStartTy = _wmTy
+    canvas.style.cursor = 'grabbing'
+  })
+
+  window.addEventListener('mousemove', e => {
+    if (!_wmDragging) return
+    const dx = (e.clientX - _wmDragStartX) / _wmScale
+    const dy = (e.clientY - _wmDragStartY) / _wmScale
+    _wmTx = _wmDragStartTx + dx
+    _wmTy = _wmDragStartTy + dy
+    applyWmTransform()
+  })
+
+  window.addEventListener('mouseup', () => {
+    if (_wmDragging) {
+      _wmDragging = false
+      const canvas = document.getElementById('wmCanvas')
+      if (canvas) canvas.style.cursor = _wmPlacing ? 'crosshair' : 'default'
+    }
+  })
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault()
+    wmZoom(e.deltaY > 0 ? -0.12 : 0.12)
+  }, { passive: false })
+}
+
+// ── Render markers ────────────────────────────────────────
+function renderMarkers() {
+  renderMarkersDOM()
+  const count = document.getElementById('wmMarkerCount')
+  if (count) count.textContent = `${_allMarkers.length} marker${_allMarkers.length !== 1 ? 's' : ''}`
+}
+
+function renderMarkersDOM() {
+  const container = document.getElementById('wmMarkersContainer')
+  const img       = document.getElementById('wmMapImg')
+  if (!container || !img) return
+
+  container.innerHTML = ''
+
+  _allMarkers.forEach(m => {
+    const mk = m._marker || {}
+    const x  = mk.x || 0
+    const y  = mk.y || 0
+    const type  = mk.marker_type || 'intel'
+    const color = WM_TYPE_COLORS[type] || '#888'
+
+    // Convert % on image to absolute position in canvas coords
+    const imgRect    = img.getBoundingClientRect()
+    const canvasRect = document.getElementById('wmCanvas').getBoundingClientRect()
+
+    const absX = (imgRect.left - canvasRect.left) + (x / 100) * imgRect.width
+    const absY = (imgRect.top  - canvasRect.top)  + (y / 100) * imgRect.height
+
+    const pin = document.createElement('div')
+    pin.className = `wm-marker${mk.directive_id ? ' pulsing' : ''}`
+    pin.dataset.type = type
+    pin.dataset.id   = m.id
+    pin.style.left   = absX + 'px'
+    pin.style.top    = absY + 'px'
+
+    pin.innerHTML = `
+      <div class="wm-pin" style="background:${color};color:${color};">
+        <div class="wm-pin-inner"></div>
+      </div>
+      <div class="wm-label">${escHtml(mk.label || '—')}</div>
+      ${mk.directive_code ? `<div class="wm-dir-badge">${escHtml(mk.directive_code)}</div>` : ''}
+    `
+
+    pin.addEventListener('mouseenter', e => showWmTooltip(m, e))
+    pin.addEventListener('mouseleave', hideWmTooltip)
+    pin.addEventListener('click', e => {
+      e.stopPropagation()
+      if (_wmPlacing) return
+      openWmEditModal(m.id)
+    })
+
+    container.appendChild(pin)
+  })
+}
+
+// ── Tooltip ───────────────────────────────────────────────
+function showWmTooltip(m, e) {
+  const mk      = m._marker || {}
+  const tooltip = document.getElementById('wmTooltip')
+  const canvas  = document.getElementById('wmCanvas')
+  if (!tooltip || !canvas) return
+
+  const type  = mk.marker_type || 'intel'
+  const color = WM_TYPE_COLORS[type] || '#888'
+  const dir   = mk.directive_code ? `<div class="wm-tooltip-dir">&#9654; Linked to: ${escHtml(mk.directive_code)}</div>` : ''
+  const desc  = mk.description   ? `<div class="wm-tooltip-body">${escHtml(mk.description).substring(0,140)}${mk.description.length > 140 ? '…' : ''}${dir}</div>` : (dir ? `<div class="wm-tooltip-body">${dir}</div>` : '')
+
+  tooltip.innerHTML = `
+    <div class="wm-tooltip-header">
+      <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+      <div>
+        <div class="wm-tooltip-type">${WM_TYPE_LABELS[type] || type}</div>
+        <div class="wm-tooltip-label">${escHtml(mk.label || '—')}</div>
+      </div>
+    </div>
+    ${desc}
+    <div class="wm-tooltip-meta">Added by ${escHtml(mk.added_by || '—')} · Click to edit</div>
+  `
+
+  const canvasRect = canvas.getBoundingClientRect()
+  const pinRect    = e.currentTarget.getBoundingClientRect()
+  let tx = pinRect.left - canvasRect.left + 18
+  let ty = pinRect.top  - canvasRect.top  - 20
+
+  // Flip if too close to right edge
+  if (tx + 300 > canvasRect.width) tx = tx - 320
+
+  tooltip.style.left    = tx + 'px'
+  tooltip.style.top     = ty + 'px'
+  tooltip.style.display = 'block'
+}
+
+function hideWmTooltip() {
+  const t = document.getElementById('wmTooltip')
+  if (t) t.style.display = 'none'
+}
+
+// ── Marker modal ──────────────────────────────────────────
+function populateDirectiveDropdown() {
+  const sel = document.getElementById('wmDirective')
+  if (!sel) return
+  // Remove all but first option
+  while (sel.options.length > 1) sel.remove(1)
+  _allDirectives.forEach(d => {
+    const opt = document.createElement('option')
+    opt.value       = d.id
+    opt.textContent = `${d.code} — ${d.name}`
+    sel.appendChild(opt)
+  })
+}
+
+function openWmModal() {
+  // Pre-fill type from toolbar selection
+  const typeEl = document.getElementById('wmType')
+  if (typeEl) typeEl.value = _wmMarkerType
+
+  document.getElementById('wmLabel').value = ''
+  document.getElementById('wmDesc').value  = ''
+  const dirSel = document.getElementById('wmDirective')
+  if (dirSel) dirSel.value = ''
+
+  setModalError('wmMarkerError', '')
+  document.getElementById('wmMarkerModalLabel').textContent = 'GIU · MARK LOCATION'
+  document.getElementById('wmMarkerSubmit').textContent = 'Pin Location'
+  document.getElementById('wmMarkerSubmit').onclick = submitWmMarker
+  _wmEditingId = null
+
+  const coordEl = document.getElementById('wmCoordDisplay')
+  if (coordEl && _wmPendingX !== null) {
+    coordEl.textContent = `X:${_wmPendingX.toFixed(1)}% / Y:${_wmPendingY.toFixed(1)}%`
+  }
+
+  document.getElementById('wmMarkerModal').classList.add('open')
+}
+
+function openWmEditModal(id) {
+  const m  = _allMarkers.find(x => x.id === id)
+  if (!m) return
+  const mk = m._marker || {}
+
+  _wmEditingId  = id
+  _wmPendingX   = mk.x
+  _wmPendingY   = mk.y
+
+  document.getElementById('wmLabel').value = mk.label || ''
+  document.getElementById('wmDesc').value  = mk.description || ''
+  const typeEl = document.getElementById('wmType')
+  if (typeEl) typeEl.value = mk.marker_type || 'intel'
+  const dirSel = document.getElementById('wmDirective')
+  if (dirSel) dirSel.value = mk.directive_id || ''
+
+  const coordEl = document.getElementById('wmCoordDisplay')
+  if (coordEl) coordEl.textContent = `X:${(mk.x||0).toFixed(1)}% / Y:${(mk.y||0).toFixed(1)}%`
+
+  setModalError('wmMarkerError', '')
+  document.getElementById('wmMarkerModalLabel').textContent = 'GIU · EDIT MARKER'
+  document.getElementById('wmMarkerSubmit').textContent = 'Save Changes'
+  document.getElementById('wmMarkerSubmit').onclick = submitWmMarker
+  document.getElementById('wmMarkerModal').classList.add('open')
+}
+
+function closeWmModal() {
+  document.getElementById('wmMarkerModal').classList.remove('open')
+  _wmEditingId  = null
+  _wmPendingX   = null
+  _wmPendingY   = null
+  // Exit place mode
+  if (_wmPlacing) togglePlaceMode()
+}
+
+async function submitWmMarker() {
+  const label = document.getElementById('wmLabel').value.trim()
+  const type  = document.getElementById('wmType').value
+  const desc  = document.getElementById('wmDesc').value.trim()
+  const dirSel = document.getElementById('wmDirective')
+  const dirId  = dirSel?.value || null
+  const dirCode = dirId
+    ? (_allDirectives.find(d => d.id === dirId)?.code || null)
+    : null
+
+  if (!label) return setModalError('wmMarkerError', 'MARKER LABEL IS REQUIRED')
+  if (_wmPendingX === null || _wmPendingY === null) {
+    return setModalError('wmMarkerError', 'COORDINATE ERROR — TRY AGAIN')
+  }
+
+  const btn = document.getElementById('wmMarkerSubmit')
+  const origText = btn.textContent
+  btn.disabled = true; btn.textContent = _wmEditingId ? 'Saving…' : 'Pinning…'
+
+  try {
+    const body = {
+      x:              _wmPendingX,
+      y:              _wmPendingY,
+      marker_type:    type,
+      label,
+      description:    desc || null,
+      directive_id:   dirId,
+      directive_code: dirCode,
+    }
+
+    if (_wmEditingId) {
+      const res = await wmApiFetch('PUT', '/api/informants?type=warmap', { id: _wmEditingId, ...body })
+      if (!res.ok) throw new Error(res.data?.error || 'Update failed')
+      const idx = _allMarkers.findIndex(x => x.id === _wmEditingId)
+      if (idx !== -1) _allMarkers[idx] = res.data.data
+      showToast('Marker updated.', 'info')
+    } else {
+      const res = await wmApiFetch('POST', '/api/informants?type=warmap', body)
+      if (!res.ok) throw new Error(res.data?.error || 'Create failed')
+      _allMarkers.push(res.data.data)
+      showToast('Marker placed on war map.', 'success')
+    }
+
+    renderMarkers()
+    closeWmModal()
+  } catch(e) {
+    setModalError('wmMarkerError', e.message.toUpperCase())
+    btn.disabled = false; btn.textContent = origText
+  }
+}
+
+// Delete button inside edit modal (injected dynamically below)
+async function deleteWmMarker(id) {
+  if (!confirm('Remove this marker from the war map?')) return
+  closeWmModal()
+  try {
+    const res = await wmApiFetch('DELETE', `/api/informants?type=warmap&id=${id}`)
+    if (!res.ok) throw new Error(res.data?.error || 'Delete failed')
+    _allMarkers = _allMarkers.filter(x => x.id !== id)
+    renderMarkers()
+    showToast('Marker removed.', 'info')
+  } catch(e) {
+    showToast('Remove failed: ' + e.message, 'error')
+  }
+}
+
+// Add Delete button to edit modal submit row
+const _origOpenWmEdit = openWmEditModal
+window.openWmEditModal = function(id) {
+  _origOpenWmEdit(id)
+  // Add delete button if not already there
+  const row = document.querySelector('#wmMarkerModal .dir-modal-submit-row')
+  if (!row) return
+  if (row.querySelector('.wm-delete-btn')) row.querySelector('.wm-delete-btn').remove()
+  const delBtn = document.createElement('button')
+  delBtn.className = 'dir-modal-cancel wm-delete-btn'
+  delBtn.style.cssText = 'color:rgba(192,57,43,0.75);border-color:rgba(192,57,43,0.25);margin-right:auto;'
+  delBtn.textContent = 'Remove Marker'
+  delBtn.onclick = () => deleteWmMarker(id)
+  row.insertBefore(delBtn, row.firstChild)
+}
+
+// ── BRIEFING MODE ─────────────────────────────────────────
+function startBriefing() {
+  if (!_allMarkers.length) {
+    showToast('No markers on the war map. Place some markers first.', 'info')
+    return
+  }
+  _briefIndex = 0
+  document.getElementById('wmBriefingOverlay').classList.add('open')
+  renderBriefSlide()
+}
+
+function closeBriefing() {
+  document.getElementById('wmBriefingOverlay').classList.remove('open')
+}
+
+function briefNav(dir) {
+  _briefIndex = Math.max(0, Math.min(_allMarkers.length - 1, _briefIndex + dir))
+  renderBriefSlide()
+}
+
+function renderBriefSlide() {
+  const total = _allMarkers.length
+  const m     = _allMarkers[_briefIndex]
+  if (!m) return
+  const mk    = m._marker || {}
+  const type  = mk.marker_type || 'intel'
+  const color = WM_TYPE_COLORS[type] || '#888'
+  const typeLbl = WM_TYPE_LABELS[type] || type
+
+  // Counter
+  document.getElementById('wmbCounter').textContent = `${_briefIndex + 1} / ${total}`
+
+  // Spotlight position on the map
+  const spotlight = document.getElementById('wmbSpotlight')
+  if (spotlight) {
+    spotlight.style.left = (mk.x || 50) + '%'
+    spotlight.style.top  = (mk.y || 50) + '%'
+  }
+
+  // Coords display
+  const coordsEl = document.getElementById('wmbCoords')
+  if (coordsEl) coordsEl.textContent = `X:${(mk.x||0).toFixed(1)}  Y:${(mk.y||0).toFixed(1)}`
+
+  // Type dot + label
+  const typeDot = document.getElementById('wmbTypeDot')
+  if (typeDot) { typeDot.style.background = color; typeDot.style.borderRadius = '50%'; typeDot.style.width = '8px'; typeDot.style.height = '8px'; }
+  document.getElementById('wmbTypeLabel').textContent    = typeLbl.toUpperCase()
+  document.getElementById('wmbTitle').textContent        = mk.label || '—'
+  document.getElementById('wmbTitle').style.borderBottom = `2px solid ${color}`
+
+  // Added by
+  const addedByEl = document.getElementById('wmbAddedBy')
+  if (addedByEl) addedByEl.textContent = mk.added_by ? `By ${mk.added_by}` : ''
+
+  // Description
+  const descEl = document.getElementById('wmbDesc')
+  if (descEl) descEl.textContent = mk.description || 'No briefing notes for this location.'
+
+  // Linked directive
+  const dirBlock = document.getElementById('wmbDirectiveBlock')
+  const dirCode  = document.getElementById('wmbDirCode')
+  if (mk.directive_code) {
+    const linked = _allDirectives.find(d => d.id === mk.directive_id)
+    dirBlock.style.display = ''
+    dirCode.textContent    = mk.directive_code + (linked ? ` — ${linked.name}` : '')
+  } else {
+    dirBlock.style.display = 'none'
+  }
+
+  // Progress bar
+  const fill = document.getElementById('wmbFill')
+  if (fill) fill.style.width = ((_briefIndex + 1) / total * 100) + '%'
+
+  // Nav buttons
+  document.getElementById('wmbPrev').disabled = _briefIndex === 0
+  const nextBtn = document.getElementById('wmbNext')
+  if (_briefIndex === total - 1) {
+    nextBtn.textContent = 'End Briefing'
+    nextBtn.onclick = closeBriefing
+  } else {
+    nextBtn.textContent = 'Next →'
+    nextBtn.onclick = () => briefNav(1)
+  }
+
+  // Animate spotlight update
+  if (spotlight) {
+    spotlight.style.transition = 'left 0.6s ease, top 0.6s ease'
+  }
+}
+
+// ── Modal close bindings ──────────────────────────────────
+document.getElementById('wmMarkerModal').addEventListener('click', function(e) {
+  if (e.target === this) closeWmModal()
+})
+document.getElementById('wmBriefingOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeBriefing()
+})
+
+// Reload warmap when tab is visited
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeWmModal(); closeBriefing() }
+  // Briefing keyboard nav
+  if (document.getElementById('wmBriefingOverlay').classList.contains('open')) {
+    if (e.key === 'ArrowRight') briefNav(1)
+    if (e.key === 'ArrowLeft')  briefNav(-1)
+  }
+})
+
 </script>
 
 </body>
