@@ -1466,3 +1466,69 @@ body.page-visible > :not(#access-gate) {
   .wm-brief-map-pane { flex: 0 0 200px; }
   .warmap-toolbar { padding: 8px 16px; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   WAR MAP — PHASE SYSTEM
+════════════════════════════════════════════════════════════ */
+
+/* Phase filter buttons row */
+.warmap-phase-btns {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.warmap-phase-filter-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.45);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.warmap-phase-filter-btn:hover {
+  border-color: rgba(201,168,76,0.35);
+  color: var(--gold-light, #e0c97f);
+}
+.warmap-phase-filter-btn.active {
+  background: rgba(201,168,76,0.12);
+  border-color: var(--gold, #C9A84C);
+  color: var(--gold, #C9A84C);
+}
+
+/* Phase badge on map pin */
+.wm-phase-badge {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(201,168,76,0.5);
+  color: var(--gold, #C9A84C);
+  font-family: var(--mono, monospace);
+  font-size: 8px;
+  letter-spacing: 1px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+/* Phase badge in briefing intel pane */
+.wm-brief-phase-badge {
+  display: inline-block;
+  margin: 6px 0 10px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--gold, #C9A84C);
+  font-family: var(--mono, monospace);
+  font-size: 9px;
+  letter-spacing: 3px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+}
+
+/* Phase hint warning state handled inline via JS */
