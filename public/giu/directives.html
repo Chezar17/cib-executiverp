@@ -189,11 +189,6 @@
         </div>
         <div class="warmap-toolbar-sep"></div>
         <span class="warmap-marker-count" id="wmMarkerCount">— markers</span>
-        <div class="warmap-toolbar-sep"></div>
-        <span class="warmap-toolbar-label">&#9650; Phase</span>
-        <div class="warmap-phase-btns" id="wmPhaseFilterBtns">
-          <button class="warmap-phase-filter-btn active" data-phase="all" onclick="setPhaseFilter('all',this)">All</button>
-        </div>
         <button class="warmap-place-btn" id="wmPlaceBtn" onclick="togglePlaceMode()">&#43; Place Marker</button>
         <button class="warmap-brief-btn" onclick="startBriefing()">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
@@ -518,14 +513,6 @@
         </div>
       </div>
 
-      <div class="dir-form-row">
-        <div class="dir-form-group">
-          <label class="dir-form-label">Phase <span style="color:var(--red);">*</span></label>
-          <input class="dir-form-input" type="number" id="wmPhase" min="1" max="99" placeholder="e.g. 1, 2, 3 …" style="width:100%;"/>
-          <div class="dir-form-hint" id="wmPhaseHint">Numerical phase this marker belongs to</div>
-        </div>
-      </div>
-
       <div class="dir-form-group">
         <label class="dir-form-label">Briefing Notes</label>
         <textarea class="dir-form-textarea" id="wmDesc" rows="3"
@@ -546,19 +533,33 @@
 </div>
 
 <!-- ════════════════════════════════════════════════
-     BRIEFING MODE OVERLAY
+     BRIEFING MODE OVERLAY  (phase-accumulate layout)
+     Left : map — dots accumulate per phase, clear on phase change
+     Right: scrollable feed — cards append downward, objective first
 ════════════════════════════════════════════════ -->
 <div class="wm-briefing-overlay" id="wmBriefingOverlay">
+
+  <!-- Top bar -->
   <div class="wm-brief-topbar">
     <div class="wm-brief-topbar-left">
       <div class="wm-brief-signal"></div>
       <div class="wm-brief-title">GIU Operational Brief</div>
-      <div class="wm-brief-counter" id="wmbCounter">0 / 0</div>
+      <!-- Phase pill -->
+      <div class="wm-brief-phase-pill" id="wmbPhasePill" style="display:none;"></div>
+      <!-- Marker counter within current phase -->
+      <div class="wm-brief-counter" id="wmbCounter"></div>
     </div>
-    <button class="wm-brief-close" onclick="closeBriefing()">End Briefing</button>
+    <div class="wm-brief-topbar-right">
+      <!-- Overall phase progress -->
+      <div class="wm-brief-phase-progress" id="wmbPhaseProgress"></div>
+      <button class="wm-brief-close" onclick="closeBriefing()">End Briefing</button>
+    </div>
   </div>
+
+  <!-- Body: map left, feed right -->
   <div class="wm-brief-body">
-    <!-- Left: map -->
+
+    <!-- Left: tactical map — dots accumulate, never clear mid-phase -->
     <div class="wm-brief-map-pane">
       <img class="wm-brief-map-img" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'"/>
       <div class="wm-brief-grid"></div>
@@ -566,39 +567,30 @@
       <div class="wm-brief-corner tr"></div>
       <div class="wm-brief-corner bl"></div>
       <div class="wm-brief-corner br"></div>
-      <div class="wm-brief-spotlight" id="wmbSpotlight">
-        <div class="wm-brief-spotlight-ring"></div>
-        <div class="wm-brief-spotlight-dot"></div>
-      </div>
-      <div class="wm-brief-coords" id="wmbCoords"></div>
+      <!-- Dots injected here by JS — one per revealed marker -->
+      <div id="wmbDotsContainer"></div>
     </div>
-    <!-- Right: intel -->
-    <div class="wm-brief-intel-pane">
-      <div class="wm-brief-intel-header">
-        <div class="wm-brief-intel-eyebrow">
-          <div class="wm-brief-type-dot" id="wmbTypeDot"></div>
-          <span id="wmbTypeLabel">—</span>
-          <span style="margin-left:auto;font-size:8px;letter-spacing:2px;color:var(--muted);" id="wmbAddedBy"></span>
-        </div>
-        <div class="wm-brief-intel-title" id="wmbTitle">—</div>
-        <div class="wm-brief-intel-sub" id="wmbSubtitle"></div>
+
+    <!-- Right: scrollable card feed -->
+    <div class="wm-brief-intel-pane" id="wmbFeedPane">
+
+      <!-- Phase header — pinned at top, updates when phase changes -->
+      <div class="wm-brief-phase-header" id="wmbPhaseHeader">
+        <div class="wm-brief-phase-header-label" id="wmbPhaseHeaderLabel">—</div>
+        <div class="wm-brief-phase-header-sub" id="wmbPhaseHeaderSub"></div>
       </div>
-      <div class="wm-brief-intel-body">
-        <div class="wm-brief-intel-desc" id="wmbDesc"></div>
-        <div id="wmbDirectiveBlock" style="display:none;">
-          <div class="wm-brief-directive-link">
-            <div class="wm-brief-directive-link-label">Linked Directive</div>
-            <div class="wm-brief-directive-link-code" id="wmbDirCode"></div>
-          </div>
-        </div>
-      </div>
+
+      <!-- Card feed — cards append here -->
+      <div class="wm-brief-feed" id="wmbFeed"></div>
+
+      <!-- Nav bar pinned at bottom -->
       <div class="wm-brief-nav">
-        <button class="wm-brief-nav-btn wm-brief-nav-prev" id="wmbPrev" onclick="briefNav(-1)" disabled>&#8592; Prev</button>
         <div class="wm-brief-nav-progress">
           <div class="wm-brief-nav-fill" id="wmbFill"></div>
         </div>
-        <button class="wm-brief-nav-btn wm-brief-nav-next" id="wmbNext" onclick="briefNav(1)">Next &#8594;</button>
+        <button class="wm-brief-nav-btn wm-brief-nav-next" id="wmbNext" onclick="briefAdvance()">Reveal Next &#8594;</button>
       </div>
+
     </div>
   </div>
 </div>
@@ -1649,7 +1641,6 @@ let _wmDragStartY     = 0
 let _wmDragStartTx    = 0
 let _wmDragStartTy    = 0
 let _briefIndex       = 0
-let _wmPhaseFilter    = 'all'  // 'all' or a phase number (string)
 
 const WM_TYPE_COLORS = {
   objective:  '#E74C3C',
@@ -1712,7 +1703,6 @@ async function loadWarmap() {
     _allMarkers = res.data.data || []
     renderMarkers()
     populateDirectiveDropdown()
-    buildPhaseFilterButtons()
   } catch(e) {
     showToast('War Map: ' + e.message, 'error')
   }
@@ -1837,46 +1827,8 @@ function setupWmPanDrag() {
 // ── Render markers ────────────────────────────────────────
 function renderMarkers() {
   renderMarkersDOM()
-  const visible = filteredMarkers()
   const count = document.getElementById('wmMarkerCount')
-  if (count) count.textContent = `${visible.length} marker${visible.length !== 1 ? 's' : ''}${_wmPhaseFilter !== 'all' ? ` · Phase ${_wmPhaseFilter}` : ''}`
-}
-
-function filteredMarkers() {
-  if (_wmPhaseFilter === 'all') return _allMarkers
-  return _allMarkers.filter(m => {
-    const mk = m._marker || {}
-    return String(mk.phase) === String(_wmPhaseFilter)
-  })
-}
-
-function setPhaseFilter(val, el) {
-  _wmPhaseFilter = val
-  document.querySelectorAll('.warmap-phase-filter-btn').forEach(b => b.classList.remove('active'))
-  if (el) el.classList.add('active')
-  renderMarkers()
-}
-
-function buildPhaseFilterButtons() {
-  const container = document.getElementById('wmPhaseFilterBtns')
-  if (!container) return
-  // Collect all unique phases, sorted numerically
-  const phases = [...new Set(
-    _allMarkers
-      .map(m => (m._marker || {}).phase)
-      .filter(p => p !== null && p !== undefined)
-  )].sort((a,b) => a - b)
-
-  // Rebuild — keep the "All" button, add one per phase
-  container.innerHTML = `<button class="warmap-phase-filter-btn${_wmPhaseFilter === 'all' ? ' active' : ''}" data-phase="all" onclick="setPhaseFilter('all',this)">All</button>`
-  phases.forEach(p => {
-    const btn = document.createElement('button')
-    btn.className = 'warmap-phase-filter-btn' + (String(_wmPhaseFilter) === String(p) ? ' active' : '')
-    btn.dataset.phase = p
-    btn.textContent = `Phase ${p}`
-    btn.onclick = function() { setPhaseFilter(String(p), this) }
-    container.appendChild(btn)
-  })
+  if (count) count.textContent = `${_allMarkers.length} marker${_allMarkers.length !== 1 ? 's' : ''}`
 }
 
 function renderMarkersDOM() {
@@ -1886,15 +1838,12 @@ function renderMarkersDOM() {
 
   container.innerHTML = ''
 
-  const markers = filteredMarkers()
-
-  markers.forEach(m => {
+  _allMarkers.forEach(m => {
     const mk = m._marker || {}
     const x  = mk.x || 0
     const y  = mk.y || 0
     const type  = mk.marker_type || 'intel'
     const color = WM_TYPE_COLORS[type] || '#888'
-    const phase = mk.phase
 
     // Convert % on image to absolute position in canvas coords
     const imgRect    = img.getBoundingClientRect()
@@ -1905,17 +1854,15 @@ function renderMarkersDOM() {
 
     const pin = document.createElement('div')
     pin.className = `wm-marker${mk.directive_id ? ' pulsing' : ''}`
-    pin.dataset.type  = type
-    pin.dataset.id    = m.id
-    pin.dataset.phase = phase || ''
-    pin.style.left    = absX + 'px'
-    pin.style.top     = absY + 'px'
+    pin.dataset.type = type
+    pin.dataset.id   = m.id
+    pin.style.left   = absX + 'px'
+    pin.style.top    = absY + 'px'
 
     pin.innerHTML = `
       <div class="wm-pin" style="background:${color};color:${color};">
         <div class="wm-pin-inner"></div>
       </div>
-      ${phase ? `<div class="wm-phase-badge">P${phase}</div>` : ''}
       <div class="wm-label">${escHtml(mk.label || '—')}</div>
       ${mk.directive_code ? `<div class="wm-dir-badge">${escHtml(mk.directive_code)}</div>` : ''}
     `
@@ -1995,16 +1942,8 @@ function openWmModal() {
 
   document.getElementById('wmLabel').value = ''
   document.getElementById('wmDesc').value  = ''
-  document.getElementById('wmPhase').value = ''
-  updatePhaseHint()
-
   const dirSel = document.getElementById('wmDirective')
   if (dirSel) dirSel.value = ''
-
-  // Wire up type change to update objective warning
-  if (typeEl) typeEl.onchange = updatePhaseHint
-  const phaseEl = document.getElementById('wmPhase')
-  if (phaseEl) phaseEl.oninput = updatePhaseHint
 
   setModalError('wmMarkerError', '')
   document.getElementById('wmMarkerModalLabel').textContent = 'GIU · MARK LOCATION'
@@ -2020,31 +1959,6 @@ function openWmModal() {
   document.getElementById('wmMarkerModal').classList.add('open')
 }
 
-// Show warning if the selected phase already has an objective marker
-function updatePhaseHint() {
-  const hintEl  = document.getElementById('wmPhaseHint')
-  const typeEl  = document.getElementById('wmType')
-  const phaseEl = document.getElementById('wmPhase')
-  if (!hintEl || !typeEl || !phaseEl) return
-
-  const phase = parseInt(phaseEl.value)
-  const type  = typeEl.value
-
-  if (type === 'objective' && phase >= 1) {
-    const takenByOther = _allMarkers.some(m => {
-      const mk = m._marker || {}
-      return mk.phase === phase && mk.marker_type === 'objective' && m.id !== _wmEditingId
-    })
-    if (takenByOther) {
-      hintEl.textContent = `⚠ Phase ${phase} already has an Objective — cannot add another.`
-      hintEl.style.color = '#E74C3C'
-      return
-    }
-  }
-  hintEl.textContent = 'Numerical phase this marker belongs to'
-  hintEl.style.color = ''
-}
-
 function openWmEditModal(id) {
   const m  = _allMarkers.find(x => x.id === id)
   if (!m) return
@@ -2056,20 +1970,14 @@ function openWmEditModal(id) {
 
   document.getElementById('wmLabel').value = mk.label || ''
   document.getElementById('wmDesc').value  = mk.description || ''
-  document.getElementById('wmPhase').value = mk.phase !== null && mk.phase !== undefined ? mk.phase : ''
-
   const typeEl = document.getElementById('wmType')
-  if (typeEl) { typeEl.value = mk.marker_type || 'intel'; typeEl.onchange = updatePhaseHint }
-  const phaseEl = document.getElementById('wmPhase')
-  if (phaseEl) phaseEl.oninput = updatePhaseHint
-
+  if (typeEl) typeEl.value = mk.marker_type || 'intel'
   const dirSel = document.getElementById('wmDirective')
   if (dirSel) dirSel.value = mk.directive_id || ''
 
   const coordEl = document.getElementById('wmCoordDisplay')
   if (coordEl) coordEl.textContent = `X:${(mk.x||0).toFixed(1)}% / Y:${(mk.y||0).toFixed(1)}%`
 
-  updatePhaseHint()
   setModalError('wmMarkerError', '')
   document.getElementById('wmMarkerModalLabel').textContent = 'GIU · EDIT MARKER'
   document.getElementById('wmMarkerSubmit').textContent = 'Save Changes'
@@ -2090,8 +1998,6 @@ async function submitWmMarker() {
   const label = document.getElementById('wmLabel').value.trim()
   const type  = document.getElementById('wmType').value
   const desc  = document.getElementById('wmDesc').value.trim()
-  const phaseRaw = document.getElementById('wmPhase').value.trim()
-  const phase = phaseRaw !== '' ? parseInt(phaseRaw) : null
   const dirSel = document.getElementById('wmDirective')
   const dirId  = dirSel?.value || null
   const dirCode = dirId
@@ -2099,22 +2005,8 @@ async function submitWmMarker() {
     : null
 
   if (!label) return setModalError('wmMarkerError', 'MARKER LABEL IS REQUIRED')
-  if (phase !== null && (isNaN(phase) || phase < 1)) {
-    return setModalError('wmMarkerError', 'PHASE MUST BE A POSITIVE NUMBER (1, 2, 3 …)')
-  }
   if (_wmPendingX === null || _wmPendingY === null) {
     return setModalError('wmMarkerError', 'COORDINATE ERROR — TRY AGAIN')
-  }
-
-  // Client-side objective-per-phase check (faster UX, API also enforces)
-  if (type === 'objective' && phase !== null) {
-    const takenByOther = _allMarkers.some(m => {
-      const mk = m._marker || {}
-      return mk.phase === phase && mk.marker_type === 'objective' && m.id !== _wmEditingId
-    })
-    if (takenByOther) {
-      return setModalError('wmMarkerError', `PHASE ${phase} ALREADY HAS AN OBJECTIVE MARKER — ONLY ONE ALLOWED PER PHASE`)
-    }
   }
 
   const btn = document.getElementById('wmMarkerSubmit')
@@ -2130,7 +2022,6 @@ async function submitWmMarker() {
       description:    desc || null,
       directive_id:   dirId,
       directive_code: dirCode,
-      phase:          phase,
     }
 
     if (_wmEditingId) {
@@ -2147,7 +2038,6 @@ async function submitWmMarker() {
     }
 
     renderMarkers()
-    buildPhaseFilterButtons()  // rebuild in case a new phase was used
     closeWmModal()
   } catch(e) {
     setModalError('wmMarkerError', e.message.toUpperCase())
@@ -2187,161 +2077,275 @@ window.openWmEditModal = function(id) {
   row.insertBefore(delBtn, row.firstChild)
 }
 
-// ── BRIEFING MODE ─────────────────────────────────────────
-// _briefSlides is a flat ordered list built from markers sorted by phase,
-// with phase header "slides" injected between groups.
-let _briefSlides = []
+// ════════════════════════════════════════════════════════════
+//  BRIEFING MODE — Phase-accumulate design
+//
+//  Structure:
+//    _briefPhases  = [ { phase, markers: [m, m, m] }, … ]
+//      — phases sorted ascending; unassigned last
+//    _briefPhaseIdx   = which phase we're currently showing
+//    _briefMarkerIdx  = how many markers in this phase have been revealed
+//
+//  Map dots accumulate throughout a phase and are cleared only
+//  when moving to the next phase.
+//  Intel feed cards append downward; objective always first.
+//  "Reveal Next" advances within a phase; when all revealed it
+//  becomes "Next Phase →"; on the last phase it becomes "End".
+// ════════════════════════════════════════════════════════════
 
-function buildBriefSlides() {
+let _briefPhases    = []   // [{phase, markers:[]}]
+let _briefPhaseIdx  = 0
+let _briefMarkerIdx = 0    // how many markers revealed in current phase
+
+// ── Build phase groups ────────────────────────────────────
+function buildBriefPhases() {
   const markers = filteredMarkers()
-  if (!markers.length) return []
 
-  // Sort: markers with a phase first (ascending), then no-phase markers
-  const withPhase    = markers.filter(m => (m._marker||{}).phase != null)
-    .sort((a,b) => (a._marker.phase||0) - (b._marker.phase||0))
-  const withoutPhase = markers.filter(m => (m._marker||{}).phase == null)
-
-  const sorted = [...withPhase, ...withoutPhase]
-
-  const slides = []
-  let lastPhase = undefined
-
-  sorted.forEach(m => {
-    const phase = (m._marker||{}).phase
-    // Insert a phase-header slide whenever the phase changes
-    if (phase != null && phase !== lastPhase) {
-      slides.push({ _isPhaseHeader: true, phase })
-      lastPhase = phase
-    } else if (phase == null && lastPhase !== 'none') {
-      if (withoutPhase.length > 0 && withPhase.length > 0) {
-        slides.push({ _isPhaseHeader: true, phase: null }) // "Unassigned" group
-      }
-      lastPhase = 'none'
-    }
-    slides.push(m)
+  // Bucket by phase
+  const bucket = {}
+  markers.forEach(m => {
+    const p = (m._marker || {}).phase
+    const key = (p != null) ? String(p) : '__unassigned__'
+    if (!bucket[key]) bucket[key] = []
+    bucket[key].push(m)
   })
 
-  return slides
+  // Sort phases numerically; unassigned last
+  const phases = Object.keys(bucket).sort((a, b) => {
+    if (a === '__unassigned__') return 1
+    if (b === '__unassigned__') return -1
+    return parseInt(a) - parseInt(b)
+  })
+
+  // Within each phase: objective first, then rest
+  return phases.map(key => ({
+    phase: key === '__unassigned__' ? null : parseInt(key),
+    markers: bucket[key].sort((a, b) => {
+      const aObj = (a._marker || {}).marker_type === 'objective' ? 0 : 1
+      const bObj = (b._marker || {}).marker_type === 'objective' ? 0 : 1
+      return aObj - bObj
+    })
+  }))
 }
 
+// ── Start briefing ────────────────────────────────────────
 function startBriefing() {
   const markers = filteredMarkers()
   if (!markers.length) {
     showToast('No markers on the war map. Place some markers first.', 'info')
     return
   }
-  _briefSlides = buildBriefSlides()
-  _briefIndex  = 0
+  _briefPhases    = buildBriefPhases()
+  _briefPhaseIdx  = 0
+  _briefMarkerIdx = 0
   document.getElementById('wmBriefingOverlay').classList.add('open')
-  renderBriefSlide()
+  renderBriefPhaseHeader()
+  clearBriefDots()
+  clearBriefFeed()
+  // Reveal first marker automatically
+  revealNextMarker()
 }
 
 function closeBriefing() {
   document.getElementById('wmBriefingOverlay').classList.remove('open')
 }
 
-function briefNav(dir) {
-  _briefIndex = Math.max(0, Math.min(_briefSlides.length - 1, _briefIndex + dir))
-  renderBriefSlide()
-}
+// ── Advance button handler ────────────────────────────────
+function briefAdvance() {
+  const phase = _briefPhases[_briefPhaseIdx]
+  if (!phase) { closeBriefing(); return }
 
-function renderBriefSlide() {
-  const total = _briefSlides.length
-  const slide = _briefSlides[_briefIndex]
-  if (!slide) return
+  const allRevealed = _briefMarkerIdx >= phase.markers.length
 
-  // ── Phase header slide ──────────────────────────────────
-  if (slide._isPhaseHeader) {
-    const phaseLabel = slide.phase != null ? `PHASE ${slide.phase}` : 'UNASSIGNED MARKERS'
-
-    // Grey out spotlight
-    const spotlight = document.getElementById('wmbSpotlight')
-    if (spotlight) { spotlight.style.left = '50%'; spotlight.style.top = '50%' }
-
-    const typeDot = document.getElementById('wmbTypeDot')
-    if (typeDot) { typeDot.style.background = '#888' }
-    document.getElementById('wmbTypeLabel').textContent    = 'PHASE BRIEFING'
-    document.getElementById('wmbTitle').textContent        = phaseLabel
-    document.getElementById('wmbTitle').style.borderBottom = '2px solid rgba(201,168,76,0.6)'
-    document.getElementById('wmbDesc').textContent         = slide.phase != null
-      ? `Starting Phase ${slide.phase} of the operation. The following markers are assigned to this phase.`
-      : 'The following markers have no assigned phase.'
-
-    const phaseBadge = document.getElementById('wmbPhaseBadge')
-    if (phaseBadge) { phaseBadge.style.display = 'none' }
-    const addedByEl = document.getElementById('wmbAddedBy')
-    if (addedByEl) addedByEl.textContent = ''
-    document.getElementById('wmbDirectiveBlock').style.display = 'none'
-    document.getElementById('wmbCoords').textContent = ''
-
-    document.getElementById('wmbCounter').textContent = `${_briefIndex + 1} / ${total}`
-    const fill = document.getElementById('wmbFill')
-    if (fill) fill.style.width = ((_briefIndex + 1) / total * 100) + '%'
-
-    document.getElementById('wmbPrev').disabled = _briefIndex === 0
-    const nextBtn = document.getElementById('wmbNext')
-    if (_briefIndex === total - 1) { nextBtn.textContent = 'End Briefing'; nextBtn.onclick = closeBriefing }
-    else { nextBtn.textContent = 'Next →'; nextBtn.onclick = () => briefNav(1) }
+  if (allRevealed) {
+    // Move to next phase
+    if (_briefPhaseIdx < _briefPhases.length - 1) {
+      _briefPhaseIdx++
+      _briefMarkerIdx = 0
+      clearBriefDots()
+      clearBriefFeed()
+      renderBriefPhaseHeader()
+      revealNextMarker()
+    } else {
+      closeBriefing()
+    }
     return
   }
 
-  // ── Normal marker slide ─────────────────────────────────
-  const mk      = slide._marker || {}
-  const type    = mk.marker_type || 'intel'
-  const color   = WM_TYPE_COLORS[type] || '#888'
-  const typeLbl = WM_TYPE_LABELS[type] || type
-  const phase   = mk.phase
+  revealNextMarker()
+}
 
-  document.getElementById('wmbCounter').textContent = `${_briefIndex + 1} / ${total}`
+// ── Reveal the next marker in the current phase ───────────
+function revealNextMarker() {
+  const phase = _briefPhases[_briefPhaseIdx]
+  if (!phase) return
 
-  const spotlight = document.getElementById('wmbSpotlight')
-  if (spotlight) { spotlight.style.left = (mk.x || 50) + '%'; spotlight.style.top = (mk.y || 50) + '%' }
+  const m = phase.markers[_briefMarkerIdx]
+  if (!m) return
 
-  const coordsEl = document.getElementById('wmbCoords')
-  if (coordsEl) coordsEl.textContent = `X:${(mk.x||0).toFixed(1)}  Y:${(mk.y||0).toFixed(1)}`
+  _briefMarkerIdx++
 
-  const typeDot = document.getElementById('wmbTypeDot')
-  if (typeDot) { typeDot.style.background = color; typeDot.style.borderRadius = '50%'; typeDot.style.width = '8px'; typeDot.style.height = '8px' }
-  document.getElementById('wmbTypeLabel').textContent    = typeLbl.toUpperCase()
-  document.getElementById('wmbTitle').textContent        = mk.label || '—'
-  document.getElementById('wmbTitle').style.borderBottom = `2px solid ${color}`
+  // Add dot on map
+  addBriefDot(m)
 
-  // Phase badge in briefing
-  const phaseBadge = document.getElementById('wmbPhaseBadge')
-  if (phaseBadge) {
-    if (phase != null) {
-      phaseBadge.textContent = `PHASE ${phase}`
-      phaseBadge.style.display = 'inline-block'
-    } else {
-      phaseBadge.style.display = 'none'
-    }
+  // Append card to feed
+  appendBriefCard(m)
+
+  // Update counter
+  updateBriefCounter()
+
+  // Update nav button label
+  updateBriefNavBtn()
+
+  // Scroll feed to bottom so new card is visible
+  const feed = document.getElementById('wmbFeed')
+  if (feed) setTimeout(() => feed.scrollTop = feed.scrollHeight, 50)
+}
+
+// ── Phase header (pinned top of feed pane) ────────────────
+function renderBriefPhaseHeader() {
+  const phase = _briefPhases[_briefPhaseIdx]
+  if (!phase) return
+
+  const label    = document.getElementById('wmbPhaseHeaderLabel')
+  const sub      = document.getElementById('wmbPhaseHeaderSub')
+  const pill     = document.getElementById('wmbPhasePill')
+  const progress = document.getElementById('wmbPhaseProgress')
+
+  const phaseLabel = phase.phase != null ? `PHASE ${phase.phase}` : 'UNASSIGNED'
+  if (label) label.textContent = phaseLabel
+  if (sub)   sub.textContent   = `${phase.markers.length} location${phase.markers.length !== 1 ? 's' : ''} in this phase`
+  if (pill)  { pill.textContent = phaseLabel; pill.style.display = '' }
+  if (progress) {
+    const total = _briefPhases.length
+    progress.textContent = `Phase ${_briefPhaseIdx + 1} of ${total}`
   }
 
-  const addedByEl = document.getElementById('wmbAddedBy')
-  if (addedByEl) addedByEl.textContent = mk.added_by ? `By ${mk.added_by}` : ''
-
-  const descEl = document.getElementById('wmbDesc')
-  if (descEl) descEl.textContent = mk.description || 'No briefing notes for this location.'
-
-  const dirBlock = document.getElementById('wmbDirectiveBlock')
-  const dirCode  = document.getElementById('wmbDirCode')
-  if (mk.directive_code) {
-    const linked = _allDirectives.find(d => d.id === mk.directive_id)
-    dirBlock.style.display = ''
-    dirCode.textContent    = mk.directive_code + (linked ? ` — ${linked.name}` : '')
-  } else {
-    dirBlock.style.display = 'none'
-  }
-
+  // Update overall progress bar
   const fill = document.getElementById('wmbFill')
-  if (fill) fill.style.width = ((_briefIndex + 1) / total * 100) + '%'
+  if (fill) fill.style.width = ((_briefPhaseIdx) / _briefPhases.length * 100) + '%'
+}
 
-  document.getElementById('wmbPrev').disabled = _briefIndex === 0
-  const nextBtn = document.getElementById('wmbNext')
-  if (_briefIndex === total - 1) { nextBtn.textContent = 'End Briefing'; nextBtn.onclick = closeBriefing }
-  else { nextBtn.textContent = 'Next →'; nextBtn.onclick = () => briefNav(1) }
+function updateBriefCounter() {
+  const phase   = _briefPhases[_briefPhaseIdx]
+  const counter = document.getElementById('wmbCounter')
+  if (!counter || !phase) return
+  counter.textContent = `${_briefMarkerIdx} / ${phase.markers.length} locations`
+}
 
-  if (spotlight) { spotlight.style.transition = 'left 0.6s ease, top 0.6s ease' }
+function updateBriefNavBtn() {
+  const btn   = document.getElementById('wmbNext')
+  const phase = _briefPhases[_briefPhaseIdx]
+  if (!btn || !phase) return
+
+  const allRevealed  = _briefMarkerIdx >= phase.markers.length
+  const isLastPhase  = _briefPhaseIdx >= _briefPhases.length - 1
+
+  if (!allRevealed) {
+    btn.textContent = 'Reveal Next →'
+    btn.classList.remove('wm-brief-nav-phase', 'wm-brief-nav-end')
+  } else if (!isLastPhase) {
+    btn.textContent = 'Next Phase →'
+    btn.classList.add('wm-brief-nav-phase')
+    btn.classList.remove('wm-brief-nav-end')
+    // Update progress bar to show completed phase
+    const fill = document.getElementById('wmbFill')
+    if (fill) fill.style.width = ((_briefPhaseIdx + 1) / _briefPhases.length * 100) + '%'
+  } else {
+    btn.textContent = 'End Briefing'
+    btn.classList.add('wm-brief-nav-end')
+    btn.classList.remove('wm-brief-nav-phase')
+    const fill = document.getElementById('wmbFill')
+    if (fill) fill.style.width = '100%'
+  }
+}
+
+// ── Map dots ──────────────────────────────────────────────
+function addBriefDot(m) {
+  const mk        = m._marker || {}
+  const container = document.getElementById('wmbDotsContainer')
+  const mapImg    = document.querySelector('.wm-brief-map-img')
+  if (!container || !mapImg) return
+
+  const type  = mk.marker_type || 'intel'
+  const color = WM_TYPE_COLORS[type] || '#888'
+  const isObj = type === 'objective'
+
+  const dot = document.createElement('div')
+  dot.className = 'wm-brief-dot' + (isObj ? ' wm-brief-dot-objective' : '')
+  dot.style.cssText = `
+    position:absolute;
+    left:${mk.x || 50}%;
+    top:${mk.y  || 50}%;
+    transform:translate(-50%,-50%);
+    z-index:5;
+    pointer-events:none;
+    animation: briefDotIn 0.4s ease both;
+  `
+  dot.innerHTML = `
+    <div class="wm-brief-dot-ring" style="border-color:${color};"></div>
+    <div class="wm-brief-dot-center" style="background:${color};box-shadow:0 0 12px ${color};"></div>
+    ${isObj ? `<div class="wm-brief-dot-pulse" style="border-color:${color};"></div>` : ''}
+    <div class="wm-brief-dot-label">${escHtml(mk.label || '')}</div>
+  `
+  container.appendChild(dot)
+}
+
+function clearBriefDots() {
+  const c = document.getElementById('wmbDotsContainer')
+  if (c) c.innerHTML = ''
+}
+
+// ── Feed cards ────────────────────────────────────────────
+function appendBriefCard(m) {
+  const mk       = m._marker || {}
+  const feed     = document.getElementById('wmbFeed')
+  if (!feed) return
+
+  const type     = mk.marker_type || 'intel'
+  const color    = WM_TYPE_COLORS[type] || '#888'
+  const typeLbl  = WM_TYPE_LABELS[type] || type
+  const isObj    = type === 'objective'
+
+  const linked   = mk.directive_id
+    ? _allDirectives.find(d => d.id === mk.directive_id)
+    : null
+  const dirHtml  = linked
+    ? `<div class="wmbc-directive">
+        <span class="wmbc-directive-label">DIRECTIVE</span>
+        <span class="wmbc-directive-code">${escHtml(mk.directive_code || '')} — ${escHtml(linked.name || '')}</span>
+       </div>`
+    : (mk.directive_code
+        ? `<div class="wmbc-directive">
+            <span class="wmbc-directive-label">DIRECTIVE</span>
+            <span class="wmbc-directive-code">${escHtml(mk.directive_code)}</span>
+           </div>`
+        : '')
+
+  const coordHtml = `<span class="wmbc-coord">X:${(mk.x||0).toFixed(1)} Y:${(mk.y||0).toFixed(1)}</span>`
+
+  const card = document.createElement('div')
+  card.className = 'wmbc' + (isObj ? ' wmbc-objective' : '')
+  card.style.setProperty('--card-color', color)
+  card.innerHTML = `
+    <div class="wmbc-header">
+      <div class="wmbc-type-dot" style="background:${color};"></div>
+      <span class="wmbc-type-label" style="color:${color};">${typeLbl.toUpperCase()}</span>
+      ${coordHtml}
+      ${mk.added_by ? `<span class="wmbc-added-by">by ${escHtml(mk.added_by)}</span>` : ''}
+    </div>
+    <div class="wmbc-title">${escHtml(mk.label || '—')}</div>
+    ${mk.description
+      ? `<div class="wmbc-desc">${escHtml(mk.description)}</div>`
+      : ''}
+    ${dirHtml}
+  `
+  feed.appendChild(card)
+}
+
+function clearBriefFeed() {
+  const f = document.getElementById('wmbFeed')
+  if (f) f.innerHTML = ''
 }
 
 // ── Modal close bindings ──────────────────────────────────
@@ -2357,8 +2361,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeWmModal(); closeBriefing() }
   // Briefing keyboard nav
   if (document.getElementById('wmBriefingOverlay').classList.contains('open')) {
-    if (e.key === 'ArrowRight') briefNav(1)
-    if (e.key === 'ArrowLeft')  briefNav(-1)
+    if (e.key === 'ArrowRight' || e.key === 'Enter') briefAdvance()
   }
 })
 
