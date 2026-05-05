@@ -81,6 +81,102 @@
   let _giuClockTimer = null
   let _currentDefcon = 5
 
+  /** ── GIU welcome TTS (Web Speech API, matches briefing voice preference) ── */
+  let _giuWelcomeSpeechGen = 0
+
+  function giuSpeechSupported() {
+    return typeof window !== 'undefined' && 'speechSynthesis' in window
+  }
+
+  function giuCancelWelcomeSpeech() {
+    try {
+      if (giuSpeechSupported()) speechSynthesis.cancel()
+    } catch (_) { /* ignore */ }
+    _giuWelcomeSpeechGen++
+  }
+
+  function giuPickUKFemaleVoice() {
+    try {
+      const voices = speechSynthesis.getVoices()
+      const normLang = (l) => String(l || '').replace('_', '-').toLowerCase()
+      const match =
+        voices.find(
+          (vo) =>
+            /google\s+uk\s+english\s+female/i.test(vo.name || '') &&
+            normLang(vo.lang) === 'en-gb'
+        ) ||
+        voices.find((vo) => /google\s+uk\s+english\s+female/i.test(vo.name || ''))
+      return match || null
+    } catch (_) {
+      return null
+    }
+  }
+
+  /** Same shaping rules as GIU briefing TTS — avoids spelling GHOST / long CAPS. */
+  function giuSpeechFriendlyCallsign(cs) {
+    let t = String(cs || '').trim()
+    if (!t || t === '—' || t === '-') return ''
+    t = t.replace(/\s*&\s*/g, ' and ')
+    t = t.replace(/\b([A-Za-z]{2,})(-[A-Za-z0-9]+)+\b/g, (full) =>
+      full
+        .split('-')
+        .map((seg) =>
+          /^\d+$/i.test(seg)
+            ? seg
+            : seg.charAt(0).toUpperCase() + seg.slice(1).toLowerCase()
+        )
+        .join(' ')
+    )
+    t = t.replace(/\b[A-Z]{4,}\b/g, (w) => w.charAt(0) + w.slice(1).toLowerCase())
+    t = t.replace(/\b([A-Za-z])(\d+)\b/g, '$1 $2')
+    return t.replace(/\s+/g, ' ').trim()
+  }
+
+  const GIU_WELCOME_GAP_MS = 100
+
+  function speakGIUWelcome(callsignRaw) {
+    if (!giuSpeechSupported()) return
+    const spokenCallsign = giuSpeechFriendlyCallsign(callsignRaw)
+    if (!spokenCallsign) return
+
+    giuCancelWelcomeSpeech()
+    const gen = _giuWelcomeSpeechGen
+
+    const parts = [
+      'Welcome to the Gang Intelligence Unit special access programme.',
+      spokenCallsign + '.',
+    ]
+
+    let i = 0
+    function speakOne() {
+      if (gen !== _giuWelcomeSpeechGen) return
+      if (i >= parts.length) return
+      try {
+        const u = new SpeechSynthesisUtterance(parts[i])
+        u.rate = 0.92
+        u.volume = 1
+        const picked = giuPickUKFemaleVoice()
+        if (picked) {
+          u.voice = picked
+          u.lang = picked.lang ? String(picked.lang).replace('_', '-') : 'en-GB'
+        } else {
+          u.lang = 'en-GB'
+        }
+        u.onend = () => {
+          if (gen !== _giuWelcomeSpeechGen) return
+          i++
+          if (i < parts.length) setTimeout(speakOne, GIU_WELCOME_GAP_MS)
+        }
+        u.onerror = u.onend
+        speechSynthesis.speak(u)
+      } catch (_) { /* ignore */ }
+    }
+    try {
+      speechSynthesis.getVoices()
+    } catch (_) { /* ignore */ }
+    speakOne()
+  }
+
   // ── Check GIU eligibility after PortalAuth loads ──────────
   // We hook into verify-token response via sessionStorage.
   // PortalAuth already called /api/verify-token; we need to
@@ -157,6 +253,7 @@
     if (!overlay) return
 
     flash.classList.add('flashing')
+    giuCancelWelcomeSpeech()
 
     setTimeout(() => {
       overlay.classList.remove('giu-visible')
@@ -171,26 +268,32 @@
   // ── Populate callsign + status values ────────────────────
   function populateGIU() {
     const cs = _giuCallsign || '—'
+    const csUpper = cs.toUpperCase()
+    const chars = csUpper.split('')
 
     // Welcome line callsign
     const giuCs = document.getElementById('giu-callsign')
     if (giuCs) {
       giuCs.textContent = ''
-      // Typewriter effect for callsign
       let i = 0
-      const chars = cs.toUpperCase().split('')
       const timer = setInterval(() => {
-        if (i < chars.length) { giuCs.textContent += chars[i++] }
-        else clearInterval(timer)
+        if (i < chars.length) {
+          giuCs.textContent += chars[i++]
+        } else {
+          clearInterval(timer)
+        }
       }, 60)
     }
 
     // Status panel callsign
     const sc = document.getElementById('giu-status-callsign')
-    if (sc) sc.textContent = cs.toUpperCase()
+    if (sc) sc.textContent = csUpper
 
     // Set DEFCON to stored value (default 5)
     setDefcon(_currentDefcon, false)
+
+    const typeMs = Math.max(400, chars.length * 60 + 350)
+    setTimeout(() => speakGIUWelcome(cs), typeMs)
   }
 
   // ── DEFCON selector ───────────────────────────────────────

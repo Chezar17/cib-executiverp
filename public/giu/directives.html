@@ -568,6 +568,10 @@
         title="Music Volume"/>
       <span class="wm-brief-vol-label" id="wmbVolLabel">40%</span>
     </div>
+    <label class="wm-brief-voice" title="Uses free browser text-to-speech (Google UK English Female when available)">
+      <input type="checkbox" id="wmbVoiceToggle" checked onchange="setBriefingVoiceEnabled(this.checked)"/>
+      <span>Voice</span>
+    </label>
     <button class="wm-brief-close" onclick="closeBriefing()">End Briefing</button>
   </div>
   <div class="wm-brief-body">
@@ -1729,12 +1733,13 @@ async function loadWarmap() {
     const res = await wmApiFetch('GET', '/api/informants?type=warmap')
     if (!res.ok) throw new Error(res.data?.error || 'Failed to load markers')
     _allMarkers = res.data.data || []
-    renderMarkers()
-    populateDirectiveDropdown()
-    buildPhaseFilterButtons()
   } catch(e) {
     showToast('War Map: ' + e.message, 'error')
+    _allMarkers = []
   }
+  renderMarkers()
+  populateDirectiveDropdown()
+  buildPhaseFilterButtons()
 }
 
 // ── Marker type selector ──────────────────────────────────
@@ -2221,6 +2226,158 @@ window.openWmEditModal = function(id) {
 let _briefPhases    = []
 let _briefPhaseIdx  = 0
 let _briefMarkerStep = 0   // 0 = only objective shown; 1 = objective + 1st non-obj marker; etc.
+/** Phase indices whose opening line (“Phase N”) has already been spoken this session */
+const _briefPhaseIntroDone = new Set()
+
+// ── Briefing voice-over (free Web Speech API) ─────────────
+let _briefVoiceEnabled = true
+
+function briefingSpeechSupported() {
+  return typeof window !== 'undefined' && 'speechSynthesis' in window
+}
+
+/** Incremented whenever speech is cancelled so queued pauses skip stale chains */
+let _briefSpeechGen = 0
+
+function cancelBriefingSpeech() {
+  try {
+    if (briefingSpeechSupported()) window.speechSynthesis.cancel()
+  } catch (_) { /* ignore */ }
+  _briefSpeechGen++
+}
+
+function setBriefingVoiceEnabled(on) {
+  _briefVoiceEnabled = !!on
+  if (!_briefVoiceEnabled) cancelBriefingSpeech()
+}
+
+/** Plain text for speech (marker notes may contain HTML entities from stored content). */
+function plainBriefText(s) {
+  if (s == null || s === '') return ''
+  const d = document.createElement('div')
+  d.innerHTML = String(s)
+  return (d.textContent || d.innerText || '').replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * Browser TTS spells ALL-CAPS + hyphen + letters/digits unpredictably (e.g. GHOST-04 vs GHOST-ALPHA).
+ * Flatten callsign-style tokens to word-like text so "Ghost Alpha", "Ghost 1" read consistently.
+ */
+function speechFriendlyText(s) {
+  let t = plainBriefText(s)
+  if (!t) return t
+  t = t.replace(/\s*&\s*/g, ' and ')
+  t = t.replace(/\b([A-Z]{2,})(-[A-Z0-9]+)+\b/g, (full) =>
+    full
+      .split('-')
+      .map((seg) =>
+        /^\d+$/.test(seg) ? seg : seg.charAt(0) + seg.slice(1).toLowerCase()
+      )
+      .join(' ')
+  )
+  // Long ALL-CAPS words (e.g. ARREST, INTERROGATE) are often spelled letter-by-letter — read as normal words.
+  // Leave 2–3 letter tokens (GIU, UK, FBI) as-is; often treated as acronyms anyway.
+  t = t.replace(/\b[A-Z]{4,}\b/g, (w) => w.charAt(0) + w.slice(1).toLowerCase())
+  return t
+}
+
+/** Prefer Chrome’s Google UK English Female (en-GB); absent → browser picks en-GB lang only */
+function pickBriefingSynthesisVoice() {
+  try {
+    const voices = speechSynthesis.getVoices()
+    const normLang = (l) => String(l || '').replace('_', '-').toLowerCase()
+    const isTarget = (vo) =>
+      /google\s+uk\s+english\s+female/i.test(vo.name || '') &&
+      normLang(vo.lang) === 'en-gb'
+    let v = voices.find(isTarget)
+    if (!v) {
+      v = voices.find((vo) =>
+        /google\s+uk\s+english\s+female/i.test(vo.name || '')
+      )
+    }
+    return v || null
+  } catch (_) {
+    return null
+  }
+}
+
+/** Pause between successive TTS phrases (single utterance has no reliable SSML pause). */
+const BRIEF_SPEECH_GAP_MS = 100
+
+function speakBriefingChunks(parts, gapMs = BRIEF_SPEECH_GAP_MS) {
+  const gen = _briefSpeechGen
+  const list = parts.map((s) => String(s || '').trim()).filter(Boolean)
+  if (!list.length) return
+
+  let i = 0
+  function speakOne() {
+    if (gen !== _briefSpeechGen) return
+    if (i >= list.length) return
+    try {
+      const u = new SpeechSynthesisUtterance(list[i])
+      u.rate = 0.92
+      u.volume = 1
+      const picked = pickBriefingSynthesisVoice()
+      if (picked) {
+        u.voice = picked
+        u.lang = picked.lang ? String(picked.lang).replace('_', '-') : 'en-GB'
+      } else {
+        u.lang = 'en-GB'
+      }
+      u.onend = () => {
+        if (gen !== _briefSpeechGen) return
+        i++
+        if (i < list.length) window.setTimeout(speakOne, gapMs)
+      }
+      u.onerror = () => {
+        if (gen !== _briefSpeechGen) return
+        i++
+        if (i < list.length) window.setTimeout(speakOne, gapMs)
+      }
+      window.speechSynthesis.speak(u)
+    } catch (e) {
+      console.warn('Briefing speech:', e)
+    }
+  }
+  speakOne()
+}
+
+function speakCurrentBriefStep() {
+  if (!_briefVoiceEnabled || !briefingSpeechSupported()) return
+  try { speechSynthesis.getVoices() } catch (_) { /* empty voice list on first paint */ }
+  cancelBriefingSpeech()
+
+  const phase = _briefPhases[_briefPhaseIdx]
+  if (!phase) return
+
+  const chunks = []
+  const phaseIntro = phase.phase != null ? `Phase ${phase.phase}.` : 'Unassigned phase.'
+  const obj = phase.objective
+  const objMk = obj ? (obj._marker || {}) : {}
+
+  if (_briefMarkerStep === 0) {
+    // Phase line once per phase when user first reaches this objective slide (not again on Back)
+    if (!_briefPhaseIntroDone.has(_briefPhaseIdx)) {
+      chunks.push(phaseIntro)
+      _briefPhaseIntroDone.add(_briefPhaseIdx)
+    }
+    chunks.push(`Objective: ${speechFriendlyText(objMk.label) || 'None'}.`)
+    const notes = speechFriendlyText(objMk.description)
+    if (notes) chunks.push(notes)
+  } else {
+    const marker = phase.markers[_briefMarkerStep - 1]
+    if (!marker) return
+    const mk = marker._marker || {}
+    const type = mk.marker_type || 'intel'
+    const typeLabel = WM_TYPE_LABELS[type] || type
+    chunks.push(String(typeLabel))
+    chunks.push(speechFriendlyText(mk.label) || 'Location.')
+    const desc = speechFriendlyText(mk.description)
+    if (desc) chunks.push(desc)
+  }
+
+  speakBriefingChunks(chunks)
+}
 
 // Build phase groups from filtered markers
 function buildBriefPhases() {
@@ -2265,8 +2422,17 @@ function startBriefing() {
   _briefPhases     = buildBriefPhases()
   _briefPhaseIdx   = 0
   _briefMarkerStep = 0
+  _briefPhaseIntroDone.clear()
   resetBriefMapZoom()
   document.getElementById('wmBriefingOverlay').classList.add('open')
+  const vt = document.getElementById('wmbVoiceToggle')
+  if (vt) _briefVoiceEnabled = vt.checked
+  else _briefVoiceEnabled = true
+  if (!briefingSpeechSupported() && vt) {
+    vt.checked = false
+    vt.disabled = true
+    _briefVoiceEnabled = false
+  }
   renderBriefPhase()
 
   // ── Play briefing background music ────────────────────────
@@ -2285,6 +2451,7 @@ function startBriefing() {
 }
 
 function closeBriefing() {
+  cancelBriefingSpeech()
   document.getElementById('wmBriefingOverlay').classList.remove('open')
   resetBriefMapZoom()
 
@@ -2460,6 +2627,10 @@ function renderBriefPhase() {
     nextBtn.textContent = `Next ›`
     nextBtn.onclick     = () => briefNav(1)
   }
+
+  window.requestAnimationFrame(() => {
+    speakCurrentBriefStep()
+  })
 }
 
 // ── Briefing map zoom — moves the WHOLE group (img + pins + spotlight) ──
