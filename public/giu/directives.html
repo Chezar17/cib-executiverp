@@ -2791,6 +2791,7 @@ function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   }
 
   group.style.transform = `scale(${_briefCurrentScale})`
+  applyBriefCounterScale()
 }
 
 function resetBriefMapZoom() {
@@ -2800,11 +2801,20 @@ function resetBriefMapZoom() {
   _briefCurrentScale = 1
   group.style.transform       = 'scale(1)'
   group.style.transformOrigin = 'center center'
-  // Clear any stale counter-scale transform from old logic
-  if (layer) { layer.style.transform = ''; layer.style.transformOrigin = '' }
+  if (layer) { layer.style.transform = 'scale(1)'; layer.style.transformOrigin = 'top left' }
 }
 
-// (counter-scale removed — pins now scale naturally with the map)
+// ── Counter-scale markers layer ────────────────────────────────────────────────
+// When the map group zooms to 4–5×, pins inside it would appear 4–5× bigger.
+// We apply the inverse scale to wmbMarkersLayer so every pin stays at its
+// natural CSS pixel size regardless of how deep we're zoomed in.
+function applyBriefCounterScale() {
+  const layer = document.getElementById('wmbMarkersLayer')
+  if (!layer || _briefCurrentScale <= 0) return
+  const inv = (1 / _briefCurrentScale).toFixed(6)
+  layer.style.transform       = `scale(${inv})`
+  layer.style.transformOrigin = 'top left'
+}
 
 // ── Brief map image sizing ────────────────────────────────────────────────────
 // #wmbImgWrap is sized to the image's natural aspect ratio, constrained to fit
@@ -2884,6 +2894,8 @@ function renderBriefMapMarkers(phase) {
     layer.appendChild(pin)
   })
 
+  // Keep pins at screen-pixel size by counter-scaling the layer
+  applyBriefCounterScale()
 }
 
 // Build the accumulating text list in the intel pane

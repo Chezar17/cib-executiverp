@@ -1687,39 +1687,40 @@ body.page-visible > :not(#access-gate) {
 }
 
 /* ── Brief map pins (persistent layer) ── */
+/* IMPORTANT: wmbMarkersLayer is counter-scaled by JS (1/mapScale) so all
+   size values here are screen-pixel sizes regardless of map zoom level.    */
 .wm-brief-pin {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 3;
   display: flex; flex-direction: column; align-items: center;
   pointer-events: none;
-  animation: pinReveal 0.4s ease both;
+  animation: pinReveal 0.35s ease both;
 }
 @keyframes pinReveal {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
   to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
-/* Pin dot and label — these live inside wmbMarkersLayer which is
-   counter-scaled by JS (scale = 1/mapScale), so they always appear
-   at their natural CSS size on screen regardless of map zoom level. */
 .wm-brief-pin-dot {
-  width: 18px; height: 18px; border-radius: 50%;
+  width: 10px; height: 10px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 8px; font-weight: 700;
-  color: #fff; border: 1.5px solid rgba(255,255,255,0.3);
-  box-shadow: 0 0 6px var(--pin-color, #888);
+  font-family: var(--mono); font-size: 5px; font-weight: 700;
+  color: #fff; border: 1px solid rgba(255,255,255,0.45);
+  box-shadow: 0 0 4px var(--pin-color, #888);
 }
 .wm-brief-pin.is-objective .wm-brief-pin-dot {
-  width: 22px; height: 22px; font-size: 10px;
-  box-shadow: 0 0 10px var(--pin-color, #E74C3C), 0 0 20px rgba(231,76,60,0.25);
+  width: 13px; height: 13px; font-size: 6px;
+  border-width: 1.5px;
+  box-shadow: 0 0 6px var(--pin-color, #E74C3C), 0 0 12px rgba(231,76,60,0.3);
 }
 .wm-brief-pin-label {
   font-family: var(--mono);
-  font-size: 7px; letter-spacing: 1px;
-  color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,1);
-  white-space: nowrap; margin-top: 2px;
-  background: rgba(0,0,0,0.75); padding: 1px 4px;
-  max-width: 90px; overflow: hidden; text-overflow: ellipsis;
+  font-size: 5px; letter-spacing: 0.5px;
+  color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,1);
+  white-space: nowrap; margin-top: 1px;
+  background: rgba(0,0,0,0.7); padding: 1px 3px;
+  max-width: 70px; overflow: hidden; text-overflow: ellipsis;
+  border-radius: 1px;
 }
 
 /* ── Intel pane flex layout override ── */
