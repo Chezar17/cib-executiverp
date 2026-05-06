@@ -2656,22 +2656,40 @@ function renderBriefPhase() {
   })
 }
 
-// ── Briefing map zoom — moves the WHOLE group (img + pins + spotlight) ──
-// x/y are percentages (0–100) matching the marker coordinate system.
-// The group is 100%×100% of the pane with transform-origin at its centre,
-// so we shift by (50 - x)% / (50 - y)% to bring that point to the centre.
+// ── Briefing map zoom ─────────────────────────────────────────────────────
+// Strategy: set transform-origin to the exact marker position (as % of the
+// group), then scale. The browser pivots around that point so the marker
+// lands exactly at the centre of the viewport — no translate math needed.
+//
+// Scale levels:
+//   Phase objective reveal   → 5.0×  (dramatic establishing zoom)
+//   Sub-marker reveal        → 4.0×  (tight tactical zoom)
+//   Override via _briefZoomScale if set externally
+//
+// The CSS transition on .wm-brief-map-group (0.75 s cubic-bezier) handles
+// the animated pan+zoom automatically.
 function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   const group = document.getElementById('wmbMapGroup')
   if (!group) return
-  const scale = isPhaseObjective ? 2.4 : 2.0
-  const tx = (50 - xPct)   // % of group width  to shift
-  const ty = (50 - yPct)   // % of group height to shift
-  group.style.transform = `scale(${scale}) translate(${tx}%, ${ty}%)`
+
+  const scale = isPhaseObjective ? 5.0 : 4.0
+
+  // 1. Set the transform-origin to the marker's position.
+  //    This is a % of the element's own size — which equals xPct/yPct since
+  //    the group fills the entire pane 1:1.
+  group.style.transformOrigin = `${xPct}% ${yPct}%`
+
+  // 2. Scale only — no translate needed. The browser keeps the origin pixel
+  //    stationary (i.e. centred in the overflow:hidden pane) as it zooms.
+  group.style.transform = `scale(${scale})`
 }
 
 function resetBriefMapZoom() {
   const group = document.getElementById('wmbMapGroup')
-  if (group) group.style.transform = 'scale(1) translate(0%, 0%)'
+  if (!group) return
+  // Animate back to full view before resetting origin
+  group.style.transform      = 'scale(1)'
+  group.style.transformOrigin = 'center center'
 }
 
 // Render all revealed markers for this phase on the brief map
