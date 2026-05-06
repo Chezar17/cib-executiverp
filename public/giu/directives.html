@@ -2801,19 +2801,34 @@ function resetBriefMapZoom() {
   _briefCurrentScale = 1
   group.style.transform       = 'scale(1)'
   group.style.transformOrigin = 'center center'
-  if (layer) { layer.style.transform = 'scale(1)'; layer.style.transformOrigin = 'top left' }
+  // Clear both layer-level and per-pin transforms
+  if (layer) {
+    layer.style.transform       = ''
+    layer.style.transformOrigin = ''
+    layer.querySelectorAll('.wm-brief-pin').forEach(pin => {
+      pin.style.transform       = 'translate(-50%, -50%)'
+      pin.style.transformOrigin = ''
+    })
+  }
 }
 
 // ── Counter-scale markers layer ────────────────────────────────────────────────
-// When the map group zooms to 4–5×, pins inside it would appear 4–5× bigger.
-// We apply the inverse scale to wmbMarkersLayer so every pin stays at its
-// natural CSS pixel size regardless of how deep we're zoomed in.
+// Scaling the whole layer from 'top left' shifts every pin off its map coordinate.
+// Instead we scale EACH PIN individually with transformOrigin 'center center' so
+// the pin's centre stays locked on its map pixel while the dot+label shrink to a
+// sensible on-screen size regardless of how far we're zoomed in.
 function applyBriefCounterScale() {
   const layer = document.getElementById('wmbMarkersLayer')
   if (!layer || _briefCurrentScale <= 0) return
   const inv = (1 / _briefCurrentScale).toFixed(6)
-  layer.style.transform       = `scale(${inv})`
-  layer.style.transformOrigin = 'top left'
+  // Clear any stale layer-level transform from old approach
+  layer.style.transform       = ''
+  layer.style.transformOrigin = ''
+  // Scale each pin in-place so it stays anchored to its coordinate
+  layer.querySelectorAll('.wm-brief-pin').forEach(pin => {
+    pin.style.transform       = `translate(-50%, -50%) scale(${inv})`
+    pin.style.transformOrigin = 'center center'
+  })
 }
 
 // ── Brief map image sizing ────────────────────────────────────────────────────
