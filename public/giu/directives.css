@@ -1321,13 +1321,18 @@ body.page-visible > :not(#access-gate) {
   /* No CSS transition — counter-scale is applied instantly via JS */
 }
 .wm-brief-map-img {
+  /* contain: full image always visible, element box = rendered content area.
+     Pins placed at left/top % of the img element then align 1:1. */
   position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  display: block;
   opacity: 0.55;
   filter: contrast(1.1) brightness(0.8);
+  pointer-events: none;
+  user-select: none;
 }
 .wm-brief-spotlight {
   position: absolute;

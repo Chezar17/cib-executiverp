@@ -2512,12 +2512,9 @@ function startBriefing() {
     vt.disabled = true
     _briefVoiceEnabled = false
   }
-
-  // Defer render until the overlay is fully painted.
-  // classList.add('open') flips display:none → display:flex, but the browser
-  // has not completed layout yet at this point — pane.clientWidth/clientHeight
-  // are still 0, which breaks pin coordinate math.  Two rAF frames guarantee
-  // the layout pass has completed before we position anything.
+  // Defer render: classList.add('open') switches display:none→flex but the
+  // browser hasn't run layout yet. getBoundingClientRect() on the img returns
+  // zero dimensions until after the first paint. Two rAF frames guarantee layout.
   requestAnimationFrame(() => requestAnimationFrame(() => renderBriefPhase()))
 
   // ── Play briefing background music ────────────────────────
@@ -2683,12 +2680,12 @@ function renderBriefPhase() {
   const spot = document.getElementById('wmbSpotlight')
   if (spot && sp.x != null) {
     // Apply same cover-crop correction as pin placement
-    const pos = briefCoordToPct(sp.x, sp.y)
+    const pos = briefPinPos(sp.x, sp.y)
     spot.style.left       = pos.left + '%'
     spot.style.top        = pos.top  + '%'
     spot.style.transition = 'left 0.5s ease, top 0.5s ease'
   } else if (spot) {
-    const pos = briefCoordToPct(50, 50)
+    const pos = briefPinPos(50, 50)
     spot.style.left = pos.left + '%'
     spot.style.top  = pos.top  + '%'
   }
@@ -2701,7 +2698,7 @@ function renderBriefPhase() {
   // ── Zoom the whole map group to the active marker ─────────
   const isPhaseObj = _briefMarkerStep === 0  // phase objective = more dramatic zoom
   if (sp.x != null && sp.y != null) {
-    const zoomPos = briefCoordToPct(sp.x, sp.y)
+    const zoomPos = briefPinPos(sp.x, sp.y)
     zoomBriefMapTo(zoomPos.left, zoomPos.top, isPhaseObj)
   } else {
     resetBriefMapZoom()
@@ -2798,62 +2795,28 @@ function applyBriefCounterScale() {
   layer.style.transformOrigin = 'center center'
 }
 
-// Render all revealed markers for this phase on the brief map.
-// SYNC FIX: coordinates (mk.x / mk.y) are percentages of the actual rendered
-// image, captured via getBoundingClientRect() in the main war map.  The brief
-// map image uses object-fit:cover inside a pane that can have a different aspect
-// ratio, so the image is cropped and its rendered area does NOT fill the pane
-// 1-to-1.  We must convert the stored % back to pixels using the brief image's
-// rendered rect (accounting for cover cropping) and then express those as % of
-// the wmbMarkersLayer div so pins land on the exact same pixel as on the main map.
-function getBriefImageRenderedRect() {
-  const img  = document.querySelector('.wm-brief-map-img')
-  const pane = document.querySelector('.wm-brief-map-pane')
-  if (!img || !pane) return null
+// ── Brief map pin placement ──────────────────────────────────────────────────
+// Stored mk.x / mk.y are % of the actual rendered <img> rect (same as main
+// war map).  We use getBoundingClientRect() on the brief <img> — identical
+// to how renderMarkersDOM() works on the main map — so there is zero
+// coordinate math and no aspect-ratio guessing.
+function briefPinPos(xPct, yPct) {
+  const img   = document.querySelector('.wm-brief-map-img')
+  const group = document.getElementById('wmbMapGroup')
+  if (!img || !group) return { left: xPct, top: yPct }
 
-  // Natural aspect ratio of the image (fall back to 1:1 if not loaded yet)
-  const natW = img.naturalWidth  || 1
-  const natH = img.naturalHeight || 1
-  const imgAspect = natW / natH
-
-  // Pane (container) dimensions — guard against zero (overlay not yet painted)
-  const paneW = pane.clientWidth  || pane.getBoundingClientRect().width
-  const paneH = pane.clientHeight || pane.getBoundingClientRect().height
-  if (!paneW || !paneH) return null
-  const paneAspect = paneW / paneH
-
-  let renderW, renderH, offsetX, offsetY
-
-  if (imgAspect > paneAspect) {
-    // Image is wider than pane → height fills, width overflows (cropped left/right)
-    renderH = paneH
-    renderW = paneH * imgAspect
-    offsetX = (paneW - renderW) / 2   // negative → image extends outside left edge
-    offsetY = 0
-  } else {
-    // Image is taller than pane → width fills, height overflows (cropped top/bottom)
-    renderW = paneW
-    renderH = paneW / imgAspect
-    offsetX = 0
-    offsetY = (paneH - renderH) / 2   // negative → image extends outside top edge
+  const imgRect   = img.getBoundingClientRect()
+  const groupRect = group.getBoundingClientRect()
+  if (!imgRect.width || !imgRect.height || !groupRect.width || !groupRect.height) {
+    return { left: xPct, top: yPct }
   }
 
-  return { offsetX, offsetY, renderW, renderH, paneW, paneH }
-}
+  const absX = (imgRect.left - groupRect.left) + (xPct / 100) * imgRect.width
+  const absY = (imgRect.top  - groupRect.top)  + (yPct / 100) * imgRect.height
 
-// Convert stored map % coordinates → % of the markers layer (which is inset:0 of the pane).
-function briefCoordToPct(xPct, yPct) {
-  const r = getBriefImageRenderedRect()
-  if (!r) return { left: xPct, top: yPct }
-
-  // Pixel position on the rendered image
-  const px = r.offsetX + (xPct / 100) * r.renderW
-  const py = r.offsetY + (yPct / 100) * r.renderH
-
-  // Express as % of the pane (= markers layer)
   return {
-    left: (px / r.paneW) * 100,
-    top:  (py / r.paneH) * 100,
+    left: (absX / groupRect.width)  * 100,
+    top:  (absY / groupRect.height) * 100,
   }
 }
 
@@ -2869,8 +2832,7 @@ function renderBriefMapMarkers(phase) {
     const color = WM_TYPE_COLORS[mk.marker_type || 'intel'] || '#888'
     const isObj = mk.marker_type === 'objective' || m === phase.objective
 
-    // Convert stored image-% coords to pane-% coords (fixes cover-crop offset)
-    const pos = briefCoordToPct(mk.x || 0, mk.y || 0)
+    const pos = briefPinPos(mk.x || 0, mk.y || 0)
 
     const pin = document.createElement('div')
     pin.className = 'wm-brief-pin' + (isObj ? ' is-objective' : '')
@@ -2878,8 +2840,7 @@ function renderBriefMapMarkers(phase) {
     pin.style.top    = pos.top  + '%'
     pin.style.setProperty('--pin-color', color)
 
-    // Number badge: objective = ★, others = index
-    const badge = isObj ? '★' : String(idx)   // idx 0 = objective so sub-markers start at 1
+    const badge = isObj ? '★' : String(idx)
     pin.innerHTML = `
       <div class="wm-brief-pin-dot" style="background:${color};">${badge}</div>
       <div class="wm-brief-pin-label">${escHtml(mk.label || '')}</div>`
@@ -2887,7 +2848,6 @@ function renderBriefMapMarkers(phase) {
     layer.appendChild(pin)
   })
 
-  // Re-apply counter-scale after DOM rebuild — new elements don't inherit it
   applyBriefCounterScale()
 }
 
