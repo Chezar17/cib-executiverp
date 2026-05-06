@@ -2664,32 +2664,49 @@ function renderBriefPhase() {
 // Scale levels:
 //   Phase objective reveal   → 5.0×  (dramatic establishing zoom)
 //   Sub-marker reveal        → 4.0×  (tight tactical zoom)
-//   Override via _briefZoomScale if set externally
 //
-// The CSS transition on .wm-brief-map-group (0.75 s cubic-bezier) handles
-// the animated pan+zoom automatically.
+// Counter-scaling: pins and labels inside the group would appear huge at 4-5×
+// zoom. We apply scale(1/currentScale) to the markers layer so they stay a
+// constant pixel size on screen regardless of map zoom.
+// The spotlight stays unscaled — it's already tiny (5px dot) and should
+// track exactly with the map pixel it marks.
+
+let _briefCurrentScale = 1  // tracks current zoom for counter-scale
+
 function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   const group = document.getElementById('wmbMapGroup')
   if (!group) return
 
-  const scale = isPhaseObjective ? 5.0 : 4.0
+  _briefCurrentScale = isPhaseObjective ? 5.0 : 4.0
 
-  // 1. Set the transform-origin to the marker's position.
-  //    This is a % of the element's own size — which equals xPct/yPct since
-  //    the group fills the entire pane 1:1.
+  // Set transform-origin to the marker position — browser pivots zoom here,
+  // landing it at the centre of the overflow:hidden viewport automatically.
   group.style.transformOrigin = `${xPct}% ${yPct}%`
+  group.style.transform       = `scale(${_briefCurrentScale})`
 
-  // 2. Scale only — no translate needed. The browser keeps the origin pixel
-  //    stationary (i.e. centred in the overflow:hidden pane) as it zooms.
-  group.style.transform = `scale(${scale})`
+  // Counter-scale the markers layer so pins/labels stay screen-constant size
+  applyBriefCounterScale()
 }
 
 function resetBriefMapZoom() {
   const group = document.getElementById('wmbMapGroup')
   if (!group) return
-  // Animate back to full view before resetting origin
-  group.style.transform      = 'scale(1)'
+  _briefCurrentScale = 1
+  group.style.transform       = 'scale(1)'
   group.style.transformOrigin = 'center center'
+  applyBriefCounterScale()
+}
+
+// Apply inverse scale to the markers layer so pins stay constant screen size.
+// Called after every zoom change AND after renderBriefMapMarkers replaces DOM.
+function applyBriefCounterScale() {
+  const layer = document.getElementById('wmbMarkersLayer')
+  if (!layer) return
+  const inv = 1 / _briefCurrentScale
+  // No CSS transition here — must snap instantly to match the map animation start
+  layer.style.transition     = 'none'
+  layer.style.transform      = `scale(${inv})`
+  layer.style.transformOrigin = 'center center'
 }
 
 // Render all revealed markers for this phase on the brief map
@@ -2719,6 +2736,9 @@ function renderBriefMapMarkers(phase) {
 
     layer.appendChild(pin)
   })
+
+  // Re-apply counter-scale after DOM rebuild — new elements don't inherit it
+  applyBriefCounterScale()
 }
 
 // Build the accumulating text list in the intel pane

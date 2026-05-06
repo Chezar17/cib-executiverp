@@ -1309,12 +1309,16 @@ body.page-visible > :not(#access-gate) {
               transform-origin 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform, transform-origin;
 }
-/* Markers layer fills the whole group so left/top % match the image */
+/* Markers layer fills the whole group so left/top % match the image.
+   transform-origin: center center lets the JS counter-scale shrink inward
+   from the middle, keeping each pin at its correct left/top position. */
 #wmbMarkersLayer {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 2;
+  transform-origin: center center;
+  /* No CSS transition — counter-scale is applied instantly via JS */
 }
 .wm-brief-map-img {
   position: absolute;
@@ -1677,24 +1681,27 @@ body.page-visible > :not(#access-gate) {
   from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
   to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
+/* Pin dot and label — these live inside wmbMarkersLayer which is
+   counter-scaled by JS (scale = 1/mapScale), so they always appear
+   at their natural CSS size on screen regardless of map zoom level. */
 .wm-brief-pin-dot {
-  width: 22px; height: 22px; border-radius: 50%;
+  width: 18px; height: 18px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 9px; font-weight: 700;
-  color: #fff; border: 2px solid rgba(255,255,255,0.25);
-  box-shadow: 0 0 10px currentColor;
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  color: #fff; border: 1.5px solid rgba(255,255,255,0.3);
+  box-shadow: 0 0 6px var(--pin-color, #888);
 }
 .wm-brief-pin.is-objective .wm-brief-pin-dot {
-  width: 28px; height: 28px; font-size: 12px;
-  box-shadow: 0 0 18px var(--pin-color, #E74C3C), 0 0 40px rgba(231,76,60,0.3);
+  width: 22px; height: 22px; font-size: 10px;
+  box-shadow: 0 0 10px var(--pin-color, #E74C3C), 0 0 20px rgba(231,76,60,0.25);
 }
 .wm-brief-pin-label {
   font-family: var(--mono);
-  font-size: 8px; letter-spacing: 1px;
-  color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-  white-space: nowrap; margin-top: 3px;
-  background: rgba(0,0,0,0.6); padding: 1px 5px;
-  max-width: 100px; overflow: hidden; text-overflow: ellipsis;
+  font-size: 7px; letter-spacing: 1px;
+  color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,1);
+  white-space: nowrap; margin-top: 2px;
+  background: rgba(0,0,0,0.75); padding: 1px 4px;
+  max-width: 90px; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ── Intel pane flex layout override ── */
