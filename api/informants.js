@@ -114,12 +114,14 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, data })
       }
 
-      // default → all non-directive, non-chat records
+      // default → real informant records only (exclude all internal-use gang tags)
       const { data, error } = await supabase
         .from('informants')
         .select('*')
         .eq('is_deleted', false)
         .neq('gang', '__directive__')
+        .neq('gang', '__member__')
+        .neq('gang', '__warmap__')
         .not('gang', 'like', '__chat__%')
         .order('created_at', { ascending: true })
       if (error) throw error
