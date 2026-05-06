@@ -2763,7 +2763,53 @@ function renderBriefPhase() {
 // The spotlight stays unscaled — it's already tiny (5px dot) and should
 // track exactly with the map pixel it marks.
 
-let _briefCurrentScale = 1  // tracks current zoom for counter-scale
+// ── Live pin tracking during zoom transition ──────────────────────────────────
+// Instead of repainting pins only at the END of the zoom (which causes them to
+// appear in the wrong place for the entire 0.85s transition), we run a
+// requestAnimationFrame loop that repositions each existing pin element every
+// frame.  The loop starts when a zoom begins and stops automatically once the
+// CSS transition finishes — no timers, no jumps, no drift.
+
+let _briefTrackingRaf  = null   // active rAF handle
+let _briefTrackingEnd  = 0      // timestamp when tracking should stop
+
+function startBriefPinTracking(durationMs) {
+  // Cancel any existing loop first
+  if (_briefTrackingRaf) cancelAnimationFrame(_briefTrackingRaf)
+  _briefTrackingEnd = performance.now() + durationMs + 50  // tiny buffer past transition
+
+  function tick(now) {
+    repositionBriefPins()
+    if (now < _briefTrackingEnd) {
+      _briefTrackingRaf = requestAnimationFrame(tick)
+    } else {
+      _briefTrackingRaf = null
+      // Final authoritative repaint once transition has fully settled
+      if (_briefPhases.length) renderBriefMapMarkers(_briefPhases[_briefPhaseIdx])
+    }
+  }
+  _briefTrackingRaf = requestAnimationFrame(tick)
+}
+
+// Reposition existing pin elements in-place — no DOM rebuild
+function repositionBriefPins() {
+  const layer = document.getElementById('wmbMarkersLayer')
+  if (!layer || !_briefPhases.length) return
+  const phase = _briefPhases[_briefPhaseIdx]
+  if (!phase) return
+  const revealedAll = [phase.objective, ...phase.markers.slice(0, _briefMarkerStep)].filter(Boolean)
+  const pins = layer.querySelectorAll('.wm-brief-pin')
+  revealedAll.forEach((m, idx) => {
+    const mk = m._marker || {}
+    const pin = pins[idx]
+    if (!pin) return
+    const { x, y } = getBriefPinScreenPos(mk.x || 0, mk.y || 0)
+    pin.style.left = x + 'px'
+    pin.style.top  = y + 'px'
+  })
+}
+
+let _briefCurrentScale = 1
 
 function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   const group = document.getElementById('wmbMapGroup')
@@ -2772,20 +2818,15 @@ function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
 
   _briefCurrentScale = isPhaseObjective ? 5.0 : 4.0
 
-  // Compute marker pixel position relative to group top-left.
-  // The wrap is centered in the group via flexbox; marker is at (xPct,yPct)% of the wrap.
   if (wrap && group.offsetWidth && wrap.offsetWidth) {
     const groupW = group.offsetWidth
     const groupH = group.offsetHeight
     const wrapW  = wrap.offsetWidth
     const wrapH  = wrap.offsetHeight
-    // Wrap's top-left offset within group (flexbox centers it)
     const wrapOffX = (groupW - wrapW) / 2
     const wrapOffY = (groupH - wrapH) / 2
-    // Marker px from group top-left
     const markerPx = wrapOffX + (xPct / 100) * wrapW
     const markerPy = wrapOffY + (yPct / 100) * wrapH
-    // Express as % of group
     group.style.transformOrigin = `${(markerPx / groupW * 100).toFixed(4)}% ${(markerPy / groupH * 100).toFixed(4)}%`
   } else {
     group.style.transformOrigin = `${xPct}% ${yPct}%`
@@ -2793,12 +2834,8 @@ function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
 
   group.style.transform = `scale(${_briefCurrentScale})`
 
-  // Re-render pins after the CSS transition completes (0.85s) so getBoundingClientRect
-  // returns the post-zoom wrap position and pins land exactly on the right spot.
-  clearTimeout(window._briefPinRepaintTimer)
-  window._briefPinRepaintTimer = setTimeout(() => {
-    if (_briefPhases.length) renderBriefMapMarkers(_briefPhases[_briefPhaseIdx])
-  }, 900)
+  // Track pins live for the full duration of the CSS transition (850ms)
+  startBriefPinTracking(850)
 }
 
 function resetBriefMapZoom() {
@@ -2807,11 +2844,7 @@ function resetBriefMapZoom() {
   _briefCurrentScale = 1
   group.style.transform       = 'scale(1)'
   group.style.transformOrigin = 'center center'
-  // Re-render pins after reset transition so they reposition correctly
-  clearTimeout(window._briefPinRepaintTimer)
-  window._briefPinRepaintTimer = setTimeout(() => {
-    if (_briefPhases.length) renderBriefMapMarkers(_briefPhases[_briefPhaseIdx])
-  }, 900)
+  startBriefPinTracking(850)
 }
 
 // applyBriefCounterScale is no longer needed — wmbMarkersLayer is outside the
