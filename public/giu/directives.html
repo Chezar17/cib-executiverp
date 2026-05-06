@@ -2512,7 +2512,13 @@ function startBriefing() {
     vt.disabled = true
     _briefVoiceEnabled = false
   }
-  renderBriefPhase()
+
+  // Defer render until the overlay is fully painted.
+  // classList.add('open') flips display:none → display:flex, but the browser
+  // has not completed layout yet at this point — pane.clientWidth/clientHeight
+  // are still 0, which breaks pin coordinate math.  Two rAF frames guarantee
+  // the layout pass has completed before we position anything.
+  requestAnimationFrame(() => requestAnimationFrame(() => renderBriefPhase()))
 
   // ── Play briefing background music ────────────────────────
   const music  = document.getElementById('briefingMusic')
@@ -2810,9 +2816,10 @@ function getBriefImageRenderedRect() {
   const natH = img.naturalHeight || 1
   const imgAspect = natW / natH
 
-  // Pane (container) dimensions
-  const paneW = pane.clientWidth
-  const paneH = pane.clientHeight
+  // Pane (container) dimensions — guard against zero (overlay not yet painted)
+  const paneW = pane.clientWidth  || pane.getBoundingClientRect().width
+  const paneH = pane.clientHeight || pane.getBoundingClientRect().height
+  if (!paneW || !paneH) return null
   const paneAspect = paneW / paneH
 
   let renderW, renderH, offsetX, offsetY
