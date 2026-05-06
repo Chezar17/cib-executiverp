@@ -2791,29 +2791,20 @@ function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   }
 
   group.style.transform = `scale(${_briefCurrentScale})`
-  applyBriefCounterScale()
 }
 
 function resetBriefMapZoom() {
   const group = document.getElementById('wmbMapGroup')
+  const layer = document.getElementById('wmbMarkersLayer')
   if (!group) return
   _briefCurrentScale = 1
   group.style.transform       = 'scale(1)'
   group.style.transformOrigin = 'center center'
-  applyBriefCounterScale()
+  // Clear any stale counter-scale transform from old logic
+  if (layer) { layer.style.transform = ''; layer.style.transformOrigin = '' }
 }
 
-// Apply inverse scale to the markers layer so pins stay constant screen size.
-// Called after every zoom change AND after renderBriefMapMarkers replaces DOM.
-function applyBriefCounterScale() {
-  const layer = document.getElementById('wmbMarkersLayer')
-  if (!layer) return
-  const inv = 1 / _briefCurrentScale
-  // No CSS transition here — must snap instantly to match the map animation start
-  layer.style.transition     = 'none'
-  layer.style.transform      = `scale(${inv})`
-  layer.style.transformOrigin = 'center center'
-}
+// (counter-scale removed — pins now scale naturally with the map)
 
 // ── Brief map image sizing ────────────────────────────────────────────────────
 // #wmbImgWrap is sized to the image's natural aspect ratio, constrained to fit
@@ -2893,7 +2884,6 @@ function renderBriefMapMarkers(phase) {
     layer.appendChild(pin)
   })
 
-  applyBriefCounterScale()
 }
 
 // Build the accumulating text list in the intel pane

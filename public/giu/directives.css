@@ -1333,7 +1333,6 @@ body.page-visible > :not(#access-gate) {
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  transform-origin: center center;
 }
 .wm-brief-spotlight {
   position: absolute;
