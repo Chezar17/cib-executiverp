@@ -596,13 +596,17 @@
     <div class="wm-brief-map-pane">
       <!-- All zoomable content lives inside this group so map + pins + spotlight scale together -->
       <div class="wm-brief-map-group" id="wmbMapGroup">
-        <img class="wm-brief-map-img" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'"/>
-        <!-- Persistent phase markers layer -->
-        <div id="wmbMarkersLayer"></div>
-        <!-- Active spotlight -->
-        <div class="wm-brief-spotlight" id="wmbSpotlight">
-          <div class="wm-brief-spotlight-ring"></div>
-          <div class="wm-brief-spotlight-dot"></div>
+        <!-- wmbImgWrap is sized to the image's exact aspect ratio in JS.
+             Pins at left/top % of this wrapper = exact pixel match. -->
+        <div id="wmbImgWrap">
+          <img class="wm-brief-map-img" id="wmbMapImg" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'" onload="onBriefImgLoad()"/>
+          <!-- Markers layer: inset:0 of wmbImgWrap → left/top % = image % -->
+          <div id="wmbMarkersLayer"></div>
+          <!-- Spotlight sits inside the same coordinate space -->
+          <div class="wm-brief-spotlight" id="wmbSpotlight">
+            <div class="wm-brief-spotlight-ring"></div>
+            <div class="wm-brief-spotlight-dot"></div>
+          </div>
         </div>
       </div>
       <!-- These stay fixed on top of the pane, outside the zoom group -->
@@ -2512,10 +2516,13 @@ function startBriefing() {
     vt.disabled = true
     _briefVoiceEnabled = false
   }
-  // Defer render: classList.add('open') switches display:none→flex but the
-  // browser hasn't run layout yet. getBoundingClientRect() on the img returns
-  // zero dimensions until after the first paint. Two rAF frames guarantee layout.
-  requestAnimationFrame(() => requestAnimationFrame(() => renderBriefPhase()))
+  // Size the image wrapper once layout is available, then render pins.
+  // We no longer need getBoundingClientRect for pin placement (direct % now),
+  // but sizeBriefImgWrap needs offsetWidth/Height which needs layout.
+  requestAnimationFrame(() => {
+    sizeBriefImgWrap()
+    requestAnimationFrame(() => renderBriefPhase())
+  })
 
   // ── Play briefing background music ────────────────────────
   const music  = document.getElementById('briefingMusic')
@@ -2679,15 +2686,13 @@ function renderBriefPhase() {
   const sp   = spotlightTarget ? (spotlightTarget._marker || {}) : {}
   const spot = document.getElementById('wmbSpotlight')
   if (spot && sp.x != null) {
-    // Apply same cover-crop correction as pin placement
-    const pos = briefPinPos(sp.x, sp.y)
-    spot.style.left       = pos.left + '%'
-    spot.style.top        = pos.top  + '%'
+    // Direct % — spotlight lives inside wmbImgWrap, same coordinate space as pins
+    spot.style.left       = sp.x + '%'
+    spot.style.top        = sp.y + '%'
     spot.style.transition = 'left 0.5s ease, top 0.5s ease'
   } else if (spot) {
-    const pos = briefPinPos(50, 50)
-    spot.style.left = pos.left + '%'
-    spot.style.top  = pos.top  + '%'
+    spot.style.left = '50%'
+    spot.style.top  = '50%'
   }
 
   const coordsEl = document.getElementById('wmbCoords')
@@ -2698,8 +2703,8 @@ function renderBriefPhase() {
   // ── Zoom the whole map group to the active marker ─────────
   const isPhaseObj = _briefMarkerStep === 0  // phase objective = more dramatic zoom
   if (sp.x != null && sp.y != null) {
-    const zoomPos = briefPinPos(sp.x, sp.y)
-    zoomBriefMapTo(zoomPos.left, zoomPos.top, isPhaseObj)
+    // Pass raw % — zoomBriefMapTo uses % of wmbImgWrap which equals image %
+    zoomBriefMapTo(sp.x, sp.y, isPhaseObj)
   } else {
     resetBriefMapZoom()
   }
@@ -2761,16 +2766,31 @@ let _briefCurrentScale = 1  // tracks current zoom for counter-scale
 
 function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   const group = document.getElementById('wmbMapGroup')
+  const wrap  = document.getElementById('wmbImgWrap')
   if (!group) return
 
   _briefCurrentScale = isPhaseObjective ? 5.0 : 4.0
 
-  // Set transform-origin to the marker position — browser pivots zoom here,
-  // landing it at the centre of the overflow:hidden viewport automatically.
-  group.style.transformOrigin = `${xPct}% ${yPct}%`
-  group.style.transform       = `scale(${_briefCurrentScale})`
+  // Compute marker pixel position relative to group top-left.
+  // The wrap is centered in the group via flexbox; marker is at (xPct,yPct)% of the wrap.
+  if (wrap && group.offsetWidth && wrap.offsetWidth) {
+    const groupW = group.offsetWidth
+    const groupH = group.offsetHeight
+    const wrapW  = wrap.offsetWidth
+    const wrapH  = wrap.offsetHeight
+    // Wrap's top-left offset within group (flexbox centers it)
+    const wrapOffX = (groupW - wrapW) / 2
+    const wrapOffY = (groupH - wrapH) / 2
+    // Marker px from group top-left
+    const markerPx = wrapOffX + (xPct / 100) * wrapW
+    const markerPy = wrapOffY + (yPct / 100) * wrapH
+    // Express as % of group
+    group.style.transformOrigin = `${(markerPx / groupW * 100).toFixed(4)}% ${(markerPy / groupH * 100).toFixed(4)}%`
+  } else {
+    group.style.transformOrigin = `${xPct}% ${yPct}%`
+  }
 
-  // Counter-scale the markers layer so pins/labels stay screen-constant size
+  group.style.transform = `scale(${_briefCurrentScale})`
   applyBriefCounterScale()
 }
 
@@ -2795,30 +2815,56 @@ function applyBriefCounterScale() {
   layer.style.transformOrigin = 'center center'
 }
 
-// ── Brief map pin placement ──────────────────────────────────────────────────
-// Stored mk.x / mk.y are % of the actual rendered <img> rect (same as main
-// war map).  We use getBoundingClientRect() on the brief <img> — identical
-// to how renderMarkersDOM() works on the main map — so there is zero
-// coordinate math and no aspect-ratio guessing.
-function briefPinPos(xPct, yPct) {
-  const img   = document.querySelector('.wm-brief-map-img')
-  const group = document.getElementById('wmbMapGroup')
-  if (!img || !group) return { left: xPct, top: yPct }
+// ── Brief map image sizing ────────────────────────────────────────────────────
+// #wmbImgWrap is sized to the image's natural aspect ratio, constrained to fit
+// the pane. Once sized, pins at left/top % directly equal image pixel %.
+// No getBoundingClientRect, no math — zero drift.
+function sizeBriefImgWrap() {
+  const img  = document.getElementById('wmbMapImg')
+  const pane = document.querySelector('.wm-brief-map-pane')
+  const wrap = document.getElementById('wmbImgWrap')
+  if (!img || !pane || !wrap) return false
 
-  const imgRect   = img.getBoundingClientRect()
-  const groupRect = group.getBoundingClientRect()
-  if (!imgRect.width || !imgRect.height || !groupRect.width || !groupRect.height) {
-    return { left: xPct, top: yPct }
-  }
+  const natW = img.naturalWidth
+  const natH = img.naturalHeight
+  if (!natW || !natH) return false
 
-  const absX = (imgRect.left - groupRect.left) + (xPct / 100) * imgRect.width
-  const absY = (imgRect.top  - groupRect.top)  + (yPct / 100) * imgRect.height
+  const paneW = pane.clientWidth  || pane.offsetWidth
+  const paneH = pane.clientHeight || pane.offsetHeight
+  if (!paneW || !paneH) return false
 
-  return {
-    left: (absX / groupRect.width)  * 100,
-    top:  (absY / groupRect.height) * 100,
+  // Fit the image inside the pane, maintaining aspect ratio (letterbox)
+  const scale = Math.min(paneW / natW, paneH / natH)
+  const w = Math.round(natW * scale)
+  const h = Math.round(natH * scale)
+
+  wrap.style.width  = w + 'px'
+  wrap.style.height = h + 'px'
+  return true
+}
+
+// Called by <img onload> and by startBriefing
+function onBriefImgLoad() {
+  sizeBriefImgWrap()
+  // If briefing is already open, re-render to reposition any pins
+  if (document.getElementById('wmBriefingOverlay').classList.contains('open')) {
+    renderBriefPhase()
   }
 }
+
+// Re-size the wrap if the pane is resized (window resize, etc.)
+;(function() {
+  const pane = document.querySelector('.wm-brief-map-pane')
+  if (!pane || typeof ResizeObserver === 'undefined') return
+  new ResizeObserver(() => {
+    if (!document.getElementById('wmBriefingOverlay').classList.contains('open')) return
+    sizeBriefImgWrap()
+  }).observe(pane)
+})()
+
+// ── Pin placement — direct % (no conversion needed) ──────────────────────────
+// Because wmbMarkersLayer is inset:0 of wmbImgWrap (which IS the image),
+// stored x/y % values map 1:1 to pin left/top %.
 
 function renderBriefMapMarkers(phase) {
   const layer = document.getElementById('wmbMarkersLayer')
@@ -2832,12 +2878,11 @@ function renderBriefMapMarkers(phase) {
     const color = WM_TYPE_COLORS[mk.marker_type || 'intel'] || '#888'
     const isObj = mk.marker_type === 'objective' || m === phase.objective
 
-    const pos = briefPinPos(mk.x || 0, mk.y || 0)
-
     const pin = document.createElement('div')
     pin.className = 'wm-brief-pin' + (isObj ? ' is-objective' : '')
-    pin.style.left   = pos.left + '%'
-    pin.style.top    = pos.top  + '%'
+    // Direct % — wmbImgWrap IS the image coordinate space
+    pin.style.left = (mk.x || 0) + '%'
+    pin.style.top  = (mk.y || 0) + '%'
     pin.style.setProperty('--pin-color', color)
 
     const badge = isObj ? '★' : String(idx)

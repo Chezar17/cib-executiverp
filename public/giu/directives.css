@@ -1300,39 +1300,40 @@ body.page-visible > :not(#access-gate) {
   overflow: hidden;
 }
 /* The zoomable group: image + pins + spotlight all live here so they scale together */
+/* The group fills the pane and is the zoom/pan target */
 .wm-brief-map-group {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform-origin: center center;
-  /* transition covers both transform AND transform-origin so pan+zoom animates smoothly */
   transition: transform 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               transform-origin 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform, transform-origin;
 }
-/* Markers layer fills the whole group so left/top % match the image.
-   transform-origin: center center lets the JS counter-scale shrink inward
-   from the middle, keeping each pin at its correct left/top position. */
+/* wmbImgWrap is sized by JS to match the image aspect ratio.
+   Everything inside uses left/top % = exact image pixel %. */
+#wmbImgWrap {
+  position: relative;
+  flex-shrink: 0;
+  /* width/height set by JS after image loads */
+}
+.wm-brief-map-img {
+  display: block;
+  width: 100%; height: 100%;
+  opacity: 0.55;
+  filter: contrast(1.1) brightness(0.8);
+  pointer-events: none;
+  user-select: none;
+}
+/* Markers layer: inset:0 of wmbImgWrap → same coordinate space as image */
 #wmbMarkersLayer {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 2;
   transform-origin: center center;
-  /* No CSS transition — counter-scale is applied instantly via JS */
-}
-.wm-brief-map-img {
-  /* contain: full image always visible, element box = rendered content area.
-     Pins placed at left/top % of the img element then align 1:1. */
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 100%; max-height: 100%;
-  width: auto; height: auto;
-  display: block;
-  opacity: 0.55;
-  filter: contrast(1.1) brightness(0.8);
-  pointer-events: none;
-  user-select: none;
 }
 .wm-brief-spotlight {
   position: absolute;
