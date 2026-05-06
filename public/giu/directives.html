@@ -539,11 +539,28 @@
         Coordinates: <span id="wmCoordDisplay" style="color:var(--gold);">—</span>
       </div>
 
+      <!-- ── LOCATION PHOTOS ─────────────────────────────────── -->
+      <div class="dir-form-group" style="margin-top:16px;">
+        <label class="dir-form-label">
+          Location / Objective Photos
+          <span style="font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;font-weight:400;text-transform:none;margin-left:8px;">up to 5 · used in briefing</span>
+        </label>
+
+        <!-- Photo slot grid -->
+        <div class="wm-photo-slots" id="wmPhotoSlots">
+          <!-- 5 slots rendered by JS -->
+        </div>
+        <div class="wm-photo-hint">JPG / PNG / WEBP · max 4 MB each · photos appear in Brief Mode when this marker is presented</div>
+      </div>
+
     </div>
     <div class="dir-modal-error" id="wmMarkerError"></div>
     <div class="dir-modal-submit-row">
+      <button class="dir-modal-cancel" id="wmDeleteBtn" style="display:none;color:var(--red);border-color:rgba(192,57,43,0.3);" onclick="deleteWmMarker()">Delete Marker</button>
       <button class="dir-modal-cancel" onclick="closeWmModal()">Cancel</button>
-      <button class="dir-modal-submit" id="wmMarkerSubmit" onclick="submitWmMarker()">Pin Location</button>
+      <button class="dir-modal-submit" id="wmMarkerSubmit" onclick="submitWmMarker()">
+        <span class="btn-spinner"></span><span class="btn-label">Pin Location</span>
+      </button>
     </div>
   </div>
 </div>
@@ -2760,15 +2777,30 @@ function renderBriefMarkersList(phase, revealedNonObj) {
     const item = document.createElement('div')
     item.className = 'wm-brief-marker-item'
     item.style.animationDelay = '0ms'  // already revealed, no delay
+    // Build image strip for this marker
+    const imgs = (mk.images || []).filter(Boolean)
+    const imgStripHtml = imgs.length ? `
+      <div class="wm-brief-img-strip">
+        ${imgs.map((url, i) => `
+          <div class="wm-brief-img-thumb" onclick="openBriefPhoto('${url}', '${escHtml(mk.label||'')}', ${i+1}, ${imgs.length})">
+            <img src="${url}" alt="Location photo ${i+1}" loading="lazy"/>
+            <div class="wm-brief-img-overlay">
+              <svg viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6v-6z"/></svg>
+            </div>
+          </div>`).join('')}
+      </div>` : ''
+
     item.innerHTML = `
       <div class="wm-brief-marker-item-top">
         <div class="wm-brief-marker-num" style="background:${color};">${idx + 1}</div>
         <div class="wm-brief-marker-type" style="color:${color};">${typeLabel.toUpperCase()}</div>
         ${mk.phase != null ? `<div class="wm-brief-marker-phase">P${mk.phase}</div>` : ''}
+        ${imgs.length ? `<div class="wm-brief-img-count"><svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:currentColor;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg> ${imgs.length}</div>` : ''}
       </div>
       <div class="wm-brief-marker-label">${escHtml(mk.label || '—')}</div>
       ${mk.description ? `<div class="wm-brief-marker-desc">${escHtml(mk.description)}</div>` : ''}
-      ${linked ? `<div class="wm-brief-marker-dir">⬡ ${escHtml(mk.directive_code || '')} — ${escHtml(linked.name || '')}</div>` : ''}`
+      ${linked ? `<div class="wm-brief-marker-dir">⬡ ${escHtml(mk.directive_code || '')} — ${escHtml(linked.name || '')}</div>` : ''}
+      ${imgStripHtml}`
 
     list.appendChild(item)
   })
@@ -2795,7 +2827,259 @@ document.addEventListener('keydown', e => {
   }
 })
 
+
+// ════════════════════════════════════════════════════════════
+//  WARMAP PHOTO MANAGEMENT
+// ════════════════════════════════════════════════════════════
+
+let _wmPendingPhotos  = [null, null, null, null, null]  // File objects staged for upload
+let _wmExistingPhotos = [null, null, null, null, null]  // URLs already in DB
+
+// ── Render the 5 photo slots inside the pin modal ─────────
+function renderWmPhotoSlots() {
+  const container = document.getElementById('wmPhotoSlots')
+  if (!container) return
+
+  // Remove all existing file inputs to avoid stale listeners
+  container.innerHTML = ''
+
+  for (let i = 0; i < 5; i++) {
+    const existing = _wmExistingPhotos[i]
+    const pending  = _wmPendingPhotos[i]
+
+    const slot = document.createElement('div')
+    slot.className = 'wm-photo-slot' + (existing || pending ? ' wm-photo-slot--filled' : '')
+
+    if (pending) {
+      // Show local preview
+      const url = URL.createObjectURL(pending)
+      slot.innerHTML = `
+        <img class="wm-photo-preview" src="${url}" alt="Preview"/>
+        <div class="wm-photo-slot-badge">NEW</div>
+        <button class="wm-photo-remove" onclick="wmRemovePhoto(${i})" title="Remove">&#x2715;</button>`
+    } else if (existing) {
+      // Show saved image
+      slot.innerHTML = `
+        <img class="wm-photo-preview" src="${existing}" alt="Saved photo"/>
+        <button class="wm-photo-remove" onclick="wmRemovePhoto(${i})" title="Remove">&#x2715;</button>
+        <div class="wm-photo-slot-expand" onclick="openBriefPhoto('${existing}','Photo',${i+1},5)">&#x26F6;</div>`
+    } else {
+      // Empty slot — click to upload
+      slot.innerHTML = `
+        <div class="wm-photo-add" onclick="wmTriggerUpload(${i})">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          <span>Photo ${i + 1}</span>
+        </div>`
+    }
+    container.appendChild(slot)
+
+    // Hidden file input per slot
+    const inp = document.createElement('input')
+    inp.type    = 'file'
+    inp.accept  = 'image/*'
+    inp.style.display = 'none'
+    inp.dataset.slot  = i
+    inp.addEventListener('change', e => wmHandleFileSelect(e, i))
+    container.appendChild(inp)
+  }
+}
+
+function wmTriggerUpload(i) {
+  const inputs = document.getElementById('wmPhotoSlots').querySelectorAll('input[type=file]')
+  if (inputs[i]) inputs[i].click()
+}
+
+function wmHandleFileSelect(e, i) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (file.size > 4 * 1024 * 1024) {
+    showToast('Max image size is 4 MB', 'error')
+    return
+  }
+  _wmPendingPhotos[i] = file
+  renderWmPhotoSlots()
+}
+
+function wmRemovePhoto(i) {
+  _wmPendingPhotos[i]  = null
+  _wmExistingPhotos[i] = null
+  renderWmPhotoSlots()
+}
+
+// ── Convert File → base64 data-URL ────────────────────────
+function wmFileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload  = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('File read failed'))
+    reader.readAsDataURL(file)
+  })
+}
+
+// ── Gather all final image URLs (existing kept, pending converted) ──
+async function wmCollectImages() {
+  const result = []
+  for (let i = 0; i < 5; i++) {
+    if (_wmPendingPhotos[i]) {
+      result.push(await wmFileToBase64(_wmPendingPhotos[i]))
+    } else if (_wmExistingPhotos[i]) {
+      result.push(_wmExistingPhotos[i])
+    } else {
+      result.push(null)
+    }
+  }
+  return result
+}
+
+// ── Patch openWmModal to reset photo state for new vs edit ──
+const _origOpenWmModal = window.openWmModal
+window.openWmModal = function(editId) {
+  _wmPendingPhotos  = [null, null, null, null, null]
+  _wmExistingPhotos = [null, null, null, null, null]
+
+  if (editId) {
+    // Load existing images from stored marker
+    const marker = _allMarkers.find(m => m.id === editId)
+    const mk = marker?._marker || {}
+    const saved = mk.images || []
+    saved.forEach((url, i) => { if (i < 5) _wmExistingPhotos[i] = url || null })
+    // Show delete button for edits
+    const del = document.getElementById('wmDeleteBtn')
+    if (del) del.style.display = 'inline-flex'
+  } else {
+    const del = document.getElementById('wmDeleteBtn')
+    if (del) del.style.display = 'none'
+  }
+
+  if (_origOpenWmModal) _origOpenWmModal(editId)
+
+  // Render slots after modal opens
+  requestAnimationFrame(() => renderWmPhotoSlots())
+}
+
+// ── Patch submitWmMarker to include images ─────────────────
+const _origSubmitWmMarker = window.submitWmMarker
+window.submitWmMarker = async function() {
+  // Upload all pending photos first
+  let images = []
+  try {
+    images = await wmCollectImages()
+  } catch(e) {
+    showToast('Photo upload error: ' + e.message, 'error')
+    return
+  }
+
+  // Stash images so the original submit can read them
+  window._wmStagedImages = images
+
+  await _origSubmitWmMarker()
+}
+
+// ── Patch the body object inside submitWmMarker via __buildBody ──
+// The original submit builds its own body — we monkey-patch the
+// wmApiFetch call to inject images into any warmap PUT/POST.
+const _origWmApiFetch = window.wmApiFetch
+window.wmApiFetch = async function(method, path, body) {
+  if (path.includes('type=warmap') && (method === 'POST' || method === 'PUT')
+      && window._wmStagedImages) {
+    body = { ...body, images: window._wmStagedImages.filter(Boolean) }
+    window._wmStagedImages = null
+  }
+  return _origWmApiFetch(method, path, body)
+}
+
+// ════════════════════════════════════════════════════════════
+//  BRIEF MODE PHOTO LIGHTBOX
+//  Opens a fullscreen photo viewer when a thumbnail is clicked
+//  in the brief mode intel pane.
+// ════════════════════════════════════════════════════════════
+
+let _lightboxImages  = []
+let _lightboxIndex   = 0
+
+function openBriefPhoto(url, markerLabel, photoNum, total) {
+  _lightboxImages = []
+  _lightboxIndex  = photoNum - 1
+
+  // Find all images for this marker by locating it in _allMarkers
+  const marker = _allMarkers.find(m => {
+    const imgs = (m._marker?.images || []).filter(Boolean)
+    return imgs.includes(url)
+  })
+  _lightboxImages = marker ? (marker._marker?.images || []).filter(Boolean) : [url]
+  _lightboxIndex  = _lightboxImages.indexOf(url)
+  if (_lightboxIndex < 0) _lightboxIndex = 0
+
+  renderLightbox()
+  document.getElementById('wmPhotoLightbox').classList.add('open')
+  document.body.style.overflow = 'hidden'
+}
+
+function closeLightbox() {
+  document.getElementById('wmPhotoLightbox').classList.remove('open')
+  document.body.style.overflow = ''
+}
+
+function lightboxNav(dir) {
+  _lightboxIndex = (_lightboxIndex + dir + _lightboxImages.length) % _lightboxImages.length
+  renderLightbox()
+}
+
+function renderLightbox() {
+  const img     = document.getElementById('wmLightboxImg')
+  const counter = document.getElementById('wmLightboxCounter')
+  const label   = document.getElementById('wmLightboxLabel')
+  const prev    = document.getElementById('wmLightboxPrev')
+  const next    = document.getElementById('wmLightboxNext')
+
+  if (img)     img.src = _lightboxImages[_lightboxIndex] || ''
+  if (counter) counter.textContent = `${_lightboxIndex + 1} / ${_lightboxImages.length}`
+  if (prev)    prev.style.display  = _lightboxImages.length > 1 ? 'flex' : 'none'
+  if (next)    next.style.display  = _lightboxImages.length > 1 ? 'flex' : 'none'
+}
+
+// Keyboard nav for lightbox
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('wmPhotoLightbox')
+  if (!lb?.classList.contains('open')) return
+  if (e.key === 'Escape')      closeLightbox()
+  if (e.key === 'ArrowLeft')   lightboxNav(-1)
+  if (e.key === 'ArrowRight')  lightboxNav(1)
+})
+
 </script>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PHOTO LIGHTBOX — Brief mode fullscreen photo viewer
+════════════════════════════════════════════════════════ -->
+<div class="wm-lightbox" id="wmPhotoLightbox" onclick="if(event.target===this)closeLightbox()">
+  <div class="wm-lightbox-box">
+
+    <!-- Topbar -->
+    <div class="wm-lightbox-topbar">
+      <div class="wm-lightbox-topbar-left">
+        <div class="wm-lightbox-dot"></div>
+        <span class="wm-lightbox-title">LOCATION INTELLIGENCE</span>
+        <span class="wm-lightbox-counter" id="wmLightboxCounter">1 / 1</span>
+      </div>
+      <button class="wm-lightbox-close" onclick="closeLightbox()">&#x2715; Close</button>
+    </div>
+
+    <!-- Image area -->
+    <div class="wm-lightbox-img-wrap">
+      <button class="wm-lightbox-nav wm-lightbox-prev" id="wmLightboxPrev" onclick="lightboxNav(-1)">&#8592;</button>
+      <img class="wm-lightbox-img" id="wmLightboxImg" src="" alt="Location photo"/>
+      <button class="wm-lightbox-nav wm-lightbox-next" id="wmLightboxNext" onclick="lightboxNav(1)">&#8594;</button>
+    </div>
+
+    <!-- Thumbnail strip -->
+    <div class="wm-lightbox-strip" id="wmLightboxStrip"></div>
+
+  </div>
+</div>
 
 </body>
 </html>

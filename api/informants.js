@@ -589,7 +589,8 @@ async function handleWarmap(req, res, supabase, session) {
   if (req.method === 'POST') {
     const {
       x, y, marker_type, label, description,
-      directive_id, directive_code, phase
+      directive_id, directive_code, phase,
+      images           // optional array of base64/URL strings (up to 5 photos)
     } = req.body
 
     if (x === undefined || y === undefined) {
@@ -621,6 +622,15 @@ async function handleWarmap(req, res, supabase, session) {
       }
     }
 
+    // Sanitise images: keep max 5, strip anything that is not a string,
+    // reject anything suspiciously large (> 5 MB base64 ≈ 6.8 MB string)
+    const MAX_IMG_SIZE = 6_800_000
+    const sanitisedImages = Array.isArray(images)
+      ? images
+          .slice(0, 5)
+          .map(i => (typeof i === 'string' && i.length < MAX_IMG_SIZE ? i : null))
+      : []
+
     const payload = {
       x:              parseFloat(x),
       y:              parseFloat(y),
@@ -631,6 +641,7 @@ async function handleWarmap(req, res, supabase, session) {
       directive_code: directive_code || null,
       added_by:       callsign,
       phase:          phaseNum,
+      images:         sanitisedImages,   // ← location / objective photos
     }
 
     const { data, error } = await supabase
@@ -654,7 +665,7 @@ async function handleWarmap(req, res, supabase, session) {
 
   // ── PUT: Update marker ────────────────────────────────────
   if (req.method === 'PUT') {
-    const { id, x, y, marker_type, label, description, directive_id, directive_code, phase } = req.body
+    const { id, x, y, marker_type, label, description, directive_id, directive_code, phase, images } = req.body
     if (!id) return res.status(400).json({ error: 'ID is required.' })
 
     const { data: existing } = await supabase
@@ -666,6 +677,12 @@ async function handleWarmap(req, res, supabase, session) {
 
     const current = safeParseJson(existing?.task) || {}
 
+    // Sanitise incoming images (keep existing if not provided)
+    const MAX_IMG_SIZE = 6_800_000
+    const incomingImages = Array.isArray(images)
+      ? images.slice(0,5).map(i => (typeof i === 'string' && i.length < MAX_IMG_SIZE ? i : null))
+      : undefined
+
     const updatedPayload = {
       ...current,
       ...(x              !== undefined ? { x: parseFloat(x) }       : {}),
@@ -676,6 +693,7 @@ async function handleWarmap(req, res, supabase, session) {
       ...(directive_id   !== undefined ? { directive_id }           : {}),
       ...(directive_code !== undefined ? { directive_code }         : {}),
       ...(phase          !== undefined ? { phase: phase !== null ? parseInt(phase) : null } : {}),
+      ...(incomingImages !== undefined ? { images: incomingImages } : {}),  // only overwrite if provided
     }
 
     const rowUpdates = { task: JSON.stringify(updatedPayload) }
