@@ -1327,12 +1327,13 @@ body.page-visible > :not(#access-gate) {
   pointer-events: none;
   user-select: none;
 }
-/* Markers layer: inset:0 of wmbImgWrap → same coordinate space as image */
+/* Markers layer: now a sibling of the zoom group, covers the whole pane.
+   Pins are positioned in screen-pixel coords by JS — never scaled, always crisp. */
 #wmbMarkersLayer {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
+  z-index: 6;   /* above zoom group (z:auto) and grid (z:3), below corners (z:4) */
 }
 .wm-brief-spotlight {
   position: absolute;
@@ -1686,21 +1687,16 @@ body.page-visible > :not(#access-gate) {
   color: var(--gold); margin-top: 6px; opacity: 0.8;
 }
 
-/* ── Brief map pins (persistent layer) ── */
-/* IMPORTANT: JS applies translate(-50%,-50%) scale(1/mapZoom) to each pin
-   individually so pins stay anchored to their map coordinate at any zoom.
-   All size values here are the intended screen-pixel size at that final scale. */
+/* ── Brief map pins (outside zoom group — always 1:1 device pixels, no blur) ── */
 .wm-brief-pin {
   position: absolute;
-  /* Base transform — JS overrides this with the counter-scale included */
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);   /* JS also sets this; keep as fallback */
   transform-origin: center center;
   z-index: 3;
   display: flex; flex-direction: column; align-items: center;
   pointer-events: none;
-  /* No CSS animation — it fights the JS transform override on reveal */
   opacity: 1;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 .wm-brief-pin-dot {
   width: 14px; height: 14px; border-radius: 50%;

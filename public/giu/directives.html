@@ -594,21 +594,22 @@
   <div class="wm-brief-body">
     <!-- Left: map with all phase markers visible -->
     <div class="wm-brief-map-pane">
-      <!-- All zoomable content lives inside this group so map + pins + spotlight scale together -->
+      <!-- All zoomable content lives inside this group so map + spotlight scale together -->
       <div class="wm-brief-map-group" id="wmbMapGroup">
         <!-- wmbImgWrap is sized to the image's exact aspect ratio in JS.
              Pins at left/top % of this wrapper = exact pixel match. -->
         <div id="wmbImgWrap">
           <img class="wm-brief-map-img" id="wmbMapImg" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'" onload="onBriefImgLoad()"/>
-          <!-- Markers layer: inset:0 of wmbImgWrap → left/top % = image % -->
-          <div id="wmbMarkersLayer"></div>
-          <!-- Spotlight sits inside the same coordinate space -->
+          <!-- Spotlight sits inside the zoom group so it scales with the map -->
           <div class="wm-brief-spotlight" id="wmbSpotlight">
             <div class="wm-brief-spotlight-ring"></div>
             <div class="wm-brief-spotlight-dot"></div>
           </div>
         </div>
       </div>
+      <!-- Markers layer lives OUTSIDE the zoom group — pins are never scaled,
+           so they are always crisp. JS positions them in screen-pixel coords. -->
+      <div id="wmbMarkersLayer"></div>
       <!-- These stay fixed on top of the pane, outside the zoom group -->
       <div class="wm-brief-grid"></div>
       <div class="wm-brief-corner tl"></div>
@@ -2791,45 +2792,30 @@ function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   }
 
   group.style.transform = `scale(${_briefCurrentScale})`
-  applyBriefCounterScale()
+
+  // Re-render pins after the CSS transition completes (0.85s) so getBoundingClientRect
+  // returns the post-zoom wrap position and pins land exactly on the right spot.
+  clearTimeout(window._briefPinRepaintTimer)
+  window._briefPinRepaintTimer = setTimeout(() => {
+    if (_briefPhases.length) renderBriefMapMarkers(_briefPhases[_briefPhaseIdx])
+  }, 900)
 }
 
 function resetBriefMapZoom() {
   const group = document.getElementById('wmbMapGroup')
-  const layer = document.getElementById('wmbMarkersLayer')
   if (!group) return
   _briefCurrentScale = 1
   group.style.transform       = 'scale(1)'
   group.style.transformOrigin = 'center center'
-  // Clear both layer-level and per-pin transforms
-  if (layer) {
-    layer.style.transform       = ''
-    layer.style.transformOrigin = ''
-    layer.querySelectorAll('.wm-brief-pin').forEach(pin => {
-      pin.style.transform       = 'translate(-50%, -50%)'
-      pin.style.transformOrigin = ''
-    })
-  }
+  // Re-render pins after reset transition so they reposition correctly
+  clearTimeout(window._briefPinRepaintTimer)
+  window._briefPinRepaintTimer = setTimeout(() => {
+    if (_briefPhases.length) renderBriefMapMarkers(_briefPhases[_briefPhaseIdx])
+  }, 900)
 }
 
-// ── Counter-scale markers layer ────────────────────────────────────────────────
-// Scaling the whole layer from 'top left' shifts every pin off its map coordinate.
-// Instead we scale EACH PIN individually with transformOrigin 'center center' so
-// the pin's centre stays locked on its map pixel while the dot+label shrink to a
-// sensible on-screen size regardless of how far we're zoomed in.
-function applyBriefCounterScale() {
-  const layer = document.getElementById('wmbMarkersLayer')
-  if (!layer || _briefCurrentScale <= 0) return
-  const inv = (1 / _briefCurrentScale).toFixed(6)
-  // Clear any stale layer-level transform from old approach
-  layer.style.transform       = ''
-  layer.style.transformOrigin = ''
-  // Scale each pin in-place so it stays anchored to its coordinate
-  layer.querySelectorAll('.wm-brief-pin').forEach(pin => {
-    pin.style.transform       = `translate(-50%, -50%) scale(${inv})`
-    pin.style.transformOrigin = 'center center'
-  })
-}
+// applyBriefCounterScale is no longer needed — wmbMarkersLayer is outside the
+// zoom group so pins are always rendered at 1:1 device pixels (no blur).
 
 // ── Brief map image sizing ────────────────────────────────────────────────────
 // #wmbImgWrap is sized to the image's natural aspect ratio, constrained to fit
@@ -2878,9 +2864,27 @@ function onBriefImgLoad() {
   }).observe(pane)
 })()
 
-// ── Pin placement — direct % (no conversion needed) ──────────────────────────
-// Because wmbMarkersLayer is inset:0 of wmbImgWrap (which IS the image),
-// stored x/y % values map 1:1 to pin left/top %.
+// ── Pin placement — screen-pixel coords outside zoom group ───────────────────
+// wmbMarkersLayer is now a sibling of wmbMapGroup (NOT inside it), so it is
+// never affected by the CSS zoom transform.  We calculate where each pin
+// should appear on screen by reading the current bounding rect of wmbImgWrap
+// (which is inside the zoomed group and therefore already reflects the zoom),
+// then convert the stored x/y % to pane-relative pixel coordinates.
+// Result: pins are always rendered at 1:1 device pixels — zero blur.
+
+function getBriefPinScreenPos(xPct, yPct) {
+  const pane = document.querySelector('.wm-brief-map-pane')
+  const wrap = document.getElementById('wmbImgWrap')
+  if (!pane || !wrap) return { x: 0, y: 0 }
+
+  const paneRect = pane.getBoundingClientRect()
+  const wrapRect = wrap.getBoundingClientRect()
+
+  // Pixel position of the map coordinate relative to pane top-left
+  const x = (wrapRect.left - paneRect.left) + (xPct / 100) * wrapRect.width
+  const y = (wrapRect.top  - paneRect.top)  + (yPct / 100) * wrapRect.height
+  return { x, y }
+}
 
 function renderBriefMapMarkers(phase) {
   const layer = document.getElementById('wmbMarkersLayer')
@@ -2894,11 +2898,13 @@ function renderBriefMapMarkers(phase) {
     const color = WM_TYPE_COLORS[mk.marker_type || 'intel'] || '#888'
     const isObj = mk.marker_type === 'objective' || m === phase.objective
 
+    const { x, y } = getBriefPinScreenPos(mk.x || 0, mk.y || 0)
+
     const pin = document.createElement('div')
     pin.className = 'wm-brief-pin' + (isObj ? ' is-objective' : '')
-    // Direct % — wmbImgWrap IS the image coordinate space
-    pin.style.left = (mk.x || 0) + '%'
-    pin.style.top  = (mk.y || 0) + '%'
+    // Screen-pixel position relative to pane (layer is absolute inside pane)
+    pin.style.left = x + 'px'
+    pin.style.top  = y + 'px'
     pin.style.setProperty('--pin-color', color)
 
     const badge = isObj ? '★' : String(idx)
@@ -2908,9 +2914,7 @@ function renderBriefMapMarkers(phase) {
 
     layer.appendChild(pin)
   })
-
-  // Keep pins at screen-pixel size by counter-scaling the layer
-  applyBriefCounterScale()
+  // No counter-scale needed — layer is outside the zoom group
 }
 
 // Build the accumulating text list in the intel pane
