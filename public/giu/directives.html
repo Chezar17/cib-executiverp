@@ -1429,7 +1429,26 @@ function renderMembers() {
     return
   }
 
-  grid.innerHTML = _allMembers.map((m, i) => buildMemberCard(m, i)).join('')
+  // Sort: entries starting with a number come first (numeric ascending),
+  // then alphabetical callsigns (case-insensitive). Handles mixed e.g. "1-GHOST", "ALPHA", "2-REAPER"
+  const sorted = [..._allMembers].sort((a, b) => {
+    const ca = (a._member?.callsign || a.name || '').trim()
+    const cb = (b._member?.callsign || b.name || '').trim()
+    const aIsNum = /^\d/.test(ca)
+    const bIsNum = /^\d/.test(cb)
+    if (aIsNum && bIsNum) {
+      // both numeric-prefixed: sort by leading number then rest
+      const numA = parseFloat(ca) || 0
+      const numB = parseFloat(cb) || 0
+      if (numA !== numB) return numA - numB
+      return ca.localeCompare(cb, undefined, { numeric: true })
+    }
+    if (aIsNum) return -1   // numbers before letters
+    if (bIsNum) return  1
+    return ca.localeCompare(cb, undefined, { sensitivity: 'base' })
+  })
+
+  grid.innerHTML = sorted.map((m, i) => buildMemberCard(m, i)).join('')
 }
 
 function buildMemberCard(row, index) {
@@ -1541,6 +1560,7 @@ function openMemberModal() {
   document.getElementById('memberModalLabel').textContent  = 'GIU · ADD MEMBER'
   document.getElementById('memberModalSubmit').textContent = 'Add Member'
   document.getElementById('memberModalSubmit').onclick     = submitMember
+  document.getElementById('memberModalSubmit').disabled    = false
   setModalError('memberModalError', '')
   document.getElementById('memberModal').classList.add('open')
   setTimeout(() => document.getElementById('mCallsign').focus(), 80)
@@ -1561,6 +1581,7 @@ function openEditMember(id) {
   document.getElementById('memberModalLabel').textContent  = 'GIU · EDIT MEMBER — ' + (m.callsign || '')
   document.getElementById('memberModalSubmit').textContent = 'Save Changes'
   document.getElementById('memberModalSubmit').onclick     = submitMember
+  document.getElementById('memberModalSubmit').disabled    = false
   setModalError('memberModalError', '')
   document.getElementById('memberModal').classList.add('open')
 }
@@ -1603,6 +1624,8 @@ async function submitMember() {
     showToast(_editingMemberId ? 'Member updated.' : 'Member added.', 'success')
   } catch (e) {
     setModalError('memberModalError', e.message.toUpperCase())
+  } finally {
+    // Always re-enable — button stays visible on error, must work fresh on next open
     setBtnLoading(btn, false)
   }
 }
