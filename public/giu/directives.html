@@ -1772,7 +1772,12 @@ async function loadWarmap() {
   try {
     const res = await wmApiFetch('GET', '/api/informants?type=warmap')
     if (!res.ok) throw new Error(res.data?.error || 'Failed to load markers')
-    _allMarkers = res.data.data || []
+    // Deep-copy each _marker so markers never share object references.
+    // This prevents images from one marker bleeding into another.
+    _allMarkers = (res.data.data || []).map(row => ({
+      ...row,
+      _marker: row._marker ? { ...row._marker, images: [...(row._marker.images || [])] } : {}
+    }))
   } catch(e) {
     showToast('War Map: ' + e.message, 'error')
     _allMarkers = []
@@ -2054,6 +2059,9 @@ function populateDirectiveDropdown() {
 }
 
 function openWmModal() {
+  // Reset photo state for a brand-new marker
+  wmResetPhotoState(null)
+
   // Pre-fill type from toolbar selection
   const typeEl = document.getElementById('wmType')
   if (typeEl) typeEl.value = _wmMarkerType
@@ -2082,7 +2090,11 @@ function openWmModal() {
     coordEl.textContent = `X:${_wmPendingX.toFixed(1)}% / Y:${_wmPendingY.toFixed(1)}%`
   }
 
+  const del = document.getElementById('wmDeleteBtn')
+  if (del) del.style.display = 'none'
+
   document.getElementById('wmMarkerModal').classList.add('open')
+  renderWmPhotoSlots()
 }
 
 // Show warning if the selected phase already has an objective marker
@@ -2119,6 +2131,9 @@ function openWmEditModal(id) {
   _wmPendingX   = mk.x
   _wmPendingY   = mk.y
 
+  // Load this marker's saved images into photo state — isolated per marker
+  wmResetPhotoState(mk.images || [])
+
   document.getElementById('wmLabel').value = mk.label || ''
   document.getElementById('wmDesc').value  = mk.description || ''
   document.getElementById('wmPhase').value = mk.phase !== null && mk.phase !== undefined ? mk.phase : ''
@@ -2134,12 +2149,18 @@ function openWmEditModal(id) {
   const coordEl = document.getElementById('wmCoordDisplay')
   if (coordEl) coordEl.textContent = `X:${(mk.x||0).toFixed(1)}% / Y:${(mk.y||0).toFixed(1)}%`
 
+  const del = document.getElementById('wmDeleteBtn')
+  if (del) del.style.display = 'inline-flex'
+
   updatePhaseHint()
   setModalError('wmMarkerError', '')
   document.getElementById('wmMarkerModalLabel').textContent = 'GIU · EDIT MARKER'
   document.getElementById('wmMarkerSubmit').textContent = 'Save Changes'
   document.getElementById('wmMarkerSubmit').onclick = submitWmMarker
   document.getElementById('wmMarkerModal').classList.add('open')
+
+  // Render photo slots now that the modal is open and images are loaded
+  renderWmPhotoSlots()
 }
 
 function closeWmModal() {
@@ -2187,6 +2208,14 @@ async function submitWmMarker() {
   btn.disabled = true; btn.textContent = _wmEditingId ? 'Saving…' : 'Pinning…'
 
   try {
+    // Collect images directly here — no monkey-patching needed
+    let images = []
+    try {
+      images = await wmCollectImages()
+    } catch(imgErr) {
+      throw new Error('Photo upload failed: ' + imgErr.message)
+    }
+
     const body = {
       x:              _wmPendingX,
       y:              _wmPendingY,
@@ -2196,23 +2225,34 @@ async function submitWmMarker() {
       directive_id:   dirId,
       directive_code: dirCode,
       phase:          phase,
+      images:         images.filter(Boolean),
     }
 
     if (_wmEditingId) {
       const res = await wmApiFetch('PUT', '/api/informants?type=warmap', { id: _wmEditingId, ...body })
       if (!res.ok) throw new Error(res.data?.error || 'Update failed')
       const idx = _allMarkers.findIndex(x => x.id === _wmEditingId)
-      if (idx !== -1) _allMarkers[idx] = res.data.data
+      if (idx !== -1) {
+        // Deep-copy the returned marker so each entry in _allMarkers is independent
+        _allMarkers[idx] = {
+          ...res.data.data,
+          _marker: { ...(res.data.data._marker || {}) }
+        }
+      }
       showToast('Marker updated.', 'info')
     } else {
       const res = await wmApiFetch('POST', '/api/informants?type=warmap', body)
       if (!res.ok) throw new Error(res.data?.error || 'Create failed')
-      _allMarkers.push(res.data.data)
+      // Deep-copy the new marker too
+      _allMarkers.push({
+        ...res.data.data,
+        _marker: { ...(res.data.data._marker || {}) }
+      })
       showToast('Marker placed on war map.', 'success')
     }
 
     renderMarkers()
-    buildPhaseFilterButtons()  // rebuild in case a new phase was used
+    buildPhaseFilterButtons()
     closeWmModal()
   } catch(e) {
     setModalError('wmMarkerError', e.message.toUpperCase())
@@ -2832,15 +2872,46 @@ document.addEventListener('keydown', e => {
 //  WARMAP PHOTO MANAGEMENT
 // ════════════════════════════════════════════════════════════
 
-let _wmPendingPhotos  = [null, null, null, null, null]  // File objects staged for upload
-let _wmExistingPhotos = [null, null, null, null, null]  // URLs already in DB
+// ════════════════════════════════════════════════════════════
+//  WAR MAP — PHOTO SLOT SYSTEM
+//  Clean, no monkey-patching. State is reset explicitly by
+//  openWmModal() and openWmEditModal() before rendering slots.
+//
+//  _wmPendingPhotos[i]  — File object chosen but not yet saved
+//  _wmExistingPhotos[i] — base64/URL already stored in DB
+//  _wmBlobUrls[i]       — object URLs created for preview;
+//                         revoked when slots are re-rendered
+//                         to prevent memory leaks
+// ════════════════════════════════════════════════════════════
 
-// ── Render the 5 photo slots inside the pin modal ─────────
+let _wmPendingPhotos  = [null, null, null, null, null]
+let _wmExistingPhotos = [null, null, null, null, null]
+let _wmBlobUrls       = [null, null, null, null, null]  // for cleanup
+
+// ── Reset photo state. Called by openWmModal / openWmEditModal ──
+function wmResetPhotoState(existingImages) {
+  // Revoke any blob URLs from the previous modal open
+  _wmBlobUrls.forEach(u => { if (u) URL.revokeObjectURL(u) })
+  _wmBlobUrls       = [null, null, null, null, null]
+  _wmPendingPhotos  = [null, null, null, null, null]
+  _wmExistingPhotos = [null, null, null, null, null]
+
+  // Load saved images for this marker (edit mode)
+  if (Array.isArray(existingImages)) {
+    existingImages.forEach((url, i) => {
+      if (i < 5) _wmExistingPhotos[i] = url || null
+    })
+  }
+}
+
+// ── Render the 5 photo slots ──────────────────────────────
 function renderWmPhotoSlots() {
   const container = document.getElementById('wmPhotoSlots')
   if (!container) return
 
-  // Remove all existing file inputs to avoid stale listeners
+  // Revoke old blob URLs before clearing DOM
+  _wmBlobUrls.forEach(u => { if (u) URL.revokeObjectURL(u) })
+  _wmBlobUrls  = [null, null, null, null, null]
   container.innerHTML = ''
 
   for (let i = 0; i < 5; i++) {
@@ -2851,34 +2922,36 @@ function renderWmPhotoSlots() {
     slot.className = 'wm-photo-slot' + (existing || pending ? ' wm-photo-slot--filled' : '')
 
     if (pending) {
-      // Show local preview
-      const url = URL.createObjectURL(pending)
+      // Create a fresh blob URL for this pending file, track it for cleanup
+      const blobUrl = URL.createObjectURL(pending)
+      _wmBlobUrls[i] = blobUrl
       slot.innerHTML = `
-        <img class="wm-photo-preview" src="${url}" alt="Preview"/>
+        <img class="wm-photo-preview" src="${blobUrl}" alt="Preview"/>
         <div class="wm-photo-slot-badge">NEW</div>
         <button class="wm-photo-remove" onclick="wmRemovePhoto(${i})" title="Remove">&#x2715;</button>`
+
     } else if (existing) {
-      // Show saved image
+      // Saved image — display directly, no blob needed
+      const safeUrl = existing.replace(/'/g, '%27')
       slot.innerHTML = `
         <img class="wm-photo-preview" src="${existing}" alt="Saved photo"/>
         <button class="wm-photo-remove" onclick="wmRemovePhoto(${i})" title="Remove">&#x2715;</button>
-        <div class="wm-photo-slot-expand" onclick="openBriefPhoto('${existing}','Photo',${i+1},5)">&#x26F6;</div>`
+        <div class="wm-photo-slot-expand" onclick="openBriefPhoto('${safeUrl}','Photo',${i+1},5)">&#x26F6;</div>`
+
     } else {
       // Empty slot — click to upload
       slot.innerHTML = `
         <div class="wm-photo-add" onclick="wmTriggerUpload(${i})">
-          <svg viewBox="0 0 24 24">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           <span>Photo ${i + 1}</span>
         </div>`
     }
     container.appendChild(slot)
 
-    // Hidden file input per slot
+    // One hidden file input per slot — created fresh each render
     const inp = document.createElement('input')
-    inp.type    = 'file'
-    inp.accept  = 'image/*'
+    inp.type         = 'file'
+    inp.accept       = 'image/*'
     inp.style.display = 'none'
     inp.dataset.slot  = i
     inp.addEventListener('change', e => wmHandleFileSelect(e, i))
@@ -2896,6 +2969,7 @@ function wmHandleFileSelect(e, i) {
   if (!file) return
   if (file.size > 4 * 1024 * 1024) {
     showToast('Max image size is 4 MB', 'error')
+    e.target.value = ''
     return
   }
   _wmPendingPhotos[i] = file
@@ -2903,6 +2977,8 @@ function wmHandleFileSelect(e, i) {
 }
 
 function wmRemovePhoto(i) {
+  // Revoke blob URL for this slot if it exists
+  if (_wmBlobUrls[i]) { URL.revokeObjectURL(_wmBlobUrls[i]); _wmBlobUrls[i] = null }
   _wmPendingPhotos[i]  = null
   _wmExistingPhotos[i] = null
   renderWmPhotoSlots()
@@ -2918,7 +2994,7 @@ function wmFileToBase64(file) {
   })
 }
 
-// ── Gather all final image URLs (existing kept, pending converted) ──
+// ── Gather all final image values (existing kept, pending converted to base64) ──
 async function wmCollectImages() {
   const result = []
   for (let i = 0; i < 5; i++) {
@@ -2931,63 +3007,6 @@ async function wmCollectImages() {
     }
   }
   return result
-}
-
-// ── Patch openWmModal to reset photo state for new vs edit ──
-const _origOpenWmModal = window.openWmModal
-window.openWmModal = function(editId) {
-  _wmPendingPhotos  = [null, null, null, null, null]
-  _wmExistingPhotos = [null, null, null, null, null]
-
-  if (editId) {
-    // Load existing images from stored marker
-    const marker = _allMarkers.find(m => m.id === editId)
-    const mk = marker?._marker || {}
-    const saved = mk.images || []
-    saved.forEach((url, i) => { if (i < 5) _wmExistingPhotos[i] = url || null })
-    // Show delete button for edits
-    const del = document.getElementById('wmDeleteBtn')
-    if (del) del.style.display = 'inline-flex'
-  } else {
-    const del = document.getElementById('wmDeleteBtn')
-    if (del) del.style.display = 'none'
-  }
-
-  if (_origOpenWmModal) _origOpenWmModal(editId)
-
-  // Render slots after modal opens
-  requestAnimationFrame(() => renderWmPhotoSlots())
-}
-
-// ── Patch submitWmMarker to include images ─────────────────
-const _origSubmitWmMarker = window.submitWmMarker
-window.submitWmMarker = async function() {
-  // Upload all pending photos first
-  let images = []
-  try {
-    images = await wmCollectImages()
-  } catch(e) {
-    showToast('Photo upload error: ' + e.message, 'error')
-    return
-  }
-
-  // Stash images so the original submit can read them
-  window._wmStagedImages = images
-
-  await _origSubmitWmMarker()
-}
-
-// ── Patch the body object inside submitWmMarker via __buildBody ──
-// The original submit builds its own body — we monkey-patch the
-// wmApiFetch call to inject images into any warmap PUT/POST.
-const _origWmApiFetch = window.wmApiFetch
-window.wmApiFetch = async function(method, path, body) {
-  if (path.includes('type=warmap') && (method === 'POST' || method === 'PUT')
-      && window._wmStagedImages) {
-    body = { ...body, images: window._wmStagedImages.filter(Boolean) }
-    window._wmStagedImages = null
-  }
-  return _origWmApiFetch(method, path, body)
 }
 
 // ════════════════════════════════════════════════════════════
