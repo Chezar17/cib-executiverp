@@ -15,6 +15,7 @@
 <script type="module" src="shared/components/site-header.js"></script>
 <link rel="stylesheet" href="styles/press.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -340,7 +341,7 @@ function setExportFmt(fmt, btn) {
 }
 
 // Build the 450×800 card DOM inside #export-card-host
-function buildExportCard(r) {
+function buildExportCard(r, qrDataUrl) {
   const host = document.getElementById('export-card-host')
   if (!host) return
   const cc  = CAT_CLASS[r.news_type] || 'cat-official'
@@ -428,6 +429,20 @@ function buildExportCard(r) {
 
     <!-- Footer -->
     <div style="padding:12px 24px 14px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;background:rgba(0,0,0,0.25);">
+
+      <!-- QR code row — only shown when a QR was generated -->
+      ${qrDataUrl ? `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="flex-shrink:0;">
+          <img src="${qrDataUrl}" width="60" height="60" style="display:block;image-rendering:pixelated;border:1px solid rgba(255,255,255,0.12);background:#fff;padding:3px;"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:8px;letter-spacing:2px;color:rgba(240,237,228,0.35);text-transform:uppercase;">To read the full release</div>
+          <div style="font-size:9px;letter-spacing:1px;color:#C9A84C;font-weight:600;">Scan QR code or visit CIB Press Room</div>
+          <div style="font-size:7px;letter-spacing:1px;color:rgba(240,237,228,0.2);word-break:break-all;">${escHtml(buildShareUrl(r.pr_number))}</div>
+        </div>
+      </div>` : ''}
+
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <span style="font-size:8px;letter-spacing:2px;color:rgba(240,237,228,0.3);text-transform:uppercase;">
           ${r.release_time ? escHtml(r.release_time) + ' · ' : ''}${r.division_tag ? escHtml(r.division_tag) : 'CIB'}
@@ -450,15 +465,55 @@ function buildExportCard(r) {
   </div>`
 }
 
+// ── QR code generator ────────────────────────────────────
+// Uses qrcodejs to render into a temp canvas, returns data URL
+function generateQrDataUrl(url) {
+  return new Promise(resolve => {
+    try {
+      const tmp = document.createElement('div')
+      tmp.style.cssText = 'position:fixed;left:-9999px;top:0;'
+      document.body.appendChild(tmp)
+
+      const qr = new QRCode(tmp, {
+        text:          url,
+        width:         120,
+        height:        120,
+        colorDark:     '#000000',
+        colorLight:    '#ffffff',
+        correctLevel:  QRCode.CorrectLevel.M,
+      })
+
+      // QRCode renders async via image — wait for it
+      setTimeout(() => {
+        const img = tmp.querySelector('img')
+        if (img && img.src) {
+          resolve(img.src)
+        } else {
+          const canvas = tmp.querySelector('canvas')
+          resolve(canvas ? canvas.toDataURL('image/png') : null)
+        }
+        document.body.removeChild(tmp)
+      }, 80)
+    } catch(e) {
+      console.warn('QR generation failed:', e)
+      resolve(null)
+    }
+  })
+}
+
 async function generateExportPreview() {
   const r = window._currentPressRelease
   if (!r) return
   const status = document.getElementById('export-status')
   const ph     = document.getElementById('export-preview-placeholder')
   const inner  = document.getElementById('export-preview-inner')
-  if (status) status.textContent = 'Rendering preview...'
+  if (status) status.textContent = 'Generating QR code...'
 
-  buildExportCard(r)
+  const shareUrl = buildShareUrl(r.pr_number)
+  const qrDataUrl = await generateQrDataUrl(shareUrl)
+
+  if (status) status.textContent = 'Rendering preview...'
+  buildExportCard(r, qrDataUrl)
 
   // Wait a frame for images to settle
   await new Promise(res => setTimeout(res, 120))
@@ -487,9 +542,13 @@ async function doExportImage() {
   const r = window._currentPressRelease
   if (!r) return
   const status = document.getElementById('export-status')
-  if (status) status.textContent = 'Generating image...'
+  if (status) status.textContent = 'Generating QR code...'
 
-  buildExportCard(r)
+  const shareUrl  = buildShareUrl(r.pr_number)
+  const qrDataUrl = await generateQrDataUrl(shareUrl)
+
+  if (status) status.textContent = 'Generating image...'
+  buildExportCard(r, qrDataUrl)
   await new Promise(res => setTimeout(res, 200))
 
   const fmt  = window._exportFmt || 'jpg'
