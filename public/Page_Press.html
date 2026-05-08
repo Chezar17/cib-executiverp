@@ -153,7 +153,7 @@
 // ═══════════════════════════════════════════════════════════
 //  PAGE_PRESS — Dynamic Press Release Loader
 //  Fetches from /api/press-releases
-//  Supports ?release=<slug> for direct share links
+//  Supports ?release=<pr_number> for direct share links
 // ═══════════════════════════════════════════════════════════
 
 const PA_API = '/api/press-releases'
@@ -171,6 +171,12 @@ function bodyToHtml(body) {
   if (!body) return ''
   return body.split(/\n\s*\n/).map(p=>`<p>${escHtml(p.trim()).replace(/\n/g,'<br/>')}</p>`).join('')
 }
+// Truncated preview: plain text, max 3 lines via CSS clamp
+function bodyPreview(body) {
+  if (!body) return ''
+  const plain = body.replace(/\n/g,' ').trim()
+  return `<p class="pr-text-preview">${escHtml(plain)}</p>`
+}
 const CAT_CLASS = {
   'Official Statement':'cat-official','Public Advisory':'cat-advisory',
   'Operation Announcement':'cat-operation','Personnel Update':'cat-personnel',
@@ -181,38 +187,46 @@ const CAT_CLASS = {
 
 function shareBtn(url, small) {
   const sz = small ? 'font-size:8px;padding:3px 10px' : 'font-size:9px;padding:4px 12px'
-  return `<button onclick="copyPressLink('${escHtml(url)}')" style="font-family:'Roboto Mono',monospace;${sz};letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--navy-border);color:var(--muted);cursor:pointer;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--muted)'">⧉ Share</button>`
+  // stopPropagation so clicking Share doesn't also navigate the card
+  return `<button onclick="event.stopPropagation();copyPressLink('${escHtml(url)}')" style="font-family:'Roboto Mono',monospace;${sz};letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--navy-border);color:var(--muted);cursor:pointer;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--muted)'">⧉ Share</button>`
 }
 
 function copyPressLink(url) {
   navigator.clipboard.writeText(url).then(()=>{const o=document.title;document.title='Link Copied!';setTimeout(()=>document.title=o,1500)})
 }
 
+// Share URL now uses pr_number as the identifier
+function buildShareUrl(prNumber) {
+  return `${location.origin}${location.pathname}?release=${encodeURIComponent(prNumber)}`
+}
+
 function buildMainCard(r) {
-  const shareUrl = `${location.origin}${location.pathname}?release=${encodeURIComponent(r.slug)}`
+  const shareUrl = buildShareUrl(r.pr_number)
+  const cardUrl  = shareUrl
   const img = r.photo_url
     ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
     : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
   const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
-  return `<article class="pr-card-main" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyToHtml(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,false)}</div></div></article>`
+  return `<a class="pr-card-link" href="${escHtml(cardUrl)}"><article class="pr-card-main" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyPreview(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,false)}</div></div></article></a>`
 }
 
 function buildSubCard(r) {
-  const shareUrl = `${location.origin}${location.pathname}?release=${encodeURIComponent(r.slug)}`
+  const shareUrl = buildShareUrl(r.pr_number)
+  const cardUrl  = shareUrl
   const img = r.photo_url
     ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
     : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
   const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
-  return `<article class="pr-card-sub" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyToHtml(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,true)}</div></div></article>`
+  return `<a class="pr-card-link" href="${escHtml(cardUrl)}"><article class="pr-card-sub" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyPreview(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,true)}</div></div></article></a>`
 }
 
 function renderSingleRelease(r) {
   const wrap = document.querySelector('.press-wrap')
   if (!wrap) return
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
-  const img = r.photo_url ? `<div class="pr-img-wrap" style="min-height:0;"><img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" style="width:100%;max-height:420px;object-fit:cover;display:block;"/>${r.photo_caption?`<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>`:''}</div>` : ''
+  const img = r.photo_url ? `<div class="pr-img-wrap" style="min-height:0;"><img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" style="width:100%;max-height:480px;object-fit:contain;background:#080D1A;display:block;"/>${r.photo_caption?`<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>`:''}</div>` : ''
   wrap.innerHTML = `<div style="max-width:860px;margin:0 auto;"><div style="margin-bottom:20px;"><a href="${location.pathname}" style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-decoration:none;text-transform:uppercase;opacity:0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">← All Press Releases</a></div><article class="pr-card-main">${img}<div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title" style="font-size:26px;">${escHtml(r.title)}</div><div class="pr-divider"></div>${r.news_maker?`<div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;opacity:0.8;">Issued by: ${escHtml(r.news_maker)}</div>`:''}<div class="pr-text" style="font-size:14px;">${bodyToHtml(r.body)}</div><div class="pr-footer" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--navy-border);display:flex;align-items:center;gap:16px;flex-wrap:wrap;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${r.division_tag?`<span style="font-family:'Roboto Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:2px;opacity:0.7;">${escHtml(r.division_tag)}</span>`:''}</div></div></article></div>`
 }
 
@@ -226,10 +240,11 @@ function renderAllReleases(releases) {
 }
 
 async function initPressPage() {
-  const slug = new URLSearchParams(location.search).get('release')
+  // URL param is now the pr_number (e.g. ?release=CIB-PR-001)
+  const prNumber = new URLSearchParams(location.search).get('release')
   try {
-    if (slug) {
-      const res  = await fetch(`${PA_API}?slug=${encodeURIComponent(slug)}`)
+    if (prNumber) {
+      const res  = await fetch(`${PA_API}?pr_number=${encodeURIComponent(prNumber)}`)
       const json = await res.json()
       if (json.success && json.data) { document.title = json.data.title+' — CIB Press Room'; renderSingleRelease(json.data) }
       else { document.querySelector('.press-wrap').innerHTML = '<div style="padding:60px 40px;text-align:center;font-family:\'Roboto Mono\',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);opacity:0.5;text-transform:uppercase;">Release not found.</div>' }

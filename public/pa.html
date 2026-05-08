@@ -242,6 +242,7 @@ body { display:flex; flex-direction:column; background:#060A14; }
   display:block; background:#080D1A;
   margin-bottom:10px; border:1px solid var(--navy-border);
 }
+
 .pa-photo-placeholder {
   display:flex; flex-direction:column; align-items:center;
   gap:8px; padding:20px; text-align:center;
@@ -803,7 +804,7 @@ function openEditForm(id) {
   document.getElementById('paDeleteBtn2').style.display  = _canWrite ? 'inline-flex' : 'none'
 
   // Share link
-  const shareUrl = buildShareUrl(r.slug)
+  const shareUrl = buildShareUrl(r.pr_number)
   document.getElementById('paShareUrl').textContent    = shareUrl
   document.getElementById('paShareRow').style.display  = 'flex'
 
@@ -1016,8 +1017,8 @@ async function executeDelete() {
 }
 
 // ── Share link ────────────────────────────────────────────────
-function buildShareUrl(slug) {
-  return `${location.origin}/Page_Press.html?release=${encodeURIComponent(slug)}`
+function buildShareUrl(prNumber) {
+  return `${location.origin}/Page_Press.html?release=${encodeURIComponent(prNumber)}`
 }
 function copyShareLink() {
   const url = document.getElementById('paShareUrl').textContent

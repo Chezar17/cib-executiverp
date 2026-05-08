@@ -83,3 +83,52 @@
   /* ── Tighten the PRESS ROOM hero — overrides sections.css defaults ── */
   .page-hero{padding:36px 40px 32px;}
   .page-hero-inner{max-width:900px;}
+
+  /* ── Clickable card wrapper ── */
+  /* Wraps entire card in an <a> without breaking layout or text styles */
+  .pr-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .pr-card-link:hover { transform: translateY(-2px); }
+  .pr-card-link:hover .pr-card-main {
+    border-color: rgba(192,57,43,0.55);
+    box-shadow: 0 6px 28px rgba(0,0,0,0.35);
+  }
+  .pr-card-link:hover .pr-card-sub {
+    border-color: rgba(201,168,76,0.55);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+  }
+  /* "Read more" hint that appears on hover */
+  .pr-card-link .pr-footer::after {
+    content: 'Read Full Release →';
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .pr-card-link:hover .pr-footer::after { opacity: 0.7; }
+
+  /* ── Body preview truncation ──
+     Cards show a 3-line teaser only; full text is on the single-release view */
+  .pr-text-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.9;
+    margin: 0;
+  }
+  .pr-card-sub .pr-text-preview {
+    font-size: 12px;
+    -webkit-line-clamp: 3;
+  }
