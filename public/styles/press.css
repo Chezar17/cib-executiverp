@@ -83,9 +83,8 @@
   /* ── Tighten the PRESS ROOM hero — overrides sections.css defaults ── */
   .page-hero{padding:36px 40px 32px;}
   .page-hero-inner{max-width:900px;}
-
-  /* ── Clickable card wrapper ── */
-  /* Wraps entire card in an <a> without breaking layout or text styles */
+  /* ── Clickable card wrapper ──────────────────────────────────────────
+     Wraps the entire card in an <a> without breaking layout or text styles */
   .pr-card-link {
     display: block;
     text-decoration: none;
@@ -102,7 +101,7 @@
     border-color: rgba(201,168,76,0.55);
     box-shadow: 0 4px 18px rgba(0,0,0,0.3);
   }
-  /* "Read more" hint that appears on hover */
+  /* "Read more" hint fades in on hover */
   .pr-card-link .pr-footer::after {
     content: 'Read Full Release →';
     font-family: 'Roboto Mono', monospace;
@@ -115,8 +114,8 @@
   }
   .pr-card-link:hover .pr-footer::after { opacity: 0.7; }
 
-  /* ── Body preview truncation ──
-     Cards show a 3-line teaser only; full text is on the single-release view */
+  /* ── Body preview truncation ─────────────────────────────────────────
+     Cards show a 3-line teaser; full text only on the single-release view */
   .pr-text-preview {
     display: -webkit-box;
     -webkit-line-clamp: 3;

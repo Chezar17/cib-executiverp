@@ -153,7 +153,7 @@
 // ═══════════════════════════════════════════════════════════
 //  PAGE_PRESS — Dynamic Press Release Loader
 //  Fetches from /api/press-releases
-//  Supports ?release=<pr_number> for direct share links
+//  Supports ?release=<pr_number> for direct share/card links
 // ═══════════════════════════════════════════════════════════
 
 const PA_API = '/api/press-releases'
@@ -167,16 +167,19 @@ function formatDate(d) {
   catch { return d }
 }
 function formatDateUpper(d) { return formatDate(d).toUpperCase() }
+
+// Full body: used in single-release detail view
 function bodyToHtml(body) {
   if (!body) return ''
   return body.split(/\n\s*\n/).map(p=>`<p>${escHtml(p.trim()).replace(/\n/g,'<br/>')}</p>`).join('')
 }
-// Truncated preview: plain text, max 3 lines via CSS clamp
+// Preview body: plain single paragraph, clamped to 3 lines via CSS
 function bodyPreview(body) {
   if (!body) return ''
   const plain = body.replace(/\n/g,' ').trim()
   return `<p class="pr-text-preview">${escHtml(plain)}</p>`
 }
+
 const CAT_CLASS = {
   'Official Statement':'cat-official','Public Advisory':'cat-advisory',
   'Operation Announcement':'cat-operation','Personnel Update':'cat-personnel',
@@ -185,9 +188,14 @@ const CAT_CLASS = {
   'Arrest Notice':'cat-operation','Wanted Notice':'cat-advisory',
 }
 
+// Share URL uses pr_number as the identifier (e.g. PR-2026-01)
+function buildShareUrl(prNumber) {
+  return `${location.origin}${location.pathname}?release=${encodeURIComponent(prNumber)}`
+}
+
 function shareBtn(url, small) {
   const sz = small ? 'font-size:8px;padding:3px 10px' : 'font-size:9px;padding:4px 12px'
-  // stopPropagation so clicking Share doesn't also navigate the card
+  // stopPropagation prevents the card <a> from also navigating when Share is clicked
   return `<button onclick="event.stopPropagation();copyPressLink('${escHtml(url)}')" style="font-family:'Roboto Mono',monospace;${sz};letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--navy-border);color:var(--muted);cursor:pointer;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--muted)'">⧉ Share</button>`
 }
 
@@ -195,31 +203,24 @@ function copyPressLink(url) {
   navigator.clipboard.writeText(url).then(()=>{const o=document.title;document.title='Link Copied!';setTimeout(()=>document.title=o,1500)})
 }
 
-// Share URL now uses pr_number as the identifier
-function buildShareUrl(prNumber) {
-  return `${location.origin}${location.pathname}?release=${encodeURIComponent(prNumber)}`
-}
-
 function buildMainCard(r) {
   const shareUrl = buildShareUrl(r.pr_number)
-  const cardUrl  = shareUrl
   const img = r.photo_url
     ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
     : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
   const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
-  return `<a class="pr-card-link" href="${escHtml(cardUrl)}"><article class="pr-card-main" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyPreview(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,false)}</div></div></article></a>`
+  return `<a class="pr-card-link" href="${escHtml(shareUrl)}"><article class="pr-card-main" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyPreview(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,false)}</div></div></article></a>`
 }
 
 function buildSubCard(r) {
   const shareUrl = buildShareUrl(r.pr_number)
-  const cardUrl  = shareUrl
   const img = r.photo_url
     ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
     : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
   const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
-  return `<a class="pr-card-link" href="${escHtml(cardUrl)}"><article class="pr-card-sub" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyPreview(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,true)}</div></div></article></a>`
+  return `<a class="pr-card-link" href="${escHtml(shareUrl)}"><article class="pr-card-sub" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyPreview(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,true)}</div></div></article></a>`
 }
 
 function renderSingleRelease(r) {
@@ -240,14 +241,23 @@ function renderAllReleases(releases) {
 }
 
 async function initPressPage() {
-  // URL param is now the pr_number (e.g. ?release=CIB-PR-001)
+  // ?release= now carries the pr_number (e.g. PR-2026-01)
   const prNumber = new URLSearchParams(location.search).get('release')
   try {
     if (prNumber) {
-      const res  = await fetch(`${PA_API}?pr_number=${encodeURIComponent(prNumber)}`)
+      // Fetch the full list then find the matching record client-side.
+      // This avoids any backend API changes — no new query param needed.
+      const res  = await fetch(PA_API)
       const json = await res.json()
-      if (json.success && json.data) { document.title = json.data.title+' — CIB Press Room'; renderSingleRelease(json.data) }
-      else { document.querySelector('.press-wrap').innerHTML = '<div style="padding:60px 40px;text-align:center;font-family:\'Roboto Mono\',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);opacity:0.5;text-transform:uppercase;">Release not found.</div>' }
+      if (json.success && json.data) {
+        const record = json.data.find(r => r.pr_number === prNumber)
+        if (record) {
+          document.title = record.title + ' — CIB Press Room'
+          renderSingleRelease(record)
+        } else {
+          document.querySelector('.press-wrap').innerHTML = '<div style="padding:60px 40px;text-align:center;font-family:\'Roboto Mono\',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);opacity:0.5;text-transform:uppercase;">Release not found.</div>'
+        }
+      }
     } else {
       const res  = await fetch(PA_API)
       const json = await res.json()
