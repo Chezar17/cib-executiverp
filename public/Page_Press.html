@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="shared/styles/site-header.css"/>
 <script type="module" src="shared/components/site-header.js"></script>
 <link rel="stylesheet" href="styles/press.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -228,7 +229,78 @@ function renderSingleRelease(r) {
   if (!wrap) return
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
   const img = r.photo_url ? `<div class="pr-img-wrap" style="min-height:0;"><img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" style="width:100%;max-height:480px;object-fit:contain;background:#080D1A;display:block;"/>${r.photo_caption?`<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>`:''}</div>` : ''
-  wrap.innerHTML = `<div style="max-width:860px;margin:0 auto;"><div style="margin-bottom:20px;"><a href="${location.pathname}" style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-decoration:none;text-transform:uppercase;opacity:0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">← All Press Releases</a></div><article class="pr-card-main">${img}<div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title" style="font-size:26px;">${escHtml(r.title)}</div><div class="pr-divider"></div>${r.news_maker?`<div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;opacity:0.8;">Issued by: ${escHtml(r.news_maker)}</div>`:''}<div class="pr-text" style="font-size:14px;">${bodyToHtml(r.body)}</div><div class="pr-footer" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--navy-border);display:flex;align-items:center;gap:16px;flex-wrap:wrap;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${r.division_tag?`<span style="font-family:'Roboto Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:2px;opacity:0.7;">${escHtml(r.division_tag)}</span>`:''}</div></div></article></div>`
+  wrap.innerHTML = `
+    <div style="max-width:860px;margin:0 auto;">
+      <div style="margin-bottom:20px;">
+        <a href="${location.pathname}" style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-decoration:none;text-transform:uppercase;opacity:0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">← All Press Releases</a>
+      </div>
+      <article class="pr-card-main">
+        ${img}
+        <div class="pr-body">
+          <div class="pr-meta-row">
+            <span class="pr-number">${escHtml(r.pr_number||'')}</span>
+            <span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span>
+            <span class="pr-date">${formatDate(r.release_date)}</span>
+          </div>
+          <div class="pr-title" style="font-size:26px;">${escHtml(r.title)}</div>
+          <div class="pr-divider"></div>
+          ${r.news_maker?`<div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;opacity:0.8;">Issued by: ${escHtml(r.news_maker)}</div>`:''}
+          <div class="pr-text" style="font-size:14px;">${bodyToHtml(r.body)}</div>
+          <div class="pr-footer" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--navy-border);display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>
+            ${r.division_tag?`<span style="font-family:'Roboto Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:2px;opacity:0.7;">${escHtml(r.division_tag)}</span>`:''}
+            <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+              <button id="btn-export-img" onclick="openExportModal()" style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:6px 14px;text-transform:uppercase;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);color:var(--gold);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;" onmouseover="this.style.background='rgba(201,168,76,0.18)'" onmouseout="this.style.background='rgba(201,168,76,0.1)'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                Export Image
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         EXPORT MODAL — hidden, shown on button click
+    ═══════════════════════════════════════════ -->
+    <div id="export-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:20px;">
+      <div style="background:#06090F;border:1px solid rgba(201,168,76,0.25);border-top:2px solid var(--gold);max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
+        <div style="padding:20px 24px 16px;border-bottom:1px solid var(--navy-border);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--gold);opacity:0.8;margin-bottom:4px;">CIB · PRESS ROOM</div>
+            <div style="font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:4px;text-transform:uppercase;color:var(--white);">Export Release Card</div>
+          </div>
+          <button onclick="closeExportModal()" style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 8px;">✕</button>
+        </div>
+        <div style="padding:20px 24px;">
+          <div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:16px;">Select format and generate a 9:16 shareable card for social media or announcements.</div>
+          <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <button id="exp-fmt-jpg" onclick="setExportFmt('jpg',this)" style="flex:1;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:7px;border:1px solid var(--gold);background:rgba(201,168,76,0.12);color:var(--gold);cursor:pointer;text-transform:uppercase;">JPG</button>
+            <button id="exp-fmt-png" onclick="setExportFmt('png',this)" style="flex:1;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:7px;border:1px solid var(--navy-border);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;">PNG</button>
+          </div>
+          <!-- Preview thumbnail -->
+          <div id="export-preview-wrap" style="width:100%;aspect-ratio:9/16;background:#06090F;border:1px solid var(--navy-border);margin-bottom:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+            <div id="export-preview-inner" style="position:absolute;inset:0;"></div>
+            <div id="export-preview-placeholder" style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);opacity:0.4;text-transform:uppercase;">Preview will appear here</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="generateExportPreview()" style="flex:1;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--navy-border);color:var(--muted);cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--muted)'">Preview</button>
+            <button onclick="doExportImage()" style="flex:2;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:8px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.4);color:var(--gold);cursor:pointer;text-transform:uppercase;" onmouseover="this.style.background='rgba(201,168,76,0.2)'" onmouseout="this.style.background='rgba(201,168,76,0.12)'">⬇ Download</button>
+          </div>
+          <div id="export-status" style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);margin-top:10px;min-height:14px;text-align:center;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         OFF-SCREEN EXPORT CANVAS — 9:16 card built in DOM then captured
+    ═══════════════════════════════════════════ -->
+    <div id="export-card-host" style="position:fixed;left:-9999px;top:0;width:450px;height:800px;z-index:-1;"></div>
+  `
+
+  // Store current release data for the export functions
+  window._currentPressRelease = r
+  window._exportFmt = 'jpg'
 }
 
 function renderAllReleases(releases) {
@@ -239,6 +311,221 @@ function renderAllReleases(releases) {
   if (mainList) mainList.innerHTML = mains.length ? mains.map(buildMainCard).join('') : '<div style="font-family:\'Roboto Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">No main headlines published yet.</div>'
   if (subGrid)  subGrid.innerHTML  = subs.length  ? subs.map(buildSubCard).join('')   : '<div style="font-family:\'Roboto Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">No sub headlines published yet.</div>'
 }
+
+// ═══════════════════════════════════════════════════════════
+//  EXPORT ENGINE — 9:16 press card renderer
+//  Uses DOM-in-host + html2canvas for accurate rendering.
+//  Card design: CIB dark aesthetic, gold/red accents.
+// ═══════════════════════════════════════════════════════════
+
+function openExportModal() {
+  const m = document.getElementById('export-modal')
+  if (m) { m.style.display = 'flex'; document.body.style.overflow = 'hidden' }
+}
+function closeExportModal() {
+  const m = document.getElementById('export-modal')
+  if (m) { m.style.display = 'none'; document.body.style.overflow = '' }
+}
+function setExportFmt(fmt, btn) {
+  window._exportFmt = fmt
+  ;['jpg','png'].forEach(f => {
+    const b = document.getElementById(`exp-fmt-${f}`)
+    if (!b) return
+    if (f === fmt) {
+      b.style.border = '1px solid var(--gold)'; b.style.background = 'rgba(201,168,76,0.12)'; b.style.color = 'var(--gold)'
+    } else {
+      b.style.border = '1px solid var(--navy-border)'; b.style.background = 'transparent'; b.style.color = 'var(--muted)'
+    }
+  })
+}
+
+// Build the 450×800 card DOM inside #export-card-host
+function buildExportCard(r) {
+  const host = document.getElementById('export-card-host')
+  if (!host) return
+  const cc  = CAT_CLASS[r.news_type] || 'cat-official'
+  const accentColor = cc === 'cat-advisory' ? '#C0392B' : cc === 'cat-operation' ? '#27AE60' : cc === 'cat-personnel' ? '#3498DB' : '#C9A84C'
+
+  // Truncate body for the card — max ~600 chars
+  const bodyRaw   = (r.body || '').replace(/\n+/g, ' ').trim()
+  const bodyShort = bodyRaw.length > 600 ? bodyRaw.slice(0, 597) + '...' : bodyRaw
+
+  // Scan-line pattern as a 1×2px data URI (pure CSS, no external img)
+  const scanLine = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAADUlEQVQI12NgYGD4DwABBAEAWjR/LQAAAABJRU5ErkJggg=='
+
+  const imgSection = r.photo_url
+    ? `<div style="width:100%;height:220px;overflow:hidden;position:relative;flex-shrink:0;">
+         <img src="${r.photo_url}" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:0.85;" crossorigin="anonymous"/>
+         <div style="position:absolute;inset:0;background:linear-gradient(transparent 55%,#060A14 100%);"></div>
+       </div>`
+    : `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0A0F1E 0%,#06090F 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06);">
+         <svg width="36" height="36" viewBox="0 0 24 24" fill="rgba(255,255,255,0.06)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+       </div>`
+
+  host.innerHTML = `
+  <div id="ec-root" style="
+    width:450px;height:800px;
+    background:#060A14;
+    font-family:'Roboto Mono',monospace;
+    display:flex;flex-direction:column;
+    position:relative;overflow:hidden;
+    box-sizing:border-box;
+  ">
+    <!-- Scan line texture -->
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:10;"></div>
+
+    <!-- Top accent bar -->
+    <div style="height:3px;background:linear-gradient(90deg,${accentColor},rgba(201,168,76,0.4),transparent);flex-shrink:0;"></div>
+
+    <!-- Topbar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.05);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${accentColor};box-shadow:0 0 8px ${accentColor};"></div>
+        <span style="font-size:8px;letter-spacing:4px;color:rgba(240,237,228,0.4);text-transform:uppercase;">CENTRAL INVESTIGATION BUREAU</span>
+      </div>
+      <span style="font-size:8px;letter-spacing:2px;color:rgba(240,237,228,0.25);">PRESS ROOM</span>
+    </div>
+
+    <!-- Photo -->
+    ${imgSection}
+
+    <!-- Body area -->
+    <div style="flex:1;display:flex;flex-direction:column;padding:22px 24px 18px;overflow:hidden;">
+
+      <!-- Meta row -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <span style="font-size:8px;letter-spacing:2px;color:rgba(240,237,228,0.3);">${escHtml(r.pr_number||'')}</span>
+        <span style="font-size:8px;letter-spacing:2px;padding:2px 8px;text-transform:uppercase;
+          background:${accentColor}22;color:${accentColor};
+          border:1px solid ${accentColor}66;">${escHtml(r.news_type||'')}</span>
+        <span style="font-size:8px;letter-spacing:1px;color:rgba(240,237,228,0.3);margin-left:auto;">${formatDateUpper(r.release_date)}</span>
+      </div>
+
+      <!-- Title -->
+      <div style="
+        font-family:'Oswald',sans-serif;
+        font-size:22px;letter-spacing:1.5px;text-transform:uppercase;
+        color:#F0EDE4;line-height:1.25;
+        margin-bottom:10px;
+        border-left:3px solid ${accentColor};
+        padding-left:12px;
+      ">${escHtml(r.title)}</div>
+
+      <!-- Accent line -->
+      <div style="width:40px;height:2px;background:${accentColor};opacity:0.5;margin-bottom:14px;margin-left:15px;"></div>
+
+      <!-- Issued by -->
+      ${r.news_maker ? `<div style="font-size:9px;letter-spacing:2px;color:#C9A84C;text-transform:uppercase;margin-bottom:10px;opacity:0.8;">Issued by: ${escHtml(r.news_maker)}</div>` : ''}
+
+      <!-- Body -->
+      <div style="
+        font-size:11px;color:rgba(240,237,228,0.55);
+        line-height:1.75;flex:1;overflow:hidden;
+        display:-webkit-box;-webkit-line-clamp:10;-webkit-box-orient:vertical;
+      ">${escHtml(bodyShort)}</div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:12px 24px 14px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;background:rgba(0,0,0,0.25);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:8px;letter-spacing:2px;color:rgba(240,237,228,0.3);text-transform:uppercase;">
+          ${r.release_time ? escHtml(r.release_time) + ' · ' : ''}${r.division_tag ? escHtml(r.division_tag) : 'CIB'}
+        </span>
+        <span style="font-size:8px;letter-spacing:2px;color:rgba(240,237,228,0.2);">cib.gov.sa</span>
+      </div>
+      <!-- Bottom classification bar -->
+      <div style="display:flex;align-items:center;gap:6px;opacity:0.35;">
+        <div style="flex:1;height:1px;background:${accentColor};opacity:0.4;"></div>
+        <span style="font-size:7px;letter-spacing:3px;color:rgba(240,237,228,0.5);text-transform:uppercase;">OFFICIAL · CIB · SAN ANDREAS</span>
+        <div style="flex:1;height:1px;background:${accentColor};opacity:0.4;"></div>
+      </div>
+    </div>
+
+    <!-- Corner marks -->
+    <div style="position:absolute;top:10px;left:10px;width:14px;height:14px;border-top:1px solid ${accentColor};border-left:1px solid ${accentColor};opacity:0.4;z-index:11;"></div>
+    <div style="position:absolute;top:10px;right:10px;width:14px;height:14px;border-top:1px solid ${accentColor};border-right:1px solid ${accentColor};opacity:0.4;z-index:11;"></div>
+    <div style="position:absolute;bottom:10px;left:10px;width:14px;height:14px;border-bottom:1px solid ${accentColor};border-left:1px solid ${accentColor};opacity:0.4;z-index:11;"></div>
+    <div style="position:absolute;bottom:10px;right:10px;width:14px;height:14px;border-bottom:1px solid ${accentColor};border-right:1px solid ${accentColor};opacity:0.4;z-index:11;"></div>
+  </div>`
+}
+
+async function generateExportPreview() {
+  const r = window._currentPressRelease
+  if (!r) return
+  const status = document.getElementById('export-status')
+  const ph     = document.getElementById('export-preview-placeholder')
+  const inner  = document.getElementById('export-preview-inner')
+  if (status) status.textContent = 'Rendering preview...'
+
+  buildExportCard(r)
+
+  // Wait a frame for images to settle
+  await new Promise(res => setTimeout(res, 120))
+
+  try {
+    const root = document.getElementById('ec-root')
+    const canvas = await html2canvas(root, {
+      width: 450, height: 800,
+      scale: 0.8,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#060A14',
+      logging: false,
+    })
+    canvas.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+    if (inner) { inner.innerHTML = ''; inner.appendChild(canvas) }
+    if (ph)     ph.style.display = 'none'
+    if (status) status.textContent = 'Preview ready. Click Download to save.'
+  } catch(e) {
+    if (status) status.textContent = 'Preview failed: ' + e.message
+    console.error('Export preview error:', e)
+  }
+}
+
+async function doExportImage() {
+  const r = window._currentPressRelease
+  if (!r) return
+  const status = document.getElementById('export-status')
+  if (status) status.textContent = 'Generating image...'
+
+  buildExportCard(r)
+  await new Promise(res => setTimeout(res, 200))
+
+  const fmt  = window._exportFmt || 'jpg'
+  const mime = fmt === 'png' ? 'image/png' : 'image/jpeg'
+  const ext  = fmt === 'png' ? 'png' : 'jpg'
+
+  try {
+    const root = document.getElementById('ec-root')
+    const canvas = await html2canvas(root, {
+      width: 450, height: 800,
+      scale: 2,       // 2× = 900×1600px output — good for social
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#060A14',
+      logging: false,
+    })
+    const dataUrl = canvas.toDataURL(mime, fmt === 'jpg' ? 0.93 : undefined)
+    const a = document.createElement('a')
+    a.href     = dataUrl
+    a.download = `CIB-${(r.pr_number||'press').replace(/[^a-zA-Z0-9-]/g,'_')}.${ext}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    if (status) status.textContent = `Downloaded as ${a.download}`
+  } catch(e) {
+    if (status) status.textContent = 'Export failed: ' + e.message
+    console.error('Export error:', e)
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Close export modal on backdrop click
+document.addEventListener('click', e => {
+  const modal = document.getElementById('export-modal')
+  if (modal && e.target === modal) closeExportModal()
+})
 
 async function initPressPage() {
   // ?release= now carries the pr_number (e.g. PR-2026-01)
