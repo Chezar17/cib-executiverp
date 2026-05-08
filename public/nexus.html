@@ -125,6 +125,13 @@
         <span class="nx-nav-label" style="color:#27AE60;">Budget Ledger</span>
         <span class="nx-nav-badge" style="background:rgba(39,174,96,0.1);color:#27AE60;border:1px solid rgba(39,174,96,0.3);">TS</span>
       </a>
+      <div class="nx-nav-item nav-blue" onclick="showPanel('announcements',this)">
+        <div class="nx-nav-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+        </div>
+        <span class="nx-nav-label">Public Announcements</span>
+        <span class="nx-nav-badge" style="background:rgba(79,195,247,0.1);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);">PUBLIC</span>
+      </div>
     </div>
 
     <div class="nx-sidebar-footer">
@@ -373,6 +380,21 @@
               </div>
             </a>
 
+            <div class="dash-mod" onclick="showPanelByName('announcements')" style="border-top:2px solid #4fc3f7;background:linear-gradient(135deg,rgba(10,20,40,0.5),transparent);cursor:pointer;">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon" style="border-color:rgba(79,195,247,0.3);background:rgba(79,195,247,0.06);">
+                  <svg viewBox="0 0 24 24" style="fill:#4fc3f7;"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                </div>
+                <span class="dash-mod-badge" style="background:rgba(79,195,247,0.12);color:#4fc3f7;border-color:rgba(79,195,247,0.3);">Public</span>
+              </div>
+              <div class="dash-mod-name" style="color:#4fc3f7;">Public Announcements</div>
+              <div class="dash-mod-desc">CIB public-facing communications · Press releases · Official statements · Community notices</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">Command · Public Affairs</span>
+                <span class="dash-mod-arrow" style="color:#4fc3f7;">›</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -544,6 +566,167 @@
         <div class="lp-info-cell"><div class="lp-info-cell-label">Classification</div><div class="lp-info-cell-value" style="color:#4fc3f7;">Top Secret</div></div>
       </div>
     </div>
+
+
+    <!-- PUBLIC ANNOUNCEMENTS PANEL -->
+    <div class="nx-panel" id="panel-announcements">
+
+      <!-- Header card -->
+      <div class="lp-card" style="border-top:2px solid #4fc3f7;background:linear-gradient(135deg,rgba(10,20,40,0.6),transparent);">
+        <div class="lp-eyebrow">CIB Public Affairs · External Communications</div>
+        <div class="lp-title">Public Announcements</div>
+        <div class="lp-divider"></div>
+        <div class="lp-desc">Central hub for managing all public-facing content published on the CIB website. Use the sections below to draft and publish press releases, recruit notices, community advisories, and official departmental statements. All content published here is visible to the public — review carefully before submitting. Managed by CIB Command and Public Affairs.</div>
+        <div class="lp-tags">
+          <span class="lp-tag" style="background:rgba(79,195,247,0.1);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);">Public Facing</span>
+          <span class="lp-tag lp-tag-i">Command · Public Affairs</span>
+        </div>
+      </div>
+
+      <!-- Announcement sub-pages grid -->
+      <div style="padding:28px 32px 0;">
+        <div style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;">
+          &#9679; Select a page to manage
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">
+
+          <!-- Press Releases -->
+          <!--
+            TO SET THE URL: replace the href="#" below with the full URL of your
+            press releases page, e.g. href="https://your-cib-site.com/press"
+          -->
+          <a href="#" target="_blank" rel="noopener noreferrer" class="ann-card" style="text-decoration:none;">
+            <div class="ann-card-inner">
+              <div class="ann-card-icon-wrap" style="border-color:rgba(79,195,247,0.25);background:rgba(79,195,247,0.06);">
+                <svg viewBox="0 0 24 24" style="fill:#4fc3f7;width:20px;height:20px;"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+              </div>
+              <div class="ann-card-body">
+                <div class="ann-card-title" style="color:#4fc3f7;">Press Releases</div>
+                <div class="ann-card-desc">Official CIB press statements, operation announcements, and media communications.</div>
+                <div class="ann-card-footer">
+                  <span class="ann-card-tag" style="color:#4fc3f7;border-color:rgba(79,195,247,0.25);">PUBLIC</span>
+                  <span class="ann-card-arrow" style="color:#4fc3f7;">↗</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Recruitment -->
+          <!--
+            TO SET THE URL: replace the href="#" below with the full URL of your
+            recruitment / join page, e.g. href="https://your-cib-site.com/recruit"
+          -->
+          <a href="#" target="_blank" rel="noopener noreferrer" class="ann-card" style="text-decoration:none;">
+            <div class="ann-card-inner">
+              <div class="ann-card-icon-wrap" style="border-color:rgba(201,168,76,0.25);background:rgba(201,168,76,0.06);">
+                <svg viewBox="0 0 24 24" style="fill:var(--gold);width:20px;height:20px;"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+              </div>
+              <div class="ann-card-body">
+                <div class="ann-card-title" style="color:var(--gold);">Recruitment</div>
+                <div class="ann-card-desc">Active hiring notices, application windows, and joining requirements for CIB divisions.</div>
+                <div class="ann-card-footer">
+                  <span class="ann-card-tag" style="color:var(--gold);border-color:rgba(201,168,76,0.25);">OPEN RECRUITMENT</span>
+                  <span class="ann-card-arrow" style="color:var(--gold);">↗</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Community Advisories -->
+          <!--
+            TO SET THE URL: replace the href="#" below with the full URL of your
+            advisories / notices page, e.g. href="https://your-cib-site.com/advisories"
+          -->
+          <a href="#" target="_blank" rel="noopener noreferrer" class="ann-card" style="text-decoration:none;">
+            <div class="ann-card-inner">
+              <div class="ann-card-icon-wrap" style="border-color:rgba(230,126,34,0.25);background:rgba(230,126,34,0.06);">
+                <svg viewBox="0 0 24 24" style="fill:#E67E22;width:20px;height:20px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              </div>
+              <div class="ann-card-body">
+                <div class="ann-card-title" style="color:#E67E22;">Community Advisories</div>
+                <div class="ann-card-desc">Public safety warnings, area alerts, and community notices issued by CIB.</div>
+                <div class="ann-card-footer">
+                  <span class="ann-card-tag" style="color:#E67E22;border-color:rgba(230,126,34,0.25);">ADVISORY</span>
+                  <span class="ann-card-arrow" style="color:#E67E22;">↗</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Official Statements -->
+          <!--
+            TO SET THE URL: replace the href="#" below with the full URL of your
+            official statements page, e.g. href="https://your-cib-site.com/statements"
+          -->
+          <a href="#" target="_blank" rel="noopener noreferrer" class="ann-card" style="text-decoration:none;">
+            <div class="ann-card-inner">
+              <div class="ann-card-icon-wrap" style="border-color:rgba(39,174,96,0.25);background:rgba(39,174,96,0.06);">
+                <svg viewBox="0 0 24 24" style="fill:#27AE60;width:20px;height:20px;"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h8v2H8v-2zm0 4h5v2H8v-2z"/></svg>
+              </div>
+              <div class="ann-card-body">
+                <div class="ann-card-title" style="color:#27AE60;">Official Statements</div>
+                <div class="ann-card-desc">Formal departmental positions, policy declarations, and command-issued public statements.</div>
+                <div class="ann-card-footer">
+                  <span class="ann-card-tag" style="color:#27AE60;border-color:rgba(39,174,96,0.25);">OFFICIAL</span>
+                  <span class="ann-card-arrow" style="color:#27AE60;">↗</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Wanted Notices -->
+          <!--
+            TO SET THE URL: replace the href="#" below with the full URL of your
+            wanted / most-wanted page, e.g. href="https://your-cib-site.com/wanted"
+          -->
+          <a href="#" target="_blank" rel="noopener noreferrer" class="ann-card" style="text-decoration:none;">
+            <div class="ann-card-inner">
+              <div class="ann-card-icon-wrap" style="border-color:rgba(192,57,43,0.3);background:rgba(192,57,43,0.06);">
+                <svg viewBox="0 0 24 24" style="fill:var(--red-alert);width:20px;height:20px;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4c1.4 0 2.8.5 3.9 1.5L5.5 16.9C4.5 15.8 4 14.4 4 13c0-3.9 3.6-7 8-7zm0 14c-1.4 0-2.8-.5-3.9-1.5l10.4-10.4c1 1.1 1.5 2.5 1.5 3.9 0 3.9-3.6 7-8 7z"/></svg>
+              </div>
+              <div class="ann-card-body">
+                <div class="ann-card-title" style="color:var(--red-alert);">Wanted Notices</div>
+                <div class="ann-card-desc">Public wanted bulletins, active warrants, and persons of interest published for community awareness.</div>
+                <div class="ann-card-footer">
+                  <span class="ann-card-tag" style="color:var(--red-alert);border-color:rgba(192,57,43,0.3);">WANTED</span>
+                  <span class="ann-card-arrow" style="color:var(--red-alert);">↗</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Event Notices -->
+          <!--
+            TO SET THE URL: replace the href="#" below with the full URL of your
+            events / calendar page, e.g. href="https://your-cib-site.com/events"
+          -->
+          <a href="#" target="_blank" rel="noopener noreferrer" class="ann-card" style="text-decoration:none;">
+            <div class="ann-card-inner">
+              <div class="ann-card-icon-wrap" style="border-color:rgba(155,89,182,0.25);background:rgba(155,89,182,0.06);">
+                <svg viewBox="0 0 24 24" style="fill:#9B59B6;width:20px;height:20px;"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7v-5z"/></svg>
+              </div>
+              <div class="ann-card-body">
+                <div class="ann-card-title" style="color:#9B59B6;">Event Notices</div>
+                <div class="ann-card-desc">Scheduled operations, community events, training exercises, and public-facing CIB activities.</div>
+                <div class="ann-card-footer">
+                  <span class="ann-card-tag" style="color:#9B59B6;border-color:rgba(155,89,182,0.25);">EVENTS</span>
+                  <span class="ann-card-arrow" style="color:#9B59B6;">↗</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- Info strip -->
+      <div class="lp-info-strip" style="margin-top:28px;">
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Maintained By</div><div class="lp-info-cell-value">CIB Command · Public Affairs</div></div>
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Visibility</div><div class="lp-info-cell-value" style="color:#4fc3f7;">Public · External</div></div>
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Review Required</div><div class="lp-info-cell-value">Before All Publications</div></div>
+      </div>
+
+    </div><!-- /panel-announcements -->
 
   </div><!-- /nx-main -->
 </div><!-- /nexus-shell -->
