@@ -15,7 +15,8 @@
 
   /* SHARED CARD PARTS */
   .pr-img-wrap{position:relative;background:#080D1A;border-bottom:1px solid var(--navy-border);display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  .pr-img-wrap img{width:100%;object-fit:cover;display:block;}
+  /* contain: never crops the image; letterboxes instead. dark bg hides gaps naturally */
+  .pr-img-wrap img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;background:#080D1A;}
   .pr-img-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;width:100%;}
   .pr-img-placeholder svg{width:32px;height:32px;fill:var(--navy-border);}
   .pr-img-placeholder span{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--navy-border);text-transform:uppercase;}
@@ -42,8 +43,8 @@
      ===================================================== */
   .main-pr-list{display:flex;flex-direction:column;gap:32px;}
   .pr-card-main{background:var(--navy-card);border:1px solid var(--navy-border);border-left:4px solid var(--red-alert);overflow:hidden;}
-  .pr-card-main .pr-img-wrap{min-height:260px;}
-  .pr-card-main .pr-img-wrap img{height:280px;}
+  .pr-card-main .pr-img-wrap{min-height:200px;max-height:400px;}
+  .pr-card-main .pr-img-wrap img{max-height:400px;}
   .pr-card-main .pr-body{padding:28px 32px;}
   .pr-card-main .pr-title{font-family:'Oswald',sans-serif;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:12px;line-height:1.3;}
   .pr-card-main .pr-divider{width:44px;height:2px;background:var(--red-alert);opacity:0.5;margin-bottom:16px;}
@@ -53,8 +54,8 @@
      ===================================================== */
   .sub-pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
   .pr-card-sub{background:var(--navy-card);border:1px solid var(--navy-border);border-left:3px solid var(--gold);overflow:hidden;}
-  .pr-card-sub .pr-img-wrap{min-height:160px;}
-  .pr-card-sub .pr-img-wrap img{height:170px;}
+  .pr-card-sub .pr-img-wrap{min-height:120px;max-height:280px;}
+  .pr-card-sub .pr-img-wrap img{max-height:280px;}
   .pr-card-sub .pr-body{padding:20px 22px;}
   .pr-card-sub .pr-title{font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:10px;line-height:1.35;}
   .pr-card-sub .pr-divider{width:32px;height:1px;background:var(--gold);opacity:0.4;margin-bottom:12px;}
@@ -73,8 +74,12 @@
     nav{padding:0 16px;}
     .nav-links{display:none;}
     .press-wrap{padding:40px 20px;}
-    .page-hero{padding:48px 20px 40px;}
+    .page-hero{padding:36px 20px 32px;}
     footer{padding:32px 20px 20px;}
     .pr-card-main .pr-body{padding:22px 20px;}
     .section-label-text{font-size:22px;}
   }
+
+  /* ── Tighten the PRESS ROOM hero — overrides sections.css defaults ── */
+  .page-hero{padding:36px 40px 32px;}
+  .page-hero-inner{max-width:900px;}

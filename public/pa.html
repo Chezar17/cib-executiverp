@@ -234,8 +234,12 @@ body { display:flex; flex-direction:column; background:#060A14; }
   transition:border-color 0.15s;
 }
 .pa-photo-area:hover { border-color:rgba(79,195,247,0.3); }
+/* Use contain so the full image always shows, regardless of aspect ratio.
+   max-height caps runaway tall images; auto width fills the available space. */
 .pa-photo-preview {
-  width:100%; max-height:160px; object-fit:cover; display:block;
+  width:100%; max-height:320px; min-height:80px;
+  object-fit:contain; object-position:center;
+  display:block; background:#080D1A;
   margin-bottom:10px; border:1px solid var(--navy-border);
 }
 .pa-photo-placeholder {
