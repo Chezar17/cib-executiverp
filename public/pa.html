@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Public Affairs — Press Release Manager · CIB NEXUS</title>
+<link rel="icon" href="../images/cib-logo.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../shared/styles/tokens.css"/>
+<link rel="stylesheet" href="../shared/styles/base.css"/>
+<link rel="stylesheet" href="../shared/styles/portal-shell.css"/>
+<style>
+
+/* ═══════════════════════════════════════════════════════════
+   PA.HTML — PUBLIC AFFAIRS PRESS RELEASE MANAGER
+   Inherits CIB NEXUS design language
+   ═══════════════════════════════════════════════════════════ */
+
+html, body { height:100%; overflow:hidden; }
+body { display:flex; flex-direction:column; background:#060A14; }
+
+/* ── Top bar ── */
+.pa-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  height:50px; padding:0 24px;
+  background:#040810;
+  border-bottom:1px solid var(--navy-border);
+  flex-shrink:0; z-index:100;
+}
+.pa-topbar-left { display:flex; align-items:center; gap:14px; }
+.pa-topbar-logo { width:26px; height:26px; object-fit:contain; }
+.pa-topbar-brand {
+  font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:5px;
+  color:var(--gold); text-transform:uppercase;
+}
+.pa-topbar-divider { width:1px; height:18px; background:var(--navy-border); }
+.pa-topbar-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:2px;
+  color:var(--muted); text-transform:uppercase;
+}
+.pa-topbar-right { display:flex; align-items:center; gap:12px; }
+.pa-topbar-badge {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  padding:3px 10px; text-transform:uppercase;
+  background:rgba(79,195,247,0.1); color:#4fc3f7;
+  border:1px solid rgba(79,195,247,0.3);
+}
+.pa-back-btn {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:2px;
+  color:var(--muted); background:transparent; border:1px solid var(--navy-border);
+  padding:5px 14px; cursor:pointer; text-transform:uppercase;
+  transition:all 0.15s;
+}
+.pa-back-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
+
+/* ── Classification banner ── */
+.pa-class-banner {
+  background:rgba(192,57,43,0.12); border-bottom:1px solid rgba(192,57,43,0.25);
+  padding:5px 24px; display:flex; align-items:center; justify-content:center; gap:16px;
+  flex-shrink:0;
+}
+.pa-class-text {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:3px;
+  color:var(--red-alert); text-transform:uppercase; opacity:0.8;
+}
+
+/* ── Shell ── */
+.pa-shell {
+  display:flex; flex:1; overflow:hidden; min-height:0;
+}
+
+/* ── Left pane: list of releases ── */
+.pa-list-pane {
+  width:340px; flex-shrink:0;
+  background:#070C18;
+  border-right:1px solid var(--navy-border);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.pa-list-header {
+  padding:16px 18px 14px;
+  border-bottom:1px solid var(--navy-border);
+  background:rgba(201,168,76,0.03);
+  flex-shrink:0;
+}
+.pa-list-title {
+  font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:3px;
+  color:var(--gold); text-transform:uppercase; margin-bottom:2px;
+}
+.pa-list-sub {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.6;
+}
+.pa-new-btn {
+  display:flex; align-items:center; gap:8px; width:100%; margin:0;
+  padding:12px 18px; background:rgba(79,195,247,0.06);
+  border:none; border-bottom:1px solid var(--navy-border);
+  cursor:pointer; transition:background 0.15s; flex-shrink:0;
+}
+.pa-new-btn:hover { background:rgba(79,195,247,0.12); }
+.pa-new-btn-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(79,195,247,0.15); border:1px solid rgba(79,195,247,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; color:#4fc3f7; line-height:1; flex-shrink:0;
+}
+.pa-new-btn-text {
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px;
+  color:#4fc3f7; text-transform:uppercase;
+}
+
+.pa-list-scroll {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+}
+.pa-list-empty {
+  padding:32px 18px; text-align:center;
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:2px;
+  color:var(--muted); opacity:0.5; text-transform:uppercase;
+}
+.pa-list-item {
+  padding:14px 18px; border-bottom:1px solid var(--navy-border);
+  cursor:pointer; transition:background 0.12s;
+  border-left:3px solid transparent;
+}
+.pa-list-item:hover { background:rgba(255,255,255,0.03); }
+.pa-list-item.active {
+  background:rgba(79,195,247,0.07);
+  border-left-color:#4fc3f7;
+}
+.pa-item-type-row {
+  display:flex; align-items:center; gap:8px; margin-bottom:6px;
+}
+.pa-item-badge {
+  font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:2px;
+  padding:2px 7px; text-transform:uppercase; flex-shrink:0;
+}
+.badge-main { background:rgba(192,57,43,0.15); color:var(--red-alert); border:1px solid rgba(192,57,43,0.3); }
+.badge-sub  { background:rgba(201,168,76,0.1);  color:var(--gold);      border:1px solid rgba(201,168,76,0.25); }
+.pa-item-number {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5; margin-left:auto;
+}
+.pa-item-title {
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1.5px;
+  color:var(--white); text-transform:uppercase; line-height:1.3;
+  margin-bottom:5px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.pa-item-meta {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5;
+}
+
+/* ── Right pane: form / detail view ── */
+.pa-form-pane {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  display:flex; flex-direction:column; min-width:0;
+}
+.pa-form-inner {
+  padding:28px 32px; max-width:860px;
+}
+
+.pa-form-header {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  margin-bottom:28px; gap:16px;
+}
+.pa-form-eyebrow {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:3px;
+  color:var(--muted); text-transform:uppercase; margin-bottom:6px; opacity:0.6;
+}
+.pa-form-title {
+  font-family:'Oswald',sans-serif; font-size:22px; letter-spacing:3px;
+  color:var(--white); text-transform:uppercase;
+}
+.pa-form-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+
+/* Form layout */
+.pa-section-label {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:3px;
+  color:#4fc3f7; text-transform:uppercase; margin-bottom:14px; margin-top:28px;
+  padding-bottom:8px; border-bottom:1px solid rgba(79,195,247,0.15);
+  opacity:0.8;
+}
+.pa-section-label:first-child { margin-top:0; }
+
+.pa-field-row { display:grid; gap:16px; margin-bottom:16px; }
+.pa-field-row.cols-2 { grid-template-columns:1fr 1fr; }
+.pa-field-row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.pa-field-row.cols-1 { grid-template-columns:1fr; }
+
+.pa-field { display:flex; flex-direction:column; gap:5px; }
+.pa-label {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  color:var(--muted); text-transform:uppercase; opacity:0.7;
+}
+.pa-label span.req { color:var(--red-alert); margin-left:2px; }
+.pa-input, .pa-select, .pa-textarea {
+  background:#0D1526; border:1px solid var(--navy-border);
+  color:var(--white); padding:9px 12px;
+  font-family:'Roboto Mono',monospace; font-size:11px; letter-spacing:0.5px;
+  outline:none; transition:border-color 0.15s; width:100%; box-sizing:border-box;
+}
+.pa-input:focus, .pa-select:focus, .pa-textarea:focus {
+  border-color:rgba(79,195,247,0.5);
+}
+.pa-input::placeholder, .pa-textarea::placeholder { color:var(--muted); opacity:0.4; }
+.pa-select { cursor:pointer; }
+.pa-select option { background:#0D1526; }
+.pa-textarea { resize:vertical; min-height:120px; line-height:1.7; }
+
+/* Headline type toggle */
+.pa-type-toggle { display:flex; gap:0; }
+.pa-type-opt {
+  flex:1; padding:9px 8px; border:1px solid var(--navy-border);
+  background:#0D1526; cursor:pointer; transition:all 0.15s;
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  color:var(--muted); text-transform:uppercase; text-align:center;
+}
+.pa-type-opt:first-child { border-right:none; }
+.pa-type-opt:hover { background:rgba(255,255,255,0.04); }
+.pa-type-opt.selected-main {
+  background:rgba(192,57,43,0.15); color:var(--red-alert);
+  border-color:rgba(192,57,43,0.4);
+}
+.pa-type-opt.selected-sub {
+  background:rgba(201,168,76,0.1); color:var(--gold);
+  border-color:rgba(201,168,76,0.35);
+}
+
+/* Photo upload area */
+.pa-photo-area {
+  border:1px dashed var(--navy-border);
+  background:#090E1C; padding:18px;
+  transition:border-color 0.15s;
+}
+.pa-photo-area:hover { border-color:rgba(79,195,247,0.3); }
+.pa-photo-preview {
+  width:100%; max-height:160px; object-fit:cover; display:block;
+  margin-bottom:10px; border:1px solid var(--navy-border);
+}
+.pa-photo-placeholder {
+  display:flex; flex-direction:column; align-items:center;
+  gap:8px; padding:20px; text-align:center;
+}
+.pa-photo-placeholder svg { width:28px; height:28px; fill:var(--navy-border); }
+.pa-photo-placeholder span {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  color:var(--muted); opacity:0.5; text-transform:uppercase;
+}
+.pa-photo-btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.pa-photo-btn {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; padding:6px 14px; cursor:pointer;
+  border:1px solid var(--navy-border); background:transparent; color:var(--muted);
+  transition:all 0.15s;
+}
+.pa-photo-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
+.pa-photo-btn.pa-photo-clear { color:rgba(192,57,43,0.7); border-color:rgba(192,57,43,0.3); }
+.pa-photo-btn.pa-photo-clear:hover { color:var(--red-alert); border-color:var(--red-alert); }
+
+/* URL field below photo area */
+.pa-photo-url-row { margin-top:8px; display:flex; align-items:center; gap:8px; }
+.pa-photo-url-label {
+  font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:2px;
+  color:var(--muted); opacity:0.5; flex-shrink:0; text-transform:uppercase;
+}
+
+/* Share link row */
+.pa-share-row {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px;
+  background:rgba(79,195,247,0.05); border:1px solid rgba(79,195,247,0.15);
+  margin-bottom:16px;
+}
+.pa-share-label {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  color:#4fc3f7; text-transform:uppercase; flex-shrink:0; opacity:0.8;
+}
+.pa-share-url {
+  flex:1; font-family:'Roboto Mono',monospace; font-size:10px;
+  color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.pa-share-copy {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  text-transform:uppercase; padding:4px 12px; cursor:pointer;
+  border:1px solid rgba(79,195,247,0.4); background:transparent; color:#4fc3f7;
+  transition:all 0.15s; flex-shrink:0;
+}
+.pa-share-copy:hover { background:rgba(79,195,247,0.1); }
+
+/* Action buttons */
+.pa-btn {
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:3px;
+  text-transform:uppercase; padding:9px 22px; cursor:pointer;
+  border:none; transition:all 0.15s;
+}
+.pa-btn-primary {
+  background:var(--red-alert); color:#fff;
+}
+.pa-btn-primary:hover { background:#a93226; }
+.pa-btn-secondary {
+  background:transparent; color:var(--muted);
+  border:1px solid var(--navy-border);
+}
+.pa-btn-secondary:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
+.pa-btn-danger {
+  background:transparent; color:rgba(192,57,43,0.7);
+  border:1px solid rgba(192,57,43,0.3);
+}
+.pa-btn-danger:hover { color:var(--red-alert); border-color:var(--red-alert); background:rgba(192,57,43,0.07); }
+.pa-btn-save {
+  background:rgba(39,174,96,0.15); color:#27AE60;
+  border:1px solid rgba(39,174,96,0.4);
+}
+.pa-btn-save:hover { background:rgba(39,174,96,0.25); }
+.pa-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* Empty/welcome state */
+.pa-welcome {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:18px; padding:40px;
+  text-align:center;
+}
+.pa-welcome-icon {
+  width:48px; height:48px; border-radius:50%;
+  background:rgba(79,195,247,0.08); border:1px solid rgba(79,195,247,0.2);
+  display:flex; align-items:center; justify-content:center;
+}
+.pa-welcome-icon svg { width:22px; height:22px; fill:#4fc3f7; opacity:0.7; }
+.pa-welcome-title {
+  font-family:'Oswald',sans-serif; font-size:18px; letter-spacing:4px;
+  color:var(--white); text-transform:uppercase;
+}
+.pa-welcome-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5; max-width:360px; line-height:1.7;
+}
+
+/* Confirmation modal */
+.pa-modal-backdrop {
+  position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  display:none; align-items:center; justify-content:center; z-index:500;
+}
+.pa-modal-backdrop.visible { display:flex; }
+.pa-modal {
+  background:#0D1526; border:1px solid var(--navy-border);
+  border-top:3px solid var(--red-alert);
+  padding:28px 32px; max-width:420px; width:90%;
+}
+.pa-modal-title {
+  font-family:'Oswald',sans-serif; font-size:16px; letter-spacing:3px;
+  color:var(--white); text-transform:uppercase; margin-bottom:10px;
+}
+.pa-modal-text {
+  font-family:'Roboto Mono',monospace; font-size:11px; letter-spacing:0.5px;
+  color:var(--muted); line-height:1.7; margin-bottom:22px;
+}
+.pa-modal-btns { display:flex; gap:10px; justify-content:flex-end; }
+
+/* Toast */
+#pa-toast {
+  position:fixed; bottom:28px; right:28px; z-index:9000;
+  display:flex; flex-direction:column; gap:8px; pointer-events:none;
+}
+
+/* Access gate */
+#pa-access-gate {
+  position:fixed; inset:0; background:#060A14;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:16px; z-index:1000;
+}
+.pa-gate-logo { width:48px; height:48px; object-fit:contain; }
+.pa-gate-text {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:3px;
+  color:var(--muted); text-transform:uppercase;
+}
+.pa-gate-bar {
+  width:200px; height:1px; background:var(--navy-border);
+  overflow:hidden;
+}
+.pa-gate-progress {
+  height:100%; width:0%; background:var(--gold);
+  animation:gateLoad 1.2s ease forwards;
+}
+@keyframes gateLoad { to { width:100%; } }
+
+/* Scrollbar */
+.pa-list-scroll::-webkit-scrollbar,
+.pa-form-pane::-webkit-scrollbar { width:4px; }
+.pa-list-scroll::-webkit-scrollbar-track,
+.pa-form-pane::-webkit-scrollbar-track { background:transparent; }
+.pa-list-scroll::-webkit-scrollbar-thumb,
+.pa-form-pane::-webkit-scrollbar-thumb { background:var(--navy-border); border-radius:2px; }
+
+/* Clearance denied state */
+.pa-denied {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:14px; padding:40px; text-align:center;
+}
+.pa-denied-icon {
+  font-family:'Oswald',sans-serif; font-size:48px; letter-spacing:2px;
+  color:rgba(192,57,43,0.3);
+}
+.pa-denied-title {
+  font-family:'Oswald',sans-serif; font-size:20px; letter-spacing:5px;
+  color:var(--red-alert); text-transform:uppercase;
+}
+.pa-denied-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ACCESS GATE -->
+<div id="pa-access-gate">
+  <img class="pa-gate-logo" src="../images/cib-logo.png" alt="CIB"
+       onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
+  <div class="pa-gate-text">Verifying Clearance...</div>
+  <div class="pa-gate-bar"><div class="pa-gate-progress"></div></div>
+</div>
+
+<!-- TOP BAR -->
+<div class="pa-topbar">
+  <div class="pa-topbar-left">
+    <img class="pa-topbar-logo" src="../images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="pa-topbar-brand">NEXUS</span>
+    <div class="pa-topbar-divider"></div>
+    <span class="pa-topbar-sub">Public Affairs · Press Release Manager</span>
+  </div>
+  <div class="pa-topbar-right">
+    <span class="pa-topbar-badge">PAO INTERNAL</span>
+    <button class="pa-back-btn" onclick="goBack()">← Back to NEXUS</button>
+  </div>
+</div>
+
+<!-- CLASSIFICATION BANNER -->
+<div class="pa-class-banner">
+  <div class="pa-class-text">SECRET // PUBLIC AFFAIRS OFFICE // AUTHORIZED EDITORIAL PERSONNEL ONLY</div>
+</div>
+
+<!-- SHELL -->
+<div class="pa-shell" id="paShell" style="display:none;">
+
+  <!-- Left pane: list -->
+  <div class="pa-list-pane">
+    <div class="pa-list-header">
+      <div class="pa-list-title">Press Releases</div>
+      <div class="pa-list-sub">All published & draft entries</div>
+    </div>
+
+    <button class="pa-new-btn" onclick="openNewForm()">
+      <div class="pa-new-btn-icon">+</div>
+      <span class="pa-new-btn-text">New Press Release</span>
+    </button>
+
+    <div class="pa-list-scroll" id="paReleaseList">
+      <div class="pa-list-empty">Loading releases...</div>
+    </div>
+  </div>
+
+  <!-- Right pane: form / welcome -->
+  <div class="pa-form-pane" id="paFormPane">
+
+    <!-- Welcome state (shown when nothing selected) -->
+    <div class="pa-welcome" id="paWelcome">
+      <div class="pa-welcome-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+      </div>
+      <div class="pa-welcome-title">Press Release Manager</div>
+      <div class="pa-welcome-sub">Select an existing release from the list to edit, or create a new one. Published releases appear live on the Public Press Room page.</div>
+    </div>
+
+    <!-- Edit / create form (hidden until needed) -->
+    <div class="pa-form-inner" id="paFormInner" style="display:none;">
+
+      <div class="pa-form-header">
+        <div>
+          <div class="pa-form-eyebrow" id="paFormEyebrow">New Press Release</div>
+          <div class="pa-form-title" id="paFormTitleDisp">Create Entry</div>
+        </div>
+        <div class="pa-form-actions">
+          <button class="pa-btn pa-btn-danger" id="paDeleteBtn" onclick="confirmDelete()" style="display:none;">Delete</button>
+          <button class="pa-btn pa-btn-secondary" onclick="cancelForm()">Cancel</button>
+          <button class="pa-btn pa-btn-save" id="paSaveBtn" onclick="saveRelease()">Save & Publish</button>
+        </div>
+      </div>
+
+      <!-- Share link (only visible when editing existing) -->
+      <div class="pa-share-row" id="paShareRow" style="display:none;">
+        <span class="pa-share-label">Share Link</span>
+        <span class="pa-share-url" id="paShareUrl">—</span>
+        <button class="pa-share-copy" onclick="copyShareLink()">Copy</button>
+      </div>
+
+      <!-- ── SECTION: Classification ── -->
+      <div class="pa-section-label">Headline Classification</div>
+
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label">Headline Type <span class="req">*</span></label>
+          <div class="pa-type-toggle">
+            <div class="pa-type-opt selected-main" id="typeOptMain" onclick="selectHeadlineType('main')">
+              ★ Main Headline — High Priority
+            </div>
+            <div class="pa-type-opt" id="typeOptSub" onclick="selectHeadlineType('sub')">
+              Sub Headline — General
+            </div>
+          </div>
+          <input type="hidden" id="fieldHeadlineType" value="main"/>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Release identity ── -->
+      <div class="pa-section-label">Release Identity</div>
+
+      <div class="pa-field-row cols-3">
+        <div class="pa-field">
+          <label class="pa-label" for="fieldPRNumber">PR Number <span class="req">*</span></label>
+          <input class="pa-input" id="fieldPRNumber" placeholder="PR-2026-005" maxlength="20"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label" for="fieldNewsType">News Type <span class="req">*</span></label>
+          <select class="pa-select" id="fieldNewsType">
+            <option value="Official Statement">Official Statement</option>
+            <option value="Public Advisory">Public Advisory</option>
+            <option value="Operation Announcement">Operation Announcement</option>
+            <option value="Personnel Update">Personnel Update</option>
+            <option value="Community Advisory">Community Advisory</option>
+            <option value="Threat Advisory">Threat Advisory</option>
+            <option value="Media Briefing">Media Briefing</option>
+            <option value="Press Conference">Press Conference</option>
+            <option value="Arrest Notice">Arrest Notice</option>
+            <option value="Wanted Notice">Wanted Notice</option>
+          </select>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label" for="fieldDivision">Division Tag</label>
+          <select class="pa-select" id="fieldDivision">
+            <option value="">— None —</option>
+            <option value="CIB">CIB Command</option>
+            <option value="CID">CID · Investigation Division</option>
+            <option value="GRD">GRD · Gang Recon Division</option>
+            <option value="PAO">PAO · Public Affairs</option>
+            <option value="OPS">OPS · Operations</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Authorship & Dates ── -->
+      <div class="pa-section-label">Authorship & Dates</div>
+
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label" for="fieldNewsMaker">News Maker Name <span class="req">*</span></label>
+          <input class="pa-input" id="fieldNewsMaker" placeholder="Commander Diraj Lakota"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label" for="fieldReleaseTime">Release Time</label>
+          <input class="pa-input" id="fieldReleaseTime" placeholder="06:00 HRS"/>
+        </div>
+      </div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label" for="fieldEventDate">Date Event Occurred <span class="req">*</span></label>
+          <input class="pa-input" id="fieldEventDate" type="date"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label" for="fieldReleaseDate">Date News Released <span class="req">*</span></label>
+          <input class="pa-input" id="fieldReleaseDate" type="date"/>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Content ── -->
+      <div class="pa-section-label">News Content</div>
+
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label" for="fieldTitle">Headline Title <span class="req">*</span></label>
+          <input class="pa-input" id="fieldTitle" placeholder="Commander X issues statement regarding..."/>
+        </div>
+      </div>
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label" for="fieldBody">News Body <span class="req">*</span>
+            <span style="opacity:0.5;font-size:8px;margin-left:6px;">(Separate paragraphs with a blank line)</span>
+          </label>
+          <textarea class="pa-textarea" id="fieldBody" rows="8"
+            placeholder="Write the press release body here.
+
+Start each new paragraph with a blank line between them.
+
+The Central Investigation Bureau..."></textarea>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Media ── -->
+      <div class="pa-section-label">Media / Photo</div>
+
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <div class="pa-photo-area" id="paPhotoArea">
+            <div id="paPhotoPreviewWrap" style="display:none;">
+              <img class="pa-photo-preview" id="paPhotoPreview" src="" alt="Preview"/>
+            </div>
+            <div class="pa-photo-placeholder" id="paPhotoPlaceholder">
+              <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+              <span>No photo selected</span>
+            </div>
+            <div class="pa-photo-btns">
+              <label class="pa-photo-btn" style="cursor:pointer;">
+                Upload File
+                <input type="file" id="paPhotoUpload" accept="image/*" style="display:none;" onchange="handlePhotoUpload(this)"/>
+              </label>
+              <button class="pa-photo-btn pa-photo-clear" onclick="clearPhoto()">✕ Remove</button>
+            </div>
+          </div>
+          <div class="pa-photo-url-row">
+            <span class="pa-photo-url-label">Or use URL:</span>
+            <input class="pa-input" id="fieldPhotoUrl" placeholder="https://..." style="font-size:10px;"
+                   oninput="handlePhotoUrlInput(this.value)"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label" for="fieldPhotoCaption">Photo Caption</label>
+          <input class="pa-input" id="fieldPhotoCaption" placeholder="IMAGE: Description of the photo..."/>
+        </div>
+      </div>
+
+      <!-- Bottom save button repeated for convenience -->
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--navy-border);">
+        <button class="pa-btn pa-btn-danger" id="paDeleteBtn2" onclick="confirmDelete()" style="display:none;">Delete Release</button>
+        <button class="pa-btn pa-btn-secondary" onclick="cancelForm()">Cancel</button>
+        <button class="pa-btn pa-btn-save" onclick="saveRelease()">Save & Publish</button>
+      </div>
+
+    </div><!-- /pa-form-inner -->
+
+    <!-- Access denied (shown for insufficient clearance) -->
+    <div class="pa-denied" id="paDenied" style="display:none;">
+      <div class="pa-denied-icon">⊘</div>
+      <div class="pa-denied-title">Access Denied</div>
+      <div class="pa-denied-sub">Secret or Top Secret clearance required to manage press releases.</div>
+    </div>
+
+  </div><!-- /pa-form-pane -->
+
+</div><!-- /pa-shell -->
+
+<!-- Delete confirmation modal -->
+<div class="pa-modal-backdrop" id="paDeleteModal">
+  <div class="pa-modal">
+    <div class="pa-modal-title">Confirm Deletion</div>
+    <div class="pa-modal-text">Are you sure you want to delete this press release? This action will remove it from the public press room. The entry is soft-deleted and retained in the audit log.</div>
+    <div class="pa-modal-btns">
+      <button class="pa-btn pa-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <button class="pa-btn pa-btn-danger" onclick="executeDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="pa-toast"></div>
+
+<script src="../shared/scripts/portal-auth.js"></script>
+<script>
+
+// ═══════════════════════════════════════════════════════════
+//  PA.HTML — PRESS RELEASE MANAGER
+//  Internal CMS for CIB Public Affairs
+//  Requires: secret or top_secret classification
+// ═══════════════════════════════════════════════════════════
+
+const PA_API   = '/api/press-releases'
+const WRITE_CL = ['secret', 'top_secret']
+
+let _releases    = []
+let _editingId   = null   // null = new, string = editing existing
+let _photoBase64 = null   // base64 of uploaded file (if any)
+let _canWrite    = false
+
+// ── Auth / init ──────────────────────────────────────────────
+PortalAuth.init({
+  loginHref:   '/Page_Login.html',
+  nameEls:     [],
+  badgeEls:    [],
+  rankEls:     [],
+  divisionEls: [],
+  classificationEls: [],
+  clearanceTitleEls: [],
+  clockEl: null,
+  onReady: function (badge, session) {
+    const cls = (session?.classification || '').toLowerCase().replace(/\s+/g, '_')
+    _canWrite  = WRITE_CL.includes(cls)
+
+    // Dismiss access gate
+    const gate = document.getElementById('pa-access-gate')
+    if (gate) { gate.style.opacity = '0'; gate.style.transition = 'opacity 0.4s'; setTimeout(() => gate.remove(), 400); }
+
+    // Show shell
+    document.getElementById('paShell').style.display = 'flex'
+
+    if (!_canWrite) {
+      document.getElementById('paDenied').style.display  = 'flex'
+      document.getElementById('paWelcome').style.display = 'none'
+      // Hide new button
+      document.querySelector('.pa-new-btn').style.display = 'none'
+    }
+
+    loadReleases()
+  }
+})
+
+// ── Navigate back to NEXUS ───────────────────────────────────
+function goBack() {
+  window.location.href = '../nexus.html'
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function showToast(msg, type) {
+  PortalAuth.showToast(msg, type, 'pa-toast')
+}
+
+// ── Load all releases from API ───────────────────────────────
+async function loadReleases() {
+  try {
+    const res  = await fetch(PA_API)
+    const json = await res.json()
+    if (json.success) {
+      _releases = json.data || []
+      renderList()
+    } else {
+      showToast('Failed to load releases', 'error')
+    }
+  } catch (e) {
+    showToast('Network error loading releases', 'error')
+  }
+}
+
+// ── Render the left list panel ───────────────────────────────
+function renderList() {
+  const el = document.getElementById('paReleaseList')
+  if (!_releases.length) {
+    el.innerHTML = '<div class="pa-list-empty">No releases yet.<br>Create the first one.</div>'
+    return
+  }
+  el.innerHTML = _releases.map(r => `
+    <div class="pa-list-item${_editingId === r.id ? ' active' : ''}" onclick="openEditForm('${r.id}')">
+      <div class="pa-item-type-row">
+        <span class="pa-item-badge ${r.headline_type === 'main' ? 'badge-main' : 'badge-sub'}">
+          ${r.headline_type === 'main' ? '★ Main' : 'Sub'}
+        </span>
+        <span class="pa-item-number">${escHtml(r.pr_number || '')}</span>
+      </div>
+      <div class="pa-item-title">${escHtml(r.title || '')}</div>
+      <div class="pa-item-meta">${formatDisplayDate(r.release_date)} · ${escHtml(r.news_maker || '')}</div>
+    </div>
+  `).join('')
+}
+
+// ── Open blank new form ──────────────────────────────────────
+function openNewForm() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  _editingId   = null
+  _photoBase64 = null
+  clearFormFields()
+  document.getElementById('paFormEyebrow').textContent     = 'New Press Release'
+  document.getElementById('paFormTitleDisp').textContent   = 'Create Entry'
+  document.getElementById('paDeleteBtn').style.display     = 'none'
+  document.getElementById('paDeleteBtn2').style.display    = 'none'
+  document.getElementById('paShareRow').style.display      = 'none'
+  document.getElementById('paWelcome').style.display       = 'none'
+  document.getElementById('paDenied').style.display        = 'none'
+  document.getElementById('paFormInner').style.display     = 'block'
+  // Default dates to today
+  const today = new Date().toISOString().split('T')[0]
+  document.getElementById('fieldEventDate').value   = today
+  document.getElementById('fieldReleaseDate').value = today
+  renderList()
+}
+
+// ── Open edit form for existing release ──────────────────────
+function openEditForm(id) {
+  const r = _releases.find(x => x.id === id)
+  if (!r) return
+  _editingId   = id
+  _photoBase64 = null
+
+  populateForm(r)
+
+  document.getElementById('paFormEyebrow').textContent   = 'Editing · ' + (r.pr_number || '')
+  document.getElementById('paFormTitleDisp').textContent = r.title || 'Edit Release'
+  document.getElementById('paDeleteBtn').style.display   = _canWrite ? 'inline-flex' : 'none'
+  document.getElementById('paDeleteBtn2').style.display  = _canWrite ? 'inline-flex' : 'none'
+
+  // Share link
+  const shareUrl = buildShareUrl(r.slug)
+  document.getElementById('paShareUrl').textContent    = shareUrl
+  document.getElementById('paShareRow').style.display  = 'flex'
+
+  document.getElementById('paWelcome').style.display   = 'none'
+  document.getElementById('paDenied').style.display    = 'none'
+  document.getElementById('paFormInner').style.display = 'block'
+
+  // Disable inputs if no write access
+  setFormReadOnly(!_canWrite)
+
+  renderList()
+}
+
+function setFormReadOnly(ro) {
+  const fields = ['fieldPRNumber','fieldNewsType','fieldDivision','fieldNewsMaker',
+                  'fieldReleaseTime','fieldEventDate','fieldReleaseDate','fieldTitle',
+                  'fieldBody','fieldPhotoUrl','fieldPhotoCaption']
+  fields.forEach(id => {
+    const el = document.getElementById(id)
+    if (el) el.disabled = ro
+  })
+  document.querySelectorAll('.pa-type-opt').forEach(el => el.style.pointerEvents = ro ? 'none' : '')
+  document.querySelectorAll('.pa-photo-btn').forEach(el => el.disabled = ro)
+  document.getElementById('paSaveBtn').disabled = ro
+}
+
+function cancelForm() {
+  _editingId = null
+  document.getElementById('paFormInner').style.display = 'none'
+  document.getElementById('paWelcome').style.display   = _canWrite ? 'flex' : 'none'
+  document.getElementById('paDenied').style.display    = _canWrite ? 'none' : 'flex'
+  renderList()
+}
+
+// ── Populate form from a release object ──────────────────────
+function populateForm(r) {
+  selectHeadlineType(r.headline_type || 'sub')
+  document.getElementById('fieldPRNumber').value      = r.pr_number    || ''
+  document.getElementById('fieldNewsType').value      = r.news_type    || 'Official Statement'
+  document.getElementById('fieldDivision').value      = r.division_tag || ''
+  document.getElementById('fieldNewsMaker').value     = r.news_maker   || ''
+  document.getElementById('fieldReleaseTime').value   = r.release_time || ''
+  document.getElementById('fieldEventDate').value     = r.event_date   || ''
+  document.getElementById('fieldReleaseDate').value   = r.release_date || ''
+  document.getElementById('fieldTitle').value         = r.title        || ''
+  document.getElementById('fieldBody').value          = r.body         || ''
+  document.getElementById('fieldPhotoCaption').value  = r.photo_caption|| ''
+  document.getElementById('fieldPhotoUrl').value      = r.photo_url    || ''
+
+  if (r.photo_url) {
+    document.getElementById('paPhotoPreview').src          = r.photo_url
+    document.getElementById('paPhotoPreviewWrap').style.display = 'block'
+    document.getElementById('paPhotoPlaceholder').style.display = 'none'
+  } else {
+    clearPhotoPreview()
+  }
+}
+
+function clearFormFields() {
+  selectHeadlineType('main')
+  const ids = ['fieldPRNumber','fieldNewsType','fieldDivision','fieldNewsMaker',
+               'fieldReleaseTime','fieldEventDate','fieldReleaseDate','fieldTitle',
+               'fieldBody','fieldPhotoCaption','fieldPhotoUrl']
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = '' })
+  document.getElementById('fieldNewsType').value = 'Official Statement'
+  clearPhotoPreview()
+  _photoBase64 = null
+}
+
+// ── Headline type toggle ──────────────────────────────────────
+function selectHeadlineType(type) {
+  document.getElementById('fieldHeadlineType').value = type
+  const main = document.getElementById('typeOptMain')
+  const sub  = document.getElementById('typeOptSub')
+  main.className = 'pa-type-opt' + (type === 'main' ? ' selected-main' : '')
+  sub.className  = 'pa-type-opt' + (type === 'sub'  ? ' selected-sub'  : '')
+}
+
+// ── Photo handling ────────────────────────────────────────────
+function handlePhotoUpload(input) {
+  const file = input.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    _photoBase64 = e.target.result
+    document.getElementById('paPhotoPreview').src = e.target.result
+    document.getElementById('paPhotoPreviewWrap').style.display = 'block'
+    document.getElementById('paPhotoPlaceholder').style.display = 'none'
+    document.getElementById('fieldPhotoUrl').value = '' // clear URL if file chosen
+  }
+  reader.readAsDataURL(file)
+}
+
+function handlePhotoUrlInput(url) {
+  if (!url) { clearPhotoPreview(); return }
+  _photoBase64 = null  // url takes precedence
+  document.getElementById('paPhotoPreview').src = url
+  document.getElementById('paPhotoPreviewWrap').style.display = 'block'
+  document.getElementById('paPhotoPlaceholder').style.display = 'none'
+}
+
+function clearPhoto() {
+  _photoBase64 = null
+  document.getElementById('fieldPhotoUrl').value = ''
+  clearPhotoPreview()
+}
+
+function clearPhotoPreview() {
+  document.getElementById('paPhotoPreview').src = ''
+  document.getElementById('paPhotoPreviewWrap').style.display = 'none'
+  document.getElementById('paPhotoPlaceholder').style.display = 'flex'
+}
+
+// ── Save (create or update) ───────────────────────────────────
+async function saveRelease() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+
+  const title   = document.getElementById('fieldTitle').value.trim()
+  const body    = document.getElementById('fieldBody').value.trim()
+  const prNum   = document.getElementById('fieldPRNumber').value.trim()
+  const maker   = document.getElementById('fieldNewsMaker').value.trim()
+  const evDate  = document.getElementById('fieldEventDate').value.trim()
+  const relDate = document.getElementById('fieldReleaseDate').value.trim()
+
+  if (!title)   { showToast('Headline title is required', 'error'); return }
+  if (!body)    { showToast('News body is required', 'error'); return }
+  if (!prNum)   { showToast('PR number is required', 'error'); return }
+  if (!maker)   { showToast('News maker is required', 'error'); return }
+  if (!evDate)  { showToast('Event date is required', 'error'); return }
+  if (!relDate) { showToast('Release date is required', 'error'); return }
+
+  const token = sessionStorage.getItem('cib_token')
+  const payload = {
+    id:              _editingId,
+    headline_type:   document.getElementById('fieldHeadlineType').value,
+    pr_number:       prNum,
+    news_type:       document.getElementById('fieldNewsType').value,
+    division_tag:    document.getElementById('fieldDivision').value,
+    news_maker:      maker,
+    release_time:    document.getElementById('fieldReleaseTime').value.trim(),
+    event_date:      evDate,
+    release_date:    relDate,
+    title,
+    body,
+    photo_base64:    _photoBase64 || null,
+    photo_url_direct:!_photoBase64 ? document.getElementById('fieldPhotoUrl').value.trim() : null,
+    photo_caption:   document.getElementById('fieldPhotoCaption').value.trim(),
+  }
+
+  const method = _editingId ? 'PUT' : 'POST'
+  const btn    = document.getElementById('paSaveBtn')
+  btn.disabled = true
+  btn.textContent = 'Saving...'
+
+  try {
+    const res  = await fetch(PA_API, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token || '' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+
+    if (json.success) {
+      showToast(_editingId ? 'Release updated' : 'Release published', 'success')
+      _editingId = json.data.id  // ensure edit mode from now on
+      await loadReleases()
+      openEditForm(_editingId)   // re-open to show share link + refreshed data
+    } else {
+      showToast(json.error || 'Save failed', 'error')
+    }
+  } catch (e) {
+    showToast('Network error saving release', 'error')
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Save & Publish'
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function confirmDelete() {
+  if (!_editingId || !_canWrite) return
+  document.getElementById('paDeleteModal').classList.add('visible')
+}
+function closeDeleteModal() {
+  document.getElementById('paDeleteModal').classList.remove('visible')
+}
+async function executeDelete() {
+  closeDeleteModal()
+  if (!_editingId) return
+
+  const token = sessionStorage.getItem('cib_token')
+  try {
+    const res  = await fetch(`${PA_API}?id=${_editingId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token || '' },
+      body: JSON.stringify({ reason: 'Deleted via PA Manager' }),
+    })
+    const json = await res.json()
+    if (json.success) {
+      showToast('Release deleted', 'success')
+      _editingId = null
+      await loadReleases()
+      cancelForm()
+    } else {
+      showToast(json.error || 'Delete failed', 'error')
+    }
+  } catch (e) {
+    showToast('Network error', 'error')
+  }
+}
+
+// ── Share link ────────────────────────────────────────────────
+function buildShareUrl(slug) {
+  return `${location.origin}/Page_Press.html?release=${encodeURIComponent(slug)}`
+}
+function copyShareLink() {
+  const url = document.getElementById('paShareUrl').textContent
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied', 'success'))
+}
+
+// ── Utilities ─────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+function formatDisplayDate(d) {
+  if (!d) return '—'
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+  } catch { return d }
+}
+
+</script>
+</body>
+</html>

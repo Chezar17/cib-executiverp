@@ -72,39 +72,8 @@
         </div>
 
         <div class="main-pr-list">
-
-          <!-- ======= MAIN ENTRY START ======= -->
-          <article class="pr-card-main">
-            <div class="pr-img-wrap">
-              <!-- REPLACE THIS WITH YOUR IMAGE (see instructions above) -->
-              <div class="pr-img-placeholder">
-              <img src="images/pa_1.jpg" alt="Brief description"/>
-              </div>
-            </div>
-            <div class="pr-body">
-              <div class="pr-meta-row">
-                <span class="pr-number">PR-2026-004</span>
-                <span class="pr-category cat-official">Official Statement</span>
-                <span class="pr-category cat-advisory">Public Advisory</span>
-                <span class="pr-date">April 20, 2026</span>
-              </div>
-              <div class="pr-title">Commander Diraj Lakota - "KITA HARUS LEBIH KERAS KE GANG YANG KERJAANNYA JUAL SENJATA MULU!"</div>
-              <div class="pr-divider"></div>
-              <div class="pr-text">
-                <p>The Central Investigation Bureau today reaffirmed its commitment to dismantling organized criminal networks involved in the illegal trafficking and distribution of firearms across the region.</p>
-                <p>Commander Diraj Lakota, Director of the Central Investigation Bureau, issued a strong statement regarding the growing threat posed by armed street gangs and weapon suppliers:</p>
-                <p>“We must be tougher on criminal gangs whose only business is selling weapons. These organizations fuel violence, intimidate communities, and profit from fear. The CIB will not allow them to operate freely. We are expanding investigations, increasing intelligence-led enforcement, and working with our law enforcement partners to identify, disrupt, and prosecute every individual involved in the illegal weapons trade.”</p>
-                <p>Under Commander Lakota leadership, the Bureau has prioritized gang suppression operations, long-term intelligence gathering, and coordinated enforcement actions targeting those responsible for supplying firearms to violent offenders.</p>
-                <p>The CIB emphasized that illegal weapons trafficking remains a direct threat to public safety, often linked to robberies, assaults, extortion, and gang-related shootings. The Bureau stated that future operations will focus not only on gang members, but also on financiers, smugglers, brokers, and anyone assisting criminal enterprises.</p>
-                <p>Commander Lakota concluded by assuring the public that the Bureau remains fully committed to protecting communities and restoring order through decisive action, professional investigations, and relentless enforcement.</p>
-              </div>
-              <div class="pr-footer">
-                <span class="pr-issued">RELEASED: 20 APR 2026 &middot; 06:00 HRS</span>
-              </div>
-            </div>
-          </article>
-          <!-- ======= MAIN ENTRY END ======= -->
-
+          <!-- Populated dynamically by JS from /api/press-releases -->
+          <div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">Loading...</div>
         </div>
       </div>
       <!-- END MAIN HEADLINE SECTION -->
@@ -137,64 +106,8 @@
         </div>
 
         <div class="sub-pr-grid">
-
-          <!-- ======= SUB ENTRY START ======= -->
-          <article class="pr-card-sub">
-            <div class="pr-img-wrap">
-              <!-- REPLACE THIS WITH YOUR IMAGE (see instructions above) -->
-              <div class="pr-img-placeholder">
-                <img src="images/pa_2.jpg" alt="Brief description"/>
-              </div>
-            </div>
-            <div class="pr-body">
-              <div class="pr-meta-row">
-                <span class="pr-number">PR-2026-002</span>
-                <span class="pr-category cat-personnel">Personnel</span>
-                <span class="pr-date">March 30, 2026</span>
-              </div>
-              <div class="pr-title">Captain Elias Makya Congratulates Detective of the Month: Detective III Julian Flux</div>
-              <div class="pr-divider"></div>
-              <div class="pr-text">
-                <p>Captain Elias Makya, Head of the Central Investigation Division, congratulated Los Santos County Sheriff Detective II Julian Flux on being named Detective of the Month.</p>
-                <p><em>“Detective Julian Flux has shown outstanding dedication, professionalism, and commitment to justice. This recognition is well deserved, and I extend my sincere congratulations on this achievement.”</em></p>
-                <p>The Central Investigation Bureau commends Detective Flux for his service and wishes him continued success in future investigations.</p>
-              </div>
-              <div class="pr-footer">
-
-                <span class="pr-issued">RELEASED: 05 MAR 2026 &middot; 09:00 HRS</span>
-              </div>
-            </div>
-          </article>
-          <!-- ======= SUB ENTRY END ======= -->
-
-          <!-- ======= SUB ENTRY START ======= -->
-          <article class="pr-card-sub">
-            <div class="pr-img-wrap">
-              <div class="pr-img-placeholder">
-                <img src="images/pa_3.jpg" alt="Brief description"/>
-              </div>
-            </div>
-            <div class="pr-body">
-              <div class="pr-meta-row">
-                <span class="pr-number">PR-2026-001</span>
-                <span class="pr-category cat-personnel">Personnel</span>
-                <span class="pr-date">March 30, 2026</span>
-              </div>
-              <div class="pr-title">Captain Meifanny Lorenta Congratulates Detective of the Month: LSPD Detective II Tarsha Kim</div>
-              <div class="pr-divider"></div>
-              <div class="pr-text">
-                <p>Captain Meifanny Lorenta, Head of the Gang Recon Division, congratulated Los Santos Police Department Detective II Tarsha Kim on being named Detective of the Month.</p>
-                <p><em>“Detective Tarsha Kim has demonstrated exceptional dedication, professionalism, and commitment to protecting the community. This recognition is well deserved, and I extend my sincere congratulations on this achievement.”</em></p>
-                <p>The Central Investigation Bureau commends Detective Kim for her service and wishes her continued success in future investigations.</p>
-              </div>
-              <div class="pr-footer">
-
-                <span class="pr-issued">RELEASED: 10 JAN 2026 &middot; 08:00 HRS</span>
-              </div>
-            </div>
-          </article>
-          <!-- ======= SUB ENTRY END ======= -->
-
+          <!-- Populated dynamically by JS from /api/press-releases -->
+          <div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">Loading...</div>
         </div>
       </div>
       <!-- END SUB HEADLINE SECTION -->
@@ -235,11 +148,100 @@
 <script type="module" src="shared/components/site-footer.js"></script>
 
 <script src="shared/scripts/site-ui.js"></script>
-
-
-
 <script src="scripts/press.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  PAGE_PRESS — Dynamic Press Release Loader
+//  Fetches from /api/press-releases
+//  Supports ?release=<slug> for direct share links
+// ═══════════════════════════════════════════════════════════
+
+const PA_API = '/api/press-releases'
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+function formatDate(d) {
+  if (!d) return ''
+  try { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) }
+  catch { return d }
+}
+function formatDateUpper(d) { return formatDate(d).toUpperCase() }
+function bodyToHtml(body) {
+  if (!body) return ''
+  return body.split(/\n\s*\n/).map(p=>`<p>${escHtml(p.trim()).replace(/\n/g,'<br/>')}</p>`).join('')
+}
+const CAT_CLASS = {
+  'Official Statement':'cat-official','Public Advisory':'cat-advisory',
+  'Operation Announcement':'cat-operation','Personnel Update':'cat-personnel',
+  'Community Advisory':'cat-advisory','Threat Advisory':'cat-advisory',
+  'Media Briefing':'cat-official','Press Conference':'cat-official',
+  'Arrest Notice':'cat-operation','Wanted Notice':'cat-advisory',
+}
+
+function shareBtn(url, small) {
+  const sz = small ? 'font-size:8px;padding:3px 10px' : 'font-size:9px;padding:4px 12px'
+  return `<button onclick="copyPressLink('${escHtml(url)}')" style="font-family:'Roboto Mono',monospace;${sz};letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--navy-border);color:var(--muted);cursor:pointer;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--muted)'">⧉ Share</button>`
+}
+
+function copyPressLink(url) {
+  navigator.clipboard.writeText(url).then(()=>{const o=document.title;document.title='Link Copied!';setTimeout(()=>document.title=o,1500)})
+}
+
+function buildMainCard(r) {
+  const shareUrl = `${location.origin}${location.pathname}?release=${encodeURIComponent(r.slug)}`
+  const img = r.photo_url
+    ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
+    : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
+  const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
+  const cc  = CAT_CLASS[r.news_type]||'cat-official'
+  return `<article class="pr-card-main" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyToHtml(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,false)}</div></div></article>`
+}
+
+function buildSubCard(r) {
+  const shareUrl = `${location.origin}${location.pathname}?release=${encodeURIComponent(r.slug)}`
+  const img = r.photo_url
+    ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
+    : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
+  const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
+  const cc  = CAT_CLASS[r.news_type]||'cat-official'
+  return `<article class="pr-card-sub" id="pr-${escHtml(r.id)}"><div class="pr-img-wrap">${img}${cap}</div><div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title">${escHtml(r.title)}</div><div class="pr-divider"></div><div class="pr-text">${bodyToHtml(r.body)}</div><div class="pr-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${shareBtn(shareUrl,true)}</div></div></article>`
+}
+
+function renderSingleRelease(r) {
+  const wrap = document.querySelector('.press-wrap')
+  if (!wrap) return
+  const cc  = CAT_CLASS[r.news_type]||'cat-official'
+  const img = r.photo_url ? `<div class="pr-img-wrap" style="min-height:0;"><img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" style="width:100%;max-height:420px;object-fit:cover;display:block;"/>${r.photo_caption?`<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>`:''}</div>` : ''
+  wrap.innerHTML = `<div style="max-width:860px;margin:0 auto;"><div style="margin-bottom:20px;"><a href="${location.pathname}" style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-decoration:none;text-transform:uppercase;opacity:0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">← All Press Releases</a></div><article class="pr-card-main">${img}<div class="pr-body"><div class="pr-meta-row"><span class="pr-number">${escHtml(r.pr_number||'')}</span><span class="pr-category ${cc}">${escHtml(r.news_type||'')}</span><span class="pr-date">${formatDate(r.release_date)}</span></div><div class="pr-title" style="font-size:26px;">${escHtml(r.title)}</div><div class="pr-divider"></div>${r.news_maker?`<div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;opacity:0.8;">Issued by: ${escHtml(r.news_maker)}</div>`:''}<div class="pr-text" style="font-size:14px;">${bodyToHtml(r.body)}</div><div class="pr-footer" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--navy-border);display:flex;align-items:center;gap:16px;flex-wrap:wrap;"><span class="pr-issued">RELEASED: ${formatDateUpper(r.release_date)}${r.release_time?' · '+escHtml(r.release_time):''}</span>${r.division_tag?`<span style="font-family:'Roboto Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:2px;opacity:0.7;">${escHtml(r.division_tag)}</span>`:''}</div></div></article></div>`
+}
+
+function renderAllReleases(releases) {
+  const mainList = document.querySelector('.main-pr-list')
+  const subGrid  = document.querySelector('.sub-pr-grid')
+  const mains = releases.filter(r=>r.headline_type==='main')
+  const subs  = releases.filter(r=>r.headline_type!=='main')
+  if (mainList) mainList.innerHTML = mains.length ? mains.map(buildMainCard).join('') : '<div style="font-family:\'Roboto Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">No main headlines published yet.</div>'
+  if (subGrid)  subGrid.innerHTML  = subs.length  ? subs.map(buildSubCard).join('')   : '<div style="font-family:\'Roboto Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">No sub headlines published yet.</div>'
+}
+
+async function initPressPage() {
+  const slug = new URLSearchParams(location.search).get('release')
+  try {
+    if (slug) {
+      const res  = await fetch(`${PA_API}?slug=${encodeURIComponent(slug)}`)
+      const json = await res.json()
+      if (json.success && json.data) { document.title = json.data.title+' — CIB Press Room'; renderSingleRelease(json.data) }
+      else { document.querySelector('.press-wrap').innerHTML = '<div style="padding:60px 40px;text-align:center;font-family:\'Roboto Mono\',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);opacity:0.5;text-transform:uppercase;">Release not found.</div>' }
+    } else {
+      const res  = await fetch(PA_API)
+      const json = await res.json()
+      if (json.success) renderAllReleases(json.data||[])
+    }
+  } catch(e) { console.error('Press page load error:', e) }
+}
+
+document.addEventListener('DOMContentLoaded', initPressPage)
+</script>
 </body>
 </html>
-
-
