@@ -415,8 +415,90 @@ body { display:flex; flex-direction:column; background:#060A14; }
   color:var(--muted); opacity:0.5;
 }
 
+/* ── Rich Text Editor ──────────────────────────────────────── */
+.pa-rte-wrap {
+  border: 1px solid var(--navy-border);
+  background: #0D1526;
+  transition: border-color 0.15s;
+}
+.pa-rte-wrap:focus-within { border-color: rgba(79,195,247,0.5); }
+
+.pa-rte-toolbar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 2px;
+  padding: 6px 8px;
+  background: #090E1C;
+  border-bottom: 1px solid var(--navy-border);
+}
+.pa-rte-group { display: flex; align-items: center; gap: 2px; }
+.pa-rte-sep {
+  width: 1px; height: 18px;
+  background: var(--navy-border);
+  margin: 0 4px;
+}
+.pa-rte-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 26px;
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer; transition: all 0.12s;
+  color: var(--muted); border-radius: 2px;
+}
+.pa-rte-btn svg { width: 13px; height: 13px; fill: currentColor; }
+.pa-rte-btn-text {
+  font-family: 'Roboto Mono', monospace; font-size: 10px;
+  letter-spacing: 0.5px; width: auto; padding: 0 7px;
+}
+.pa-rte-btn:hover {
+  background: rgba(79,195,247,0.1);
+  border-color: rgba(79,195,247,0.3);
+  color: #4fc3f7;
+}
+.pa-rte-btn.active {
+  background: rgba(79,195,247,0.15);
+  border-color: rgba(79,195,247,0.4);
+  color: #4fc3f7;
+}
+.pa-rte-btn-danger:hover {
+  background: rgba(192,57,43,0.1);
+  border-color: rgba(192,57,43,0.3);
+  color: var(--red-alert);
+}
+
+.pa-rte-editor {
+  min-height: 200px; max-height: 480px;
+  overflow-y: auto;
+  padding: 14px 16px;
+  color: var(--white);
+  font-family: 'Roboto', sans-serif; font-size: 13px; line-height: 1.9;
+  outline: none;
+  word-break: break-word;
+}
+.pa-rte-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted); opacity: 0.4;
+  pointer-events: none;
+}
+/* Rendered styles inside the editor */
+.pa-rte-editor p { margin: 0 0 0.8em; }
+.pa-rte-editor b, .pa-rte-editor strong { color: var(--white); }
+.pa-rte-editor i, .pa-rte-editor em { color: rgba(240,237,228,0.8); }
+.pa-rte-editor u { text-decoration-color: rgba(201,168,76,0.6); }
+.pa-rte-editor blockquote {
+  margin: 12px 0;
+  padding: 10px 16px;
+  border-left: 3px solid var(--gold);
+  background: rgba(201,168,76,0.06);
+  color: rgba(240,237,228,0.7);
+  font-style: italic;
+}
+.pa-rte-editor ul { padding-left: 22px; margin: 8px 0; }
+.pa-rte-editor ol { padding-left: 22px; margin: 8px 0; }
+.pa-rte-editor li { margin-bottom: 4px; color: var(--muted); }
+.pa-rte-editor hr {
+  border: none; border-top: 1px solid var(--navy-border);
+  margin: 16px 0;
+}
+
 </style>
-</head>
 <body>
 
 <!-- ACCESS GATE -->
@@ -589,15 +671,53 @@ body { display:flex; flex-direction:column; background:#060A14; }
       </div>
       <div class="pa-field-row cols-1">
         <div class="pa-field">
-          <label class="pa-label" for="fieldBody">News Body <span class="req">*</span>
-            <span style="opacity:0.5;font-size:8px;margin-left:6px;">(Separate paragraphs with a blank line)</span>
-          </label>
-          <textarea class="pa-textarea" id="fieldBody" rows="8"
-            placeholder="Write the press release body here.
-
-Start each new paragraph with a blank line between them.
-
-The Central Investigation Bureau..."></textarea>
+          <label class="pa-label">News Body <span class="req">*</span></label>
+          <!-- Rich text editor -->
+          <div class="pa-rte-wrap">
+            <!-- Toolbar -->
+            <div class="pa-rte-toolbar" id="paRteToolbar">
+              <!-- Text alignment -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn" title="Align Left"      onclick="rteCmd('justifyLeft')"   data-cmd="justifyLeft">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 4h12v2H3zm0 4h18v2H3zm0 4h12v2H3zm0 4h18v2H3z"/></svg>
+                </button>
+                <button class="pa-rte-btn" title="Align Center"    onclick="rteCmd('justifyCenter')" data-cmd="justifyCenter">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm3 4h12v2H6zm-3 4h18v2H3zm3 4h12v2H6zm-3 4h18v2H3z"/></svg>
+                </button>
+                <button class="pa-rte-btn" title="Align Right"     onclick="rteCmd('justifyRight')"  data-cmd="justifyRight">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm6 4h12v2H9zm-6 4h18v2H3zm6 4h12v2H9zm-6 4h18v2H3z"/></svg>
+                </button>
+                <button class="pa-rte-btn" title="Justify"         onclick="rteCmd('justifyFull')"   data-cmd="justifyFull">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3z"/></svg>
+                </button>
+              </div>
+              <div class="pa-rte-sep"></div>
+              <!-- Inline formatting -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn pa-rte-btn-text" title="Bold"      onclick="rteCmd('bold')"      data-cmd="bold"><b>B</b></button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Italic"    onclick="rteCmd('italic')"    data-cmd="italic"><i>I</i></button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Underline" onclick="rteCmd('underline')" data-cmd="underline"><u>U</u></button>
+              </div>
+              <div class="pa-rte-sep"></div>
+              <!-- Block elements -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn pa-rte-btn-text" title="Blockquote"      onclick="rteToggleBlockquote()" data-cmd="blockquote" style="font-size:14px;">"</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Bullet List"     onclick="rteCmd('insertUnorderedList')" data-cmd="insertUnorderedList">• ≡</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Numbered List"   onclick="rteCmd('insertOrderedList')"   data-cmd="insertOrderedList">1. ≡</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Horizontal Rule" onclick="rteInsertHr()" style="letter-spacing:1px;">—</button>
+              </div>
+              <div class="pa-rte-sep"></div>
+              <!-- Clear -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn pa-rte-btn-text pa-rte-btn-danger" title="Clear Formatting" onclick="rteCmd('removeFormat')">✕ fmt</button>
+              </div>
+            </div>
+            <!-- Editable area -->
+            <div class="pa-rte-editor" id="paRteEditor" contenteditable="true"
+                 data-placeholder="Write the press release body here..."></div>
+            <!-- Hidden input synced to editor HTML — this is what gets saved -->
+            <input type="hidden" id="fieldBody"/>
+          </div>
         </div>
       </div>
 
@@ -850,7 +970,7 @@ function populateForm(r) {
   document.getElementById('fieldEventDate').value     = r.event_date   || ''
   document.getElementById('fieldReleaseDate').value   = r.release_date || ''
   document.getElementById('fieldTitle').value         = r.title        || ''
-  document.getElementById('fieldBody').value          = r.body         || ''
+  rteSetContent(r.body || '')
   document.getElementById('fieldPhotoCaption').value  = r.photo_caption|| ''
   document.getElementById('fieldPhotoUrl').value      = r.photo_url    || ''
 
@@ -867,9 +987,10 @@ function clearFormFields() {
   selectHeadlineType('main')
   const ids = ['fieldPRNumber','fieldNewsType','fieldDivision','fieldNewsMaker',
                'fieldReleaseTime','fieldEventDate','fieldReleaseDate','fieldTitle',
-               'fieldBody','fieldPhotoCaption','fieldPhotoUrl']
+               'fieldPhotoCaption','fieldPhotoUrl']
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = '' })
   document.getElementById('fieldNewsType').value = 'Official Statement'
+  rteClear()
   clearPhotoPreview()
   _photoBase64 = null
 }
@@ -1034,6 +1155,107 @@ function formatDisplayDate(d) {
   try {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   } catch { return d }
+}
+
+// ── Rich Text Editor ─────────────────────────────────────────
+const _rteEditor  = () => document.getElementById('paRteEditor')
+const _rteHidden  = () => document.getElementById('fieldBody')
+
+// Execute a standard execCommand and sync state
+function rteCmd(cmd) {
+  _rteEditor().focus()
+  document.execCommand(cmd, false, null)
+  _rteSync()
+  _rteUpdateToolbar()
+}
+
+// Toggle blockquote: wrap/unwrap selection
+function rteToggleBlockquote() {
+  const editor = _rteEditor()
+  editor.focus()
+  const sel  = window.getSelection()
+  if (!sel.rangeCount) return
+  const range    = sel.getRangeAt(0)
+  const ancestor = range.commonAncestorContainer
+  const bq       = (ancestor.nodeType === 1 ? ancestor : ancestor.parentElement).closest('blockquote')
+  if (bq) {
+    // Unwrap: replace bq with its children
+    const frag = document.createDocumentFragment()
+    while (bq.firstChild) frag.appendChild(bq.firstChild)
+    bq.replaceWith(frag)
+  } else {
+    document.execCommand('formatBlock', false, 'blockquote')
+  }
+  _rteSync()
+  _rteUpdateToolbar()
+}
+
+// Insert a horizontal rule at cursor
+function rteInsertHr() {
+  _rteEditor().focus()
+  document.execCommand('insertHTML', false, '<hr/><p><br/></p>')
+  _rteSync()
+}
+
+// Sync editor HTML → hidden input
+function _rteSync() {
+  const html = _rteEditor().innerHTML
+  _rteHidden().value = (html === '<br>' || html === '') ? '' : html
+}
+
+// Highlight active toolbar buttons based on cursor state
+function _rteUpdateToolbar() {
+  const cmds = ['bold','italic','underline','justifyLeft','justifyCenter','justifyRight','justifyFull','insertUnorderedList','insertOrderedList']
+  cmds.forEach(cmd => {
+    const btn = document.querySelector(`.pa-rte-btn[data-cmd="${cmd}"]`)
+    if (!btn) return
+    try { btn.classList.toggle('active', document.queryCommandState(cmd)) } catch(e){}
+  })
+  // Blockquote active state
+  const bqBtn = document.querySelector('.pa-rte-btn[data-cmd="blockquote"]')
+  if (bqBtn) {
+    const sel = window.getSelection()
+    if (sel && sel.rangeCount) {
+      const anc = sel.getRangeAt(0).commonAncestorContainer
+      const el  = anc.nodeType === 1 ? anc : anc.parentElement
+      bqBtn.classList.toggle('active', !!el.closest('blockquote'))
+    }
+  }
+}
+
+// Wire up editor events after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  const editor = _rteEditor()
+  if (!editor) return
+  editor.addEventListener('input',     _rteSync)
+  editor.addEventListener('keyup',     _rteUpdateToolbar)
+  editor.addEventListener('mouseup',   _rteUpdateToolbar)
+  editor.addEventListener('selectionchange', _rteUpdateToolbar)
+  // Ensure paste strips foreign styling
+  editor.addEventListener('paste', e => {
+    e.preventDefault()
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain')
+    document.execCommand('insertText', false, text)
+  })
+})
+
+// Set RTE content (used when loading an existing release)
+function rteSetContent(html) {
+  const editor = _rteEditor()
+  if (!editor) return
+  // Legacy plain-text bodies: convert blank-line paragraphs to <p> tags
+  if (html && !/<[a-z]/i.test(html)) {
+    html = html.split(/\n\s*\n/).map(p => `<p>${escHtml(p.trim()).replace(/\n/g,'<br/>')}</p>`).join('')
+  }
+  editor.innerHTML = html || ''
+  _rteSync()
+}
+
+// Clear RTE content
+function rteClear() {
+  const editor = _rteEditor()
+  if (editor) editor.innerHTML = ''
+  _rteSync()
 }
 
 </script>

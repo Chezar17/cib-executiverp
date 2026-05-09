@@ -35,6 +35,22 @@
   .pr-text{font-size:13px;color:var(--muted);line-height:1.9;}
   .pr-text p{margin-bottom:10px;}
   .pr-text p:last-child{margin-bottom:0;}
+  /* Rich-text formatting rendered from editor */
+  .pr-text b, .pr-text strong { color: var(--white); font-weight:600; }
+  .pr-text i, .pr-text em     { color: rgba(240,237,228,0.8); }
+  .pr-text u                  { text-decoration-color: rgba(201,168,76,0.5); }
+  .pr-text blockquote {
+    margin: 14px 0;
+    padding: 10px 18px;
+    border-left: 3px solid var(--gold);
+    background: rgba(201,168,76,0.05);
+    color: rgba(240,237,228,0.7);
+    font-style: italic;
+  }
+  .pr-text ul { padding-left: 22px; margin: 8px 0 12px; }
+  .pr-text ol { padding-left: 22px; margin: 8px 0 12px; }
+  .pr-text li { margin-bottom: 5px; }
+  .pr-text hr { border:none; border-top:1px solid var(--navy-border); margin:16px 0; }
   .pr-.pr-division-tag{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;opacity:0.7;}
   .pr-issued{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--muted);opacity:0.5;}
 

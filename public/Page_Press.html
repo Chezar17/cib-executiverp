@@ -121,11 +121,11 @@
     <aside class="sidebar">
 
       <div class="sidebar-card">
-        <div class="sidebar-title">Media Contact</div>
-        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;">For press inquiries, interview requests, or media credential applications, contact the CIB Public Affairs Office.</p>
-        <div class="contact-row">Office: <span>CIB PAO Associate</span></div>
+        <div class="sidebar-title">Office Contact</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;">For press inquiries, interview requests, or media credential applications, contact the CIB Office.</p>
+        <div class="contact-row">Office: <span>CIB HQ</span></div>
         <div class="contact-row">Hours: <span>Mon - Fri &middot; 19:00 - 22:00</span></div>
-        <div class="contact-row">Location: <span>Sandy Shore Sherriff Office</span></div>
+        <div class="contact-row">Location: <span>North of Cypress Building</span></div>
         <div class="contact-row">Jurisdiction: <span>State of San Andreas</span></div>
       </div>
 
@@ -170,15 +170,21 @@ function formatDate(d) {
 }
 function formatDateUpper(d) { return formatDate(d).toUpperCase() }
 
-// Full body: used in single-release detail view
+// Full body: render stored HTML directly (rich text from editor).
+// Falls back to plain-text paragraph splitting for legacy entries.
 function bodyToHtml(body) {
   if (!body) return ''
+  // If body contains HTML tags, trust it as rich HTML
+  if (/<[a-z][\s\S]*>/i.test(body)) return body
+  // Legacy plain-text: split on blank lines into <p> tags
   return body.split(/\n\s*\n/).map(p=>`<p>${escHtml(p.trim()).replace(/\n/g,'<br/>')}</p>`).join('')
 }
-// Preview body: plain single paragraph, clamped to 3 lines via CSS
+// Preview body: strip all tags to get plain text, clamp via CSS
 function bodyPreview(body) {
   if (!body) return ''
-  const plain = body.replace(/\n/g,' ').trim()
+  const tmp = document.createElement('div')
+  tmp.innerHTML = bodyToHtml(body)
+  const plain = (tmp.textContent || tmp.innerText || '').replace(/\s+/g,' ').trim()
   return `<p class="pr-text-preview">${escHtml(plain)}</p>`
 }
 
