@@ -353,8 +353,10 @@ function buildExportCard(r, qrDataUrl) {
   const cc  = CAT_CLASS[r.news_type] || 'cat-official'
   const accentColor = cc === 'cat-advisory' ? '#C0392B' : cc === 'cat-operation' ? '#27AE60' : cc === 'cat-personnel' ? '#3498DB' : '#C9A84C'
 
-  // Truncate body for the card — max ~600 chars
-  const bodyRaw   = (r.body || '').replace(/\n+/g, ' ').trim()
+  // Strip HTML tags to get clean plain text for the export card
+  const _bodyTmp  = document.createElement('div')
+  _bodyTmp.innerHTML = bodyToHtml(r.body || '')
+  const bodyRaw   = (_bodyTmp.textContent || _bodyTmp.innerText || '').replace(/\s+/g, ' ').trim()
   const bodyShort = bodyRaw.length > 600 ? bodyRaw.slice(0, 597) + '...' : bodyRaw
 
   // Scan-line pattern as a 1×2px data URI (pure CSS, no external img)
