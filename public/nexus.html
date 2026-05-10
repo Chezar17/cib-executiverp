@@ -831,23 +831,56 @@
 /* ── Onboarding backdrop ── */
 #ob-backdrop {
   position:fixed;inset:0;z-index:8000;
-  background:rgba(0,0,0,0.82);
+  background:rgba(0,0,0,0);
   display:none;
   pointer-events:none;
+  transition:background 0.4s ease;
 }
-#ob-backdrop.ob-active { display:block; pointer-events:auto; }
+#ob-backdrop.ob-active { display:block; pointer-events:auto; background:rgba(0,0,0,0.92); }
 
 /* ── Spotlight cutout via box-shadow trick ── */
 #ob-spotlight {
   position:fixed;
-  border-radius:3px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.78);
-  border:2px solid rgba(201,168,76,0.6);
-  transition:all 0.45s cubic-bezier(0.4,0,0.2,1);
+  border-radius:4px;
+  /* Very dark outer shadow = dimmed backdrop. Bright inner = lit element */
+  box-shadow:
+    0 0 0 9999px rgba(0,0,0,0.88),       /* dim everything else */
+    inset 0 0 0 2px rgba(201,168,76,0.95), /* bright gold inner border */
+    0 0 0 4px rgba(201,168,76,0.5),        /* gold glow ring 1 */
+    0 0 0 8px rgba(201,168,76,0.2),        /* gold glow ring 2 */
+    0 0 30px 6px rgba(201,168,76,0.35);    /* outer gold halo */
+  border:2px solid rgba(201,168,76,1);    /* solid gold border */
+  transition:
+    top    0.42s cubic-bezier(0.22,1,0.36,1),
+    left   0.42s cubic-bezier(0.22,1,0.36,1),
+    width  0.42s cubic-bezier(0.22,1,0.36,1),
+    height 0.42s cubic-bezier(0.22,1,0.36,1),
+    opacity 0.25s ease;
   z-index:8001;
   pointer-events:none;
+  animation:ob-spotlight-pulse 2.5s ease-in-out infinite;
 }
-#ob-spotlight.ob-hidden { opacity:0; width:0;height:0; }
+@keyframes ob-spotlight-pulse {
+  0%,100% {
+    box-shadow:
+      0 0 0 9999px rgba(0,0,0,0.88),
+      inset 0 0 0 2px rgba(201,168,76,0.95),
+      0 0 0 4px rgba(201,168,76,0.5),
+      0 0 0 8px rgba(201,168,76,0.2),
+      0 0 30px 6px rgba(201,168,76,0.35);
+    border-color:rgba(201,168,76,1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 9999px rgba(0,0,0,0.88),
+      inset 0 0 0 2px rgba(255,210,80,1),
+      0 0 0 6px rgba(201,168,76,0.65),
+      0 0 0 12px rgba(201,168,76,0.25),
+      0 0 45px 10px rgba(201,168,76,0.5);
+    border-color:rgba(255,210,80,1);
+  }
+}
+#ob-spotlight.ob-hidden { opacity:0; width:0;height:0; pointer-events:none; }
 
 /* ── Dialog card ── */
 #ob-card {
@@ -990,14 +1023,28 @@
 #ob-confirm {
   position:fixed;inset:0;z-index:8020;
   display:none;align-items:center;justify-content:center;
-  background:rgba(0,0,0,0.88);
+  background:rgba(0,0,0,0);
+  transition:background 0.35s ease;
 }
-#ob-confirm.ob-active { display:flex; }
+#ob-confirm.ob-active {
+  display:flex;
+  animation:ob-confirm-in 0.35s ease forwards;
+}
+@keyframes ob-confirm-in {
+  0%   { background:rgba(0,0,0,0); }
+  100% { background:rgba(0,0,0,0.92); }
+}
 .ob-confirm-box {
-  width:460px;background:#080E1C;
-  border:1px solid rgba(201,168,76,0.2);
+  width:480px;background:#080E1C;
+  border:1px solid rgba(201,168,76,0.25);
   border-top:3px solid var(--gold,#C9A84C);
   overflow:hidden;
+  animation:ob-box-in 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  box-shadow:0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(201,168,76,0.08);
+}
+@keyframes ob-box-in {
+  0%   { opacity:0; transform:translateY(28px) scale(0.96); }
+  100% { opacity:1; transform:translateY(0)    scale(1); }
 }
 .ob-confirm-header {
   display:flex;align-items:stretch;
@@ -1401,23 +1448,51 @@
     nextBtn().disabled = true
 
     updateProgress()
-    positionSpotlight(step.target)
 
     // Show card first (so we can measure its height), then position
     card().style.display = 'block'
+
+    // Initial position (instant, before scroll)
+    positionSpotlight(step.target)
+    setTimeout(() => { positionCard(step.target, step.pos) }, 20)
+
+    // Re-position after scroll animation settles (~500ms)
+    // This ensures spotlight is on the now-visible element
     setTimeout(() => {
+      positionSpotlight(step.target)
       positionCard(step.target, step.pos)
-    }, 20)
+    }, 520)
 
     // Type text, then play audio
     typeText(step.text, () => {
       playStepAudio(step.audio)
     })
 
-    // Scroll target into view gently
+    // Auto-scroll so the highlighted element is clearly visible
     if (step.target) {
       const el = document.querySelector(step.target)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      if (el) {
+        // 1. If element is inside the scrollable .nx-main, scroll that container
+        const nxMain = document.querySelector('.nx-main')
+        if (nxMain && nxMain.contains(el)) {
+          const elRect   = el.getBoundingClientRect()
+          const mainRect = nxMain.getBoundingClientRect()
+          const elCenterInMain = (elRect.top - mainRect.top) + nxMain.scrollTop + (elRect.height / 2)
+          const targetScroll   = elCenterInMain - (nxMain.clientHeight / 2)
+          nxMain.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' })
+        }
+        // 2. If element is inside the .nx-sidebar, scroll the sidebar
+        const sidebar = document.querySelector('.nx-sidebar')
+        if (sidebar && sidebar.contains(el)) {
+          const elRect  = el.getBoundingClientRect()
+          const sbRect  = sidebar.getBoundingClientRect()
+          const elCenterInSb = (elRect.top - sbRect.top) + sidebar.scrollTop + (elRect.height / 2)
+          const targetScroll = elCenterInSb - (sidebar.clientHeight / 2)
+          sidebar.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' })
+        }
+        // 3. Fallback — native smooth scroll for fixed/other elements
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
     }
   }
 
@@ -1464,7 +1539,7 @@
       // Show the confirm prompt after a short delay (let dashboard render)
       setTimeout(() => {
         confirm().classList.add('ob-active')
-      }, 1200)
+      }, 400)
     },
 
     startGuide: function () {
