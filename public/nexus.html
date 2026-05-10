@@ -1515,23 +1515,6 @@
     },
   }
 
-  // ── Hook into PortalAuth ────────────────────────────────────
-  // We monkey-patch the onReady to also call ObSystem.init
-  // AFTER nexus.js has already set up PortalAuth.
-  // This runs after the <script src="nexus.js"> finishes.
-  document.addEventListener('DOMContentLoaded', () => {
-    const origInit = PortalAuth.init.bind(PortalAuth)
-    PortalAuth.init = function (opts) {
-      const origOnReady = opts.onReady
-      opts.onReady = function (badge, session) {
-        if (origOnReady) origOnReady(badge, session)
-        // Delay slightly so all DOM is ready
-        setTimeout(() => ObSystem.init(session), 600)
-      }
-      origInit(opts)
-    }
-  })
-
   // Handle window resize — reposition if active
   window.addEventListener('resize', () => {
     if (!_active || _stepIdx >= _steps.length) return

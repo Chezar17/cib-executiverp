@@ -48,6 +48,10 @@
         var d = session.division || 'CIB'
         side.textContent = u + ' \u00b7 ' + d + ' \u00b7 SECURE'
       }
+      // Trigger onboarding after dashboard has rendered
+      setTimeout(function () {
+        if (window.ObSystem) ObSystem.init(session)
+      }, 800)
     }
   });
 
