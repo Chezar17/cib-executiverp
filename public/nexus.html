@@ -828,28 +828,29 @@
      Bahasa Indonesia · Audio per step · Highlight overlay
      ═══════════════════════════════════════════════════════════ -->
 <style>
-/* ── Onboarding backdrop ── */
+/* ── Onboarding backdrop ──
+   No longer applies its own dark bg — spotlight box-shadow does all dimming.
+   Still used as a full-screen pointer-events catcher. */
 #ob-backdrop {
   position:fixed;inset:0;z-index:8000;
-  background:rgba(0,0,0,0);
+  background:transparent;
   display:none;
   pointer-events:none;
-  transition:background 0.4s ease;
 }
-#ob-backdrop.ob-active { display:block; pointer-events:auto; background:rgba(0,0,0,0.92); }
+#ob-backdrop.ob-active { display:block; pointer-events:auto; }
 
-/* ── Spotlight cutout via box-shadow trick ── */
+/* ── Spotlight cutout via box-shadow trick ──
+   ONE dark layer only. The element inside the spotlight is visible
+   because it gets z-index:8002 via .ob-target-highlight (added in JS). */
 #ob-spotlight {
   position:fixed;
   border-radius:4px;
-  /* Very dark outer shadow = dimmed backdrop. Bright inner = lit element */
   box-shadow:
-    0 0 0 9999px rgba(0,0,0,0.88),       /* dim everything else */
-    inset 0 0 0 2px rgba(201,168,76,0.95), /* bright gold inner border */
-    0 0 0 4px rgba(201,168,76,0.5),        /* gold glow ring 1 */
-    0 0 0 8px rgba(201,168,76,0.2),        /* gold glow ring 2 */
-    0 0 30px 6px rgba(201,168,76,0.35);    /* outer gold halo */
-  border:2px solid rgba(201,168,76,1);    /* solid gold border */
+    0 0 0 9999px rgba(0,0,0,0.82),          /* single dim layer — whole screen except cutout */
+    0 0 0 3px rgba(201,168,76,0.9),          /* gold ring just outside the element */
+    0 0 20px 4px rgba(201,168,76,0.4),       /* gold glow ring */
+    0 0 40px 8px rgba(201,168,76,0.15);      /* outer soft halo */
+  border:2px solid rgba(201,168,76,0.95);
   transition:
     top    0.42s cubic-bezier(0.22,1,0.36,1),
     left   0.42s cubic-bezier(0.22,1,0.36,1),
@@ -863,24 +864,33 @@
 @keyframes ob-spotlight-pulse {
   0%,100% {
     box-shadow:
-      0 0 0 9999px rgba(0,0,0,0.88),
-      inset 0 0 0 2px rgba(201,168,76,0.95),
-      0 0 0 4px rgba(201,168,76,0.5),
-      0 0 0 8px rgba(201,168,76,0.2),
-      0 0 30px 6px rgba(201,168,76,0.35);
-    border-color:rgba(201,168,76,1);
+      0 0 0 9999px rgba(0,0,0,0.82),
+      0 0 0 3px rgba(201,168,76,0.9),
+      0 0 20px 4px rgba(201,168,76,0.4),
+      0 0 40px 8px rgba(201,168,76,0.15);
+    border-color:rgba(201,168,76,0.95);
   }
   50% {
     box-shadow:
-      0 0 0 9999px rgba(0,0,0,0.88),
-      inset 0 0 0 2px rgba(255,210,80,1),
-      0 0 0 6px rgba(201,168,76,0.65),
-      0 0 0 12px rgba(201,168,76,0.25),
-      0 0 45px 10px rgba(201,168,76,0.5);
+      0 0 0 9999px rgba(0,0,0,0.82),
+      0 0 0 4px rgba(255,210,80,1),
+      0 0 28px 6px rgba(201,168,76,0.55),
+      0 0 55px 12px rgba(201,168,76,0.22);
     border-color:rgba(255,210,80,1);
   }
 }
 #ob-spotlight.ob-hidden { opacity:0; width:0;height:0; pointer-events:none; }
+
+/* ── Lifted target element ──
+   Applied in JS to whichever element is being spotlighted.
+   Must sit ABOVE the spotlight (z-index:8002) so it's visible through the cutout. */
+.ob-target-highlight {
+  position:relative;
+  z-index:8002 !important;
+  /* Subtle brightness boost so it pops against the dim surround */
+  filter:brightness(1.12) saturate(1.1);
+  transition:filter 0.3s ease;
+}
 
 /* ── Dialog card ── */
 #ob-card {
@@ -1316,8 +1326,17 @@
   }
 
   // ── Spotlight positioning ──────────────────────────────────
+  let _lastHighlightedEl = null   // track so we can remove the class when moving on
+
   function positionSpotlight(selector) {
     const sp = spotlight()
+
+    // Remove highlight from the previously spotlighted element
+    if (_lastHighlightedEl) {
+      _lastHighlightedEl.classList.remove('ob-target-highlight')
+      _lastHighlightedEl = null
+    }
+
     if (!selector) {
       sp.className = 'ob-hidden'
       return
@@ -1332,6 +1351,10 @@
     sp.style.width  = (r.width  + pad * 2) + 'px'
     sp.style.height = (r.height + pad * 2) + 'px'
     sp.className = ''
+
+    // Lift the target element above the box-shadow dim so it's clearly visible
+    el.classList.add('ob-target-highlight')
+    _lastHighlightedEl = el
   }
 
   // ── Card positioning ───────────────────────────────────────
@@ -1571,6 +1594,12 @@
       _active = false
       stopAudio()
       clearTimeout(_typeTimer)
+
+      // Remove highlight from last spotlighted element
+      if (_lastHighlightedEl) {
+        _lastHighlightedEl.classList.remove('ob-target-highlight')
+        _lastHighlightedEl = null
+      }
 
       // Fade out
       card().style.transition   = 'opacity 0.3s'
