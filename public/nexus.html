@@ -1151,7 +1151,7 @@
         <div class="ob-audio-bar"></div>
       </div>
     </div>
-    <div class="ob-step-badge" id="obStepBadge">1 / 7</div>
+    <div class="ob-step-badge" id="obStepBadge">1 / 15</div>
   </div>
   <div class="ob-card-body">
     <div class="ob-step-label" id="obStepLabel">Selamat Datang</div>
@@ -1173,16 +1173,21 @@
   4. Audio plays automatically when the step text finishes typing
 
   Step audio files:
-    ob_step_01_welcome.mp3       → Sambutan selamat datang
-    ob_step_02_dashboard.mp3     → Pengenalan dashboard
-    ob_step_03_clearance.mp3     → Clearance level
-    ob_step_04_timeout.mp3       → Session timeout
-    ob_step_05_logout.mp3        → Cara logout
-    ob_step_06_documents.mp3     → Seksi Documents
-    ob_step_07_guidebook.mp3     → CIB Guidebook
-    ob_step_08_penal.mp3         → Penal Codes
-    ob_step_09_directory.mp3     → Main Directory
-    ob_step_10_done.mp3          → Penutup
+    ob_step_01_welcome.mp3          → Sambutan selamat datang
+    ob_step_02_dashboard.mp3        → Pengenalan dashboard
+    ob_step_03_clearance.mp3        → Clearance level
+    ob_step_04_timeout.mp3          → Session timeout
+    ob_step_05_logout.mp3           → Cara logout
+    ob_step_06_documents.mp3        → Seksi Documents
+    ob_step_07_guidebook.mp3        → CIB Guidebook
+    ob_step_08_penal.mp3            → Penal Codes
+    ob_step_09_directory.mp3        → Main Directory
+    ob_step_10_intelligence.mp3     → Seksi Intelligence (intro)
+    ob_step_11_weapons.mp3          → Weapons Tracker
+    ob_step_12_gang.mp3             → Gang Intelligence
+    ob_step_13_informant.mp3        → Informant Registry
+    ob_step_14_hvc.mp3              → High Value Criminal Registry
+    ob_step_15_done.mp3             → Penutup
 -->
 <audio id="ob-audio" preload="none"></audio>
 
@@ -1278,12 +1283,52 @@
         audio:  'ob_step_09_directory.mp3',
         text:   `Main Directory adalah direktori induk seluruh berkas CIB — termasuk arsip kasus, laporan operasi, catatan intelijen, log pengawasan, dan dokumentasi bukti.\n\nAkses dokumen ini memerlukan clearance Top Secret.`,
       },
-      // ── Step 10 · Done ───────────────────────────────────────
+      // ── Step 10 · Intelligence section ───────────────────────
+      {
+        label:  'Seksi Intelligence',
+        target: '.dash-cat:nth-child(2)',
+        pos:    'right',
+        audio:  'ob_step_10_intelligence.mp3',
+        text:   `Sekarang kita masuk ke Seksi Intelligence — bagian paling sensitif di NEXUS.\n\nSeksi ini berisi empat modul intelijen operasional yang digunakan oleh divisi GRD dan CID. Semua modul di sini bersifat Top Secret dan hanya dapat diakses oleh personel dengan clearance yang sesuai.`,
+      },
+      // ── Step 11 · Weapons Tracker ────────────────────────────
+      {
+        label:  'Weapons Tracker',
+        target: '#panel-dashboard [onclick*="weapons"]',
+        pos:    'right',
+        audio:  'ob_step_11_weapons.mp3',
+        text:   `Weapons Tracker adalah sistem pelacakan langsung jaringan senjata ilegal yang beroperasi di San Andreas.\n\nDikelola oleh Gang Recon Division, papan ini mencakup rute pasokan aktif, catatan penyitaan, distributor yang diketahui, log koordinasi antar-instansi, dan upaya interdiksi yang sedang berjalan.\n\nHanya untuk personel GRD berklearance tinggi.`,
+      },
+      // ── Step 12 · Gang Intelligence ──────────────────────────
+      {
+        label:  'Gang Intelligence',
+        target: '#panel-dashboard [onclick*="gang"]',
+        pos:    'right',
+        audio:  'ob_step_12_gang.mp3',
+        text:   `Gang Intelligence adalah basis data intelijen geng komprehensif yang dikelola oleh Gang Recon Division.\n\nMencakup profil geng aktif, pemetaan wilayah territorial, penilaian ancaman, jaringan komunikasi internal geng, dan riwayat operasi penindakan yang telah dilakukan oleh CIB.`,
+      },
+      // ── Step 13 · Informant Registry ─────────────────────────
+      {
+        label:  'Informant Registry',
+        target: '#panel-dashboard [onclick*="informant"]',
+        pos:    'left',
+        audio:  'ob_step_13_informant.mp3',
+        text:   `Informant Registry adalah basis data aman yang menyimpan seluruh informan aktif, tidak aktif, maupun yang sudah terbakar — yang saat ini terdaftar di Central Investigation Bureau.\n\nIdentitas setiap informan adalah informasi paling sensitif di seluruh portal. Akses tanpa otorisasi merupakan pelanggaran berat dan dapat berujung pada pemecatan serta tuntutan pidana.`,
+      },
+      // ── Step 14 · HVC ────────────────────────────────────────
+      {
+        label:  'High Value Criminal',
+        target: '.nx-nav-item.nav-hvc',
+        pos:    'right',
+        audio:  'ob_step_14_hvc.mp3',
+        text:   `HIGH VALUE CRIMINAL REGISTRY — direktori rahasia seluruh target kriminal bernilai tinggi yang sedang dilacak oleh CIB.\n\nSetiap entri mencakup profil lengkap, riwayat kejahatan, koneksi jaringan, dan status operasi yang sedang berjalan. Data ini hanya dapat diakses oleh personel dengan otorisasi khusus dari CIB Command.`,
+      },
+      // ── Step 15 · Done ───────────────────────────────────────
       {
         label:  'Panduan Selesai',
         target: null,
         pos:    'centre',
-        audio:  'ob_step_10_done.mp3',
+        audio:  'ob_step_15_done.mp3',
         text:   `Itu dia gambaran umum NEXUS, ${rank} ${name}.\n\nKamu sudah siap mengoperasikan portal ini. Jika membutuhkan bantuan, jangan ragu untuk menghubungi CIB Command.\n\nSelamat bertugas. Tetap aman di lapangan.`,
       },
     ]
