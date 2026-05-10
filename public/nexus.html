@@ -822,5 +822,725 @@
 <script src="shared/scripts/portal-auth.js"></script>
 <script src="shared/scripts/site-ui.js"></script>
 <script src="scripts/nexus.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ONBOARDING SYSTEM — Lt. Jadda Quetzalli
+     Bahasa Indonesia · Audio per step · Highlight overlay
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+/* ── Onboarding backdrop ── */
+#ob-backdrop {
+  position:fixed;inset:0;z-index:8000;
+  background:rgba(0,0,0,0.82);
+  display:none;
+  pointer-events:none;
+}
+#ob-backdrop.ob-active { display:block; pointer-events:auto; }
+
+/* ── Spotlight cutout via box-shadow trick ── */
+#ob-spotlight {
+  position:fixed;
+  border-radius:3px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.78);
+  border:2px solid rgba(201,168,76,0.6);
+  transition:all 0.45s cubic-bezier(0.4,0,0.2,1);
+  z-index:8001;
+  pointer-events:none;
+}
+#ob-spotlight.ob-hidden { opacity:0; width:0;height:0; }
+
+/* ── Dialog card ── */
+#ob-card {
+  position:fixed;
+  width:420px;
+  background:#080E1C;
+  border:1px solid rgba(201,168,76,0.25);
+  border-top:3px solid var(--gold,#C9A84C);
+  z-index:8010;
+  transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 24px 64px rgba(0,0,0,0.7);
+  overflow:hidden;
+}
+/* ── Guide header ── */
+.ob-card-header {
+  display:flex;align-items:stretch;gap:0;
+  background:linear-gradient(135deg,rgba(12,20,40,1),rgba(8,14,28,1));
+  border-bottom:1px solid rgba(201,168,76,0.15);
+  position:relative;overflow:hidden;
+}
+.ob-card-header::before {
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 0% 50%,rgba(201,168,76,0.07),transparent 70%);
+}
+.ob-guide-photo-wrap {
+  width:90px;flex-shrink:0;position:relative;overflow:hidden;
+}
+.ob-guide-photo {
+  width:100%;height:100%;object-fit:cover;object-position:top center;
+  display:block;filter:grayscale(15%) contrast(1.05);
+}
+.ob-guide-photo-scan {
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,0.7),transparent);
+  animation:ob-scan 3s ease-in-out infinite;
+}
+@keyframes ob-scan {
+  0%,100%{top:0;opacity:0} 10%{opacity:1} 90%{opacity:1} 0%{top:0} 100%{top:100%}
+  50%{top:50%}
+}
+.ob-guide-info {
+  padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:3px;
+  position:relative;
+}
+.ob-guide-eyebrow {
+  font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+  color:var(--gold,#C9A84C);text-transform:uppercase;opacity:0.7;
+}
+.ob-guide-name {
+  font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:3px;
+  color:#fff;text-transform:uppercase;
+}
+.ob-guide-rank {
+  font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;
+  color:rgba(240,237,228,0.45);text-transform:uppercase;margin-top:2px;
+}
+.ob-audio-indicator {
+  display:flex;align-items:center;gap:3px;margin-top:6px;
+}
+.ob-audio-bar {
+  width:2px;border-radius:1px;background:var(--gold,#C9A84C);opacity:0;
+  animation:ob-bar 1s ease-in-out infinite;
+}
+.ob-audio-bar:nth-child(1){height:6px;animation-delay:0s}
+.ob-audio-bar:nth-child(2){height:10px;animation-delay:0.15s}
+.ob-audio-bar:nth-child(3){height:7px;animation-delay:0.3s}
+.ob-audio-bar:nth-child(4){height:12px;animation-delay:0.1s}
+.ob-audio-bar:nth-child(5){height:5px;animation-delay:0.25s}
+.ob-audio-playing .ob-audio-bar { opacity:0.8; }
+@keyframes ob-bar {
+  0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)}
+}
+
+/* ── Step badge ── */
+.ob-step-badge {
+  position:absolute;top:10px;right:12px;
+  font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;
+  color:rgba(201,168,76,0.5);text-transform:uppercase;
+}
+
+/* ── Content area ── */
+.ob-card-body { padding:20px 22px 0; }
+.ob-step-label {
+  font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;
+  color:var(--gold,#C9A84C);text-transform:uppercase;opacity:0.7;margin-bottom:8px;
+}
+.ob-dialogue {
+  font-family:'Roboto Mono',monospace;font-size:11px;line-height:1.85;
+  color:rgba(240,237,228,0.82);min-height:64px;
+  letter-spacing:0.3px;
+}
+.ob-dialogue .ob-cursor {
+  display:inline-block;width:7px;height:11px;
+  background:var(--gold,#C9A84C);opacity:0.8;
+  animation:ob-blink 0.7s step-end infinite;vertical-align:text-bottom;
+}
+@keyframes ob-blink { 50%{opacity:0} }
+
+/* ── Progress dots ── */
+.ob-progress {
+  display:flex;align-items:center;gap:5px;padding:14px 22px 0;
+}
+.ob-dot {
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(255,255,255,0.15);transition:all 0.3s;
+  flex-shrink:0;
+}
+.ob-dot.ob-done { background:rgba(201,168,76,0.5); }
+.ob-dot.ob-current {
+  background:var(--gold,#C9A84C);
+  box-shadow:0 0 6px rgba(201,168,76,0.6);
+  width:16px;border-radius:3px;
+}
+
+/* ── Footer buttons ── */
+.ob-card-footer {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px 18px;margin-top:14px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  gap:10px;
+}
+.ob-btn {
+  font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;
+  text-transform:uppercase;padding:8px 20px;cursor:pointer;
+  border:none;transition:all 0.15s;
+}
+.ob-btn-skip {
+  background:transparent;color:rgba(240,237,228,0.35);
+  border:1px solid rgba(255,255,255,0.08);
+}
+.ob-btn-skip:hover { color:rgba(240,237,228,0.6);border-color:rgba(255,255,255,0.2); }
+.ob-btn-next {
+  background:var(--gold,#C9A84C);color:#0a0f1e;
+  min-width:100px;
+}
+.ob-btn-next:hover { background:#d4ac50; }
+.ob-btn-next:disabled { opacity:0.5;cursor:not-allowed; }
+
+/* ── Confirm prompt (need assistance?) ── */
+#ob-confirm {
+  position:fixed;inset:0;z-index:8020;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.88);
+}
+#ob-confirm.ob-active { display:flex; }
+.ob-confirm-box {
+  width:460px;background:#080E1C;
+  border:1px solid rgba(201,168,76,0.2);
+  border-top:3px solid var(--gold,#C9A84C);
+  overflow:hidden;
+}
+.ob-confirm-header {
+  display:flex;align-items:stretch;
+  background:linear-gradient(135deg,rgba(12,20,40,1),rgba(8,14,28,1));
+  border-bottom:1px solid rgba(201,168,76,0.12);
+}
+.ob-confirm-photo { width:100px;flex-shrink:0;overflow:hidden; }
+.ob-confirm-photo img {
+  width:100%;height:100%;object-fit:cover;object-position:top center;
+  filter:grayscale(15%);display:block;
+}
+.ob-confirm-intro { padding:18px 20px;display:flex;flex-direction:column;justify-content:center;gap:4px; }
+.ob-confirm-eyebrow {
+  font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;
+  color:var(--gold,#C9A84C);text-transform:uppercase;opacity:0.7;
+}
+.ob-confirm-name {
+  font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:3px;
+  color:#fff;text-transform:uppercase;
+}
+.ob-confirm-sub {
+  font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;
+  color:rgba(240,237,228,0.4);text-transform:uppercase;
+}
+.ob-confirm-body { padding:22px 24px; }
+.ob-confirm-text {
+  font-family:'Roboto Mono',monospace;font-size:11px;line-height:1.85;
+  color:rgba(240,237,228,0.75);margin-bottom:20px;letter-spacing:0.3px;
+}
+.ob-confirm-btns { display:flex;gap:12px; }
+.ob-confirm-yes {
+  flex:1;padding:10px;font-family:'Oswald',sans-serif;font-size:12px;
+  letter-spacing:3px;text-transform:uppercase;
+  background:var(--gold,#C9A84C);color:#0a0f1e;border:none;cursor:pointer;
+  transition:background 0.15s;
+}
+.ob-confirm-yes:hover { background:#d4ac50; }
+.ob-confirm-no {
+  flex:1;padding:10px;font-family:'Oswald',sans-serif;font-size:12px;
+  letter-spacing:3px;text-transform:uppercase;
+  background:transparent;color:rgba(240,237,228,0.4);
+  border:1px solid rgba(255,255,255,0.1);cursor:pointer;
+  transition:all 0.15s;
+}
+.ob-confirm-no:hover { color:rgba(240,237,228,0.7);border-color:rgba(255,255,255,0.25); }
+</style>
+
+<!-- Confirm prompt -->
+<div id="ob-confirm">
+  <div class="ob-confirm-box">
+    <div class="ob-confirm-header">
+      <div class="ob-confirm-photo">
+        <img src="images/jadda_va.jpg" alt="Lt. Jadda Quetzalli"
+             onerror="this.parentElement.style.display='none'"/>
+      </div>
+      <div class="ob-confirm-intro">
+        <div class="ob-confirm-eyebrow">CIB · Panduan Sistem</div>
+        <div class="ob-confirm-name">Lt. Jadda Quetzalli</div>
+        <div class="ob-confirm-sub">Officer Guidance · NEXUS Portal</div>
+      </div>
+    </div>
+    <div class="ob-confirm-body">
+      <div class="ob-confirm-text" id="ob-confirm-text">
+        Halo! Saya Letnan Jadda Quetzalli, pemandu resmi NEXUS Portal.<br><br>
+        Sepertinya ini pertama kali kamu masuk ke portal ini. Apakah kamu membutuhkan panduan singkat untuk mengenal fitur-fitur di NEXUS?
+      </div>
+      <div class="ob-confirm-btns">
+        <button class="ob-confirm-yes" onclick="ObSystem.startGuide()">Ya, Mulai Panduan</button>
+        <button class="ob-confirm-no" onclick="ObSystem.skipGuide()">Tidak, Lewati</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Spotlight + card -->
+<div id="ob-backdrop"></div>
+<div id="ob-spotlight" class="ob-hidden"></div>
+<div id="ob-card" style="display:none;">
+  <div class="ob-card-header">
+    <div class="ob-guide-photo-wrap">
+      <img class="ob-guide-photo" src="images/jadda_va.jpg" alt="Lt. Jadda Quetzalli"
+           onerror="this.parentElement.style.background='#111'"/>
+      <div class="ob-guide-photo-scan"></div>
+    </div>
+    <div class="ob-guide-info">
+      <div class="ob-guide-eyebrow">Pemandu Resmi</div>
+      <div class="ob-guide-name">Lt. Jadda Quetzalli</div>
+      <div class="ob-guide-rank">CIB · Panduan Sistem</div>
+      <div class="ob-audio-indicator" id="obAudioIndicator">
+        <div class="ob-audio-bar"></div>
+        <div class="ob-audio-bar"></div>
+        <div class="ob-audio-bar"></div>
+        <div class="ob-audio-bar"></div>
+        <div class="ob-audio-bar"></div>
+      </div>
+    </div>
+    <div class="ob-step-badge" id="obStepBadge">1 / 7</div>
+  </div>
+  <div class="ob-card-body">
+    <div class="ob-step-label" id="obStepLabel">Selamat Datang</div>
+    <div class="ob-dialogue" id="obDialogue"></div>
+  </div>
+  <div class="ob-progress" id="obProgress"></div>
+  <div class="ob-card-footer">
+    <button class="ob-btn ob-btn-skip" onclick="ObSystem.endGuide()">Lewati Semua</button>
+    <button class="ob-btn ob-btn-next" id="obNextBtn" onclick="ObSystem.nextStep()">Lanjut →</button>
+  </div>
+</div>
+
+<!-- Per-step audio elements — place your MP3/OGG files in /audio/onboarding/ -->
+<!--
+  HOW TO ADD AUDIO:
+  1. Create a folder: audio/onboarding/
+  2. For each step, name your file to match the src below
+  3. Supported: .mp3 (preferred), .ogg (fallback)
+  4. Audio plays automatically when the step text finishes typing
+
+  Step audio files:
+    ob_step_01_welcome.mp3       → Sambutan selamat datang
+    ob_step_02_dashboard.mp3     → Pengenalan dashboard
+    ob_step_03_clearance.mp3     → Clearance level
+    ob_step_04_timeout.mp3       → Session timeout
+    ob_step_05_logout.mp3        → Cara logout
+    ob_step_06_documents.mp3     → Seksi Documents
+    ob_step_07_guidebook.mp3     → CIB Guidebook
+    ob_step_08_penal.mp3         → Penal Codes
+    ob_step_09_directory.mp3     → Main Directory
+    ob_step_10_done.mp3          → Penutup
+-->
+<audio id="ob-audio" preload="none"></audio>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  NEXUS ONBOARDING SYSTEM
+//  Guide: Lt. Jadda Quetzalli · Bahasa Indonesia
+//  Reads rank+name from PortalAuth session
+// ═══════════════════════════════════════════════════════════
+
+;(function () {
+
+  // ── Config ─────────────────────────────────────────────────
+  const ONBOARDING_API = '/api/onboarding'  // see hvc.js — handleOnboarding
+  const AUDIO_BASE     = 'audio/onboarding/'
+  const TYPE_SPEED_MS  = 22   // ms per character when typing dialogue
+
+  // ── Guide steps definition ─────────────────────────────────
+  // target: CSS selector to highlight (null = centre card, no spotlight)
+  // audio:  filename inside AUDIO_BASE (without path)
+  // pos:    preferred card position ('right'|'left'|'below'|'above'|'centre')
+  function buildSteps(rank, name) {
+    return [
+      // ── Step 1 · Welcome ────────────────────────────────────
+      {
+        label:  'Selamat Datang',
+        target: null,
+        pos:    'centre',
+        audio:  'ob_step_01_welcome.mp3',
+        text:   `Halo, ${rank} ${name}! Saya Letnan Jadda Quetzalli, pemandu resmi portal NEXUS.\n\nNEXUS adalah pusat kendali internal CIB — tempat kamu mengakses semua dokumen, intelijen, dan operasi yang bersifat rahasia.\n\nMari saya tunjukkan fitur-fitur utamanya.`,
+      },
+      // ── Step 2 · Dashboard overview ─────────────────────────
+      {
+        label:  'Tampilan Dashboard',
+        target: '.dash-hero',
+        pos:    'below',
+        audio:  'ob_step_02_dashboard.mp3',
+        text:   `Ini adalah Dashboard utama NEXUS. Di sini kamu bisa melihat semua informasi sesi aktifmu secara sekilas.\n\nPerhatikan panel di sebelah kanan — di sana tercantum identitas resmi dan status clearance-mu saat ini.`,
+      },
+      // ── Step 3 · Clearance level ─────────────────────────────
+      {
+        label:  'Clearance Level',
+        target: '#dashSessionClearance',
+        pos:    'left',
+        audio:  'ob_step_03_clearance.mp3',
+        text:   `Clearance Level menunjukkan tingkat akses yang dimiliki oleh akunmu di dalam sistem NEXUS.\n\nSemakin tinggi clearance-mu, semakin banyak panel dan dokumen yang bisa kamu akses. Jangan pernah membagikan credential ini ke siapapun.`,
+      },
+      // ── Step 4 · Session timeout ──────────────────────────────
+      {
+        label:  'Session Timeout',
+        target: '.dash-alert-cell:nth-child(3)',
+        pos:    'above',
+        audio:  'ob_step_04_timeout.mp3',
+        text:   `NEXUS secara otomatis akan logout jika kamu tidak aktif selama 30 menit.\n\nIni adalah protokol keamanan standar CIB. Pastikan kamu selalu logout secara manual sebelum meninggalkan perangkat.`,
+      },
+      // ── Step 5 · Logout ──────────────────────────────────────
+      {
+        label:  'Cara Logout',
+        target: '.logout-btn',
+        pos:    'below',
+        audio:  'ob_step_05_logout.mp3',
+        text:   `Tombol Logout ada di pojok kanan atas topbar. Klik tombol ini setiap kali kamu selesai menggunakan NEXUS.\n\nSelalu logout setelah sesi selesai — ini kewajiban keamanan, bukan opsional.`,
+      },
+      // ── Step 6 · Documents section ───────────────────────────
+      {
+        label:  'Seksi Documents',
+        target: '.dash-cat:first-child',
+        pos:    'right',
+        audio:  'ob_step_06_documents.mp3',
+        text:   `Seksi Documents berisi tiga dokumen fundamental yang wajib kamu kuasai sebagai anggota CIB.\n\nMasing-masing dokumen memiliki tingkat akses yang berbeda — pastikan kamu membaca sesuai clearance-mu.`,
+      },
+      // ── Step 7 · CIB Guidebook ───────────────────────────────
+      {
+        label:  'CIB Guidebook',
+        target: '.dash-mod.mod-gold:first-child',
+        pos:    'right',
+        audio:  'ob_step_07_guidebook.mp3',
+        text:   `CIB Guidebook adalah manual operasional lengkap yang mencakup semua prosedur standar CIB — mulai dari aturan engagement, rantai komando, hingga protokol lapangan.\n\nWajib dibaca oleh semua personel.`,
+      },
+      // ── Step 8 · Penal Codes ─────────────────────────────────
+      {
+        label:  'Penal Codes',
+        target: '.dash-mod.mod-gold:nth-child(2)',
+        pos:    'right',
+        audio:  'ob_step_08_penal.mp3',
+        text:   `Penal Codes berisi kode hukum pidana resmi Negara Bagian San Andreas.\n\nGunakan ini sebagai referensi saat melakukan penangkapan, pengajuan dakwaan, atau konsultasi hukum dalam operasi lapangan.`,
+      },
+      // ── Step 9 · Main Directory ───────────────────────────────
+      {
+        label:  'Main Directory',
+        target: '.dash-mod.mod-red:first-child',
+        pos:    'right',
+        audio:  'ob_step_09_directory.mp3',
+        text:   `Main Directory adalah direktori induk seluruh berkas CIB — termasuk arsip kasus, laporan operasi, catatan intelijen, log pengawasan, dan dokumentasi bukti.\n\nAkses dokumen ini memerlukan clearance Top Secret.`,
+      },
+      // ── Step 10 · Done ───────────────────────────────────────
+      {
+        label:  'Panduan Selesai',
+        target: null,
+        pos:    'centre',
+        audio:  'ob_step_10_done.mp3',
+        text:   `Itu dia gambaran umum NEXUS, ${rank} ${name}.\n\nKamu sudah siap mengoperasikan portal ini. Jika membutuhkan bantuan, jangan ragu untuk menghubungi CIB Command.\n\nSelamat bertugas. Tetap aman di lapangan.`,
+      },
+    ]
+  }
+
+  // ── State ──────────────────────────────────────────────────
+  let _steps     = []
+  let _stepIdx   = 0
+  let _typeTimer = null
+  let _session   = null
+  let _active    = false
+
+  // ── DOM refs ───────────────────────────────────────────────
+  const $ = id => document.getElementById(id)
+  const backdrop  = () => $('ob-backdrop')
+  const spotlight = () => $('ob-spotlight')
+  const card      = () => $('ob-card')
+  const confirm   = () => $('ob-confirm')
+  const audio     = () => $('ob-audio')
+  const nextBtn   = () => $('obNextBtn')
+
+  // ── Audio ──────────────────────────────────────────────────
+  function playStepAudio(filename) {
+    const el = audio()
+    if (!el || !filename) return
+    el.pause()
+    el.src = AUDIO_BASE + filename
+    el.load()
+    const ind = $('obAudioIndicator')
+    el.onplay  = () => ind && ind.classList.add('ob-audio-playing')
+    el.onended = () => ind && ind.classList.remove('ob-audio-playing')
+    el.onpause = () => ind && ind.classList.remove('ob-audio-playing')
+    el.play().catch(() => {})
+  }
+  function stopAudio() {
+    const el = audio()
+    if (el) { el.pause(); el.currentTime = 0 }
+    const ind = $('obAudioIndicator')
+    if (ind) ind.classList.remove('ob-audio-playing')
+  }
+
+  // ── Spotlight positioning ──────────────────────────────────
+  function positionSpotlight(selector) {
+    const sp = spotlight()
+    if (!selector) {
+      sp.className = 'ob-hidden'
+      return
+    }
+    const el = document.querySelector(selector)
+    if (!el) { sp.className = 'ob-hidden'; return }
+
+    const r = el.getBoundingClientRect()
+    const pad = 8
+    sp.style.top    = (r.top  - pad) + 'px'
+    sp.style.left   = (r.left - pad) + 'px'
+    sp.style.width  = (r.width  + pad * 2) + 'px'
+    sp.style.height = (r.height + pad * 2) + 'px'
+    sp.className = ''
+  }
+
+  // ── Card positioning ───────────────────────────────────────
+  function positionCard(selector, pos) {
+    const c = card()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const cw = 420
+    const ch = c.offsetHeight || 300
+    const margin = 16
+
+    if (!selector || pos === 'centre') {
+      c.style.left = ((vw - cw) / 2) + 'px'
+      c.style.top  = ((vh - ch) / 2) + 'px'
+      return
+    }
+
+    const el = document.querySelector(selector)
+    if (!el) {
+      c.style.left = ((vw - cw) / 2) + 'px'
+      c.style.top  = ((vh - ch) / 2) + 'px'
+      return
+    }
+
+    const r   = el.getBoundingClientRect()
+    const pad = 16
+
+    let left, top
+    switch (pos) {
+      case 'right':
+        left = r.right + pad
+        top  = Math.max(margin, r.top - 20)
+        // Clamp to viewport
+        if (left + cw > vw - margin) left = r.left - cw - pad
+        break
+      case 'left':
+        left = r.left - cw - pad
+        top  = Math.max(margin, r.top - 20)
+        if (left < margin) left = r.right + pad
+        break
+      case 'below':
+        left = Math.max(margin, r.left)
+        top  = r.bottom + pad
+        if (left + cw > vw - margin) left = vw - cw - margin
+        break
+      case 'above':
+        left = Math.max(margin, r.left)
+        top  = r.top - ch - pad
+        if (top < margin) top = r.bottom + pad
+        if (left + cw > vw - margin) left = vw - cw - margin
+        break
+      default:
+        left = (vw - cw) / 2
+        top  = (vh - ch) / 2
+    }
+
+    c.style.left = Math.max(margin, Math.min(vw - cw - margin, left)) + 'px'
+    c.style.top  = Math.max(margin, Math.min(vh - ch - margin, top))  + 'px'
+  }
+
+  // ── Typewriter dialogue ────────────────────────────────────
+  function typeText(text, onDone) {
+    clearTimeout(_typeTimer)
+    const el = $('obDialogue')
+    if (!el) return
+    el.innerHTML = ''
+    let i = 0
+    const chars = text.split('')
+    nextBtn().disabled = true
+
+    function tick() {
+      if (i < chars.length) {
+        // Render \n as <br>
+        if (chars[i] === '\n') {
+          el.innerHTML += '<br/>'
+        } else {
+          // Append as text node to avoid XSS
+          el.appendChild(document.createTextNode(chars[i]))
+        }
+        i++
+        _typeTimer = setTimeout(tick, TYPE_SPEED_MS)
+      } else {
+        // Typing done — show cursor briefly then enable next
+        const cursor = document.createElement('span')
+        cursor.className = 'ob-cursor'
+        el.appendChild(cursor)
+        setTimeout(() => {
+          cursor.remove()
+          nextBtn().disabled = false
+          if (onDone) onDone()
+        }, 600)
+      }
+    }
+    tick()
+  }
+
+  // ── Progress dots ──────────────────────────────────────────
+  function updateProgress() {
+    const el = $('obProgress')
+    if (!el) return
+    el.innerHTML = _steps.map((_, i) =>
+      `<div class="ob-dot${i < _stepIdx ? ' ob-done' : i === _stepIdx ? ' ob-current' : ''}"></div>`
+    ).join('')
+  }
+
+  // ── Render a step ──────────────────────────────────────────
+  function renderStep(idx) {
+    const step = _steps[idx]
+    if (!step) return
+
+    $('obStepLabel').textContent = step.label
+    $('obStepBadge').textContent = `${idx + 1} / ${_steps.length}`
+    nextBtn().textContent = idx === _steps.length - 1 ? 'Selesai ✓' : 'Lanjut →'
+    nextBtn().disabled = true
+
+    updateProgress()
+    positionSpotlight(step.target)
+
+    // Show card first (so we can measure its height), then position
+    card().style.display = 'block'
+    setTimeout(() => {
+      positionCard(step.target, step.pos)
+    }, 20)
+
+    // Type text, then play audio
+    typeText(step.text, () => {
+      playStepAudio(step.audio)
+    })
+
+    // Scroll target into view gently
+    if (step.target) {
+      const el = document.querySelector(step.target)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }
+
+  // ── API calls ──────────────────────────────────────────────
+  async function checkOnboarded() {
+    try {
+      const token = sessionStorage.getItem('cib_token')
+      const res   = await fetch(ONBOARDING_API, {
+        headers: { 'x-session-token': token || '' }
+      })
+      if (!res.ok) return true  // on error, don't block the user
+      const json = await res.json()
+      return json.has_onboarded === true
+    } catch { return true }
+  }
+
+  async function markOnboarded() {
+    try {
+      const token = sessionStorage.getItem('cib_token')
+      await fetch(ONBOARDING_API, {
+        method:  'POST',
+        headers: {
+          'Content-Type':    'application/json',
+          'x-session-token': token || ''
+        }
+      })
+    } catch { /* silent fail */ }
+  }
+
+  // ── Public API ─────────────────────────────────────────────
+  window.ObSystem = {
+
+    // Called by PortalAuth.onReady after session resolves
+    init: async function (session) {
+      _session = session
+      const done = await checkOnboarded()
+      if (done) return  // already onboarded — do nothing
+
+      // Build steps with real rank+name from session
+      const rank = session?.rank || 'Petugas'
+      const name = session?.name || session?.badge || 'Anonim'
+      _steps = buildSteps(rank, name)
+
+      // Show the confirm prompt after a short delay (let dashboard render)
+      setTimeout(() => {
+        confirm().classList.add('ob-active')
+      }, 1200)
+    },
+
+    startGuide: function () {
+      confirm().classList.remove('ob-active')
+      backdrop().classList.add('ob-active')
+      _stepIdx = 0
+      _active  = true
+      renderStep(0)
+    },
+
+    skipGuide: function () {
+      confirm().classList.remove('ob-active')
+      markOnboarded()
+    },
+
+    nextStep: function () {
+      if (!_active) return
+      stopAudio()
+      clearTimeout(_typeTimer)
+      _stepIdx++
+      if (_stepIdx >= _steps.length) {
+        ObSystem.endGuide()
+        return
+      }
+      renderStep(_stepIdx)
+    },
+
+    endGuide: function () {
+      _active = false
+      stopAudio()
+      clearTimeout(_typeTimer)
+
+      // Fade out
+      card().style.transition   = 'opacity 0.3s'
+      card().style.opacity      = '0'
+      backdrop().style.opacity  = '0'
+      backdrop().style.transition = 'opacity 0.3s'
+
+      setTimeout(() => {
+        card().style.display    = 'none'
+        card().style.opacity    = '1'
+        backdrop().classList.remove('ob-active')
+        backdrop().style.opacity = '1'
+        spotlight().className   = 'ob-hidden'
+      }, 320)
+
+      markOnboarded()
+    },
+  }
+
+  // ── Hook into PortalAuth ────────────────────────────────────
+  // We monkey-patch the onReady to also call ObSystem.init
+  // AFTER nexus.js has already set up PortalAuth.
+  // This runs after the <script src="nexus.js"> finishes.
+  document.addEventListener('DOMContentLoaded', () => {
+    const origInit = PortalAuth.init.bind(PortalAuth)
+    PortalAuth.init = function (opts) {
+      const origOnReady = opts.onReady
+      opts.onReady = function (badge, session) {
+        if (origOnReady) origOnReady(badge, session)
+        // Delay slightly so all DOM is ready
+        setTimeout(() => ObSystem.init(session), 600)
+      }
+      origInit(opts)
+    }
+  })
+
+  // Handle window resize — reposition if active
+  window.addEventListener('resize', () => {
+    if (!_active || _stepIdx >= _steps.length) return
+    const step = _steps[_stepIdx]
+    positionSpotlight(step.target)
+    positionCard(step.target, step.pos)
+  })
+
+})()
+</script>
 </body>
 </html>

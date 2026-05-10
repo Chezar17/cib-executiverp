@@ -39,28 +39,6 @@
 
     <div>
 
-      <!-- ============================================================
-           MAIN HEADLINE SECTION
-           For high-priority information that the ENTIRE CITY must know.
-           Use for: threat advisories, major arrests, active dangers,
-           citywide warnings, significant operation outcomes.
-
-           HOW TO ADD A NEW MAIN HEADLINE:
-           1. Copy the block between "MAIN ENTRY START" and "MAIN ENTRY END"
-           2. Paste it at the TOP of .main-pr-list (newest release first)
-           3. Update: PR number, badge type, date, title, body, division, time
-
-           HOW TO ADD AN IMAGE:
-           Inside the <div class="pr-img-wrap">, delete the
-           <div class="pr-img-placeholder">...</div> block and replace with:
-              <img src="your-photo.jpg" alt="Brief description"/>
-           Optionally add a caption below it:
-              <div class="pr-img-label">
-                <div class="pr-img-caption">IMAGE: Your caption here</div>
-              </div>
-           Make sure the image file is in the same folder as this HTML.
-           Recommended image size: 1200 x 500px or wider.
-           ============================================================ -->
 
       <div class="section-block">
         <div class="section-label-bar">
@@ -74,27 +52,10 @@
         </div>
 
         <div class="main-pr-list">
-          <!-- Populated dynamically by JS from /api/press-releases -->
           <div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">Loading...</div>
         </div>
       </div>
-      <!-- END MAIN HEADLINE SECTION -->
 
-
-      <!-- ============================================================
-           SUB HEADLINE SECTION
-           For lower-priority bureau information: personnel updates,
-           appointments, internal notices, procedural announcements,
-           and non-urgent public information.
-
-           HOW TO ADD A NEW SUB HEADLINE:
-           1. Copy the block between "SUB ENTRY START" and "SUB ENTRY END"
-           2. Paste it at the TOP of .sub-pr-grid (newest release first)
-           3. Update: PR number, category badge, date, title, body, division, time
-
-           HOW TO ADD AN IMAGE: same instructions as Main Headline above.
-           Recommended image size: 900 x 400px or wider.
-           ============================================================ -->
 
       <div class="section-block">
         <div class="section-label-bar">
@@ -152,11 +113,7 @@
 <script src="shared/scripts/site-ui.js"></script>
 <script src="scripts/press.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════════
-//  PAGE_PRESS — Dynamic Press Release Loader
-//  Fetches from /api/press-releases
-//  Supports ?release=<pr_number> for direct share/card links
-// ═══════════════════════════════════════════════════════════
+
 
 const PA_API = '/api/press-releases'
 
@@ -170,8 +127,7 @@ function formatDate(d) {
 }
 function formatDateUpper(d) { return formatDate(d).toUpperCase() }
 
-// Full body: render stored HTML directly (rich text from editor).
-// Falls back to plain-text paragraph splitting for legacy entries.
+
 function bodyToHtml(body) {
   if (!body) return ''
   // If body contains HTML tags, trust it as rich HTML
@@ -196,14 +152,14 @@ const CAT_CLASS = {
   'Arrest Notice':'cat-operation','Wanted Notice':'cat-advisory',
 }
 
-// Share URL uses pr_number as the identifier (e.g. PR-2026-01)
+
 function buildShareUrl(prNumber) {
   return `${location.origin}${location.pathname}?release=${encodeURIComponent(prNumber)}`
 }
 
 function shareBtn(url, small) {
   const sz = small ? 'font-size:8px;padding:3px 10px' : 'font-size:9px;padding:4px 12px'
-  // stopPropagation prevents the card <a> from also navigating when Share is clicked
+
   return `<button onclick="event.stopPropagation();copyPressLink('${escHtml(url)}')" style="font-family:'Roboto Mono',monospace;${sz};letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--navy-border);color:var(--muted);cursor:pointer;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--muted)'">⧉ Share</button>`
 }
 
