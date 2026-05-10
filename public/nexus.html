@@ -831,7 +831,7 @@
 /* ── Onboarding backdrop ── */
 #ob-backdrop {
   position:fixed;inset:0;z-index:8000;
-  background:rgba(0,0,0,0.82);
+  background:rgba(0,0,0,0.60);
   display:none;
   pointer-events:none;
 }
@@ -840,9 +840,14 @@
 /* ── Spotlight cutout via box-shadow trick ── */
 #ob-spotlight {
   position:fixed;
-  border-radius:3px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.78);
-  border:2px solid rgba(201,168,76,0.6);
+  border-radius:4px;
+  /* shadow fills everything OUTSIDE the spotlight; keep it lighter so the
+     highlighted element stays clearly visible through the cutout */
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.68);
+  /* thicker, brighter border so the highlight is impossible to miss */
+  border:2px solid rgba(201,168,76,0.95);
+  outline:1px solid rgba(201,168,76,0.3);
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.68), 0 0 18px rgba(201,168,76,0.35);
   transition:all 0.45s cubic-bezier(0.4,0,0.2,1);
   z-index:8001;
   pointer-events:none;
@@ -1192,7 +1197,7 @@
       // ── Step 6 · Documents section ───────────────────────────
       {
         label:  'Seksi Documents',
-        target: '.dash-cat:first-child',
+        target: '.nx-nav-group:nth-child(2)',
         pos:    'right',
         audio:  'ob_step_06_documents.mp3',
         text:   `Seksi Documents berisi tiga dokumen fundamental yang wajib kamu kuasai sebagai anggota CIB.\n\nMasing-masing dokumen memiliki tingkat akses yang berbeda — pastikan kamu membaca sesuai clearance-mu.`,
@@ -1200,7 +1205,7 @@
       // ── Step 7 · CIB Guidebook ───────────────────────────────
       {
         label:  'CIB Guidebook',
-        target: '.dash-mod.mod-gold:first-child',
+        target: '.nx-nav-group:nth-child(2) .nx-nav-item:nth-child(2)',
         pos:    'right',
         audio:  'ob_step_07_guidebook.mp3',
         text:   `CIB Guidebook adalah manual operasional lengkap yang mencakup semua prosedur standar CIB — mulai dari aturan engagement, rantai komando, hingga protokol lapangan.\n\nWajib dibaca oleh semua personel.`,
@@ -1208,7 +1213,7 @@
       // ── Step 8 · Penal Codes ─────────────────────────────────
       {
         label:  'Penal Codes',
-        target: '.dash-mod.mod-gold:nth-child(2)',
+        target: '.nx-nav-group:nth-child(2) .nx-nav-item:nth-child(3)',
         pos:    'right',
         audio:  'ob_step_08_penal.mp3',
         text:   `Penal Codes berisi kode hukum pidana resmi Negara Bagian San Andreas.\n\nGunakan ini sebagai referensi saat melakukan penangkapan, pengajuan dakwaan, atau konsultasi hukum dalam operasi lapangan.`,
@@ -1216,7 +1221,7 @@
       // ── Step 9 · Main Directory ───────────────────────────────
       {
         label:  'Main Directory',
-        target: '.dash-mod.mod-red:first-child',
+        target: '.nx-nav-group:nth-child(2) .nx-nav-item:nth-child(4)',
         pos:    'right',
         audio:  'ob_step_09_directory.mp3',
         text:   `Main Directory adalah direktori induk seluruh berkas CIB — termasuk arsip kasus, laporan operasi, catatan intelijen, log pengawasan, dan dokumentasi bukti.\n\nAkses dokumen ini memerlukan clearance Top Secret.`,
@@ -1417,7 +1422,15 @@
     // Scroll target into view gently
     if (step.target) {
       const el = document.querySelector(step.target)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      if (el) {
+        // For sidebar nav items, scroll within the sidebar — not the whole page
+        const sidebar = document.querySelector('.nx-sidebar')
+        if (sidebar && sidebar.contains(el)) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        } else {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }
+      }
     }
   }
 
