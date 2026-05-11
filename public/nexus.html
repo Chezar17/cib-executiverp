@@ -1180,8 +1180,8 @@
     </div>
     <div class="ob-confirm-body">
       <div class="ob-confirm-text" id="ob-confirm-text">
-        Halo! Saya Letnan Jadda Quetzalli, pemandu resmi NEXUS Portal.<br><br>
-        Sepertinya ini pertama kali kamu masuk ke portal ini. Apakah kamu membutuhkan panduan singkat untuk mengenal fitur-fitur di NEXUS?
+        Welcome to NEXUS.<br><br>
+        Apakah kamu membutuhkan panduan singkat untuk mengenal fitur-fitur di NEXUS?
       </div>
       <div class="ob-confirm-btns">
         <button class="ob-confirm-yes" onclick="ObSystem.startGuide()">Ya, Mulai Panduan</button>
@@ -1287,7 +1287,7 @@
         target: null,
         pos:    'centre',
         audio:  'ob_step_01_welcome.mp3',
-        text:   `Halo, ${rank} ${name}! Saya Letnan Jadda Quetzalli, pemandu resmi portal NEXUS.\n\nNEXUS adalah pusat kendali internal CIB — tempat kamu mengakses semua dokumen, intelijen, dan operasi yang bersifat rahasia.\n\nMari saya tunjukkan fitur-fitur utamanya.`,
+        text:   `Halo, ${rank} ${name}! Saya Letnan Jadda Quetzalli, yang akan memandu kamu di NEXUS.\n\nNEXUS adalah pusat kendali internal CIB — tempat kamu mengakses semua dokumen, intelijen, dan operasi yang bersifat rahasia.\n\nMari saya tunjukkan fitur-fitur utamanya.`,
       },
       // ── Step 2 · Dashboard overview ─────────────────────────
       {
@@ -1303,7 +1303,7 @@
         target: '#dashSessionClearance',
         pos:    'left',
         audio:  'ob_step_03_clearance.mp3',
-        text:   `Clearance Level menunjukkan tingkat akses yang dimiliki oleh akunmu di dalam sistem NEXUS.\n\nSemakin tinggi clearance-mu, semakin banyak panel dan dokumen yang bisa kamu akses. Jangan pernah membagikan credential ini ke siapapun.`,
+        text:   `Clearance Level menunjukkan tingkat akses yang dimiliki oleh kamu di dalam sistem NEXUS.\n\nSemakin tinggi clearance-mu, semakin banyak panel dan dokumen yang bisa kamu akses. Jangan pernah membagikan credential ini ke siapapun.`,
       },
       // ── Step 4 · Session timeout ──────────────────────────────
       {
@@ -1311,7 +1311,7 @@
         target: '.dash-alert-cell:nth-child(3)',
         pos:    'above',
         audio:  'ob_step_04_timeout.mp3',
-        text:   `NEXUS secara otomatis akan logout jika kamu tidak aktif selama 30 menit.\n\nIni adalah protokol keamanan standar CIB. Pastikan kamu selalu logout secara manual sebelum meninggalkan perangkat.`,
+        text:   `NEXUS secara otomatis akan logout jika kamu tidak aktif selama 30 menit.\n\nIni adalah protokol keamanan CIB. Pastikan kamu selalu logout secara manual sebelum meninggalkan perangkat.`,
       },
       // ── Step 5 · Logout ──────────────────────────────────────
       {
@@ -1327,7 +1327,7 @@
         target: '#panel-dashboard [onclick*="guidebook"]',
         pos:    'below',
         audio:  'ob_step_06_documents.mp3',
-        text:   `Seksi Documents berisi tiga dokumen fundamental yang wajib kamu kuasai sebagai anggota CIB.\n\nMasing-masing dokumen memiliki tingkat akses yang berbeda — pastikan kamu membaca sesuai clearance-mu.`,
+        text:   `Section Documents berisi tiga dokumen fundamental yang wajib kamu kuasai sebagai anggota CIB.\n\nMasing-masing dokumen memiliki tingkat akses yang berbeda — pastikan kamu membaca sesuai clearance-mu.`,
         targetParent: true,
       },
       // ── Step 7 · CIB Guidebook ───────────────────────────────
@@ -1336,7 +1336,7 @@
         target: '#panel-dashboard [onclick*="guidebook"]',
         pos:    'right',
         audio:  'ob_step_07_guidebook.mp3',
-        text:   `CIB Guidebook adalah manual operasional lengkap yang mencakup semua prosedur standar CIB — mulai dari aturan engagement, rantai komando, hingga protokol lapangan.\n\nWajib dibaca oleh semua personel.`,
+        text:   `CIB Guidebook adalah manual operasional lengkap yang mencakup semua prosedur standar CIB — mulai dari aturan engagement, chain of command, hingga protokol lapangan.\n\nWajib dibaca oleh semua personel.`,
       },
       // ── Step 8 · Penal Codes ─────────────────────────────────
       {
@@ -1352,7 +1352,7 @@
         target: '#panel-dashboard [onclick*="directory"]',
         pos:    'left',
         audio:  'ob_step_09_directory.mp3',
-        text:   `Main Directory adalah direktori induk seluruh berkas CIB — termasuk arsip kasus, laporan operasi, catatan intelijen, log pengawasan, dan dokumentasi bukti.\n\nAkses dokumen ini memerlukan clearance Top Secret.`,
+        text:   `Main Directory adalah direktori induk seluruh berkas CIB — termasuk arsip kasus, laporan operasi, catatan intelijen, log pengawasan, dan dokumentasi bukti.`,
       },
       // ── Step 10 · Intelligence section ───────────────────────
       // Target the Intelligence dash-cat wrapper directly via its label child text
@@ -1361,7 +1361,7 @@
         target: '#panel-dashboard [onclick*="weapons"]',
         pos:    'below',
         audio:  'ob_step_10_intelligence.mp3',
-        text:   `Sekarang kita masuk ke Seksi Intelligence — bagian paling sensitif di NEXUS.\n\nSeksi ini berisi empat modul intelijen operasional yang digunakan oleh divisi GRD dan CID. Semua modul di sini bersifat Top Secret dan hanya dapat diakses oleh personel dengan clearance yang sesuai.`,
+        text:   `Sekarang kita masuk ke Seksi Intelligence — bagian paling sensitif di NEXUS.\nSeksi ini berisi empat modul intelijen operasional yang digunakan oleh divisi GRD dan CID.`,
         targetParent: true,
       },
       // ── Step 11 · Weapons Tracker ────────────────────────────
@@ -1411,7 +1411,7 @@
         target: '#panel-dashboard [href*="finance"]',
         pos:    'right',
         audio:  'ob_step_16_budget.mp3',
-        text:   `Budget Ledger adalah buku anggaran operasional CIB dan catatan pengeluaran personel.\n\nMencakup seluruh transaksi keuangan departemen, kartu pengeluaran pribadi, dan log anggaran divisi. Akses ke modul ini dibatasi sesuai clearance — data keuangan adalah informasi sensitif yang hanya boleh diketahui oleh personel berwenang.`,
+        text:   `Budget Ledger adalah buku anggaran operasional CIB dan catatan pengeluaran personel.Mencakup seluruh transaksi keuangan departemen, kartu pengeluaran pribadi, dan log anggaran divisi.`,
       },
       // ── Step 17 · Public Announcements ───────────────────────
       {
@@ -1419,7 +1419,7 @@
         target: '#panel-dashboard [onclick*="announcements"]',
         pos:    'right',
         audio:  'ob_step_17_announcements.mp3',
-        text:   `Public Announcements adalah pusat pengelolaan seluruh konten publik yang diterbitkan di website resmi CIB.\n\nGunakan bagian ini untuk menyusun dan mempublikasikan siaran pers, pengumuman rekrutmen, advisory masyarakat, dan pernyataan resmi departemen. Semua konten yang diterbitkan di sini bersifat publik dan mewakili suara resmi CIB.`,
+        text:   `Public Announcements adalah pusat pengelolaan seluruh konten publik yang diterbitkan di website resmi CIB.`,
       },
       // ── Step 18 · Investigation Reports ──────────────────────
       {
@@ -1427,7 +1427,7 @@
         target: '#panel-dashboard [onclick*="reports"]',
         pos:    'left',
         audio:  'ob_step_18_reports.mp3',
-        text:   `Investigation Reports adalah repositori aman untuk seluruh Laporan Investigasi formal yang diajukan oleh detektif CIB.\n\nSetiap laporan mencakup dokumentasi lengkap kasus kriminal — termasuk detail korban dan tersangka, pernyataan saksi, bukti forensik, hasil autopsi, dan penutupan kasus akhir.\n\nLaporan dapat dibuat, diedit, dan diekspor sebagai dokumen PDF resmi sesuai standar CID Form 0001.`,
+        text:   `Investigation Reports adalah repositori aman untuk seluruh Laporan Investigasi formal yang diajukan oleh detektif CIB. Disini kamu bisa membuat Investigation Reports yang mengikuti standar pengadilan`,
       },
       // ── Step 19 · Panduan Portal button ──────────────────────
       {
