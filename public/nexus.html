@@ -1153,7 +1153,7 @@
         <div class="ob-audio-bar"></div>
       </div>
     </div>
-    <div class="ob-step-badge" id="obStepBadge">1 / 15</div>
+    <div class="ob-step-badge" id="obStepBadge">1 / 19</div>
   </div>
   <div class="ob-card-body">
     <div class="ob-step-label" id="obStepLabel">Selamat Datang</div>
@@ -1192,7 +1192,11 @@
     ob_step_12_gang.mp3             → Gang Intelligence
     ob_step_13_informant.mp3        → Informant Registry
     ob_step_14_hvc.mp3              → High Value Criminal Registry
-    ob_step_15_done.mp3             → Penutup
+    ob_step_15_internal.mp3         → Seksi Internal (intro)
+    ob_step_16_budget.mp3           → Budget Ledger
+    ob_step_17_announcements.mp3    → Public Announcements
+    ob_step_18_reports.mp3          → Investigation Reports
+    ob_step_19_done.mp3             → Penutup
 -->
 <audio id="ob-audio" preload="none"></audio>
 
@@ -1331,12 +1335,45 @@
         audio:  'ob_step_14_hvc.mp3',
         text:   `HIGH VALUE CRIMINAL REGISTRY — direktori rahasia seluruh target kriminal bernilai tinggi yang sedang dilacak oleh CIB.\n\nSetiap entri mencakup profil lengkap, riwayat kejahatan, koneksi jaringan, dan status operasi yang sedang berjalan. Data ini hanya dapat diakses oleh personel dengan otorisasi khusus dari CIB Command.`,
       },
-      // ── Step 15 · Done ───────────────────────────────────────
+      // ── Step 15 · Internal section intro ─────────────────────
+      {
+        label:  'Seksi Internal',
+        target: '#panel-dashboard [href*="finance"]',
+        pos:    'below',
+        audio:  'ob_step_15_internal.mp3',
+        text:   `Terakhir, kita masuk ke Seksi Internal — area operasional yang mencakup anggaran, komunikasi publik, dan dokumentasi kasus resmi CIB.\n\nSeksi ini digunakan secara rutin oleh semua divisi dalam menjalankan administrasi dan operasi harian.`,
+        targetParent: true,
+      },
+      // ── Step 16 · Budget Ledger ───────────────────────────────
+      {
+        label:  'Budget Ledger',
+        target: '#panel-dashboard [href*="finance"]',
+        pos:    'right',
+        audio:  'ob_step_16_budget.mp3',
+        text:   `Budget Ledger adalah buku anggaran operasional CIB dan catatan pengeluaran personel.\n\nMencakup seluruh transaksi keuangan departemen, kartu pengeluaran pribadi, dan log anggaran divisi. Akses ke modul ini dibatasi sesuai clearance — data keuangan adalah informasi sensitif yang hanya boleh diketahui oleh personel berwenang.`,
+      },
+      // ── Step 17 · Public Announcements ───────────────────────
+      {
+        label:  'Public Announcements',
+        target: '#panel-dashboard [onclick*="announcements"]',
+        pos:    'right',
+        audio:  'ob_step_17_announcements.mp3',
+        text:   `Public Announcements adalah pusat pengelolaan seluruh konten publik yang diterbitkan di website resmi CIB.\n\nGunakan bagian ini untuk menyusun dan mempublikasikan siaran pers, pengumuman rekrutmen, advisory masyarakat, dan pernyataan resmi departemen. Semua konten yang diterbitkan di sini bersifat publik dan mewakili suara resmi CIB.`,
+      },
+      // ── Step 18 · Investigation Reports ──────────────────────
+      {
+        label:  'Investigation Reports',
+        target: '#panel-dashboard [onclick*="reports"]',
+        pos:    'left',
+        audio:  'ob_step_18_reports.mp3',
+        text:   `Investigation Reports adalah repositori aman untuk seluruh Laporan Investigasi formal yang diajukan oleh detektif CIB.\n\nSetiap laporan mencakup dokumentasi lengkap kasus kriminal — termasuk detail korban dan tersangka, pernyataan saksi, bukti forensik, hasil autopsi, dan penutupan kasus akhir.\n\nLaporan dapat dibuat, diedit, dan diekspor sebagai dokumen PDF resmi sesuai standar CID Form 0001.`,
+      },
+      // ── Step 19 · Done ───────────────────────────────────────
       {
         label:  'Panduan Selesai',
         target: null,
         pos:    'centre',
-        audio:  'ob_step_15_done.mp3',
+        audio:  'ob_step_19_done.mp3',
         text:   `Itu dia gambaran umum NEXUS, ${rank} ${name}.\n\nKamu sudah siap mengoperasikan portal ini. Jika membutuhkan bantuan, jangan ragu untuk menghubungi CIB Command.\n\nSelamat bertugas. Tetap aman di lapangan.`,
       },
     ]
