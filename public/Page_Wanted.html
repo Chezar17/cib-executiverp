@@ -52,8 +52,129 @@
        "SUSPECT ENTRY START" and "SUSPECT ENTRY END",
        paste it at the TOP of this list, and fill in the fields.
        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <!-- Populated dynamically by scripts/wanted.js via GET /api/wanted -->
   <div class="wanted-list">
+
+
+    <!-- â•â•â•â•â•â•â• SUSPECT ENTRY START â•â•â•â•â•â•â• -->
+    <div class="wanted-card">
+
+      <!-- LEFT: PHOTO COLUMN -->
+      <div class="suspect-photo-col">
+
+        <div class="suspect-photo">
+          <!--
+            HOW TO ADD PHOTO:
+            Delete the <div class="photo-placeholder"> block below
+            and replace with:
+            <img src="suspect-1.jpg" alt="D. Morales"/>
+
+            Recommended: portrait photo, 400x500px minimum.
+            Place the image in the same folder as this HTML file.
+          -->
+          <div class="photo-placeholder">
+            <svg viewBox="0 0 24 24"></svg>
+              <img src="images/ss_1.png" alt="D. Morales"/>
+          </div>
+        </div>
+
+        <!-- Case strip below photo -->
+        <div class="photo-case-strip">
+          <!-- EDIT: Case number -->
+          <div class="photo-case-id">CASE NO. CIB-MW-2026-002</div>
+          <!-- EDIT: Date suspect was added to wanted list -->
+          <div class="photo-date-wanted">WANTED SINCE: <span>April 7, 2026</span></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: INFO COLUMN -->
+      <div class="suspect-info">
+
+        <!-- Name + Threat Level -->
+        <div class="suspect-header">
+          <div class="suspect-name-block">
+            <!-- EDIT: Alias (nickname), if none delete this line -->
+            <div class="suspect-alias">AKA "John Doe"</div>
+            <!-- EDIT: Full name -->
+            <div class="suspect-name">KILLER OF CHIEF ANKOOW ALREX</div>
+            <!-- EDIT: Suspect ID / DOB -->
+            <div class="suspect-id">SUSPECT ID: SS-01 &nbsp;|&nbsp; DOB: UNKNOWN &nbsp;|&nbsp; NATIONALITY: UNKNOWN</div>
+          </div>
+          <!-- EDIT: Change class to threat-critical / threat-high / threat-medium / threat-low -->
+          <div class="threat-badge threat-critical">
+            <div class="threat-badge-label">Threat Level</div>
+            <div class="threat-badge-level">Critical</div>
+          </div>
+        </div>
+
+        <!-- Bounty -->
+        <div class="bounty-row">
+          <div>
+            <div class="bounty-label">Bounty on Capture</div>
+            <!-- EDIT: Bounty note -->
+            <div class="bounty-note">Dead or Alive &middot; Authorized by CIB Director</div>
+          </div>
+          <!-- EDIT: Bounty amount -->
+          <div class="bounty-amount">$10,000</div>
+        </div>
+
+        <!-- Quick meta stats -->
+        <div class="suspect-meta-grid">
+          <!-- EDIT: Last known location -->
+          <div class="meta-cell">
+            <div class="meta-cell-label">Last Known Location</div>
+            <div class="meta-cell-value">South of Casino, LS</div>
+          </div>
+          <!-- EDIT: Gang/Organization affiliation -->
+          <div class="meta-cell">
+            <div class="meta-cell-label">Affiliation</div>
+            <div class="meta-cell-value">UNKNOWN</div>
+          </div>
+          <!-- EDIT: Status -->
+          <div class="meta-cell">
+            <div class="meta-cell-label">Status</div>
+            <div class="meta-cell-value" style="color:var(--red-alert);">At Large</div>
+          </div>
+        </div>
+
+        <!-- Debrief -->
+        <div style="margin-bottom:20px;">
+          <div class="suspect-section-title">Suspect Debrief</div>
+          <!-- EDIT: Debrief paragraph — background, history, behavior -->
+          <div class="suspect-debrief">This debrief is focused on the unidentified suspect known as John Doe, who is now wanted in connection with the abduction and murder of Chief Fire Department Ankoow Alrex. Evidence and witness statements place the subject among the armed assailants involved in the coordinated attack near the Casino and the subsequent homicide at the O”™Neil House. The subject is believed to be part of a larger criminal group consisting of more than five offenders who executed a planned kidnapping using firearms, intimidation, and lethal violence. Incident Involvement Approach with extreme caution.</div>
+        </div>
+
+        <!-- Crimes list -->
+        <div class="crimes-block">
+          <div class="suspect-section-title">Charges & Offenses</div>
+          <div class="crimes-list">
+            <!-- EDIT: Add or remove <span class="crime-tag"> items as needed -->
+            <span class="crime-tag">Murder of A Government Employee</span>
+            <span class="crime-tag">Kidnapping</span>
+            <span class="crime-tag">Desecration of Human Corpse</span>
+            <span class="crime-tag">Illegal Possession of Human Remains</span>
+            <span class="crime-tag">Criminal use of a Firearm</span>
+          </div>
+        </div>
+
+        <!-- Primary Detective -->
+        <div class="detective-row">
+          <!-- EDIT: Detective initials (shown in avatar circle) -->
+          <div class="detective-avatar">EM</div>
+          <div class="detective-info">
+            <div class="detective-label">Primary Detective</div>
+            <!-- EDIT: Detective full name -->
+            <div class="detective-name">Det. Elias Makya</div>
+            <!-- EDIT: Detective rank -->
+            <div class="detective-rank">Head of CID &middot; Badge #26104</div>
+          </div>
+          <!-- EDIT: Detective's division and contact -->
+          <div class="detective-division">Criminal Investigation Division<br/>Los Santos County Sherriff</div>
+        </div>
+
+      </div>
+    </div>
+    <!-- â•â•â•â•â•â•â• SUSPECT ENTRY END â•â•â•â•â•â•â• -->  
 
   </div>
   <!-- END .wanted-list -->
