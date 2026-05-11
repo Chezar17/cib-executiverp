@@ -1256,7 +1256,8 @@
     ob_step_16_budget.mp3           → Budget Ledger
     ob_step_17_announcements.mp3    → Public Announcements
     ob_step_18_reports.mp3          → Investigation Reports
-    ob_step_19_done.mp3             → Penutup
+    ob_step_19_panduan.mp3          → Tombol Panduan Portal
+    ob_step_20_done.mp3             → Penutup
 -->
 <audio id="ob-audio" preload="none"></audio>
 
@@ -1428,12 +1429,20 @@
         audio:  'ob_step_18_reports.mp3',
         text:   `Investigation Reports adalah repositori aman untuk seluruh Laporan Investigasi formal yang diajukan oleh detektif CIB.\n\nSetiap laporan mencakup dokumentasi lengkap kasus kriminal — termasuk detail korban dan tersangka, pernyataan saksi, bukti forensik, hasil autopsi, dan penutupan kasus akhir.\n\nLaporan dapat dibuat, diedit, dan diekspor sebagai dokumen PDF resmi sesuai standar CID Form 0001.`,
       },
-      // ── Step 19 · Done ───────────────────────────────────────
+      // ── Step 19 · Panduan Portal button ──────────────────────
+      {
+        label:  'Panduan Portal',
+        target: '.nx-help-btn',
+        pos:    'right',
+        audio:  'ob_step_19_panduan.mp3',
+        text:   `Satu hal lagi sebelum kita selesai — tombol ini.\n\nJika kamu membutuhkan panduan ini kembali di masa mendatang, cukup klik tombol "Panduan Portal" di pojok kiri bawah sidebar. Panduan akan langsung diulang dari awal kapan pun kamu mau.`,
+      },
+      // ── Step 20 · Done ───────────────────────────────────────
       {
         label:  'Panduan Selesai',
         target: null,
         pos:    'centre',
-        audio:  'ob_step_19_done.mp3',
+        audio:  'ob_step_20_done.mp3',
         text:   `Itu dia gambaran umum NEXUS, ${rank} ${name}.\n\nKamu sudah siap mengoperasikan portal ini. Jika membutuhkan bantuan, jangan ragu untuk menghubungi CIB Command.\n\nSelamat bertugas. Tetap aman di lapangan.`,
       },
     ]
