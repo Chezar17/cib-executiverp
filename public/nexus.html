@@ -1226,6 +1226,80 @@ input#obVolSlider::-moz-range-track { background:transparent; }
   transition:all 0.15s;
 }
 .ob-confirm-no:hover { color:rgba(240,237,228,0.7);border-color:rgba(255,255,255,0.25); }
+
+/* ── Confirm prompt — audio player row ── */
+.ob-confirm-audio-row {
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;margin-bottom:18px;
+  background:rgba(201,168,76,0.04);
+  border:1px solid rgba(201,168,76,0.12);
+}
+.ob-confirm-audio-bars {
+  display:flex;align-items:center;gap:3px;flex-shrink:0;
+}
+.ob-confirm-audio-bar {
+  width:2px;border-radius:1px;background:var(--gold,#C9A84C);opacity:0.25;
+  transition:opacity 0.2s;
+}
+.ob-confirm-audio-bar:nth-child(1){height:6px}
+.ob-confirm-audio-bar:nth-child(2){height:10px}
+.ob-confirm-audio-bar:nth-child(3){height:7px}
+.ob-confirm-audio-bar:nth-child(4){height:12px}
+.ob-confirm-audio-bar:nth-child(5){height:5px}
+.ob-confirm-audio-playing .ob-confirm-audio-bar {
+  opacity:0.85;
+  animation:ob-bar 1s ease-in-out infinite;
+}
+.ob-confirm-audio-playing .ob-confirm-audio-bar:nth-child(1){animation-delay:0s}
+.ob-confirm-audio-playing .ob-confirm-audio-bar:nth-child(2){animation-delay:0.15s}
+.ob-confirm-audio-playing .ob-confirm-audio-bar:nth-child(3){animation-delay:0.3s}
+.ob-confirm-audio-playing .ob-confirm-audio-bar:nth-child(4){animation-delay:0.1s}
+.ob-confirm-audio-playing .ob-confirm-audio-bar:nth-child(5){animation-delay:0.25s}
+.ob-confirm-vol-wrap {
+  flex:1;display:flex;align-items:center;gap:8px;
+}
+.ob-confirm-vol-label {
+  font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;
+  color:rgba(201,168,76,0.45);text-transform:uppercase;white-space:nowrap;flex-shrink:0;
+}
+.ob-confirm-vol-slider-wrap {
+  flex:1;position:relative;height:16px;display:flex;align-items:center;
+}
+.ob-confirm-vol-slider-wrap::before {
+  content:'';position:absolute;left:0;right:0;height:2px;
+  background:rgba(255,255,255,0.1);border-radius:1px;pointer-events:none;
+}
+.ob-confirm-vol-slider-wrap::after {
+  content:'';position:absolute;left:0;height:2px;
+  width:calc(var(--cvol, 0.8) * 100%);
+  background:rgba(201,168,76,0.7);border-radius:1px;
+  pointer-events:none;transition:width 0.05s linear;
+}
+input#obConfirmVolSlider {
+  position:relative;width:100%;height:16px;
+  -webkit-appearance:none;appearance:none;
+  background:transparent;border:none;outline:none;cursor:pointer;
+  margin:0;padding:0;z-index:1;
+}
+input#obConfirmVolSlider::-webkit-slider-thumb {
+  -webkit-appearance:none;appearance:none;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--gold,#C9A84C);
+  box-shadow:0 0 6px rgba(201,168,76,0.5);
+  border:none;cursor:pointer;
+}
+input#obConfirmVolSlider::-moz-range-thumb {
+  width:10px;height:10px;border-radius:50%;
+  background:var(--gold,#C9A84C);
+  box-shadow:0 0 6px rgba(201,168,76,0.5);
+  border:none;cursor:pointer;
+}
+input#obConfirmVolSlider::-webkit-slider-runnable-track { background:transparent; }
+input#obConfirmVolSlider::-moz-range-track { background:transparent; }
+.ob-confirm-vol-pct {
+  font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+  color:rgba(201,168,76,0.45);width:26px;text-align:right;flex-shrink:0;
+}
 </style>
 
 <!-- Confirm prompt -->
@@ -1247,6 +1321,24 @@ input#obVolSlider::-moz-range-track { background:transparent; }
         Welcome to NEXUS.<br><br>
         Apakah kamu membutuhkan panduan singkat untuk mengenal fitur-fitur di NEXUS?
       </div>
+      <!-- Audio player — matches guide card volume row style -->
+      <div class="ob-confirm-audio-row">
+        <div class="ob-confirm-audio-bars" id="obConfirmAudioBars">
+          <div class="ob-confirm-audio-bar"></div>
+          <div class="ob-confirm-audio-bar"></div>
+          <div class="ob-confirm-audio-bar"></div>
+          <div class="ob-confirm-audio-bar"></div>
+          <div class="ob-confirm-audio-bar"></div>
+        </div>
+        <div class="ob-confirm-vol-wrap">
+          <div class="ob-confirm-vol-label">Volume</div>
+          <div class="ob-confirm-vol-slider-wrap" id="obConfirmVolWrap" style="--cvol:0.8;">
+            <input type="range" id="obConfirmVolSlider" min="0" max="1" step="0.01" value="0.8"
+                   oninput="obConfirmSetVolume(this.value)"/>
+          </div>
+          <div class="ob-confirm-vol-pct" id="obConfirmVolPct">80%</div>
+        </div>
+      </div>
       <div class="ob-confirm-btns">
         <button class="ob-confirm-yes" onclick="ObSystem.startGuide()">Ya, Mulai Panduan</button>
         <button class="ob-confirm-no" onclick="ObSystem.skipGuide()">Tidak, Lewati</button>
@@ -1266,9 +1358,9 @@ input#obVolSlider::-moz-range-track { background:transparent; }
       <div class="ob-guide-photo-scan"></div>
     </div>
     <div class="ob-guide-info">
-      <div class="ob-guide-eyebrow">Pemandu Resmi</div>
+      <div class="ob-guide-eyebrow">Secretary of CIB</div>
       <div class="ob-guide-name">Lt. Jadda Quetzalli</div>
-      <div class="ob-guide-rank">CIB · Panduan Sistem</div>
+      <div class="ob-guide-rank">CIB · System Guide</div>
       <div class="ob-audio-indicator" id="obAudioIndicator">
         <div class="ob-audio-bar"></div>
         <div class="ob-audio-bar"></div>
@@ -1334,6 +1426,88 @@ input#obVolSlider::-moz-range-track { background:transparent; }
     ob_step_20_done.mp3             → Penutup
 -->
 <audio id="ob-audio" preload="none"></audio>
+
+<!-- Confirm prompt audio — plays when the welcome prompt appears -->
+<!--
+  HOW TO ADD THE CONFIRM AUDIO:
+  1. Place your audio file at:  audio/onboarding/ob_confirm_welcome.mp3
+  2. That's it — it plays automatically when the confirm prompt opens,
+     and stops when the user clicks either button.
+
+  File name:   ob_confirm_welcome.mp3
+  Folder:      audio/onboarding/
+  Full path:   audio/onboarding/ob_confirm_welcome.mp3
+
+  Tip: Keep it short (10–20 seconds) — just Lt. Jadda introducing herself
+       and asking if the user wants the portal guide.
+-->
+<audio id="ob-confirm-audio" preload="none"
+       src="audio/onboarding/ob_confirm_welcome.mp3"></audio>
+
+<script>
+// ── Confirm prompt audio controller ──────────────────────────
+// Shares _volume/_muted state with the main onboarding system via
+// the ObSystem.setVolume API so both sliders stay in sync.
+
+let _confirmVol  = 0.8
+
+function obConfirmSetVolume(val) {
+  _confirmVol = parseFloat(val)
+  const el = document.getElementById('ob-confirm-audio')
+  if (el) el.volume = _confirmVol
+
+  // Update slider fill and pct label
+  const wrap = document.getElementById('obConfirmVolWrap')
+  if (wrap) wrap.style.setProperty('--cvol', _confirmVol)
+  const pct = document.getElementById('obConfirmVolPct')
+  if (pct) pct.textContent = Math.round(_confirmVol * 100) + '%'
+  const slider = document.getElementById('obConfirmVolSlider')
+  if (slider) slider.value = _confirmVol
+}
+
+function obConfirmPlayAudio() {
+  const el = document.getElementById('ob-confirm-audio')
+  const bars = document.getElementById('obConfirmAudioBars')
+  if (!el) return
+  el.volume = _confirmVol
+  el.currentTime = 0
+  el.onplay  = () => bars && bars.classList.add('ob-confirm-audio-playing')
+  el.onended = () => bars && bars.classList.remove('ob-confirm-audio-playing')
+  el.onpause = () => bars && bars.classList.remove('ob-confirm-audio-playing')
+  el.play().catch(() => {}) // silent fail if browser blocks autoplay
+}
+
+function obConfirmStopAudio() {
+  const el = document.getElementById('ob-confirm-audio')
+  const bars = document.getElementById('obConfirmAudioBars')
+  if (el) { el.pause(); el.currentTime = 0 }
+  if (bars) bars.classList.remove('ob-confirm-audio-playing')
+}
+
+// Observe the confirm overlay for ob-active class changes
+// so we can auto-play/stop without touching ObSystem internals
+;(function () {
+  const target = document.getElementById('ob-confirm')
+  if (!target) return
+  const observer = new MutationObserver(() => {
+    if (target.classList.contains('ob-active')) {
+      // Small delay so the box-in animation starts first
+      setTimeout(obConfirmPlayAudio, 300)
+    } else {
+      obConfirmStopAudio()
+    }
+  })
+  observer.observe(target, { attributes: true, attributeFilter: ['class'] })
+})()
+
+// Patch ObSystem.startGuide and skipGuide to stop confirm audio when dismissed
+document.addEventListener('DOMContentLoaded', () => {
+  const _origStart = ObSystem.startGuide.bind(ObSystem)
+  const _origSkip  = ObSystem.skipGuide.bind(ObSystem)
+  ObSystem.startGuide = function () { obConfirmStopAudio(); _origStart() }
+  ObSystem.skipGuide  = function () { obConfirmStopAudio(); _origSkip()  }
+})
+</script>
 
 <script>
 // ═══════════════════════════════════════════════════════════
