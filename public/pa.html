@@ -1563,8 +1563,7 @@ function populateWantedForm(w) {
   document.getElementById('wAffiliation').value   = w.affiliation    || ''
   document.getElementById('wStatus').value        = w.status         || 'at_large'
   document.getElementById('wDebrief').value       = w.debrief        || ''
-  document.getElementById('wCharges').value       = (w.charges || []).join('
-')
+  document.getElementById('wCharges').value       = (w.charges || []).join('\n')
   document.getElementById('wDetInitials').value   = w.detective_initials  || ''
   document.getElementById('wDetName').value       = w.detective_name      || ''
   document.getElementById('wDetRank').value       = w.detective_rank      || ''
@@ -1663,8 +1662,7 @@ async function saveWanted() {
   if (!fullName) { showToast('Name / charge label is required', 'error'); return }
 
   const chargesRaw = document.getElementById('wCharges').value
-  const charges = chargesRaw.split('
-').map(s => s.trim()).filter(Boolean)
+  const charges = chargesRaw.split('\n').map(s => s.trim()).filter(Boolean)
 
   const token = sessionStorage.getItem('cib_token')
   const payload = {
