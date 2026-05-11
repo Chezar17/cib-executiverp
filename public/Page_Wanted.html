@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -14,6 +14,10 @@
 <link rel="stylesheet" href="shared/styles/site-header.css"/>
 <script type="module" src="shared/components/site-header.js"></script>
 <link rel="stylesheet" href="styles/wanted.css"/>
+
+<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
 /* ── Loading / empty states ── */
 .mw-loading {
@@ -61,48 +65,84 @@
   color:var(--muted); opacity:0.5;
 }
 
-/* ── Export button on each card ── */
-.mw-export-btn {
-  display:inline-flex; align-items:center; gap:7px;
-  margin-top:18px;
-  padding:8px 18px;
-  background:transparent;
-  border:1px solid rgba(201,168,76,0.25);
-  color:rgba(201,168,76,0.6);
-  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2.5px;
-  text-transform:uppercase; cursor:pointer;
-  transition:all 0.18s ease;
-  position:relative; overflow:hidden;
+/* ── Export Button ── */
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.35);
+  color: rgba(201,168,76,0.75);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  position: relative;
+  overflow: hidden;
 }
-.mw-export-btn::before {
-  content:''; position:absolute; inset:0;
-  background:rgba(201,168,76,0.06);
-  transform:translateX(-100%);
-  transition:transform 0.22s ease;
+.export-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(201,168,76,0.06);
+  opacity: 0;
+  transition: opacity 0.2s;
 }
-.mw-export-btn:hover { border-color:rgba(201,168,76,0.6); color:rgba(201,168,76,1); }
-.mw-export-btn:hover::before { transform:translateX(0); }
-.mw-export-btn svg { flex-shrink:0; transition:transform 0.18s; }
-.mw-export-btn:hover svg { transform:translateY(-1px); }
-.mw-export-btn.mw-exporting { opacity:0.5; pointer-events:none; }
+.export-btn:hover {
+  border-color: rgba(201,168,76,0.7);
+  color: #C9A84C;
+  background: rgba(201,168,76,0.05);
+}
+.export-btn:hover::before { opacity: 1; }
+.export-btn:active { transform: scale(0.98); }
+.export-btn svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+.export-btn.exporting {
+  pointer-events: none;
+  opacity: 0.5;
+}
+.export-btn.exporting .export-btn-text::after {
+  content: '...';
+}
 
-/* ── Export toast notification ── */
-#mwExportToast {
-  position:fixed; bottom:28px; right:28px; z-index:9999;
-  display:flex; flex-direction:column; gap:8px; pointer-events:none;
-}
+/* ── Export Toast ── */
 .mw-toast {
-  padding:11px 20px;
-  background:#0D1526; border:1px solid rgba(201,168,76,0.3);
-  border-left:3px solid var(--gold, #C9A84C);
-  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1.5px;
-  color:rgba(240,237,228,0.85); text-transform:uppercase;
-  animation:mwToastIn 0.25s ease, mwToastOut 0.3s ease 2.5s forwards;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 9999;
+  background: #0e0e0e;
+  border: 1px solid rgba(201,168,76,0.4);
+  color: rgba(201,168,76,0.9);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
 }
-.mw-toast.mw-toast-err { border-left-color:#C0392B; }
-@keyframes mwToastIn  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-@keyframes mwToastOut { to   { opacity:0; transform:translateY(8px);  } }
+.mw-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.mw-toast-dot {
+  width: 6px; height: 6px;
+  background: #C9A84C;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -138,26 +178,23 @@
 
   <!-- Wanted list container — populated by JS -->
   <div class="wanted-list" id="mwWantedList">
-
-    <!-- Loading state -->
     <div class="mw-loading" id="mwLoadingState">
       <div class="mw-loading-text">Retrieving Priority Target Data...</div>
       <div class="mw-loading-bar"><div class="mw-loading-progress"></div></div>
     </div>
-
   </div>
-  <!-- END .wanted-list -->
 
 </div>
-<!-- END .mw-wrap -->
 
-<!-- Export toast -->
-<div id="mwExportToast"></div>
+<!-- Export toast notification -->
+<div class="mw-toast" id="mwToast">
+  <div class="mw-toast-dot"></div>
+  <span id="mwToastText">Poster exported</span>
+</div>
 
 <!-- FOOTER -->
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
-
 <script src="shared/scripts/site-ui.js"></script>
 <script src="scripts/wanted.js"></script>
 
@@ -190,6 +227,16 @@ const STATUS_COLORS = {
   cleared:    'var(--muted)',
 }
 
+// Canvas hex equivalents for CSS vars (used in poster drawing)
+const GOLD   = '#C9A84C'
+const RED    = '#C0392B'
+const BG     = '#0A0A0A'
+const BG2    = '#111111'
+const BORDER = 'rgba(201,168,76,0.18)'
+const MUTED  = '#666666'
+const WHITE  = '#FFFFFF'
+const DIM    = '#AAAAAA'
+
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
@@ -201,6 +248,506 @@ function formatDate(d) {
   } catch { return d }
 }
 
+// ── Toast helper ──────────────────────────────────────────
+let _toastTimer = null
+function showToast(msg) {
+  const el = document.getElementById('mwToast')
+  document.getElementById('mwToastText').textContent = msg
+  el.classList.add('show')
+  clearTimeout(_toastTimer)
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000)
+}
+
+// ── QR Code helper — returns a PNG data-URL via hidden div ──
+function generateQRDataURL(text, size) {
+  return new Promise((resolve) => {
+    const wrapper = document.createElement('div')
+    wrapper.style.cssText = 'position:fixed;left:-9999px;top:-9999px;'
+    document.body.appendChild(wrapper)
+    new QRCode(wrapper, {
+      text,
+      width:  size,
+      height: size,
+      colorDark:  '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    })
+    // QRCode renders synchronously into a canvas/img
+    setTimeout(() => {
+      const img = wrapper.querySelector('img') || wrapper.querySelector('canvas')
+      let url = ''
+      if (img && img.tagName === 'IMG') url = img.src
+      else if (img && img.tagName === 'CANVAS') url = img.toDataURL('image/png')
+      document.body.removeChild(wrapper)
+      resolve(url)
+    }, 80)
+  })
+}
+
+// ── Load image cross-origin helper ───────────────────────
+function loadImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload  = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = src
+  })
+}
+
+// ── Draw rounded rect helper ─────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+  ctx.lineTo(x + r, y + h)
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+  ctx.lineTo(x, y + r)
+  ctx.quadraticCurveTo(x, y, x + r, y)
+  ctx.closePath()
+}
+
+// ── Wrap text helper ─────────────────────────────────────
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = String(text || '').split(' ')
+  let line = ''
+  let curY = y
+  for (let i = 0; i < words.length; i++) {
+    const test = line + words[i] + ' '
+    if (ctx.measureText(test).width > maxWidth && i > 0) {
+      ctx.fillText(line.trim(), x, curY)
+      line = words[i] + ' '
+      curY += lineHeight
+    } else {
+      line = test
+    }
+  }
+  if (line.trim()) ctx.fillText(line.trim(), x, curY)
+  return curY
+}
+
+// ════════════════════════════════════════════════════════════
+//  POSTER EXPORT — draws a 900×1280 canvas wanted poster
+// ════════════════════════════════════════════════════════════
+async function exportWantedPoster(w) {
+  const W = 900, H = 1280
+  const canvas = document.createElement('canvas')
+  canvas.width  = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d')
+
+  // ── Fonts must be loaded first ──
+  await document.fonts.ready
+
+  // ── Background ──
+  ctx.fillStyle = '#0C0C0C'
+  ctx.fillRect(0, 0, W, H)
+
+  // Subtle grid texture
+  ctx.save()
+  ctx.strokeStyle = 'rgba(201,168,76,0.03)'
+  ctx.lineWidth = 1
+  for (let gx = 0; gx <= W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke() }
+  for (let gy = 0; gy <= H; gy += 40) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke() }
+  ctx.restore()
+
+  // ── Outer border ──
+  ctx.save()
+  ctx.strokeStyle = 'rgba(201,168,76,0.4)'
+  ctx.lineWidth = 1
+  ctx.strokeRect(28, 28, W - 56, H - 56)
+  ctx.strokeStyle = 'rgba(201,168,76,0.12)'
+  ctx.lineWidth = 1
+  ctx.strokeRect(34, 34, W - 68, H - 68)
+  ctx.restore()
+
+  // Corner accents
+  const corners = [[34,34],[W-34,34],[34,H-34],[W-34,H-34]]
+  const cLen = 22
+  ctx.save()
+  ctx.strokeStyle = GOLD
+  ctx.lineWidth = 1.5
+  for (const [cx,cy] of corners) {
+    const dx = cx < W/2 ? 1 : -1
+    const dy = cy < H/2 ? 1 : -1
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx + dx*cLen, cy); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx, cy + dy*cLen); ctx.stroke()
+  }
+  ctx.restore()
+
+  // ── Header strip ──
+  ctx.save()
+  const hGrad = ctx.createLinearGradient(0,42,0,90)
+  hGrad.addColorStop(0, 'rgba(201,168,76,0.14)')
+  hGrad.addColorStop(1, 'rgba(201,168,76,0.0)')
+  ctx.fillStyle = hGrad
+  ctx.fillRect(34, 42, W - 68, 52)
+  ctx.restore()
+
+  // CIB eyebrow
+  ctx.save()
+  ctx.font = '500 10px "Roboto Mono", monospace'
+  ctx.fillStyle = 'rgba(201,168,76,0.6)'
+  ctx.letterSpacing = '4px'
+  ctx.fillText('CENTRAL INVESTIGATION BUREAU  ·  PRIORITY TARGET', 60, 66)
+  ctx.restore()
+
+  // Separator line under header
+  ctx.save()
+  ctx.strokeStyle = 'rgba(201,168,76,0.25)'
+  ctx.lineWidth = 1
+  ctx.beginPath(); ctx.moveTo(34, 90); ctx.lineTo(W-34, 90); ctx.stroke()
+  ctx.restore()
+
+  // ── WANTED title ──
+  ctx.save()
+  ctx.font = '700 72px "Oswald", sans-serif'
+  ctx.fillStyle = WHITE
+  ctx.letterSpacing = '12px'
+  ctx.textAlign = 'center'
+  ctx.fillText('WANTED', W/2, 162)
+  ctx.restore()
+
+  // Gold underline
+  ctx.save()
+  const lineW = 220
+  ctx.fillStyle = GOLD
+  ctx.fillRect(W/2 - lineW/2, 170, lineW, 2)
+  ctx.restore()
+
+  // ── Threat level badge ──
+  const threatMap = { critical:'#8B1010', high:'#C0392B', medium:'#D4840A', low:'#2E7D32' }
+  const threatColor = threatMap[w.threat_level] || threatMap.high
+  const threatLabel = (THREAT_LABELS[w.threat_level] || 'HIGH').toUpperCase()
+  ctx.save()
+  roundRect(ctx, W/2 - 80, 182, 160, 26, 2)
+  ctx.fillStyle = threatColor
+  ctx.fill()
+  ctx.font = '600 10px "Roboto Mono", monospace'
+  ctx.fillStyle = WHITE
+  ctx.textAlign = 'center'
+  ctx.letterSpacing = '3px'
+  ctx.fillText(`THREAT LEVEL: ${threatLabel}`, W/2, 199)
+  ctx.restore()
+
+  // ── Photo section ──
+  const photoX = 60, photoY = 222, photoW = 260, photoH = 320
+  ctx.save()
+  ctx.strokeStyle = 'rgba(201,168,76,0.3)'
+  ctx.lineWidth = 1
+  ctx.strokeRect(photoX, photoY, photoW, photoH)
+  ctx.restore()
+
+  // Photo background
+  ctx.save()
+  ctx.fillStyle = '#1a1a1a'
+  ctx.fillRect(photoX+1, photoY+1, photoW-2, photoH-2)
+  ctx.restore()
+
+  if (w.photo_url) {
+    const img = await loadImage(w.photo_url)
+    if (img) {
+      ctx.save()
+      ctx.rect(photoX+1, photoY+1, photoW-2, photoH-2)
+      ctx.clip()
+      // Cover-fit
+      const iRatio = img.width / img.height
+      const bRatio = photoW / photoH
+      let sx,sy,sw,sh
+      if (iRatio > bRatio) { sh = img.height; sw = sh*bRatio; sx = (img.width-sw)/2; sy = 0 }
+      else                 { sw = img.width; sh = sw/bRatio; sx = 0; sy = (img.height-sh)/2 }
+      ctx.drawImage(img, sx, sy, sw, sh, photoX+1, photoY+1, photoW-2, photoH-2)
+      ctx.restore()
+
+      // Vignette on photo
+      ctx.save()
+      const vGrad = ctx.createRadialGradient(photoX+photoW/2, photoY+photoH/2, photoH*0.2, photoX+photoW/2, photoY+photoH/2, photoH*0.75)
+      vGrad.addColorStop(0, 'rgba(0,0,0,0)')
+      vGrad.addColorStop(1, 'rgba(0,0,0,0.55)')
+      ctx.fillStyle = vGrad
+      ctx.fillRect(photoX+1, photoY+1, photoW-2, photoH-2)
+      ctx.restore()
+    }
+  } else {
+    // Placeholder silhouette
+    ctx.save()
+    ctx.fillStyle = '#1a1a1a'
+    ctx.fillRect(photoX+1, photoY+1, photoW-2, photoH-2)
+    ctx.fillStyle = 'rgba(201,168,76,0.07)'
+    ctx.font = '140px "Oswald", sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('?', photoX + photoW/2, photoY + photoH*0.65)
+    ctx.restore()
+  }
+
+  // Case strip under photo
+  ctx.save()
+  ctx.fillStyle = 'rgba(0,0,0,0.85)'
+  ctx.fillRect(photoX, photoY + photoH - 38, photoW, 38)
+  ctx.font = '500 8px "Roboto Mono", monospace'
+  ctx.fillStyle = 'rgba(201,168,76,0.7)'
+  ctx.textAlign = 'left'
+  ctx.letterSpacing = '1.5px'
+  ctx.fillText(`CASE NO. ${w.case_number || '—'}`, photoX + 10, photoY + photoH - 22)
+  ctx.fillStyle = 'rgba(255,255,255,0.4)'
+  ctx.font = '400 8px "Roboto Mono", monospace'
+  ctx.fillText(`WANTED SINCE: ${formatDate(w.wanted_since)}`, photoX + 10, photoY + photoH - 8)
+  ctx.restore()
+
+  // ── Right info column ──
+  const infoX = 345, infoY = 222, infoW = W - infoX - 55
+
+  // Alias
+  let curY2 = infoY
+  if (w.alias) {
+    ctx.save()
+    ctx.font = '400 11px "Roboto Mono", monospace'
+    ctx.fillStyle = 'rgba(201,168,76,0.6)'
+    ctx.textAlign = 'left'
+    ctx.letterSpacing = '2px'
+    ctx.fillText(`AKA "${w.alias.toUpperCase()}"`, infoX, curY2 + 14)
+    curY2 += 24
+    ctx.restore()
+  }
+
+  // Full name
+  ctx.save()
+  ctx.font = '700 38px "Oswald", sans-serif'
+  ctx.fillStyle = WHITE
+  ctx.textAlign = 'left'
+  ctx.letterSpacing = '1px'
+  // Shrink font if name is long
+  const nameFont = w.full_name && w.full_name.length > 20 ? '700 28px "Oswald", sans-serif' : '700 38px "Oswald", sans-serif'
+  ctx.font = nameFont
+  ctx.fillText(String(w.full_name || 'UNKNOWN').toUpperCase(), infoX, curY2 + 38)
+  curY2 += 50
+  ctx.restore()
+
+  // Meta ID row
+  ctx.save()
+  ctx.font = '400 9px "Roboto Mono", monospace'
+  ctx.fillStyle = 'rgba(255,255,255,0.35)'
+  ctx.textAlign = 'left'
+  ctx.letterSpacing = '1px'
+  const metaParts = [
+    w.suspect_id ? `ID: ${w.suspect_id}` : null,
+    `DOB: ${w.dob || 'UNKNOWN'}`,
+    `NAT: ${w.nationality || 'UNKNOWN'}`,
+  ].filter(Boolean)
+  ctx.fillText(metaParts.join('  |  '), infoX, curY2)
+  curY2 += 20
+  ctx.restore()
+
+  // Divider
+  ctx.save()
+  ctx.strokeStyle = 'rgba(201,168,76,0.2)'
+  ctx.lineWidth = 1
+  ctx.beginPath(); ctx.moveTo(infoX, curY2); ctx.lineTo(infoX + infoW, curY2); ctx.stroke()
+  curY2 += 16
+  ctx.restore()
+
+  // Bounty row
+  ctx.save()
+  ctx.fillStyle = 'rgba(201,168,76,0.06)'
+  roundRect(ctx, infoX, curY2, infoW, 58, 2)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(201,168,76,0.2)'
+  ctx.lineWidth = 1
+  ctx.stroke()
+  ctx.font = '500 9px "Roboto Mono", monospace'
+  ctx.fillStyle = 'rgba(201,168,76,0.55)'
+  ctx.textAlign = 'left'
+  ctx.letterSpacing = '2px'
+  ctx.fillText('BOUNTY ON CAPTURE', infoX + 14, curY2 + 18)
+  ctx.font = '600 24px "Oswald", sans-serif'
+  ctx.fillStyle = GOLD
+  ctx.letterSpacing = '1px'
+  ctx.fillText(String(w.bounty_amount || 'TBD').toUpperCase(), infoX + 14, curY2 + 46)
+  ctx.font = '400 8px "Roboto Mono", monospace'
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'
+  ctx.textAlign = 'right'
+  ctx.letterSpacing = '0.5px'
+  ctx.fillText(String(w.bounty_note || 'Authorized by CIB Director'), infoX + infoW - 14, curY2 + 50)
+  curY2 += 72
+
+  ctx.restore()
+
+  // Meta grid — 3 cells
+  const cells = [
+    { label: 'Last Known Location', value: w.last_known_loc || '—' },
+    { label: 'Affiliation',         value: w.affiliation    || 'UNKNOWN' },
+    { label: 'Status',              value: STATUS_LABELS[w.status] || 'At Large',
+      color: w.status === 'at_large' ? RED : w.status === 'in_custody' ? '#27ae60' : MUTED },
+  ]
+  const cellW = Math.floor(infoW / 3)
+  cells.forEach((cell, i) => {
+    const cx2 = infoX + i * cellW
+    ctx.save()
+    ctx.strokeStyle = 'rgba(201,168,76,0.12)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(cx2, curY2, cellW, 54)
+    ctx.font = '400 8px "Roboto Mono", monospace'
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'
+    ctx.textAlign = 'left'
+    ctx.letterSpacing = '1.5px'
+    ctx.fillText(cell.label.toUpperCase(), cx2 + 10, curY2 + 16)
+    ctx.font = '600 13px "Oswald", sans-serif'
+    ctx.fillStyle = cell.color || WHITE
+    ctx.letterSpacing = '0.5px'
+    // Wrap long values
+    const valStr = String(cell.value).toUpperCase()
+    ctx.fillText(valStr.substring(0, 22), cx2 + 10, curY2 + 36)
+    if (valStr.length > 22) ctx.fillText(valStr.substring(22, 44), cx2 + 10, curY2 + 50)
+    ctx.restore()
+  })
+  curY2 += 68
+
+  // ── Full-width section: Debrief ──
+  const fullX = 60, fullW2 = W - 115
+  if (w.debrief) {
+    ctx.save()
+    ctx.font = '500 9px "Roboto Mono", monospace'
+    ctx.fillStyle = 'rgba(201,168,76,0.55)'
+    ctx.textAlign = 'left'
+    ctx.letterSpacing = '2px'
+    ctx.fillText('SUSPECT DEBRIEF', fullX, curY2 + 14)
+    ctx.fillStyle = 'rgba(201,168,76,0.2)'
+    ctx.fillRect(fullX, curY2 + 20, fullW2, 1)
+    ctx.font = '300 11px "Roboto", sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.letterSpacing = '0.3px'
+    curY2 = wrapText(ctx, w.debrief, fullX, curY2 + 34, fullW2, 16) + 22
+    ctx.restore()
+  }
+
+  // ── Charges ──
+  const charges = Array.isArray(w.charges) ? w.charges : []
+  if (charges.length) {
+    ctx.save()
+    ctx.font = '500 9px "Roboto Mono", monospace'
+    ctx.fillStyle = 'rgba(201,168,76,0.55)'
+    ctx.textAlign = 'left'
+    ctx.letterSpacing = '2px'
+    ctx.fillText('CHARGES & OFFENSES', fullX, curY2 + 14)
+    ctx.fillStyle = 'rgba(201,168,76,0.2)'
+    ctx.fillRect(fullX, curY2 + 20, fullW2, 1)
+    curY2 += 32
+
+    let tagX = fullX
+    for (const charge of charges) {
+      ctx.font = '500 9px "Roboto Mono", monospace'
+      ctx.letterSpacing = '1px'
+      const tw = ctx.measureText(charge.toUpperCase()).width + 20
+      if (tagX + tw > fullX + fullW2 - 80) {
+        tagX = fullX
+        curY2 += 28
+      }
+      roundRect(ctx, tagX, curY2, tw, 20, 2)
+      ctx.fillStyle = 'rgba(192,57,43,0.15)'
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(192,57,43,0.4)'
+      ctx.lineWidth = 1
+      ctx.stroke()
+      ctx.fillStyle = 'rgba(255,255,255,0.65)'
+      ctx.textAlign = 'left'
+      ctx.fillText(charge.toUpperCase(), tagX + 10, curY2 + 14)
+      tagX += tw + 8
+    }
+    curY2 += 40
+    ctx.restore()
+  }
+
+  // ── Bottom strip — QR code + footer ──
+  const bottomY = H - 160
+  ctx.save()
+  ctx.fillStyle = 'rgba(201,168,76,0.04)'
+  ctx.fillRect(34, bottomY, W - 68, 100)
+  ctx.strokeStyle = 'rgba(201,168,76,0.15)'
+  ctx.lineWidth = 1
+  ctx.strokeRect(34, bottomY, W - 68, 100)
+  ctx.restore()
+
+  // Divider above bottom strip
+  ctx.save()
+  ctx.strokeStyle = 'rgba(201,168,76,0.18)'
+  ctx.lineWidth = 1
+  ctx.beginPath(); ctx.moveTo(34, bottomY); ctx.lineTo(W-34, bottomY); ctx.stroke()
+  ctx.restore()
+
+  // QR code — left side of bottom strip
+  const qrSize = 80
+  const qrUrl  = window.location.origin + '/Page_Wanted.html'
+  const qrData = await generateQRDataURL(qrUrl, qrSize * 2)
+  if (qrData) {
+    const qrImg = await loadImage(qrData)
+    if (qrImg) {
+      // White bg for QR
+      ctx.save()
+      ctx.fillStyle = WHITE
+      ctx.fillRect(54, bottomY + 10, qrSize, qrSize)
+      ctx.drawImage(qrImg, 54, bottomY + 10, qrSize, qrSize)
+      ctx.restore()
+
+      // QR label
+      ctx.save()
+      ctx.font = '400 7px "Roboto Mono", monospace'
+      ctx.fillStyle = 'rgba(201,168,76,0.45)'
+      ctx.textAlign = 'center'
+      ctx.letterSpacing = '1px'
+      ctx.fillText('SCAN TO VIEW', 54 + qrSize/2, bottomY + qrSize + 22)
+      ctx.fillText('ALL WANTED', 54 + qrSize/2, bottomY + qrSize + 32)
+      ctx.restore()
+    }
+  }
+
+  // Footer text — right of QR
+  const ftX = 160
+  ctx.save()
+  ctx.font = '400 8px "Roboto Mono", monospace'
+  ctx.fillStyle = 'rgba(201,168,76,0.5)'
+  ctx.textAlign = 'left'
+  ctx.letterSpacing = '2px'
+  ctx.fillText('IF YOU HAVE INFORMATION REGARDING THIS INDIVIDUAL,', ftX, bottomY + 26)
+  ctx.fillText('CONTACT THE CIB TIP HOTLINE IMMEDIATELY.', ftX, bottomY + 40)
+  ctx.fillStyle = 'rgba(192,57,43,0.7)'
+  ctx.font = '600 11px "Roboto Mono", monospace'
+  ctx.letterSpacing = '1.5px'
+  ctx.fillText('DO NOT ATTEMPT TO APPREHEND.', ftX, bottomY + 60)
+  ctx.fillText('CONSIDER ARMED AND DANGEROUS.', ftX, bottomY + 74)
+  ctx.fillStyle = 'rgba(255,255,255,0.15)'
+  ctx.font = '400 8px "Roboto Mono", monospace'
+  ctx.letterSpacing = '1px'
+  ctx.fillText(`ISSUED BY CENTRAL INVESTIGATION BUREAU  ·  SAN ANDREAS`, ftX, bottomY + 96)
+  ctx.restore()
+
+  // ── Very bottom bar ──
+  ctx.save()
+  ctx.fillStyle = 'rgba(201,168,76,0.08)'
+  ctx.fillRect(34, H - 56, W - 68, 22)
+  ctx.font = '400 8px "Roboto Mono", monospace'
+  ctx.fillStyle = 'rgba(201,168,76,0.35)'
+  ctx.textAlign = 'left'
+  ctx.letterSpacing = '2px'
+  const exportDate = new Date().toLocaleDateString('en-US', { day:'2-digit', month:'short', year:'numeric' }).toUpperCase()
+  ctx.fillText(`EXPORTED: ${exportDate}  ·  CIB CLASSIFIED`, 60, H - 40)
+  ctx.textAlign = 'right'
+  ctx.fillText(`REF: ${w.case_number || w.suspect_id || 'CIB-WANTED'}`, W - 60, H - 40)
+  ctx.restore()
+
+  // ── Download ──
+  const fileName = `CIB_WANTED_${String(w.full_name || 'SUSPECT').replace(/\s+/g,'_').toUpperCase()}.png`
+  const link = document.createElement('a')
+  link.download = fileName
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
+
+// ════════════════════════════════════════════════════════════
+//  Card HTML builder
+// ════════════════════════════════════════════════════════════
 function buildCardHTML(w, index) {
   const num        = String(index + 1).padStart(2, '0')
   const threatCls  = 'threat-' + (w.threat_level || 'high')
@@ -251,8 +798,11 @@ function buildCardHTML(w, index) {
     `NATIONALITY: ${escHtml(w.nationality || 'UNKNOWN')}`,
   ].filter(Boolean).join(' &nbsp;|&nbsp; ')
 
+  // Encode wanted data as JSON for the export button
+  const wData = escHtml(JSON.stringify(w))
+
   return `
-    <div class="wanted-card" data-wanted-index="${index}">
+    <div class="wanted-card">
 
       <!-- LEFT: PHOTO COLUMN -->
       <div class="suspect-photo-col">
@@ -261,6 +811,17 @@ function buildCardHTML(w, index) {
           <div class="photo-case-id">CASE NO. ${escHtml(w.case_number || '—')}</div>
           <div class="photo-date-wanted">WANTED SINCE: <span>${formatDate(w.wanted_since)}</span></div>
         </div>
+
+        <!-- EXPORT BUTTON -->
+        <button class="export-btn" onclick="handleExport(this, '${wData}')" title="Export as wanted poster image">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span class="export-btn-text">Export Poster</span>
+        </button>
+
       </div>
 
       <!-- RIGHT: INFO COLUMN -->
@@ -305,21 +866,36 @@ function buildCardHTML(w, index) {
         ${chargesBlock}
         ${detBlock}
 
-        <!-- Export button -->
-        <button class="mw-export-btn" onclick="exportWantedCard(${index})" title="Export as image and share it to other people">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Export Bulletin and share the picture to help us find this suspect
-        </button>
-
       </div>
     </div>`
 }
 
-// ── Wanted data store (for export) ──────────────────────────
-let _mwData = []
+// ── Export button handler ──────────────────────────────────
+async function handleExport(btn, wDataEncoded) {
+  if (btn.classList.contains('exporting')) return
+  btn.classList.add('exporting')
+  const span = btn.querySelector('.export-btn-text')
+  const origText = span.textContent
+  span.textContent = 'Generating'
 
+  try {
+    // Decode the HTML-escaped JSON
+    const raw  = wDataEncoded.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
+    const w    = JSON.parse(raw)
+    await exportWantedPoster(w)
+    showToast(`Poster exported — ${w.full_name || 'suspect'}`)
+  } catch (err) {
+    console.error('Export failed:', err)
+    showToast('Export failed. Please try again.')
+  } finally {
+    btn.classList.remove('exporting')
+    span.textContent = origText
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  Data loader
+// ════════════════════════════════════════════════════════════
 async function loadWantedList() {
   const listEl = document.getElementById('mwWantedList')
 
@@ -330,9 +906,7 @@ async function loadWantedList() {
     if (!json.success) throw new Error(json.error || 'Failed to load')
 
     const data = (json.data || []).filter(w => w.status !== 'cleared')
-    _mwData = data  // store for export
 
-    // Update count bar
     const activeCount = data.filter(w => w.status === 'at_large').length
     document.getElementById('mwCountNum').textContent = String(activeCount).padStart(2, '0')
 
@@ -358,7 +932,9 @@ async function loadWantedList() {
 
     listEl.innerHTML = data.map((w, i) => buildCardHTML(w, i)).join('')
 
-    if (window.SiteUi && SiteUi.initScrollReveal) SiteUi.initScrollReveal()
+    if (window.SiteUi && SiteUi.initScrollReveal) {
+      SiteUi.initScrollReveal()
+    }
 
   } catch (err) {
     console.error('Failed to load wanted list:', err)
@@ -371,793 +947,6 @@ async function loadWantedList() {
   }
 }
 
-// ════════════════════════════════════════════════════════════
-//  EXPORT ENGINE — Canvas-based wanted bulletin generator
-// ════════════════════════════════════════════════════════════
-
-// ── Toast helper ─────────────────────────────────────────────
-function mwToast(msg, isErr) {
-  const wrap = document.getElementById('mwExportToast')
-  const el   = document.createElement('div')
-  el.className = 'mw-toast' + (isErr ? ' mw-toast-err' : '')
-  el.textContent = msg
-  wrap.appendChild(el)
-  setTimeout(() => el.remove(), 2900)
-}
-
-// ── Minimal pure-JS QR code generator ────────────────────────
-// Encodes a URL into a QR matrix using alphanumeric + byte mode.
-// Returns a 2D boolean array (true = dark module).
-function generateQRMatrix(text) {
-  // We use a minimal implementation that produces a valid Version 3 QR code
-  // via the qrcodegen library pattern — here implemented as a self-contained encoder.
-  // For production, swap this with a full library; this covers URLs up to ~80 chars.
-
-  // --- Reed-Solomon GF(256) math ---
-  const GF_EXP = new Uint8Array(512)
-  const GF_LOG = new Uint8Array(256)
-  ;(function(){
-    let x = 1
-    for (let i = 0; i < 255; i++) {
-      GF_EXP[i] = x; GF_LOG[x] = i
-      x <<= 1; if (x & 0x100) x ^= 0x11D
-    }
-    for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255]
-  })()
-  const gfMul = (a, b) => (!a || !b) ? 0 : GF_EXP[GF_LOG[a] + GF_LOG[b]]
-  const gfPoly = (gen, exp) => {
-    let r = [1]
-    for (let i = 0; i < exp; i++) {
-      const p = []; for (let j = 0; j < r.length + 1; j++) p[j] = 0
-      for (let j = 0; j < r.length; j++) {
-        p[j]   ^= gfMul(r[j], GF_EXP[i])
-        p[j+1] ^= r[j]
-      }
-      r = p
-    }
-    return r
-  }
-  const rsEncode = (data, nsym) => {
-    const gen = gfPoly(2, nsym)
-    const msg = [...data, ...new Array(nsym).fill(0)]
-    for (let i = 0; i < data.length; i++) {
-      const c = msg[i]; if (!c) continue
-      for (let j = 0; j < gen.length; j++) msg[i+j] ^= gfMul(gen[j], c)
-    }
-    return msg.slice(data.length)
-  }
-
-  // --- Encode text as bytes ---
-  const bytes = []
-  for (let i = 0; i < text.length; i++) bytes.push(text.charCodeAt(i) & 0xFF)
-
-  // Version 3, ECC level M: 17×17 + 4*(3-1) = 21 modules? No: (17+4*ver) = 29 for ver 3
-  // We'll use Version 2 (25 modules) which holds up to 32 bytes in M mode
-  // Version 4 (33×33) holds up to 50 bytes in M — we auto-pick
-  let version = 1
-  const caps = [17, 14, 11, 7] // bytes cap for v1-v4 at ECC-M
-  for (let v = 1; v <= 4; v++) { if (bytes.length <= caps[v-1]) { version = v; break } }
-  if (bytes.length > caps[3]) version = 4 // clamp
-
-  const size  = 17 + 4 * version
-  const grid  = Array.from({length: size}, () => new Uint8Array(size)) // 0=light,1=dark,2=reserved
-  const mask  = Array.from({length: size}, () => new Uint8Array(size)) // 1=function module
-
-  const set = (r,c,v) => { grid[r][c] = v; mask[r][c] = 1 }
-
-  // Finder patterns
-  const finder = (tr, tc) => {
-    for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
-      const pr = tr+r, pc = tc+c
-      if (pr < 0 || pr >= size || pc < 0 || pc >= size) continue
-      const inSq = r >= 0 && r <= 6 && c >= 0 && c <= 6
-      const onBorder = r === 0 || r === 6 || c === 0 || c === 6
-      const inInner  = r >= 2 && r <= 4 && c >= 2 && c <= 4
-      set(pr, pc, (inSq && (onBorder || inInner)) ? 1 : 0)
-    }
-  }
-  finder(0, 0); finder(0, size-7); finder(size-7, 0)
-
-  // Timing patterns
-  for (let i = 8; i < size-8; i++) {
-    set(6, i, i%2===0 ? 1 : 0)
-    set(i, 6, i%2===0 ? 1 : 0)
-  }
-
-  // Dark module
-  set(4*version+9, 8, 1)
-
-  // Alignment pattern (version >= 2)
-  if (version >= 2) {
-    const pos = version === 2 ? [6,18] : version === 3 ? [6,22] : [6,26]
-    for (let ai = 0; ai < pos.length; ai++) for (let aj = 0; aj < pos.length; aj++) {
-      const cr = pos[ai], cc = pos[aj]
-      if (mask[cr][cc]) continue
-      for (let r = -2; r <= 2; r++) for (let c = -2; c <= 2; c++) {
-        const v = (r===-2||r===2||c===-2||c===2||r===0&&c===0) ? 1 : 0
-        set(cr+r, cc+c, v)
-      }
-    }
-  }
-
-  // Build data bitstream
-  const bits = []
-  // Mode: byte = 0100
-  bits.push(0,1,0,0)
-  // Character count (8 bits for version 1-9 byte mode)
-  const len = bytes.length
-  for (let i = 7; i >= 0; i--) bits.push((len >> i) & 1)
-  // Data bytes
-  for (const b of bytes) for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1)
-  // Terminator
-  for (let i = 0; i < 4 && bits.length % 8 !== 0; i++) bits.push(0)
-  while (bits.length % 8 !== 0) bits.push(0)
-
-  // ECC config per version/ECC-M
-  const eccCfg = {1:{ec:10,bl:1,bc:[19]},2:{ec:16,bl:1,bc:[34]},3:{ec:26,bl:2,bc:[17,17]},4:{ec:18,bl:2,bc:[24,25]}}
-  const cfg = eccCfg[version]
-
-  // Pad to data capacity
-  const pad = [0xEC, 0x11]
-  let pi = 0
-  while (bits.length < cfg.bc.reduce((a,b)=>a+b,0) * 8) {
-    bits.push(...[7,6,5,4,3,2,1,0].map(i => (pad[pi%2]>>i)&1)); pi++
-  }
-
-  // Split into blocks + ECC
-  const dataBytes = []
-  for (let i = 0; i < bits.length; i += 8) {
-    let b = 0; for (let j = 0; j < 8; j++) b = (b<<1) | (bits[i+j]||0)
-    dataBytes.push(b)
-  }
-
-  const blocks = []; let offset = 0
-  for (const bc of cfg.bc) { blocks.push(dataBytes.slice(offset, offset+bc)); offset += bc }
-  const eccBlocks = blocks.map(b => rsEncode(b, cfg.ec))
-
-  // Interleave data
-  const finalBits = []
-  const maxDC = Math.max(...blocks.map(b=>b.length))
-  for (let i = 0; i < maxDC; i++) for (const b of blocks) if (i < b.length) for (let j=7;j>=0;j--) finalBits.push((b[i]>>j)&1)
-  for (let i = 0; i < cfg.ec; i++) for (const e of eccBlocks) if (i < e.length) for (let j=7;j>=0;j--) finalBits.push((e[i]>>j)&1)
-
-  // Place data into grid (zigzag)
-  let bi = 0
-  const isFunc = (r,c) => mask[r] && mask[r][c]
-  let up = true
-  for (let col = size-1; col >= 1; col -= 2) {
-    if (col === 6) col--
-    for (let ri = 0; ri < size; ri++) {
-      const r = up ? (size-1-ri) : ri
-      for (let dc = 0; dc <= 1; dc++) {
-        const c = col - dc
-        if (!isFunc(r,c) && bi < finalBits.length) {
-          grid[r][c] = finalBits[bi++]
-        }
-      }
-    }
-    up = !up
-  }
-
-  // Apply mask pattern 0: (row+col) % 2 === 0
-  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
-    if (!mask[r][c] && (r+c)%2===0) grid[r][c] ^= 1
-  }
-
-  // Format info (ECC-M, mask 0) = binary 101010000010010 (pre-computed)
-  const fmt = [1,0,1,0,1,0,0,0,0,0,1,0,0,1,0]
-  const fmtPos = [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]]
-  fmtPos.forEach(([r,c],i)=>{ grid[r][c]=fmt[i]; grid[c][r]=fmt[i] })
-  // Second copy
-  const fmt2r = [[size-1,8],[size-2,8],[size-3,8],[size-4,8],[size-5,8],[size-6,8],[size-7,8],[8,size-8],[8,size-7],[8,size-6],[8,size-5],[8,size-4],[8,size-3],[8,size-2],[8,size-1]]
-  fmt2r.forEach(([r,c],i)=>{ grid[r][c]=fmt[i] })
-
-  // Return 2D boolean matrix
-  return grid.map(row => Array.from(row).map(v => v===1))
-}
-
-// ── Draw QR code onto canvas ──────────────────────────────────
-function drawQR(ctx, matrix, x, y, totalSize, fgColor, bgColor) {
-  const n       = matrix.length
-  const mod     = totalSize / n
-
-  if (bgColor) {
-    ctx.fillStyle = bgColor
-    ctx.fillRect(x, y, totalSize, totalSize)
-  }
-  ctx.fillStyle = fgColor
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      if (matrix[r][c]) {
-        ctx.fillRect(
-          Math.floor(x + c * mod),
-          Math.floor(y + r * mod),
-          Math.ceil(mod),
-          Math.ceil(mod)
-        )
-      }
-    }
-  }
-}
-
-// ── Load image as Promise ─────────────────────────────────────
-function loadImg(src) {
-  return new Promise(resolve => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload  = () => resolve(img)
-    img.onerror = () => resolve(null)
-    img.src = src
-  })
-}
-
-// ── Threat colour lookup ──────────────────────────────────────
-function threatColor(level) {
-  return { critical:'#C0392B', high:'#E67E22', medium:'#F1C40F', low:'#27AE60' }[level] || '#C0392B'
-}
-function statusColor(status) {
-  return { at_large:'#C0392B', in_custody:'#27AE60', deceased:'#7f8c8d', cleared:'#7f8c8d' }[status] || '#C0392B'
-}
-function statusLabel(status) {
-  return { at_large:'At Large', in_custody:'In Custody', deceased:'Deceased', cleared:'Cleared' }[status] || (status || 'At Large')
-}
-
-// ── Wrap text helper ──────────────────────────────────────────
-function wrapText(ctx, text, x, y, maxW, lineH) {
-  if (!text) return y
-  const words = text.split(' ')
-  let line = '', ly = y
-  for (const word of words) {
-    const test = line ? line + ' ' + word : word
-    if (ctx.measureText(test).width > maxW && line) {
-      ctx.fillText(line, x, ly); line = word; ly += lineH
-    } else { line = test }
-  }
-  if (line) { ctx.fillText(line, x, ly); ly += lineH }
-  return ly
-}
-
-// ── Rounded rect helper ───────────────────────────────────────
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath()
-  ctx.moveTo(x+r, y)
-  ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r)
-  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h)
-  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r)
-  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y)
-  ctx.closePath()
-}
-
-// ── Code 128 barcode renderer (subset B, canvas) ─────────────
-function drawBarcode128(ctx, text, x, y, w, h) {
-  // Code128B encoding table (value -> pattern as 11-bit int, MSB first)
-  const C128B = {
-    ' ':11011001100,' !':11001101100,'"':11001100110,'#':10010011000,
-    '$':10010001100,'%':10001001100,'&':10011001000,"'":10011000100,
-    '(':10001100100,')':11001001000,'*':11001000100,'+':11000100100,
-    ',':10110011100,'-':10011011100,'.':10011001110,'/':10111001100,
-    '0':10011101100,'1':10011100110,'2':11001110010,'3':11001011100,
-    '4':11001001110,'5':11011100100,'6':11001110100,'7':11101101110,
-    '8':11101001100,'9':11100101100,':':11100100110,';':11101100100,
-    '<':11100110100,'=':11100110010,'>':11011011000,'?':11011000110,
-    '@':11000110110,'A':10100011000,'B':10001011000,'C':10001000110,
-    'D':10110001000,'E':10001101000,'F':10001100010,'G':11010001000,
-    'H':11000101000,'I':11000100010,'J':10110111000,'K':10110001110,
-    'L':10001101110,'M':10111011000,'N':10111000110,'O':10001110110,
-    'P':11101110110,'Q':11010001110,'R':11000101110,'S':11011101000,
-    'T':11011100010,'U':11011101110,'V':11101011000,'W':11101000110,
-    'X':11100010110,'Y':11101101000,'Z':11101100010,'[':11100011010,
-    '\\':11101111010,']':11001000010,'^':11110001010,'_':10100110000,
-    '`':10100001100,'a':10010110000,'b':10010000110,'c':10000101100,
-    'd':10000100110,'e':10110010000,'f':10110000100,'g':10011010000,
-    'h':10011000010,'i':10000110100,'j':10000110010,'k':11000010010,
-    'l':11001010000,'m':11110111010,'n':11000010100,'o':10001111010,
-    'p':10100111100,'q':10010111100,'r':10010011110,'s':10111100100,
-    't':10011110100,'u':10011110010,'v':11110100100,'w':11110010100,
-    'x':11110010010,'y':11011011110,'z':11011110110,'{':11110110110,
-    '|':10101111000,'}':10100011110,'~':10001111010,
-  }
-  // START B = 104 -> pattern 11010010000
-  // STOP = pattern 1100011101011
-  const startPat = 11010010000
-  const stopPat  = 1100011101011
-
-  // Build bit array
-  let bits = []
-  const pushPat = (pat, len) => {
-    for (let i = len - 1; i >= 0; i--) bits.push((pat >> i) & 1)
-  }
-  pushPat(startPat, 11)
-  let checksum = 104
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i]
-    const pat = C128B[ch]
-    if (pat === undefined) continue
-    const val = Object.keys(C128B).indexOf(ch)
-    checksum += (i + 1) * val
-    pushPat(pat, 11)
-  }
-  // Check symbol
-  const checkVal = checksum % 103
-  const checkKeys = Object.keys(C128B)
-  if (checkKeys[checkVal]) pushPat(C128B[checkKeys[checkVal]], 11)
-  // Stop + termination bar
-  for (let i = 12; i >= 0; i--) bits.push((stopPat >> i) & 1)
-
-  // Quiet zones (10 modules each side)
-  bits = [...new Array(10).fill(0), ...bits, ...new Array(10).fill(0)]
-
-  const moduleW = w / bits.length
-  bits.forEach((b, i) => {
-    ctx.fillStyle = b ? '#000000' : '#FFFFFF'
-    ctx.fillRect(x + i * moduleW, y, moduleW + 0.5, h)
-  })
-}
-
-// ── Draw an agency badge placeholder (SVG-star badge style) ───
-function drawAgencyBadge(ctx, x, y, size, acronym, color, name) {
-  // Outer circle
-  ctx.save()
-  ctx.beginPath()
-  ctx.arc(x + size/2, y + size/2, size/2, 0, Math.PI*2)
-  ctx.fillStyle = color + '22'
-  ctx.fill()
-  ctx.strokeStyle = color
-  ctx.lineWidth = 2
-  ctx.stroke()
-
-  // Inner ring
-  ctx.beginPath()
-  ctx.arc(x + size/2, y + size/2, size/2 - 5, 0, Math.PI*2)
-  ctx.strokeStyle = color + '55'
-  ctx.lineWidth = 1
-  ctx.stroke()
-
-  // Star points (5-pointed)
-  const cx2 = x + size/2, cy2 = y + size/2
-  const outerR = size * 0.28, innerR = size * 0.12
-  ctx.beginPath()
-  for (let i = 0; i < 10; i++) {
-    const angle = (i * Math.PI / 5) - Math.PI / 2
-    const r = i % 2 === 0 ? outerR : innerR
-    const px2 = cx2 + Math.cos(angle) * r
-    const py2 = cy2 + Math.sin(angle) * r
-    i === 0 ? ctx.moveTo(px2, py2) : ctx.lineTo(px2, py2)
-  }
-  ctx.closePath()
-  ctx.fillStyle = color
-  ctx.fill()
-
-  // Acronym text
-  ctx.fillStyle = color
-  ctx.font = `700 ${Math.round(size * 0.18)}px 'Oswald','Impact',sans-serif`
-  ctx.letterSpacing = '1px'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(acronym, cx2, cy2 + size * 0.25)
-  ctx.textBaseline = 'alphabetic'
-  ctx.restore()
-}
-
-// ── Main export function ──────────────────────────────────────
-async function exportWantedCard(index) {
-  const w = _mwData[index]
-  if (!w) return
-
-  // Disable button while working
-  const btn = document.querySelector(`.wanted-card[data-wanted-index="${index}"] .mw-export-btn`)
-  if (btn) btn.classList.add('mw-exporting')
-  mwToast('Generating bulletin...')
-
-  try {
-    // ══════════════════════════════════════════════════════════
-    //  CANVAS — 900 × 1400 portrait, @2× retina
-    // ══════════════════════════════════════════════════════════
-    const W = 900, H = 1400
-    const canvas = document.createElement('canvas')
-    canvas.width  = W * 2; canvas.height = H * 2
-    const ctx = canvas.getContext('2d')
-    ctx.scale(2, 2)
-
-    // ── Tokens ────────────────────────────────────────────────
-    const GOLD   = '#C9A84C'
-    const GOLD2  = '#F0D060'
-    const RED    = '#C0392B'
-    const RED2   = '#E84040'
-    const BG     = '#070C18'
-    const BG2    = '#0C1220'
-    const BG3    = '#101828'
-    const LINE   = '#1E2E44'
-    const WHITE  = '#F2EEE4'
-    const MUTED  = '#6080A0'
-    const MONO   = "'Roboto Mono','Courier New',monospace"
-    const DISP   = "'Oswald','Impact',sans-serif"
-    const tColor = threatColor(w.threat_level)
-    const now    = new Date().toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()
-
-    // ── Helpers ───────────────────────────────────────────────
-    function label(text, x, y, opts = {}) {
-      const { size = 9, spacing = '2px', color = MUTED, align = 'left', bold = false } = opts
-      ctx.fillStyle = color
-      ctx.font = `${bold ? '700' : '400'} ${size}px ${MONO}`
-      ctx.letterSpacing = spacing
-      ctx.textAlign = align
-      ctx.fillText(text, x, y)
-      ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
-    }
-    function heading(text, x, y, opts = {}) {
-      const { size = 28, spacing = '2px', color = WHITE, align = 'left', bold = true } = opts
-      ctx.fillStyle = color
-      ctx.font = `${bold ? '700' : '400'} ${size}px ${DISP}`
-      ctx.letterSpacing = spacing
-      ctx.textAlign = align
-      ctx.fillText(text, x, y)
-      ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
-    }
-    function pill(text, x, y, w2, h2, bg, border, textColor) {
-      ctx.fillStyle = bg; roundRect(ctx, x, y, w2, h2, 4); ctx.fill()
-      ctx.strokeStyle = border; ctx.lineWidth = 1.5; roundRect(ctx, x, y, w2, h2, 4); ctx.stroke()
-      ctx.fillStyle = textColor; ctx.font = `700 10px ${MONO}`; ctx.letterSpacing = '2px'
-      ctx.textAlign = 'center'; ctx.fillText(text, x + w2/2, y + h2/2 + 4)
-      ctx.textAlign = 'left'; ctx.letterSpacing = '0px'
-    }
-    function hLine(y, color = LINE) {
-      ctx.fillStyle = color; ctx.fillRect(0, y, W, 1)
-    }
-    function wrapLines(text, maxW, maxLines) {
-      if (!text) return []
-      const words = text.split(' '), lines = []
-      let cur = ''
-      for (const word of words) {
-        const test = cur ? cur + ' ' + word : word
-        if (ctx.measureText(test).width > maxW && cur) {
-          lines.push(cur); cur = word
-          if (lines.length >= maxLines - 1) { cur = word; break }
-        } else cur = test
-      }
-      if (cur && lines.length < maxLines) lines.push(cur)
-      return lines
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  FULL BACKGROUND
-    // ══════════════════════════════════════════════════════════
-    ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H)
-    // Fine dot grid
-    ctx.fillStyle = 'rgba(255,255,255,0.012)'
-    for (let gx = 0; gx < W; gx += 18)
-      for (let gy = 0; gy < H; gy += 18)
-        ctx.fillRect(gx, gy, 1, 1)
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 1 — TOP HEADER  H: 72
-    // ══════════════════════════════════════════════════════════
-    let CY = 0
-    const S1H = 72
-    ctx.fillStyle = BG2; ctx.fillRect(0, CY, W, S1H)
-    // Threat color bar
-    ctx.fillStyle = tColor; ctx.fillRect(0, CY, W, 5)
-    // MOST WANTED
-    ctx.fillStyle = RED2; ctx.font = `700 46px ${DISP}`; ctx.letterSpacing = '8px'
-    ctx.textAlign = 'center'; ctx.fillText('MOST WANTED', W/2, CY + 48); ctx.textAlign = 'left'
-    ctx.letterSpacing = '0px'
-    // Gold bottom line
-    ctx.fillStyle = GOLD; ctx.fillRect(0, CY + S1H - 2, W, 2)
-    CY += S1H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 2 — SUBTITLE + AGENCIES  H: 130
-    //  Dark row: subtitle text + 4 logos with names in line
-    // ══════════════════════════════════════════════════════════
-    const S2H = 130
-    ctx.fillStyle = BG3; ctx.fillRect(0, CY, W, S2H)
-
-    // Subtitle
-    label('STATE OF SAN ANDREAS  ·  JOINT LAW ENFORCEMENT BULLETIN', W/2, CY + 18, { align:'center', size:9, spacing:'2px', color:MUTED })
-
-    // Load 4 logos
-    const agencies = [
-      { acronym:'LSCS', line1:'LOS SANTOS COUNTY', line2:'SHERIFF',       color:'#C9A84C', src: window.location.origin + '/images/lscs-logo.png' },
-      { acronym:'LSPD', line1:'LOS SANTOS POLICE', line2:'DEPARTMENT',    color:'#5599DD', src: window.location.origin + '/images/lspd-logo.png' },
-      { acronym:'SASP', line1:'SAN ANDREAS',        line2:'STATE POLICE',  color:'#DD3333', src: window.location.origin + '/images/sasp-logo.png' },
-      { acronym:'CIB',  line1:'CENTRAL INVESTIGATION', line2:'BUREAU',     color:'#C9A84C', src: window.location.origin + '/images/cib-logo.png' },
-    ]
-    const logos = await Promise.all(agencies.map(a => loadImg(a.src)))
-    const LSZO = W / 4
-    const LGSZ = 58
-    agencies.forEach((ag, i) => {
-      const cx = LSZO * i + LSZO / 2
-      const lx = cx - LGSZ / 2
-      const ly = CY + 26
-      if (logos[i]) {
-        ctx.drawImage(logos[i], lx, ly, LGSZ, LGSZ)
-      } else {
-        drawAgencyBadge(ctx, lx, ly, LGSZ, ag.acronym, ag.color, ag.line1)
-      }
-      // Name lines
-      ctx.fillStyle = ag.color; ctx.font = `700 8px ${MONO}`; ctx.letterSpacing = '0.8px'; ctx.textAlign = 'center'
-      ctx.fillText(ag.line1, cx, ly + LGSZ + 13)
-      ctx.fillText(ag.line2, cx, ly + LGSZ + 24)
-      ctx.textAlign = 'left'; ctx.letterSpacing = '0px'
-      // Divider
-      if (i > 0) { ctx.fillStyle = LINE; ctx.fillRect(LSZO * i, CY + 28, 1, S2H - 40) }
-    })
-    hLine(CY + S2H, GOLD + '40')
-    CY += S2H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 3 — SUSPECT PHOTO  H: 500  (true 1:1 at 500×500,
-    //  centred horizontally with dark side strips)
-    // ══════════════════════════════════════════════════════════
-    const S3H = 500
-    const PHSZ = 500   // 1:1 square
-    const PHX  = (W - PHSZ) / 2   // centred: 200px
-    const PHY  = CY
-
-    // Dark side strips (left and right of photo)
-    ctx.fillStyle = BG2; ctx.fillRect(0, PHY, PHX, S3H)
-    ctx.fillStyle = BG2; ctx.fillRect(PHX + PHSZ, PHY, PHX, S3H)
-
-    const suspectImg = w.photo_url ? await loadImg(w.photo_url) : null
-    if (suspectImg) {
-      // True 1:1 center-crop
-      const side  = Math.min(suspectImg.width, suspectImg.height)
-      const sx    = (suspectImg.width  - side) / 2
-      const sy    = (suspectImg.height - side) / 2
-      ctx.save()
-      ctx.beginPath(); ctx.rect(PHX, PHY, PHSZ, PHSZ); ctx.clip()
-      ctx.drawImage(suspectImg, sx, sy, side, side, PHX, PHY, PHSZ, PHSZ)
-      ctx.restore()
-
-      // Vignette
-      const vig = ctx.createRadialGradient(PHX+PHSZ/2, PHY+PHSZ*0.4, PHSZ*0.12, PHX+PHSZ/2, PHY+PHSZ*0.5, PHSZ*0.68)
-      vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,0.62)')
-      ctx.fillStyle = vig; ctx.fillRect(PHX, PHY, PHSZ, PHSZ)
-
-      // Bottom fade to BG
-      const bfade = ctx.createLinearGradient(0, PHY + PHSZ - 80, 0, PHY + PHSZ)
-      bfade.addColorStop(0, 'rgba(7,12,24,0)'); bfade.addColorStop(1, 'rgba(7,12,24,0.9)')
-      ctx.fillStyle = bfade; ctx.fillRect(PHX, PHY + PHSZ - 80, PHSZ, 80)
-
-      // Top fade
-      const tfade = ctx.createLinearGradient(0, PHY, 0, PHY + 36)
-      tfade.addColorStop(0, BG3); tfade.addColorStop(1, 'rgba(0,0,0,0)')
-      ctx.fillStyle = tfade; ctx.fillRect(PHX, PHY, PHSZ, 36)
-
-      // Scan lines
-      ctx.fillStyle = 'rgba(192,57,43,0.025)'
-      for (let sl = PHY; sl < PHY + PHSZ; sl += 4) ctx.fillRect(PHX, sl, PHSZ, 2)
-
-    } else {
-      ctx.fillStyle = BG3; ctx.fillRect(PHX, PHY, PHSZ, PHSZ)
-      ctx.strokeStyle = LINE; ctx.lineWidth = 1
-      ctx.beginPath(); ctx.arc(PHX+PHSZ/2, PHY+PHSZ/2, 80, 0, Math.PI*2); ctx.stroke()
-      label('NO PHOTO ON FILE', PHX+PHSZ/2, PHY+PHSZ/2+6, { align:'center', size:12, spacing:'3px' })
-    }
-
-    // Photo border + crosshairs
-    ctx.strokeStyle = RED + '99'; ctx.lineWidth = 2
-    ctx.strokeRect(PHX + 3, PHY + 3, PHSZ - 6, PHSZ - 6)
-    const CHL = 24; ctx.strokeStyle = RED; ctx.lineWidth = 2
-    ;[[PHX+3,PHY+3],[PHX+PHSZ-3,PHY+3],[PHX+3,PHY+PHSZ-3],[PHX+PHSZ-3,PHY+PHSZ-3]].forEach(([px,py]) => {
-      const dx = px === PHX+3 ? 1 : -1, dy = py === PHY+3 ? 1 : -1
-      ctx.beginPath(); ctx.moveTo(px+dx*CHL,py); ctx.lineTo(px,py); ctx.lineTo(px,py+dy*CHL); ctx.stroke()
-    })
-
-    // "SUSPECT" watermark inside photo top-left
-    ctx.fillStyle = 'rgba(200,50,40,0.55)'
-    ctx.font = `700 11px ${MONO}`; ctx.letterSpacing = '5px'
-    ctx.fillText('SUSPECT', PHX + 14, PHY + 26); ctx.letterSpacing = '0px'
-
-    // Threat badge — inside photo top-right
-    const TBW = 150, TBH = 56, TBX = PHX + PHSZ - TBW - 10, TBY = PHY + 10
-    ctx.fillStyle = tColor + '2A'; roundRect(ctx, TBX, TBY, TBW, TBH, 4); ctx.fill()
-    ctx.strokeStyle = tColor; ctx.lineWidth = 2; roundRect(ctx, TBX, TBY, TBW, TBH, 4); ctx.stroke()
-    label('THREAT LEVEL', TBX + TBW/2, TBY + 17, { align:'center', size:8, spacing:'2px' })
-    heading((w.threat_level || 'HIGH').toUpperCase(), TBX + TBW/2, TBY + 44, { size:26, align:'center', color:tColor, spacing:'3px' })
-
-    // Side-strip info: case # left, status right
-    label('CASE NO.', PHX - 10, PHY + 30, { align:'right', size:8, spacing:'1px' })
-    heading(w.case_number || '—', PHX - 10, PHY + 50, { size:18, align:'right', color:GOLD, spacing:'1px' })
-    label('STATUS', PHX + PHSZ + 10, PHY + 30, { size:8, spacing:'1px' })
-    const sCol = statusColor(w.status), sLbl = statusLabel(w.status).toUpperCase()
-    heading(sLbl, PHX + PHSZ + 10, PHY + 50, { size:16, color:sCol, spacing:'1px' })
-
-    // Wanted since on the right strip
-    label('WANTED SINCE', PHX + PHSZ + 10, PHY + 80, { size:8, spacing:'1px' })
-    const wSince = w.wanted_since ? new Date(w.wanted_since+'T00:00:00').toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase() : '—'
-    heading(wSince, PHX + PHSZ + 10, PHY + 98, { size:14, color:WHITE, spacing:'0.5px' })
-
-    // Bounty on left strip
-    label('BOUNTY', PHX - 10, PHY + 90, { align:'right', size:8, spacing:'1px' })
-    heading(w.bounty_amount || 'TBD', PHX - 10, PHY + 112, { size:20, align:'right', color:GOLD2, spacing:'1px' })
-
-    CY += S3H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 4 — NAME BAND  H: 100
-    // ══════════════════════════════════════════════════════════
-    const S4H = 100
-    ctx.fillStyle = BG2; ctx.fillRect(0, CY, W, S4H)
-    ctx.fillStyle = GOLD; ctx.fillRect(0, CY, W, 3)
-
-    let ny = CY + 28
-    if (w.alias) {
-      label(`AKA  "${w.alias.toUpperCase()}"`, W/2, ny, { align:'center', size:10, spacing:'2px', color:GOLD + 'BB' })
-      ny += 20
-    }
-    const nameFS = (w.full_name||'').length > 20 ? 42 : 50
-    heading((w.full_name || 'UNKNOWN SUSPECT').toUpperCase(), W/2, ny + nameFS - 10, { size:nameFS, align:'center', spacing:'4px' })
-
-    // Meta row bottom of name band
-    const metaParts = [
-      w.suspect_id   ? `ID: ${w.suspect_id}` : null,
-      `DOB: ${w.dob || 'UNKNOWN'}`,
-      `NAT: ${w.nationality || 'UNKNOWN'}`,
-    ].filter(Boolean)
-    label(metaParts.join('   ·   '), W/2, CY + S4H - 10, { align:'center', size:9, spacing:'1px' })
-    hLine(CY + S4H)
-    CY += S4H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 5 — INFO ROW  H: 80
-    //  3 cells: Location · Affiliation · DOB (bounty on photo side)
-    // ══════════════════════════════════════════════════════════
-    const S5H = 80
-    ctx.fillStyle = BG3; ctx.fillRect(0, CY, W, S5H)
-
-    const infoCells = [
-      { lbl:'LAST KNOWN LOCATION', val: w.last_known_loc || '—' },
-      { lbl:'AFFILIATION',          val: w.affiliation || 'UNKNOWN' },
-      { lbl:'BOUNTY ON CAPTURE',    val: w.bounty_amount || 'TBD', gold:true },
-    ]
-    infoCells.forEach((c, i) => {
-      const cx = (W / 3) * i
-      if (i > 0) { ctx.fillStyle = LINE; ctx.fillRect(cx, CY + 8, 1, S5H - 16) }
-      label(c.lbl, cx + W/6, CY + 20, { align:'center', size:8, spacing:'1.5px' })
-      heading(c.val, cx + W/6, CY + 58, { size:c.gold ? 26 : 16, align:'center', color:c.gold ? GOLD2 : WHITE, spacing:'1px' })
-    })
-    hLine(CY + S5H)
-    CY += S5H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 6 — CHARGES  H: dynamic min 80
-    // ══════════════════════════════════════════════════════════
-    const charges = Array.isArray(w.charges) ? w.charges : []
-    const S6H = Math.max(80, Math.min(130, 36 + Math.ceil(charges.length / 3) * 32))
-    ctx.fillStyle = BG; ctx.fillRect(0, CY, W, S6H)
-    label('CHARGES & OFFENSES', 24, CY + 20, { size:9, spacing:'2.5px' })
-
-    if (charges.length) {
-      let tx = 24, tgY = CY + 30, rowN = 0
-      for (const ch of charges.slice(0, 12)) {
-        ctx.font = `700 11px ${MONO}`; ctx.letterSpacing = '0.3px'
-        const tw = ctx.measureText(ch).width + 22; ctx.letterSpacing = '0px'
-        if (tx + tw > W - 24 && rowN < 2) { tx = 24; tgY += 30; rowN++ }
-        if (rowN >= 3) break
-        ctx.fillStyle = RED + '1E'; roundRect(ctx, tx, tgY, tw, 24, 3); ctx.fill()
-        ctx.strokeStyle = RED + '66'; ctx.lineWidth = 1; roundRect(ctx, tx, tgY, tw, 24, 3); ctx.stroke()
-        ctx.fillStyle = '#F08080'; ctx.font = `700 11px ${MONO}`; ctx.letterSpacing = '0.3px'
-        ctx.fillText(ch, tx + 11, tgY + 17); ctx.letterSpacing = '0px'
-        tx += tw + 8
-      }
-    } else {
-      label('NO CHARGES ON FILE', 24, CY + 54, { size:11, color:MUTED })
-    }
-    hLine(CY + S6H)
-    CY += S6H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 7 — DETECTIVE + DEBRIEF  H: 110
-    // ══════════════════════════════════════════════════════════
-    const S7H = 110
-    ctx.fillStyle = BG2; ctx.fillRect(0, CY, W, S7H)
-
-    // Left half: detective
-    if (w.detective_name) {
-      const AVR = 26, AX = 20 + AVR, AY = CY + S7H/2
-      ctx.fillStyle = GOLD + '1A'
-      ctx.beginPath(); ctx.arc(AX, AY, AVR, 0, Math.PI*2); ctx.fill()
-      ctx.strokeStyle = GOLD + '55'; ctx.lineWidth = 1.5
-      ctx.beginPath(); ctx.arc(AX, AY, AVR, 0, Math.PI*2); ctx.stroke()
-      const init = ((w.detective_initials || (w.detective_name||'').split(' ').map(p=>p[0]).join('')).substring(0,2)||'??').toUpperCase()
-      ctx.fillStyle = GOLD; ctx.font = `700 16px ${DISP}`; ctx.letterSpacing = '1px'
-      ctx.textAlign = 'center'; ctx.fillText(init, AX, AY + 6); ctx.textAlign = 'left'; ctx.letterSpacing = '0px'
-      const DX = AX + AVR + 16
-      label('PRIMARY DETECTIVE', DX, CY + 26, { size:9, spacing:'1.5px' })
-      heading(`Det. ${w.detective_name}`, DX, CY + 52, { size:20, spacing:'1px' })
-      if (w.detective_rank) label(w.detective_rank, DX, CY + 70, { size:10, color:MUTED + 'CC' })
-      if (w.detective_division) label(w.detective_division, DX, CY + 86, { size:9 })
-    }
-
-    // Right half: debrief
-    if (w.debrief) {
-      const debX = w.detective_name ? W/2 + 10 : 24
-      const debW = w.detective_name ? W - debX - 24 : W - 48
-      label('SUSPECT DEBRIEF', debX, CY + 22, { size:9, spacing:'2px' })
-      ctx.fillStyle = 'rgba(242,238,228,0.75)'; ctx.font = `400 12px ${MONO}`
-      const dLines = wrapLines(w.debrief, debW, 4)
-      dLines.forEach((dl, di) => { ctx.fillText(dl, debX, CY + 42 + di * 17) })
-    }
-
-    hLine(CY + S7H)
-    CY += S7H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 8 — WARNING BAND  H: 48
-    // ══════════════════════════════════════════════════════════
-    const S8H = 48
-    ctx.fillStyle = RED + '22'; ctx.fillRect(0, CY, W, S8H)
-    ctx.fillStyle = RED; ctx.fillRect(0, CY, W, 4)
-    ctx.fillStyle = '#F05050'; ctx.font = `700 15px ${DISP}`; ctx.letterSpacing = '4px'
-    ctx.textAlign = 'center'
-    ctx.fillText('⚠  DO NOT ATTEMPT TO APPREHEND  —  ARMED & DANGEROUS  ⚠', W/2, CY + 32)
-    ctx.textAlign = 'left'; ctx.letterSpacing = '0px'
-    CY += S8H
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 9 — QR FOOTER  (remaining height, dark bg)
-    //  Big centered QR + label + case info flanking it
-    // ══════════════════════════════════════════════════════════
-    const S9H = H - CY
-    ctx.fillStyle = BG2; ctx.fillRect(0, CY, W, S9H)
-    hLine(CY, GOLD + '30')
-
-    const qrUrl    = window.location.origin + '/Page_Wanted.html'
-    const qrMatrix = generateQRMatrix(qrUrl)
-    const QSZ      = Math.min(S9H - 40, 180)   // large as fits
-    const QX       = (W - QSZ) / 2
-    const QY       = CY + (S9H - QSZ) / 2 - 8
-
-    // White QR background pad
-    ctx.fillStyle = '#FFFFFF'; roundRect(ctx, QX - 10, QY - 10, QSZ + 20, QSZ + 20, 4); ctx.fill()
-    drawQR(ctx, qrMatrix, QX, QY, QSZ, '#070C18', null)
-
-    // Labels above / below QR
-    label('SCAN TO ACCESS', W/2, QY - 16, { align:'center', size:9, spacing:'2px', color:MUTED })
-    label('CIB MOST WANTED LIST', W/2, QY - 5, { align:'center', size:11, spacing:'1.5px', color:GOLD, bold:true })
-    label(`cib.gov.sa / Page_Wanted`, W/2, QY + QSZ + 20, { align:'center', size:9, spacing:'1px', color:MUTED })
-
-    // Left of QR: case + suspect ID
-    const LQX = QX - 20
-    label('CASE NO.', LQX, QY + 14, { align:'right', size:8, spacing:'1.5px' })
-    heading(w.case_number || '—', LQX, QY + 36, { size:18, align:'right', color:GOLD, spacing:'1px' })
-    if (w.suspect_id) {
-      label('SUSPECT ID', LQX, QY + 58, { align:'right', size:8, spacing:'1.5px' })
-      heading(w.suspect_id, LQX, QY + 78, { size:14, align:'right', color:WHITE, spacing:'1px' })
-    }
-
-    // Right of QR: agencies credit
-    const RQX = QX + QSZ + 20
-    label('JOINT BULLETIN', RQX, QY + 14, { size:8, spacing:'1.5px' })
-    label('LSCS', RQX, QY + 34, { size:10, spacing:'1px', color:'#C9A84C', bold:true })
-    label('LSPD', RQX, QY + 50, { size:10, spacing:'1px', color:'#5599DD', bold:true })
-    label('SASP', RQX, QY + 66, { size:10, spacing:'1px', color:'#DD3333', bold:true })
-    label('CIB',  RQX, QY + 82, { size:10, spacing:'1px', color:'#C9A84C', bold:true })
-
-    // Bottom micro line
-    label(`ISSUED ${now}  ·  UNAUTHORIZED DISTRIBUTION IS A FEDERAL OFFENSE`, W/2, H - 8, { align:'center', size:8, spacing:'0.8px', color:MUTED + '90' })
-
-    // ── Download ──────────────────────────────────────────────
-    const slug  = (w.full_name || 'suspect').toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    const fname = `WANTED-${slug}-${w.case_number || index + 1}.png`
-
-    const a = document.createElement('a')
-    a.href     = canvas.toDataURL('image/png')
-    a.download = fname
-    a.click()
-
-    mwToast(`Bulletin exported: ${fname}`)
-
-  } catch (err) {
-    console.error('Export error:', err)
-    mwToast('Export failed — check console', true)
-  } finally {
-    if (btn) btn.classList.remove('mw-exporting')
-  }
-}
-
-// Initialize
 loadWantedList()
 </script>
 </body>
