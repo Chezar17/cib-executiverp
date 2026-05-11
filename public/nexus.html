@@ -1002,6 +1002,70 @@
   0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)}
 }
 
+/* ── Volume control ── */
+.ob-volume-row {
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px 10px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  flex-shrink:0;
+}
+.ob-vol-icon {
+  width:26px;height:26px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;border:none;padding:0;cursor:pointer;
+  color:rgba(201,168,76,0.55);
+  transition:color 0.15s;
+}
+.ob-vol-icon:hover { color:rgba(201,168,76,0.9); }
+.ob-vol-icon svg { width:14px;height:14px;fill:currentColor;display:block; }
+.ob-vol-slider-wrap {
+  flex:1;position:relative;height:16px;
+  display:flex;align-items:center;
+}
+/* Track */
+.ob-vol-slider-wrap::before {
+  content:'';position:absolute;left:0;right:0;height:2px;
+  background:rgba(255,255,255,0.1);border-radius:1px;
+  pointer-events:none;
+}
+/* Filled track — driven by JS via --vol CSS var */
+.ob-vol-slider-wrap::after {
+  content:'';position:absolute;left:0;height:2px;
+  width:calc(var(--vol, 0.8) * 100%);
+  background:rgba(201,168,76,0.7);border-radius:1px;
+  pointer-events:none;transition:width 0.05s linear;
+}
+input#obVolSlider {
+  position:relative;width:100%;height:16px;
+  -webkit-appearance:none;appearance:none;
+  background:transparent;border:none;outline:none;cursor:pointer;
+  margin:0;padding:0;z-index:1;
+}
+input#obVolSlider::-webkit-slider-thumb {
+  -webkit-appearance:none;appearance:none;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--gold,#C9A84C);
+  box-shadow:0 0 6px rgba(201,168,76,0.5);
+  border:none;cursor:pointer;
+  transition:transform 0.15s,box-shadow 0.15s;
+}
+input#obVolSlider::-moz-range-thumb {
+  width:10px;height:10px;border-radius:50%;
+  background:var(--gold,#C9A84C);
+  box-shadow:0 0 6px rgba(201,168,76,0.5);
+  border:none;cursor:pointer;
+}
+input#obVolSlider::-webkit-slider-thumb:hover {
+  transform:scale(1.35);
+  box-shadow:0 0 10px rgba(201,168,76,0.75);
+}
+input#obVolSlider::-webkit-slider-runnable-track { background:transparent; }
+input#obVolSlider::-moz-range-track { background:transparent; }
+.ob-vol-pct {
+  font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:1px;
+  color:rgba(201,168,76,0.45);width:26px;text-align:right;flex-shrink:0;
+}
+
 /* ── Step badge ── */
 .ob-step-badge {
   position:absolute;top:10px;right:12px;
@@ -1220,6 +1284,16 @@
     <div class="ob-dialogue" id="obDialogue"></div>
   </div>
   <div class="ob-progress" id="obProgress"></div>
+  <div class="ob-volume-row">
+    <button class="ob-vol-icon" id="obVolMuteBtn" title="Mute / Unmute" onclick="ObSystem.toggleMute()">
+      <svg id="obVolIconSvg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+    </button>
+    <div class="ob-vol-slider-wrap" id="obVolSliderWrap" style="--vol:0.8;">
+      <input type="range" id="obVolSlider" min="0" max="1" step="0.01" value="0.8"
+             oninput="ObSystem.setVolume(this.value)"/>
+    </div>
+    <div class="ob-vol-pct" id="obVolPct">80%</div>
+  </div>
   <div class="ob-card-footer">
     <button class="ob-btn ob-btn-skip" onclick="ObSystem.endGuide()">Lewati Semua</button>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -1361,7 +1435,7 @@
         target: '#panel-dashboard [onclick*="weapons"]',
         pos:    'below',
         audio:  'ob_step_10_intelligence.mp3',
-        text:   `Sekarang kita masuk ke Seksi Intelligence — bagian paling sensitif di NEXUS.\nSeksi ini berisi empat modul intelijen operasional yang digunakan oleh divisi GRD dan CID.`,
+        text:   `Sekarang kita masuk ke Section Intelligence — bagian paling sensitif di NEXUS.\nSection ini berisi empat modul intelijen operasional yang digunakan oleh divisi GRD dan CID.`,
         targetParent: true,
       },
       // ── Step 11 · Weapons Tracker ────────────────────────────
@@ -1370,7 +1444,7 @@
         target: '#panel-dashboard [onclick*="weapons"]',
         pos:    'right',
         audio:  'ob_step_11_weapons.mp3',
-        text:   `Weapons Tracker adalah sistem pelacakan langsung jaringan senjata ilegal yang beroperasi di San Andreas.\n\nDikelola oleh Gang Recon Division, papan ini mencakup rute pasokan aktif, catatan penyitaan, distributor yang diketahui, log koordinasi antar-instansi, dan upaya interdiksi yang sedang berjalan.\n\nHanya untuk personel GRD berklearance tinggi.`,
+        text:   `Weapons Tracker adalah sistem pelacakan langsung jaringan senjata ilegal yang beroperasi di San Andreas.\n\nDikelola oleh Gang Recon Division, papan ini mencakup rute pasokan aktif, catatan penyitaan, distributor yang diketahui, log koordinasi antar-instansi, dan upaya interdiksi yang sedang berjalan.\n\nHanya untuk personel CIB berklearance tinggi.`,
       },
       // ── Step 12 · Gang Intelligence ──────────────────────────
       {
@@ -1402,7 +1476,7 @@
         target: '#panel-dashboard [href*="finance"]',
         pos:    'below',
         audio:  'ob_step_15_internal.mp3',
-        text:   `Terakhir, kita masuk ke Seksi Internal — area operasional yang mencakup anggaran, komunikasi publik, dan dokumentasi kasus resmi CIB.\n\nSeksi ini digunakan secara rutin oleh semua divisi dalam menjalankan administrasi dan operasi harian.`,
+        text:   `Terakhir, kita masuk ke Section Internal — area operasional yang mencakup anggaran, komunikasi publik, dan dokumentasi kasus resmi CIB.\n\nSection ini digunakan secara rutin oleh semua divisi dalam menjalankan administrasi dan operasi harian.`,
         targetParent: true,
       },
       // ── Step 16 · Budget Ledger ───────────────────────────────
@@ -1435,7 +1509,7 @@
         target: '.nx-help-btn',
         pos:    'right',
         audio:  'ob_step_19_panduan.mp3',
-        text:   `Satu hal lagi sebelum kita selesai — tombol ini.\n\nJika kamu membutuhkan panduan ini kembali di masa mendatang, cukup klik tombol "Panduan Portal" di pojok kiri bawah sidebar. Panduan akan langsung diulang dari awal kapan pun kamu mau.`,
+        text:   `Satu hal lagi sebelum kita selesai — tombol ini.\n\nJika kamu membutuhkan panduan ini kembali di masa mendatang, cukup klik tombol "Panduan Portal" di pojok kiri bawah sidebar.`,
       },
       // ── Step 20 · Done ───────────────────────────────────────
       {
@@ -1443,7 +1517,7 @@
         target: null,
         pos:    'centre',
         audio:  'ob_step_20_done.mp3',
-        text:   `Itu dia gambaran umum NEXUS, ${rank} ${name}.\n\nKamu sudah siap mengoperasikan portal ini. Jika membutuhkan bantuan, jangan ragu untuk menghubungi CIB Command.\n\nSelamat bertugas. Tetap aman di lapangan.`,
+        text:   `Itu dia gambaran umum NEXUS, ${rank} ${name}.\n\nKamu sudah siap mengoperasikan portal ini. Jika membutuhkan bantuan, jangan ragu untuk menghubungi CIB Command.\n\nSelamat bertugas. Stay Safe.`,
       },
     ]
   }
@@ -1466,11 +1540,16 @@
   const backBtn   = () => $('obBackBtn')
 
   // ── Audio ──────────────────────────────────────────────────
+  let _volume  = 0.8   // persisted across steps
+  let _muted   = false
+  let _prevVol = 0.8   // remembered before mute
+
   function playStepAudio(filename) {
     const el = audio()
     if (!el || !filename) return
     el.pause()
     el.src = AUDIO_BASE + filename
+    el.volume = _muted ? 0 : _volume
     el.load()
     const ind = $('obAudioIndicator')
     el.onplay  = () => ind && ind.classList.add('ob-audio-playing')
@@ -1483,6 +1562,24 @@
     if (el) { el.pause(); el.currentTime = 0 }
     const ind = $('obAudioIndicator')
     if (ind) ind.classList.remove('ob-audio-playing')
+  }
+
+  // Update the speaker icon based on current volume level
+  function _updateVolIcon() {
+    const svg = $('obVolIconSvg')
+    if (!svg) return
+    let path
+    if (_muted || _volume === 0) {
+      // Muted — speaker with X
+      path = 'M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z'
+    } else if (_volume < 0.4) {
+      // Low volume — speaker with one wave
+      path = 'M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z'
+    } else {
+      // Full volume — speaker with two waves
+      path = 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'
+    }
+    svg.innerHTML = `<path d="${path}"/>`
   }
 
   // ── Spotlight positioning ──────────────────────────────────
@@ -1859,6 +1956,38 @@
       }, 320)
 
       markOnboarded()
+    },
+
+    // ── Volume control ─────────────────────────────────────────
+    setVolume: function (val) {
+      _volume = parseFloat(val)
+      _muted  = (_volume === 0)
+      const el = audio()
+      if (el) el.volume = _volume
+      // Update slider fill track and percentage label
+      const wrap = $('obVolSliderWrap')
+      if (wrap) wrap.style.setProperty('--vol', _volume)
+      const pct = $('obVolPct')
+      if (pct) pct.textContent = Math.round(_volume * 100) + '%'
+      // Update mute button icon
+      _updateVolIcon()
+      // Sync slider thumb position
+      const slider = $('obVolSlider')
+      if (slider) slider.value = _volume
+    },
+
+    toggleMute: function () {
+      if (_muted) {
+        // Un-mute — restore previous volume (min 0.1 so it's audible)
+        _muted  = false
+        _volume = _prevVol > 0.05 ? _prevVol : 0.5
+      } else {
+        // Mute — remember current volume
+        _prevVol = _volume
+        _volume  = 0
+        _muted   = true
+      }
+      ObSystem.setVolume(_volume)
     },
   }
 
