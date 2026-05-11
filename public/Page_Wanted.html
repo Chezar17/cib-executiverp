@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -306,7 +306,7 @@ function buildCardHTML(w, index) {
         ${detBlock}
 
         <!-- Export button -->
-        <button class="mw-export-btn" onclick="exportWantedCard(${index})" title="Export as image">
+        <button class="mw-export-btn" onclick="exportWantedCard(${index})" title="Export as image and share it to other people">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
@@ -628,6 +628,117 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
+// ── Code 128 barcode renderer (subset B, canvas) ─────────────
+function drawBarcode128(ctx, text, x, y, w, h) {
+  // Code128B encoding table (value -> pattern as 11-bit int, MSB first)
+  const C128B = {
+    ' ':11011001100,' !':11001101100,'"':11001100110,'#':10010011000,
+    '$':10010001100,'%':10001001100,'&':10011001000,"'":10011000100,
+    '(':10001100100,')':11001001000,'*':11001000100,'+':11000100100,
+    ',':10110011100,'-':10011011100,'.':10011001110,'/':10111001100,
+    '0':10011101100,'1':10011100110,'2':11001110010,'3':11001011100,
+    '4':11001001110,'5':11011100100,'6':11001110100,'7':11101101110,
+    '8':11101001100,'9':11100101100,':':11100100110,';':11101100100,
+    '<':11100110100,'=':11100110010,'>':11011011000,'?':11011000110,
+    '@':11000110110,'A':10100011000,'B':10001011000,'C':10001000110,
+    'D':10110001000,'E':10001101000,'F':10001100010,'G':11010001000,
+    'H':11000101000,'I':11000100010,'J':10110111000,'K':10110001110,
+    'L':10001101110,'M':10111011000,'N':10111000110,'O':10001110110,
+    'P':11101110110,'Q':11010001110,'R':11000101110,'S':11011101000,
+    'T':11011100010,'U':11011101110,'V':11101011000,'W':11101000110,
+    'X':11100010110,'Y':11101101000,'Z':11101100010,'[':11100011010,
+    '\\':11101111010,']':11001000010,'^':11110001010,'_':10100110000,
+    '`':10100001100,'a':10010110000,'b':10010000110,'c':10000101100,
+    'd':10000100110,'e':10110010000,'f':10110000100,'g':10011010000,
+    'h':10011000010,'i':10000110100,'j':10000110010,'k':11000010010,
+    'l':11001010000,'m':11110111010,'n':11000010100,'o':10001111010,
+    'p':10100111100,'q':10010111100,'r':10010011110,'s':10111100100,
+    't':10011110100,'u':10011110010,'v':11110100100,'w':11110010100,
+    'x':11110010010,'y':11011011110,'z':11011110110,'{':11110110110,
+    '|':10101111000,'}':10100011110,'~':10001111010,
+  }
+  // START B = 104 -> pattern 11010010000
+  // STOP = pattern 1100011101011
+  const startPat = 11010010000
+  const stopPat  = 1100011101011
+
+  // Build bit array
+  let bits = []
+  const pushPat = (pat, len) => {
+    for (let i = len - 1; i >= 0; i--) bits.push((pat >> i) & 1)
+  }
+  pushPat(startPat, 11)
+  let checksum = 104
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    const pat = C128B[ch]
+    if (pat === undefined) continue
+    const val = Object.keys(C128B).indexOf(ch)
+    checksum += (i + 1) * val
+    pushPat(pat, 11)
+  }
+  // Check symbol
+  const checkVal = checksum % 103
+  const checkKeys = Object.keys(C128B)
+  if (checkKeys[checkVal]) pushPat(C128B[checkKeys[checkVal]], 11)
+  // Stop + termination bar
+  for (let i = 12; i >= 0; i--) bits.push((stopPat >> i) & 1)
+
+  // Quiet zones (10 modules each side)
+  bits = [...new Array(10).fill(0), ...bits, ...new Array(10).fill(0)]
+
+  const moduleW = w / bits.length
+  bits.forEach((b, i) => {
+    ctx.fillStyle = b ? '#000000' : '#FFFFFF'
+    ctx.fillRect(x + i * moduleW, y, moduleW + 0.5, h)
+  })
+}
+
+// ── Draw an agency badge placeholder (SVG-star badge style) ───
+function drawAgencyBadge(ctx, x, y, size, acronym, color, name) {
+  // Outer circle
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(x + size/2, y + size/2, size/2, 0, Math.PI*2)
+  ctx.fillStyle = color + '22'
+  ctx.fill()
+  ctx.strokeStyle = color
+  ctx.lineWidth = 2
+  ctx.stroke()
+
+  // Inner ring
+  ctx.beginPath()
+  ctx.arc(x + size/2, y + size/2, size/2 - 5, 0, Math.PI*2)
+  ctx.strokeStyle = color + '55'
+  ctx.lineWidth = 1
+  ctx.stroke()
+
+  // Star points (5-pointed)
+  const cx2 = x + size/2, cy2 = y + size/2
+  const outerR = size * 0.28, innerR = size * 0.12
+  ctx.beginPath()
+  for (let i = 0; i < 10; i++) {
+    const angle = (i * Math.PI / 5) - Math.PI / 2
+    const r = i % 2 === 0 ? outerR : innerR
+    const px2 = cx2 + Math.cos(angle) * r
+    const py2 = cy2 + Math.sin(angle) * r
+    i === 0 ? ctx.moveTo(px2, py2) : ctx.lineTo(px2, py2)
+  }
+  ctx.closePath()
+  ctx.fillStyle = color
+  ctx.fill()
+
+  // Acronym text
+  ctx.fillStyle = color
+  ctx.font = `700 ${Math.round(size * 0.18)}px 'Oswald','Impact',sans-serif`
+  ctx.letterSpacing = '1px'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(acronym, cx2, cy2 + size * 0.25)
+  ctx.textBaseline = 'alphabetic'
+  ctx.restore()
+}
+
 // ── Main export function ──────────────────────────────────────
 async function exportWantedCard(index) {
   const w = _mwData[index]
@@ -639,477 +750,550 @@ async function exportWantedCard(index) {
   mwToast('Generating bulletin...')
 
   try {
-    // Canvas dimensions — portrait bulletin style
-    const W = 900, H = 1200
+    // ── Canvas: 1:1 square, 1200×1200 @2× for retina ─────────
+    const S = 1200
     const canvas = document.createElement('canvas')
-    canvas.width  = W * 2   // 2× for retina
-    canvas.height = H * 2
-    canvas.style.width  = W + 'px'
-    canvas.style.height = H + 'px'
+    canvas.width  = S * 2
+    canvas.height = S * 2
+    canvas.style.width  = S + 'px'
+    canvas.style.height = S + 'px'
     const ctx = canvas.getContext('2d')
-    ctx.scale(2, 2)         // draw at 2× then scale down
+    ctx.scale(2, 2)
 
+    // ── Design tokens ─────────────────────────────────────────
     const GOLD    = '#C9A84C'
-    const GOLD2   = '#D4AC50'
     const RED     = '#C0392B'
     const BG      = '#060A14'
-    const BG2     = '#080E1C'
-    const BORDER  = '#111D33'
+    const BG2     = '#0B1120'
+    const BG3     = '#0D1526'
+    const BORDER  = '#1A2840'
     const WHITE   = '#F0EDE4'
-    const MUTED   = '#5A6A82'
-    const MONO    = "'Roboto Mono', 'Courier New', monospace"
-    const DISPLAY = "'Oswald', 'Impact', sans-serif"
+    const MUTED   = '#4A5E78'
+    const MONO    = "'Roboto Mono','Courier New',monospace"
+    const DISPLAY = "'Oswald','Impact',sans-serif"
+    const W = S, H = S
 
-    // ── Background ───────────────────────────────────────────
+    const tColor = threatColor(w.threat_level)
+
+    // ═══════════════════════════════════════════════════════════
+    //  BACKGROUND
+    // ═══════════════════════════════════════════════════════════
     ctx.fillStyle = BG
     ctx.fillRect(0, 0, W, H)
 
-    // Subtle grid overlay
-    ctx.strokeStyle = 'rgba(255,255,255,0.025)'
-    ctx.lineWidth = 1
-    for (let gx = 0; gx < W; gx += 28) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke() }
-    for (let gy = 0; gy < H; gy += 28) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke() }
+    // Subtle dot grid
+    ctx.fillStyle = 'rgba(255,255,255,0.018)'
+    for (let gx = 0; gx < W; gx += 24)
+      for (let gy = 0; gy < H; gy += 24)
+        ctx.fillRect(gx, gy, 1, 1)
 
-    // Top accent bar
-    const accentH = 4
-    ctx.fillStyle = threatColor(w.threat_level)
-    ctx.fillRect(0, 0, W, accentH)
+    // Red diagonal corner marks (tactical feel)
+    const cornerSz = 18
+    ctx.strokeStyle = RED + '55'
+    ctx.lineWidth = 1.5
+    const corners = [[0,0],[W,0],[0,H],[W,H]]
+    corners.forEach(([cx2,cy2]) => {
+      const sx = cx2 === 0 ? 1 : -1, sy = cy2 === 0 ? 1 : -1
+      ctx.beginPath()
+      ctx.moveTo(cx2 + sx * cornerSz, cy2)
+      ctx.lineTo(cx2, cy2)
+      ctx.lineTo(cx2, cy2 + sy * cornerSz)
+      ctx.stroke()
+    })
 
-    // Gold left edge stripe
-    ctx.fillStyle = GOLD
-    ctx.fillRect(0, accentH, 3, H - accentH)
-
-    // ── TOP HEADER BAND ──────────────────────────────────────
-    const headerH = 64
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 1 — TOP HEADER (agency logos + "MOST WANTED")
+    //  Height: 148px
+    // ═══════════════════════════════════════════════════════════
+    const hdrH = 148
     ctx.fillStyle = BG2
-    ctx.fillRect(0, accentH, W, headerH)
-    ctx.strokeStyle = BORDER
-    ctx.lineWidth = 1
-    ctx.strokeRect(0, accentH + headerH - 1, W, 1)
+    ctx.fillRect(0, 0, W, hdrH)
 
-    // CIB logo (try to load)
-    const logo = await loadImg(window.location.origin + '/images/cib-logo.png')
-    if (logo) {
-      ctx.drawImage(logo, 20, accentH + 12, 40, 40)
-    } else {
-      ctx.fillStyle = GOLD
-      ctx.font = `bold 11px ${MONO}`
-      ctx.letterSpacing = '3px'
-      ctx.fillText('CIB', 20, accentH + 36)
-      ctx.letterSpacing = '0px'
-    }
+    // Threat-colored top accent bar
+    ctx.fillStyle = tColor
+    ctx.fillRect(0, 0, W, 5)
 
-    // Brand text
+    // Thin gold separator
     ctx.fillStyle = GOLD
-    ctx.font = `600 18px ${DISPLAY}`
-    ctx.letterSpacing = '6px'
-    ctx.fillText('CENTRAL INVESTIGATION BUREAU', logo ? 72 : 58, accentH + 28)
+    ctx.fillRect(0, hdrH - 2, W, 2)
+
+    // --- "MOST WANTED" big title ---
+    ctx.fillStyle = RED
+    ctx.font = `700 64px ${DISPLAY}`
+    ctx.letterSpacing = '10px'
+    ctx.textAlign = 'center'
+    ctx.fillText('MOST WANTED', W/2, 74)
     ctx.letterSpacing = '0px'
 
-    ctx.fillStyle = MUTED
-    ctx.font = `10px ${MONO}`
-    ctx.letterSpacing = '2px'
-    ctx.fillText('CIB · PRIORITY TARGET BULLETIN · CLASSIFIED', logo ? 72 : 58, accentH + 48)
-    ctx.letterSpacing = '0px'
-
-    // TOP RIGHT: case number + date
+    // Subtitle line
     ctx.fillStyle = MUTED
     ctx.font = `9px ${MONO}`
-    ctx.textAlign = 'right'
-    ctx.letterSpacing = '1px'
-    ctx.fillText(`CASE NO. ${w.case_number || '—'}`, W - 20, accentH + 24)
-    const wsSince = w.wanted_since ? new Date(w.wanted_since + 'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}).toUpperCase() : '—'
-    ctx.fillText(`WANTED SINCE ${wsSince}`, W - 20, accentH + 40)
-    ctx.textAlign = 'left'
+    ctx.letterSpacing = '3px'
+    ctx.fillText('STATE OF SAN ANDREAS — JOINT LAW ENFORCEMENT BULLETIN', W/2, 94)
     ctx.letterSpacing = '0px'
 
-    // ── MOST WANTED TITLE BLOCK ───────────────────────────────
-    const titleY = accentH + headerH + 24
-    ctx.fillStyle = RED
-    ctx.font = `700 56px ${DISPLAY}`
-    ctx.letterSpacing = '8px'
-    ctx.fillText('MOST WANTED', 24, titleY + 44)
-    ctx.letterSpacing = '0px'
+    // --- 4 Agency Logos row ---
+    const agencies = [
+      { acronym:'LSCS', name:'Los Santos County\nSheriff', color:'#C9A84C' },
+      { acronym:'LSPD', name:'Los Santos Police\nDepartment', color:'#4A90D9' },
+      { acronym:'SASP', name:'San Andreas\nState Police', color:'#C0392B' },
+      { acronym:'CIB',  name:'Central Investigation\nBureau', color:'#C9A84C' },
+    ]
 
-    // Red underline
-    ctx.fillStyle = RED
-    ctx.fillRect(24, titleY + 52, 380, 2)
+    // Load logos (try, fallback to badge drawings)
+    const logoSrcs = [
+      window.location.origin + '/images/lscs-logo.png',
+      window.location.origin + '/images/lspd-logo.png',
+      window.location.origin + '/images/sasp-logo.png',
+      window.location.origin + '/images/cib-logo.png',
+    ]
+    const logos = await Promise.all(logoSrcs.map(s => loadImg(s)))
 
-    // Threat badge — top right
-    const tColor = threatColor(w.threat_level)
-    const tLabel = (w.threat_level || 'high').toUpperCase()
-    ctx.fillStyle = tColor + '22'
-    roundRect(ctx, W - 170, titleY, 150, 52, 3)
-    ctx.fill()
-    ctx.strokeStyle = tColor + '88'
-    ctx.lineWidth = 1
-    roundRect(ctx, W - 170, titleY, 150, 52, 3)
-    ctx.stroke()
-    ctx.fillStyle = MUTED
-    ctx.font = `8px ${MONO}`
-    ctx.letterSpacing = '2px'
-    ctx.textAlign = 'center'
-    ctx.fillText('THREAT LEVEL', W - 95, titleY + 18)
-    ctx.fillStyle = tColor
-    ctx.font = `700 20px ${DISPLAY}`
-    ctx.letterSpacing = '4px'
-    ctx.fillText(tLabel, W - 95, titleY + 40)
-    ctx.textAlign = 'left'
-    ctx.letterSpacing = '0px'
+    const badgeSize = 38
+    const badgeSpacing = W / 4
+    agencies.forEach((ag, i) => {
+      const bx = badgeSpacing * i + (badgeSpacing - badgeSize) / 2
+      const by = 103
+      if (logos[i]) {
+        ctx.drawImage(logos[i], bx, by, badgeSize, badgeSize)
+      } else {
+        drawAgencyBadge(ctx, bx, by, badgeSize, ag.acronym, ag.color, ag.name)
+      }
+      // Agency name under badge
+      ctx.fillStyle = ag.color
+      ctx.font = `700 7px ${MONO}`
+      ctx.letterSpacing = '1px'
+      ctx.textAlign = 'center'
+      ctx.fillText(ag.acronym, bx + badgeSize/2, by + badgeSize + 11)
+      ctx.letterSpacing = '0px'
+    })
 
-    // ── PHOTO + INFO ROW ──────────────────────────────────────
-    const photoY    = titleY + 72
-    const photoW    = 220
-    const photoH    = 290
-    const infoX     = 24 + photoW + 24
-    const infoW     = W - infoX - 24
-
-    // Photo frame
-    ctx.strokeStyle = BORDER
-    ctx.lineWidth   = 1
-    ctx.strokeRect(24, photoY, photoW, photoH)
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 2 — SUSPECT PHOTO (dominant, center)
+    //  Y: 148 → 148+490 = 638  (490px, ~41% of 1200)
+    // ═══════════════════════════════════════════════════════════
+    const photoY = hdrH
+    const photoH = 490
+    const photoW = W   // full width
 
     // Load suspect photo
     const suspectImg = w.photo_url ? await loadImg(w.photo_url) : null
     if (suspectImg) {
-      // Cover-fit into frame
       const ir = suspectImg.width / suspectImg.height
       const fr = photoW / photoH
       let sx, sy, sw, sh
-      if (ir > fr) { sh = suspectImg.height; sw = sh * fr; sx = (suspectImg.width - sw) / 2; sy = 0 }
-      else         { sw = suspectImg.width;  sh = sw / fr; sy = (suspectImg.height - sh) / 2; sx = 0 }
-      ctx.save(); ctx.beginPath(); ctx.rect(24, photoY, photoW, photoH); ctx.clip()
-      ctx.drawImage(suspectImg, sx, sy, sw, sh, 24, photoY, photoW, photoH)
+      if (ir > fr) { sh = suspectImg.height; sw = sh * fr; sx = (suspectImg.width - sw)/2; sy = 0 }
+      else         { sw = suspectImg.width;  sh = sw / fr; sy = (suspectImg.height - sh)/2; sx = 0 }
+      ctx.save()
+      ctx.beginPath(); ctx.rect(0, photoY, photoW, photoH); ctx.clip()
+      ctx.drawImage(suspectImg, sx, sy, sw, sh, 0, photoY, photoW, photoH)
       ctx.restore()
+
+      // Dramatic vignette
+      const vig = ctx.createRadialGradient(W/2, photoY + photoH*0.45, photoH*0.15, W/2, photoY + photoH/2, photoH*0.75)
+      vig.addColorStop(0, 'rgba(0,0,0,0)')
+      vig.addColorStop(1, 'rgba(0,0,0,0.75)')
+      ctx.fillStyle = vig
+      ctx.fillRect(0, photoY, W, photoH)
+
+      // Dark gradient top (blend into header)
+      const topGrad = ctx.createLinearGradient(0, photoY, 0, photoY + 60)
+      topGrad.addColorStop(0, BG2)
+      topGrad.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = topGrad
+      ctx.fillRect(0, photoY, W, 60)
+
+      // Dark gradient bottom (blend into name band)
+      const btmGrad = ctx.createLinearGradient(0, photoY + photoH - 120, 0, photoY + photoH)
+      btmGrad.addColorStop(0, 'rgba(0,0,0,0)')
+      btmGrad.addColorStop(1, 'rgba(6,10,20,0.95)')
+      ctx.fillStyle = btmGrad
+      ctx.fillRect(0, photoY + photoH - 120, W, 120)
+
+      // Red scan line overlay (subtle tactical effect)
+      ctx.fillStyle = 'rgba(192,57,43,0.04)'
+      for (let sl = photoY; sl < photoY + photoH; sl += 5) ctx.fillRect(0, sl, W, 2)
+
     } else {
-      // Placeholder
+      // No photo placeholder
       ctx.fillStyle = BG2
-      ctx.fillRect(24, photoY, photoW, photoH)
-      ctx.fillStyle = BORDER
-      ctx.font = `${DISPLAY}`
-      ctx.textAlign = 'center'
+      ctx.fillRect(0, photoY, W, photoH)
+      // Crosshair placeholder
+      ctx.strokeStyle = BORDER
+      ctx.lineWidth = 1
+      ctx.beginPath(); ctx.moveTo(W/2, photoY); ctx.lineTo(W/2, photoY + photoH); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, photoY + photoH/2); ctx.lineTo(W, photoY + photoH/2); ctx.stroke()
+      ctx.beginPath(); ctx.arc(W/2, photoY + photoH/2, 80, 0, Math.PI*2); ctx.stroke()
       ctx.fillStyle = MUTED
-      ctx.font = `11px ${MONO}`
-      ctx.letterSpacing = '2px'
-      ctx.fillText('NO PHOTO', 24 + photoW/2, photoY + photoH/2 + 5)
+      ctx.font = `700 13px ${MONO}`
+      ctx.letterSpacing = '4px'
+      ctx.textAlign = 'center'
+      ctx.fillText('NO PHOTO ON FILE', W/2, photoY + photoH/2 + 6)
       ctx.letterSpacing = '0px'
       ctx.textAlign = 'left'
     }
 
-    // Scan line effect on photo
-    ctx.fillStyle = 'rgba(0,0,0,0.18)'
-    for (let sl = photoY; sl < photoY + photoH; sl += 4) ctx.fillRect(24, sl, photoW, 1)
+    // Red border frame lines around photo
+    ctx.strokeStyle = RED + 'BB'
+    ctx.lineWidth = 3
+    ctx.strokeRect(3, photoY + 3, W - 6, photoH - 6)
 
-    // Photo bottom strip
-    ctx.fillStyle = 'rgba(0,0,0,0.72)'
-    ctx.fillRect(24, photoY + photoH - 32, photoW, 32)
-    ctx.fillStyle = GOLD
-    ctx.font = `8px ${MONO}`
-    ctx.letterSpacing = '1px'
-    ctx.textAlign = 'center'
-    ctx.fillText('CENTRAL INVESTIGATION BUREAU', 24 + photoW/2, photoY + photoH - 18)
-    ctx.fillStyle = MUTED
-    ctx.fillText('OFFICIAL RECORD', 24 + photoW/2, photoY + photoH - 7)
-    ctx.textAlign = 'left'
+    // Corner crosshair accents
+    const chL = 22
+    ctx.strokeStyle = RED
+    ctx.lineWidth = 2
+    ;[[3, photoY+3],[W-3, photoY+3],[3, photoY+photoH-3],[W-3, photoY+photoH-3]].forEach(([px,py]) => {
+      const dx = px < W/2 ? 1 : -1, dy = py < photoY + photoH/2 ? 1 : -1
+      ctx.beginPath()
+      ctx.moveTo(px + dx*chL, py); ctx.lineTo(px, py); ctx.lineTo(px, py + dy*chL)
+      ctx.stroke()
+    })
+
+    // "SUSPECT" watermark text at top-left of photo
+    ctx.fillStyle = 'rgba(192,57,43,0.35)'
+    ctx.font = `700 11px ${MONO}`
+    ctx.letterSpacing = '5px'
+    ctx.fillText('SUSPECT', 18, photoY + 25)
     ctx.letterSpacing = '0px'
 
-    // ── INFO COLUMN ───────────────────────────────────────────
-    let iy = photoY
+    // Threat badge — top right corner of photo
+    const tbW = 130, tbH = 44
+    const tbX = W - tbW - 16, tbY = photoY + 14
+    ctx.fillStyle = tColor + '33'
+    roundRect(ctx, tbX, tbY, tbW, tbH, 4)
+    ctx.fill()
+    ctx.strokeStyle = tColor
+    ctx.lineWidth = 1.5
+    roundRect(ctx, tbX, tbY, tbW, tbH, 4)
+    ctx.stroke()
+    ctx.fillStyle = MUTED
+    ctx.font = `7px ${MONO}`
+    ctx.letterSpacing = '2px'
+    ctx.textAlign = 'center'
+    ctx.fillText('THREAT LEVEL', tbX + tbW/2, tbY + 14)
+    ctx.fillStyle = tColor
+    ctx.font = `700 18px ${DISPLAY}`
+    ctx.letterSpacing = '3px'
+    ctx.fillText((w.threat_level || 'HIGH').toUpperCase(), tbX + tbW/2, tbY + 34)
+    ctx.letterSpacing = '0px'
+    ctx.textAlign = 'left'
+
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 3 — NAME / ID BAND
+    //  Y: 638 → 638+110 = 748
+    // ═══════════════════════════════════════════════════════════
+    const nameBandY = photoY + photoH
+    const nameBandH = 110
+    ctx.fillStyle = BG2
+    ctx.fillRect(0, nameBandY, W, nameBandH)
+
+    // Gold top accent line
+    ctx.fillStyle = GOLD
+    ctx.fillRect(0, nameBandY, W, 2)
 
     // Alias
+    let ny = nameBandY + 22
     if (w.alias) {
-      ctx.fillStyle = GOLD + 'BB'
+      ctx.fillStyle = GOLD + 'CC'
       ctx.font = `9px ${MONO}`
-      ctx.letterSpacing = '2px'
-      ctx.fillText(`AKA "${w.alias}"`, infoX, iy + 14)
-      iy += 22
+      ctx.letterSpacing = '2.5px'
+      ctx.textAlign = 'center'
+      ctx.fillText(`AKA  "${w.alias.toUpperCase()}"`, W/2, ny)
+      ny += 18
       ctx.letterSpacing = '0px'
     }
 
     // Full name
+    const nameSize = (w.full_name||'').length > 24 ? 36 : 44
     ctx.fillStyle = WHITE
-    ctx.font = `700 ${(w.full_name||'').length > 22 ? '22px' : '28px'} ${DISPLAY}`
-    ctx.letterSpacing = '2px'
-    wrapText(ctx, (w.full_name || '—').toUpperCase(), infoX, iy + 28, infoW, 32)
-    iy += (w.full_name||'').length > 22 ? 54 : 44
+    ctx.font = `700 ${nameSize}px ${DISPLAY}`
+    ctx.letterSpacing = '4px'
+    ctx.textAlign = 'center'
+    ctx.fillText((w.full_name || '—').toUpperCase(), W/2, ny + nameSize - 8)
     ctx.letterSpacing = '0px'
+    ny += nameSize + 4
 
-    // Divider
-    ctx.fillStyle = BORDER
-    ctx.fillRect(infoX, iy, infoW, 1)
-    iy += 14
-
-    // Meta row: suspect ID / DOB / nationality
+    // Meta row
     const metaParts = [
       w.suspect_id ? `ID: ${w.suspect_id}` : null,
       `DOB: ${w.dob || 'UNKNOWN'}`,
       `NAT: ${w.nationality || 'UNKNOWN'}`,
+      `CASE: ${w.case_number || '—'}`,
     ].filter(Boolean)
     ctx.fillStyle = MUTED
     ctx.font = `8px ${MONO}`
     ctx.letterSpacing = '1px'
-    ctx.fillText(metaParts.join('  ·  '), infoX, iy)
-    iy += 20
+    ctx.fillText(metaParts.join('   ·   '), W/2, nameBandY + nameBandH - 10)
     ctx.letterSpacing = '0px'
+    ctx.textAlign = 'left'
 
-    // Status pill
+    // Status pill — right side
     const sColor = statusColor(w.status)
     const sLabel = statusLabel(w.status).toUpperCase()
-    ctx.fillStyle = sColor + '22'
-    roundRect(ctx, infoX, iy, 110, 24, 2)
+    const spW = 110, spH = 26
+    ctx.fillStyle = sColor + '28'
+    roundRect(ctx, W - spW - 20, nameBandY + 12, spW, spH, 3)
     ctx.fill()
-    ctx.strokeStyle = sColor + '88'
-    ctx.lineWidth = 1
-    roundRect(ctx, infoX, iy, 110, 24, 2)
+    ctx.strokeStyle = sColor
+    ctx.lineWidth = 1.5
+    roundRect(ctx, W - spW - 20, nameBandY + 12, spW, spH, 3)
     ctx.stroke()
     ctx.fillStyle = sColor
     ctx.font = `700 9px ${MONO}`
     ctx.letterSpacing = '2px'
     ctx.textAlign = 'center'
-    ctx.fillText(sLabel, infoX + 55, iy + 15)
+    ctx.fillText(sLabel, W - spW/2 - 20, nameBandY + 12 + 17)
     ctx.textAlign = 'left'
     ctx.letterSpacing = '0px'
-    iy += 34
 
-    // Bounty block
-    ctx.fillStyle = BG2
-    ctx.fillRect(infoX, iy, infoW, 56)
-    ctx.strokeStyle = GOLD + '44'
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 4 — INFO GRID (bounty / location / affiliation)
+    //  Y: 748 → 748+90 = 838
+    // ═══════════════════════════════════════════════════════════
+    const infoGridY = nameBandY + nameBandH
+    const infoGridH = 90
+    ctx.fillStyle = BG3
+    ctx.fillRect(0, infoGridY, W, infoGridH)
+    ctx.strokeStyle = GOLD + '33'
     ctx.lineWidth = 1
-    ctx.strokeRect(infoX, iy, infoW, 56)
-    ctx.fillStyle = GOLD + 'AA'
-    ctx.font = `8px ${MONO}`
-    ctx.letterSpacing = '2px'
-    ctx.fillText('BOUNTY ON CAPTURE', infoX + 12, iy + 18)
-    ctx.letterSpacing = '0px'
-    ctx.fillStyle = GOLD
-    ctx.font = `700 28px ${DISPLAY}`
-    ctx.letterSpacing = '2px'
-    ctx.fillText(w.bounty_amount || 'TBD', infoX + 12, iy + 46)
-    ctx.letterSpacing = '0px'
-    if (w.bounty_note) {
-      ctx.fillStyle = MUTED
-      ctx.font = `8px ${MONO}`
-      ctx.letterSpacing = '1px'
-      ctx.textAlign = 'right'
-      ctx.fillText(w.bounty_note.substring(0, 40), infoX + infoW - 12, iy + 46)
-      ctx.textAlign = 'left'
-      ctx.letterSpacing = '0px'
-    }
-    iy += 68
+    ctx.strokeRect(0, infoGridY, W, 1)
 
-    // Meta grid: location / affiliation
-    const metaCells = [
-      { label:'LAST KNOWN LOCATION', value: w.last_known_loc || '—' },
-      { label:'AFFILIATION',         value: w.affiliation    || 'UNKNOWN' },
+    const infoCells = [
+      { label:'BOUNTY ON CAPTURE', value: w.bounty_amount || 'TBD', color: GOLD },
+      { label:'LAST KNOWN LOCATION', value: w.last_known_loc || '—', color: WHITE },
+      { label:'AFFILIATION', value: w.affiliation || 'UNKNOWN', color: WHITE },
+      { label:'WANTED SINCE', value: w.wanted_since ? new Date(w.wanted_since + 'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}).toUpperCase() : '—', color: WHITE },
     ]
-    const cellW = (infoW - 8) / 2
-    metaCells.forEach((cell, ci) => {
-      const cx = infoX + ci * (cellW + 8)
-      ctx.fillStyle = BG2
-      ctx.fillRect(cx, iy, cellW, 44)
-      ctx.strokeStyle = BORDER
-      ctx.lineWidth = 1
-      ctx.strokeRect(cx, iy, cellW, 44)
+    const cellW2 = W / infoCells.length
+    infoCells.forEach((cell, i) => {
+      const cx2 = i * cellW2
+      // Divider
+      if (i > 0) {
+        ctx.strokeStyle = BORDER
+        ctx.lineWidth = 1
+        ctx.beginPath(); ctx.moveTo(cx2, infoGridY + 10); ctx.lineTo(cx2, infoGridY + infoGridH - 10); ctx.stroke()
+      }
       ctx.fillStyle = MUTED
       ctx.font = `7px ${MONO}`
       ctx.letterSpacing = '1.5px'
-      ctx.fillText(cell.label, cx + 8, iy + 14)
-      ctx.fillStyle = WHITE
-      ctx.font = `10px ${MONO}`
-      ctx.letterSpacing = '0.5px'
-      // Truncate long values
+      ctx.textAlign = 'center'
+      ctx.fillText(cell.label, cx2 + cellW2/2, infoGridY + 22)
+      ctx.fillStyle = cell.color
+      ctx.font = `700 ${i === 0 ? '22px' : '13px'} ${DISPLAY}`
+      ctx.letterSpacing = i === 0 ? '2px' : '1px'
+      // Truncate
       let val = cell.value
-      while (ctx.measureText(val).width > cellW - 16 && val.length > 0) val = val.slice(0,-1)
+      ctx.font = `700 ${i === 0 ? '22px' : '13px'} ${DISPLAY}`
+      while (ctx.measureText(val).width > cellW2 - 16 && val.length > 1) val = val.slice(0,-1)
       if (val !== cell.value) val += '…'
-      ctx.fillText(val, cx + 8, iy + 34)
+      ctx.fillText(val, cx2 + cellW2/2, infoGridY + 62)
       ctx.letterSpacing = '0px'
     })
-    iy += 56
+    ctx.textAlign = 'left'
 
-    // ── DEBRIEF BLOCK ─────────────────────────────────────────
-    const debriefY = Math.max(photoY + photoH + 20, iy + 8)
-    iy = debriefY
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 5 — CHARGES ROW
+    //  Y: 838 → 838+72 = 910
+    // ═══════════════════════════════════════════════════════════
+    const chargesY = infoGridY + infoGridH
+    const chargesH = 72
+    ctx.fillStyle = BG
+    ctx.fillRect(0, chargesY, W, chargesH)
+    ctx.strokeStyle = BORDER
+    ctx.lineWidth = 1
+    ctx.strokeRect(0, chargesY, W, 1)
 
-    if (w.debrief) {
-      ctx.fillStyle = MUTED
-      ctx.font = `8px ${MONO}`
-      ctx.letterSpacing = '2px'
-      ctx.fillText('SUSPECT DEBRIEF', 24, iy)
-      iy += 14
-      ctx.letterSpacing = '0px'
-      ctx.fillStyle = BORDER
-      ctx.fillRect(24, iy, W - 48, 1)
-      iy += 12
+    ctx.fillStyle = MUTED
+    ctx.font = `7px ${MONO}`
+    ctx.letterSpacing = '2px'
+    ctx.fillText('CHARGES & OFFENSES', 20, chargesY + 16)
+    ctx.letterSpacing = '0px'
 
-      ctx.fillStyle = 'rgba(240,237,228,0.65)'
-      ctx.font = `11px ${MONO}`
-      ctx.letterSpacing = '0.2px'
-      // Limit debrief to ~4 lines
-      const debriefMaxLines = 4
-      const maxDebriefW = W - 48
-      const words = w.debrief.split(' ')
-      let line = '', lines = []
-      for (const word of words) {
-        const test = line ? line + ' ' + word : word
-        if (ctx.measureText(test).width > maxDebriefW && line) { lines.push(line); line = word; if (lines.length >= debriefMaxLines) break }
-        else line = test
-      }
-      if (lines.length < debriefMaxLines && line) lines.push(line)
-      if (lines.length === debriefMaxLines && line !== lines[lines.length-1]) {
-        lines[lines.length-1] = lines[lines.length-1].slice(0,-3) + '...'
-      }
-      lines.forEach(l => { ctx.fillText(l, 24, iy); iy += 17 })
-      ctx.letterSpacing = '0px'
-      iy += 10
-    }
-
-    // ── CHARGES BLOCK ─────────────────────────────────────────
     const charges = Array.isArray(w.charges) ? w.charges : []
     if (charges.length) {
-      ctx.fillStyle = MUTED
-      ctx.font = `8px ${MONO}`
-      ctx.letterSpacing = '2px'
-      ctx.fillText('CHARGES & OFFENSES', 24, iy)
-      iy += 14
-      ctx.letterSpacing = '0px'
-      ctx.fillStyle = BORDER
-      ctx.fillRect(24, iy, W - 48, 1)
-      iy += 12
-
-      // Tag pills
-      let tx = 24, tagY = iy
-      for (const charge of charges.slice(0, 8)) {
-        ctx.font = `8px ${MONO}`
+      let tx2 = 20, tagY2 = chargesY + 24, tagRow = 0
+      for (const charge of charges.slice(0, 10)) {
+        ctx.font = `7px ${MONO}`
         ctx.letterSpacing = '0.5px'
-        const tw = ctx.measureText(charge).width + 20
+        const tw2 = ctx.measureText(charge).width + 16
         ctx.letterSpacing = '0px'
-        if (tx + tw > W - 24) { tx = 24; tagY += 26 }
-        ctx.fillStyle = RED + '18'
-        roundRect(ctx, tx, tagY, tw, 20, 2)
+        if (tx2 + tw2 > W - 20 && tagRow < 1) { tx2 = 20; tagY2 += 24; tagRow++ }
+        if (tagRow >= 2) break
+        ctx.fillStyle = RED + '1A'
+        roundRect(ctx, tx2, tagY2, tw2, 18, 2)
         ctx.fill()
-        ctx.strokeStyle = RED + '55'
+        ctx.strokeStyle = RED + '66'
         ctx.lineWidth = 1
-        roundRect(ctx, tx, tagY, tw, 20, 2)
+        roundRect(ctx, tx2, tagY2, tw2, 18, 2)
         ctx.stroke()
         ctx.fillStyle = '#E57373'
-        ctx.font = `8px ${MONO}`
-        ctx.letterSpacing = '0.5px'
-        ctx.fillText(charge, tx + 10, tagY + 13)
+        ctx.font = `7px ${MONO}`
+        ctx.letterSpacing = '0.3px'
+        ctx.fillText(charge, tx2 + 8, tagY2 + 12)
         ctx.letterSpacing = '0px'
-        tx += tw + 8
+        tx2 += tw2 + 6
       }
-      iy = tagY + 32
+    } else {
+      ctx.fillStyle = MUTED
+      ctx.font = `9px ${MONO}`
+      ctx.fillText('NO CHARGES ON FILE', 20, chargesY + 44)
     }
 
-    // ── DETECTIVE ROW ─────────────────────────────────────────
-    if (w.detective_name) {
-      ctx.fillStyle = BORDER
-      ctx.fillRect(24, iy, W - 48, 1)
-      iy += 14
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 6 — DETECTIVE + DEBRIEF ROW
+    //  Y: 910 → 910+68 = 978
+    // ═══════════════════════════════════════════════════════════
+    const detY = chargesY + chargesH
+    const detH = 68
+    ctx.fillStyle = BG2
+    ctx.fillRect(0, detY, W, detH)
+    ctx.strokeStyle = BORDER
+    ctx.lineWidth = 1
+    ctx.strokeRect(0, detY, W, 1)
 
-      // Avatar circle
-      const avR = 18
+    if (w.detective_name) {
+      const avR2 = 20
       ctx.fillStyle = GOLD + '22'
-      ctx.beginPath(); ctx.arc(24 + avR, iy + avR, avR, 0, Math.PI*2); ctx.fill()
-      ctx.strokeStyle = GOLD + '55'
+      ctx.beginPath(); ctx.arc(20 + avR2, detY + detH/2, avR2, 0, Math.PI*2); ctx.fill()
+      ctx.strokeStyle = GOLD + '66'
       ctx.lineWidth = 1
-      ctx.beginPath(); ctx.arc(24 + avR, iy + avR, avR, 0, Math.PI*2); ctx.stroke()
+      ctx.beginPath(); ctx.arc(20 + avR2, detY + detH/2, avR2, 0, Math.PI*2); ctx.stroke()
       ctx.fillStyle = GOLD
       ctx.font = `700 11px ${DISPLAY}`
       ctx.letterSpacing = '1px'
       ctx.textAlign = 'center'
       const initials = (w.detective_initials || (w.detective_name||'').split(' ').map(p=>p[0]).join('')).substring(0,2).toUpperCase()
-      ctx.fillText(initials, 24 + avR, iy + avR + 4)
+      ctx.fillText(initials, 20 + avR2, detY + detH/2 + 4)
       ctx.textAlign = 'left'
       ctx.letterSpacing = '0px'
 
+      const detX2 = 20 + avR2*2 + 12
       ctx.fillStyle = MUTED
-      ctx.font = `7px ${MONO}`
+      ctx.font = `6px ${MONO}`
       ctx.letterSpacing = '1.5px'
-      ctx.fillText('PRIMARY DETECTIVE', 24 + avR*2 + 12, iy + 12)
+      ctx.fillText('PRIMARY DETECTIVE', detX2, detY + 18)
       ctx.letterSpacing = '0px'
       ctx.fillStyle = WHITE
-      ctx.font = `12px ${DISPLAY}`
+      ctx.font = `700 13px ${DISPLAY}`
       ctx.letterSpacing = '1px'
-      ctx.fillText(`Det. ${w.detective_name}`, 24 + avR*2 + 12, iy + 28)
+      ctx.fillText(`Det. ${w.detective_name}`, detX2, detY + 35)
       ctx.letterSpacing = '0px'
       if (w.detective_rank) {
         ctx.fillStyle = MUTED
-        ctx.font = `8px ${MONO}`
-        ctx.fillText(w.detective_rank, 24 + avR*2 + 12, iy + 42)
+        ctx.font = `7px ${MONO}`
+        ctx.fillText(w.detective_rank, detX2, detY + 50)
       }
-      if (w.detective_division) {
-        ctx.fillStyle = MUTED
-        ctx.font = `8px ${MONO}`
-        ctx.textAlign = 'right'
-        ctx.fillText(w.detective_division, W - 24, iy + 28)
-        ctx.textAlign = 'left'
-      }
-      iy += 52
     }
 
-    // ── FOOTER BAND ───────────────────────────────────────────
-    const footerH = 100
-    const footerY = H - footerH
-    ctx.fillStyle = BG2
-    ctx.fillRect(0, footerY, W, footerH)
-    ctx.strokeStyle = BORDER
-    ctx.lineWidth = 1
-    ctx.strokeRect(0, footerY, W, 1)
-    ctx.fillStyle = GOLD
-    ctx.fillRect(0, footerY, W, 2)
+    if (w.debrief) {
+      const debX = w.detective_name ? W / 2 + 10 : 20
+      const debMaxW = w.detective_name ? W - debX - 20 : W - 40
+      ctx.fillStyle = MUTED
+      ctx.font = `6px ${MONO}`
+      ctx.letterSpacing = '1.5px'
+      ctx.fillText('DEBRIEF', debX, detY + 16)
+      ctx.letterSpacing = '0px'
+      ctx.fillStyle = 'rgba(240,237,228,0.6)'
+      ctx.font = `9px ${MONO}`
+      const debWords = (w.debrief||'').split(' ')
+      let debLine = '', debLines = [], debY2 = detY + 30
+      for (const dw of debWords) {
+        const test = debLine ? debLine + ' ' + dw : dw
+        if (ctx.measureText(test).width > debMaxW && debLine) {
+          debLines.push(debLine); debLine = dw
+          if (debLines.length >= 2) break
+        } else debLine = test
+      }
+      if (debLines.length < 2 && debLine) debLines.push(debLine)
+      debLines.forEach(dl => { ctx.fillText(dl, debX, debY2); debY2 += 16 })
+    }
 
-    // Warning text
-    ctx.fillStyle = RED + 'CC'
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 7 — WARNING BAND
+    //  Y: 978 → 978+36 = 1014
+    // ═══════════════════════════════════════════════════════════
+    const warnY = detY + detH
+    const warnH = 36
+    ctx.fillStyle = RED + '22'
+    ctx.fillRect(0, warnY, W, warnH)
+    ctx.fillStyle = RED
+    ctx.fillRect(0, warnY, W, 2)
+    ctx.fillStyle = RED
     ctx.font = `700 11px ${DISPLAY}`
-    ctx.letterSpacing = '3px'
+    ctx.letterSpacing = '4px'
     ctx.textAlign = 'center'
-    ctx.fillText('⚠  DO NOT ATTEMPT TO APPREHEND — CONSIDER ARMED AND DANGEROUS  ⚠', W/2, footerY + 22)
-    ctx.letterSpacing = '0px'
-
-    ctx.fillStyle = MUTED
-    ctx.font = `8px ${MONO}`
-    ctx.letterSpacing = '1px'
-    ctx.fillText('If you have information, contact CIB Tip Hotline immediately.', W/2, footerY + 38)
+    ctx.fillText('⚠  DO NOT ATTEMPT TO APPREHEND  —  ARMED & DANGEROUS  ⚠', W/2, warnY + 23)
     ctx.letterSpacing = '0px'
     ctx.textAlign = 'left'
 
-    // ── QR CODE ───────────────────────────────────────────────
-    const qrUrl    = window.location.origin + '/Page_Wanted.html'
-    const qrMatrix = generateQRMatrix(qrUrl)
-    const qrSize   = 68
-    const qrX      = W - 24 - qrSize
-    const qrY      = footerY + 16
+    // ═══════════════════════════════════════════════════════════
+    //  SECTION 8 — BARCODE + QR FOOTER
+    //  Y: 1014 → 1014+186 = 1200
+    // ═══════════════════════════════════════════════════════════
+    const ftY = warnY + warnH
+    const ftH = H - ftY  // remainder = 186
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(0, ftY, W, ftH)
 
-    // QR background
-    ctx.fillStyle = WHITE
-    ctx.fillRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8)
+    // --- BARCODE (large, scannable) ---
+    const barcodeText = (w.case_number || w.suspect_id || 'CIB-0000').replace(/[^A-Za-z0-9\- .$/+%]/g,'')
+    const bcH = 100
+    const bcW = W * 0.72
+    const bcX = (W - bcW) / 2
+    const bcY = ftY + 10
+    drawBarcode128(ctx, barcodeText.toUpperCase(), bcX, bcY, bcW, bcH)
 
-    drawQR(ctx, qrMatrix, qrX, qrY, qrSize, '#0a0f1e', null)
-
-    // QR label
-    ctx.fillStyle = MUTED
-    ctx.font = `7px ${MONO}`
-    ctx.letterSpacing = '1px'
+    // Barcode text below
+    ctx.fillStyle = '#111111'
+    ctx.font = `700 11px ${MONO}`
+    ctx.letterSpacing = '4px'
     ctx.textAlign = 'center'
-    ctx.fillText('SCAN · CIB WANTED', qrX + qrSize/2, qrY + qrSize + 14)
-    ctx.textAlign = 'left'
+    ctx.fillText(barcodeText.toUpperCase(), W/2, bcY + bcH + 15)
     ctx.letterSpacing = '0px'
 
-    // Bottom classified line
-    ctx.fillStyle = MUTED
+    // Agency label under barcode
+    ctx.fillStyle = '#888888'
     ctx.font = `7px ${MONO}`
+    ctx.letterSpacing = '2px'
+    ctx.fillText('LSCS  ·  LSPD  ·  SASP  ·  CIB  |  STATE OF SAN ANDREAS', W/2, bcY + bcH + 28)
+    ctx.letterSpacing = '0px'
+    ctx.textAlign = 'left'
+
+    // --- QR CODE (right side) ---
+    const qrUrl2    = window.location.origin + '/Page_Wanted.html'
+    const qrMatrix2 = generateQRMatrix(qrUrl2)
+    const qrSize2   = 78
+    const qrX2      = W - qrSize2 - 14
+    const qrY2      = ftY + ftH - qrSize2 - 14
+
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(qrX2 - 4, qrY2 - 4, qrSize2 + 8, qrSize2 + 8)
+    ctx.strokeStyle = '#CCCCCC'
+    ctx.lineWidth = 1
+    ctx.strokeRect(qrX2 - 4, qrY2 - 4, qrSize2 + 8, qrSize2 + 8)
+    drawQR(ctx, qrMatrix2, qrX2, qrY2, qrSize2, '#060A14', null)
+
+    ctx.fillStyle = '#888888'
+    ctx.font = `6px ${MONO}`
+    ctx.letterSpacing = '0.8px'
+    ctx.textAlign = 'center'
+    ctx.fillText('SCAN / CIB WANTED', qrX2 + qrSize2/2, qrY2 - 6)
+    ctx.letterSpacing = '0px'
+    ctx.textAlign = 'left'
+
+    // Bottom classified micro-line
+    const now = new Date().toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()
+    ctx.fillStyle = '#999999'
+    ctx.font = `6px ${MONO}`
     ctx.letterSpacing = '1.5px'
     ctx.textAlign = 'center'
-    const now = new Date().toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()
-    ctx.fillText(`CIB · PRIORITY TARGET BULLETIN · ISSUED ${now} · UNAUTHORIZED DISTRIBUTION IS A FEDERAL OFFENSE`, W/2, H - 8)
+    ctx.fillText(`JOINT BULLETIN  ·  ISSUED ${now}  ·  UNAUTHORIZED DISTRIBUTION IS A FEDERAL OFFENSE`, W/2, H - 5)
     ctx.textAlign = 'left'
     ctx.letterSpacing = '0px'
 
     // ── Download ──────────────────────────────────────────────
     const slug  = (w.full_name || 'suspect').toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    const fname = `CIB-WANTED-${slug}-${w.case_number || index + 1}.png`
+    const fname = `WANTED-${slug}-${w.case_number || index + 1}.png`
 
     const a = document.createElement('a')
     a.href     = canvas.toDataURL('image/png')
