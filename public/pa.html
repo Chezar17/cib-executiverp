@@ -389,6 +389,188 @@ body { display:flex; flex-direction:column; background:#060A14; }
 }
 @keyframes gateLoad { to { width:100%; } }
 
+/* ── Module tabs ── */
+.pa-module-tabs {
+  display:flex; gap:0; flex-shrink:0;
+  border-bottom:1px solid var(--navy-border);
+  background:#040810;
+}
+.pa-module-tab {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; padding:12px 20px; cursor:pointer;
+  background:transparent; border:none; border-bottom:2px solid transparent;
+  color:var(--muted); opacity:0.5; transition:all 0.15s; flex-shrink:0;
+}
+.pa-module-tab:hover { opacity:0.8; color:var(--white); }
+.pa-module-tab.active { color:var(--gold); opacity:1; border-bottom-color:var(--gold); }
+.pa-module-tab.tab-wanted.active { color:#C0392B; border-bottom-color:#C0392B; }
+
+/* ── Wanted module shell ── */
+#paWantedModule { display:none; flex:1; overflow:hidden; min-height:0; }
+#paWantedModule.visible { display:flex; }
+#paPressModule  { display:flex; flex:1; overflow:hidden; min-height:0; }
+#paPressModule.hidden { display:none; }
+
+/* ── Wanted list pane ── */
+.pw-list-pane {
+  width:340px; flex-shrink:0;
+  background:#070C18;
+  border-right:1px solid var(--navy-border);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.pw-list-header {
+  padding:16px 18px 14px;
+  border-bottom:1px solid var(--navy-border);
+  background:rgba(192,57,43,0.04);
+  flex-shrink:0;
+}
+.pw-list-title {
+  font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:3px;
+  color:#C0392B; text-transform:uppercase; margin-bottom:2px;
+}
+.pw-list-sub {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.6;
+}
+.pw-new-btn {
+  display:flex; align-items:center; gap:8px; width:100%; margin:0;
+  padding:12px 18px; background:rgba(192,57,43,0.06);
+  border:none; border-bottom:1px solid var(--navy-border);
+  cursor:pointer; transition:background 0.15s; flex-shrink:0;
+}
+.pw-new-btn:hover { background:rgba(192,57,43,0.12); }
+.pw-new-btn-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(192,57,43,0.15); border:1px solid rgba(192,57,43,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; color:#C0392B; line-height:1; flex-shrink:0;
+}
+.pw-new-btn-text {
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px;
+  color:#C0392B; text-transform:uppercase;
+}
+.pw-list-scroll { flex:1; overflow-y:auto; overflow-x:hidden; }
+.pw-list-empty {
+  padding:32px 18px; text-align:center;
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:2px;
+  color:var(--muted); opacity:0.5; text-transform:uppercase;
+}
+.pw-list-item {
+  padding:14px 18px; border-bottom:1px solid var(--navy-border);
+  cursor:pointer; transition:background 0.12s;
+  border-left:3px solid transparent;
+}
+.pw-list-item:hover { background:rgba(255,255,255,0.03); }
+.pw-list-item.active { background:rgba(192,57,43,0.07); border-left-color:#C0392B; }
+.pw-item-threat-row {
+  display:flex; align-items:center; gap:8px; margin-bottom:5px;
+}
+.pw-threat-badge {
+  font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:2px;
+  padding:2px 7px; text-transform:uppercase; flex-shrink:0;
+}
+.pw-threat-critical { background:rgba(192,57,43,0.2); color:#C0392B; border:1px solid rgba(192,57,43,0.4); }
+.pw-threat-high     { background:rgba(230,126,34,0.15); color:#E67E22; border:1px solid rgba(230,126,34,0.35); }
+.pw-threat-medium   { background:rgba(241,196,15,0.12); color:#F1C40F; border:1px solid rgba(241,196,15,0.3); }
+.pw-threat-low      { background:rgba(39,174,96,0.12);  color:#27AE60; border:1px solid rgba(39,174,96,0.3); }
+.pw-item-case {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5; margin-left:auto;
+}
+.pw-item-name {
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1.5px;
+  color:var(--white); text-transform:uppercase; line-height:1.3;
+  margin-bottom:5px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.pw-item-meta {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5;
+}
+
+/* ── Wanted form pane ── */
+.pw-form-pane {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  display:flex; flex-direction:column; min-width:0;
+}
+.pw-form-inner { padding:28px 32px; max-width:860px; }
+
+.pw-welcome {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:18px; padding:40px; text-align:center;
+}
+.pw-welcome-icon {
+  width:56px; height:56px; border-radius:50%;
+  background:rgba(192,57,43,0.08); border:1px solid rgba(192,57,43,0.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px;
+}
+.pw-welcome-title {
+  font-family:'Oswald',sans-serif; font-size:18px; letter-spacing:4px;
+  color:var(--white); text-transform:uppercase;
+}
+.pw-welcome-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5; max-width:400px; line-height:1.7;
+}
+
+/* Crimes tag input */
+.pw-crimes-input-wrap { display:flex; gap:8px; margin-bottom:10px; }
+.pw-crimes-tags { display:flex; flex-wrap:wrap; gap:6px; }
+.pw-crime-tag {
+  display:flex; align-items:center; gap:5px;
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1.5px;
+  text-transform:uppercase; padding:4px 10px;
+  background:rgba(192,57,43,0.1); color:rgba(192,57,43,0.9);
+  border:1px solid rgba(192,57,43,0.3);
+}
+.pw-crime-remove {
+  cursor:pointer; opacity:0.6; font-size:10px; line-height:1;
+  background:none; border:none; color:inherit; padding:0;
+}
+.pw-crime-remove:hover { opacity:1; }
+.pw-crimes-empty {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.4; padding:6px 0;
+}
+
+/* Threat level toggle */
+.pw-threat-toggle { display:flex; gap:0; }
+.pw-threat-opt {
+  flex:1; padding:9px 6px; border:1px solid var(--navy-border);
+  background:#0D1526; cursor:pointer; transition:all 0.15s;
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1.5px;
+  color:var(--muted); text-transform:uppercase; text-align:center;
+}
+.pw-threat-opt:not(:last-child) { border-right:none; }
+.pw-threat-opt:hover { background:rgba(255,255,255,0.04); }
+.pw-threat-opt.sel-critical { background:rgba(192,57,43,0.15); color:#C0392B; border-color:rgba(192,57,43,0.4); }
+.pw-threat-opt.sel-high     { background:rgba(230,126,34,0.12); color:#E67E22; border-color:rgba(230,126,34,0.35); }
+.pw-threat-opt.sel-medium   { background:rgba(241,196,15,0.1); color:#F1C40F; border-color:rgba(241,196,15,0.3); }
+.pw-threat-opt.sel-low      { background:rgba(39,174,96,0.1); color:#27AE60; border-color:rgba(39,174,96,0.3); }
+
+/* Status toggle */
+.pw-status-toggle { display:flex; gap:0; }
+.pw-status-opt {
+  flex:1; padding:9px 6px; border:1px solid var(--navy-border);
+  background:#0D1526; cursor:pointer; transition:all 0.15s;
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1.5px;
+  color:var(--muted); text-transform:uppercase; text-align:center;
+}
+.pw-status-opt:not(:last-child) { border-right:none; }
+.pw-status-opt:hover { background:rgba(255,255,255,0.04); }
+.pw-status-opt.sel-atlarge  { background:rgba(192,57,43,0.15); color:#C0392B; border-color:rgba(192,57,43,0.4); }
+.pw-status-opt.sel-captured { background:rgba(39,174,96,0.12); color:#27AE60; border-color:rgba(39,174,96,0.35); }
+.pw-status-opt.sel-deceased { background:rgba(100,100,100,0.15); color:#aaa; border-color:rgba(150,150,150,0.3); }
+
+/* Scrollbar */
+.pw-list-scroll::-webkit-scrollbar,
+.pw-form-pane::-webkit-scrollbar { width:4px; }
+.pw-list-scroll::-webkit-scrollbar-track,
+.pw-form-pane::-webkit-scrollbar-track { background:transparent; }
+.pw-list-scroll::-webkit-scrollbar-thumb,
+.pw-form-pane::-webkit-scrollbar-thumb { background:var(--navy-border); border-radius:2px; }
+
 /* Scrollbar */
 .pa-list-scroll::-webkit-scrollbar,
 .pa-form-pane::-webkit-scrollbar { width:4px; }
@@ -530,6 +712,15 @@ body { display:flex; flex-direction:column; background:#060A14; }
 
 <!-- SHELL -->
 <div class="pa-shell" id="paShell" style="display:none;">
+
+  <!-- Module tabs -->
+  <div class="pa-module-tabs" style="position:absolute;top:0;left:0;right:0;z-index:10;display:none;" id="paModuleTabs">
+    <button class="pa-module-tab active" onclick="switchModule('press')" id="tabPress">◈ Press Releases</button>
+    <button class="pa-module-tab tab-wanted" onclick="switchModule('wanted')" id="tabWanted">⚠ Most Wanted</button>
+  </div>
+
+  <!-- Press module -->
+  <div id="paPressModule" style="display:flex;flex:1;overflow:hidden;min-height:0;width:100%;">
 
   <!-- Left pane: list -->
   <div class="pa-list-pane">
@@ -775,6 +966,220 @@ body { display:flex; flex-direction:column; background:#060A14; }
 
   </div><!-- /pa-form-pane -->
 
+  </div><!-- /paPressModule -->
+
+  <!-- ══════════════════════════════════════════════════
+       WANTED MODULE
+       ══════════════════════════════════════════════════ -->
+  <div id="paWantedModule" style="width:100%;height:100%;display:none;">
+
+    <!-- Left: wanted list -->
+    <div class="pw-list-pane">
+      <div class="pw-list-header">
+        <div class="pw-list-title">Most Wanted</div>
+        <div class="pw-list-sub">Active wanted individuals</div>
+      </div>
+      <button class="pw-new-btn" onclick="pwOpenNew()">
+        <div class="pw-new-btn-icon">+</div>
+        <span class="pw-new-btn-text">Add Wanted Individual</span>
+      </button>
+      <div class="pw-list-scroll" id="pwList">
+        <div class="pw-list-empty">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Right: form / welcome -->
+    <div class="pw-form-pane" id="pwFormPane">
+
+      <!-- Welcome -->
+      <div class="pw-welcome" id="pwWelcome">
+        <div class="pw-welcome-icon">⚠</div>
+        <div class="pw-welcome-title">Wanted List Manager</div>
+        <div class="pw-welcome-sub">Add or edit wanted individuals. Changes reflect immediately on the public Most Wanted page.</div>
+      </div>
+
+      <!-- Form -->
+      <div class="pw-form-inner" id="pwFormInner" style="display:none;">
+
+        <div class="pa-form-header">
+          <div>
+            <div class="pa-form-eyebrow" id="pwFormEyebrow">New Wanted Entry</div>
+            <div class="pa-form-title" id="pwFormTitleDisp">Add Individual</div>
+          </div>
+          <div class="pa-form-actions">
+            <button class="pa-btn pa-btn-danger" id="pwDeleteBtn" onclick="pwConfirmDelete()" style="display:none;">Delete</button>
+            <button class="pa-btn pa-btn-secondary" onclick="pwCancel()">Cancel</button>
+            <button class="pa-btn pa-btn-save" id="pwSaveBtn" onclick="pwSave()">Save & Publish</button>
+          </div>
+        </div>
+
+        <!-- Identity -->
+        <div class="pa-section-label">Suspect Identity</div>
+        <div class="pa-field-row cols-3">
+          <div class="pa-field">
+            <label class="pa-label">Case Number <span class="req">*</span></label>
+            <input class="pa-input" id="pwCaseNo" placeholder="CIB-MW-2026-003"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Suspect ID</label>
+            <input class="pa-input" id="pwSuspectId" placeholder="SS-02"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Wanted Since <span class="req">*</span></label>
+            <input class="pa-input" id="pwWantedSince" type="date"/>
+          </div>
+        </div>
+        <div class="pa-field-row cols-2">
+          <div class="pa-field">
+            <label class="pa-label">Full Name / Title <span class="req">*</span></label>
+            <input class="pa-input" id="pwFullName" placeholder="e.g. KILLER OF CHIEF ANKOOW ALREX"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Alias / AKA</label>
+            <input class="pa-input" id="pwAlias" placeholder='AKA "John Doe"'/>
+          </div>
+        </div>
+        <div class="pa-field-row cols-3">
+          <div class="pa-field">
+            <label class="pa-label">Date of Birth</label>
+            <input class="pa-input" id="pwDob" placeholder="UNKNOWN"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Nationality</label>
+            <input class="pa-input" id="pwNationality" placeholder="UNKNOWN"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Bounty Amount <span class="req">*</span></label>
+            <input class="pa-input" id="pwBounty" placeholder="$10,000"/>
+          </div>
+        </div>
+
+        <!-- Threat & Status -->
+        <div class="pa-section-label">Threat Level & Status</div>
+        <div class="pa-field-row cols-2">
+          <div class="pa-field">
+            <label class="pa-label">Threat Level</label>
+            <div class="pw-threat-toggle" id="pwThreatToggle">
+              <div class="pw-threat-opt sel-critical" onclick="pwSetThreat('critical')">Critical</div>
+              <div class="pw-threat-opt" onclick="pwSetThreat('high')">High</div>
+              <div class="pw-threat-opt" onclick="pwSetThreat('medium')">Medium</div>
+              <div class="pw-threat-opt" onclick="pwSetThreat('low')">Low</div>
+            </div>
+            <input type="hidden" id="pwThreatLevel" value="critical"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Status</label>
+            <div class="pw-status-toggle" id="pwStatusToggle">
+              <div class="pw-status-opt sel-atlarge" onclick="pwSetStatus('At Large')">At Large</div>
+              <div class="pw-status-opt" onclick="pwSetStatus('Captured')">Captured</div>
+              <div class="pw-status-opt" onclick="pwSetStatus('Deceased')">Deceased</div>
+            </div>
+            <input type="hidden" id="pwStatus" value="At Large"/>
+          </div>
+        </div>
+
+        <!-- Location & Affiliation -->
+        <div class="pa-section-label">Location & Affiliation</div>
+        <div class="pa-field-row cols-2">
+          <div class="pa-field">
+            <label class="pa-label">Last Known Location</label>
+            <input class="pa-input" id="pwLastLocation" placeholder="South of Casino, LS"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Gang / Organization</label>
+            <input class="pa-input" id="pwAffiliation" placeholder="UNKNOWN"/>
+          </div>
+        </div>
+
+        <!-- Bounty note + detective -->
+        <div class="pa-section-label">Case Details</div>
+        <div class="pa-field-row cols-1">
+          <div class="pa-field">
+            <label class="pa-label">Bounty Note</label>
+            <input class="pa-input" id="pwBountyNote" placeholder="Dead or Alive · Authorized by CIB Director"/>
+          </div>
+        </div>
+        <div class="pa-field-row cols-1">
+          <div class="pa-field">
+            <label class="pa-label">Suspect Debrief <span class="req">*</span></label>
+            <textarea class="pa-textarea" id="pwDebrief" placeholder="Background, incident involvement, behavior notes..." style="min-height:100px;"></textarea>
+          </div>
+        </div>
+
+        <!-- Crimes -->
+        <div class="pa-section-label">Charges & Offenses</div>
+        <div class="pa-field-row cols-1">
+          <div class="pa-field">
+            <label class="pa-label">Add Charge</label>
+            <div class="pw-crimes-input-wrap">
+              <input class="pa-input" id="pwCrimeInput" placeholder="e.g. Murder of A Government Employee" style="flex:1;"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();pwAddCrime();}"/>
+              <button class="pa-btn pa-btn-secondary" onclick="pwAddCrime()" style="padding:9px 16px;font-size:10px;">+ Add</button>
+            </div>
+            <div class="pw-crimes-tags" id="pwCrimesTags">
+              <span class="pw-crimes-empty">No charges added yet.</span>
+            </div>
+            <input type="hidden" id="pwCrimesHidden" value="[]"/>
+          </div>
+        </div>
+
+        <!-- Detective -->
+        <div class="pa-section-label">Assigned Detective</div>
+        <div class="pa-field-row cols-3">
+          <div class="pa-field">
+            <label class="pa-label">Detective Name</label>
+            <input class="pa-input" id="pwDetName" placeholder="Det. Elias Makya"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Rank & Badge</label>
+            <input class="pa-input" id="pwDetRank" placeholder="Head of CID · Badge #26104"/>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label">Division</label>
+            <input class="pa-input" id="pwDetDiv" placeholder="Criminal Investigation Division"/>
+          </div>
+        </div>
+
+        <!-- Photo -->
+        <div class="pa-section-label">Suspect Photo</div>
+        <div class="pa-field-row cols-1">
+          <div class="pa-field">
+            <div class="pa-photo-area" id="pwPhotoArea">
+              <div id="pwPhotoPreviewWrap" style="display:none;">
+                <img class="pa-photo-preview" id="pwPhotoPreview" src="" alt="Suspect"/>
+              </div>
+              <div class="pa-photo-placeholder" id="pwPhotoPlaceholder">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                <span>No photo selected</span>
+              </div>
+              <div class="pa-photo-btns">
+                <label class="pa-photo-btn" style="cursor:pointer;">
+                  Upload File
+                  <input type="file" id="pwPhotoUpload" accept="image/*" style="display:none;" onchange="pwHandlePhotoUpload(this)"/>
+                </label>
+                <button class="pa-photo-btn pa-photo-clear" onclick="pwClearPhoto()">✕ Remove</button>
+              </div>
+            </div>
+            <div class="pa-photo-url-row">
+              <span class="pa-photo-url-label">Or use URL:</span>
+              <input class="pa-input" id="pwPhotoUrl" placeholder="https://..." style="font-size:10px;"
+                     oninput="pwHandlePhotoUrl(this.value)"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom actions -->
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--navy-border);">
+          <button class="pa-btn pa-btn-danger" id="pwDeleteBtn2" onclick="pwConfirmDelete()" style="display:none;">Delete Entry</button>
+          <button class="pa-btn pa-btn-secondary" onclick="pwCancel()">Cancel</button>
+          <button class="pa-btn pa-btn-save" onclick="pwSave()">Save & Publish</button>
+        </div>
+
+      </div><!-- /pw-form-inner -->
+    </div><!-- /pw-form-pane -->
+
+  </div><!-- /paWantedModule -->
+
 </div><!-- /pa-shell -->
 
 <!-- Delete confirmation modal -->
@@ -785,6 +1190,18 @@ body { display:flex; flex-direction:column; background:#060A14; }
     <div class="pa-modal-btns">
       <button class="pa-btn pa-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
       <button class="pa-btn pa-btn-danger" onclick="executeDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Wanted delete modal -->
+<div class="pa-modal-backdrop" id="pwDeleteModal">
+  <div class="pa-modal">
+    <div class="pa-modal-title">Remove Wanted Entry</div>
+    <div class="pa-modal-text">This will remove the suspect from the public Most Wanted page. The record is soft-deleted and retained in audit logs.</div>
+    <div class="pa-modal-btns">
+      <button class="pa-btn pa-btn-secondary" onclick="document.getElementById('pwDeleteModal').classList.remove('visible')">Cancel</button>
+      <button class="pa-btn pa-btn-danger" onclick="pwExecuteDelete()">Remove</button>
     </div>
   </div>
 </div>
@@ -1256,6 +1673,267 @@ function rteClear() {
   const editor = _rteEditor()
   if (editor) editor.innerHTML = ''
   _rteSync()
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE TABS — switch between Press & Wanted
+// ═══════════════════════════════════════════════════════════
+
+function switchModule(mod) {
+  const pressEl   = document.getElementById('paPressModule')
+  const wantedEl  = document.getElementById('paWantedModule')
+  const tabPress  = document.getElementById('tabPress')
+  const tabWanted = document.getElementById('tabWanted')
+  if (mod === 'press') {
+    pressEl.style.display  = 'flex'
+    wantedEl.style.display = 'none'
+    tabPress.classList.add('active')
+    tabWanted.classList.remove('active')
+  } else {
+    pressEl.style.display  = 'none'
+    wantedEl.style.display = 'flex'
+    tabWanted.classList.add('active')
+    tabPress.classList.remove('active')
+    pwLoadList()
+  }
+}
+
+// Patch loadReleases to also reveal tabs
+;(function() {
+  const _orig = window.loadReleases
+  window.loadReleases = async function() {
+    const tabs = document.getElementById('paModuleTabs')
+    if (tabs) {
+      tabs.style.display  = 'flex'
+      const shell = document.getElementById('paShell')
+      if (shell) shell.style.paddingTop = '41px'
+    }
+    if (_orig) await _orig.apply(this, arguments)
+  }
+})()
+
+// ═══════════════════════════════════════════════════════════
+//  WANTED MODULE — CRUD
+// ═══════════════════════════════════════════════════════════
+
+const PW_API = '/api/wanted'
+
+let _wantedList  = []
+let _pwEditingId = null
+let _pwPhotoB64  = null
+let _pwCrimes    = []
+
+async function pwLoadList() {
+  const el = document.getElementById('pwList')
+  try {
+    const res  = await fetch(PW_API)
+    const json = await res.json()
+    if (json.success) { _wantedList = json.data || []; pwRenderList() }
+    else { el.innerHTML = '<div class="pw-list-empty">Failed to load.</div>' }
+  } catch (e) { el.innerHTML = '<div class="pw-list-empty">Network error.</div>' }
+}
+
+function pwRenderList() {
+  const el = document.getElementById('pwList')
+  if (!_wantedList.length) {
+    el.innerHTML = '<div class="pw-list-empty">No wanted individuals.<br>Add the first one.</div>'
+    return
+  }
+  const threatCls = { critical:'pw-threat-critical', high:'pw-threat-high', medium:'pw-threat-medium', low:'pw-threat-low' }
+  el.innerHTML = _wantedList.map(w => `
+    <div class="pw-list-item${_pwEditingId === w.id ? ' active' : ''}" onclick="pwOpenEdit('${w.id}')">
+      <div class="pw-item-threat-row">
+        <span class="pw-threat-badge ${threatCls[w.threat_level] || 'pw-threat-critical'}">${escHtml(w.threat_level||'Critical')}</span>
+        <span class="pw-item-case">${escHtml(w.case_no||'')}</span>
+      </div>
+      <div class="pw-item-name">${escHtml(w.full_name||'')}</div>
+      <div class="pw-item-meta">${escHtml(w.status||'At Large')} · ${escHtml(w.bounty||'—')}</div>
+    </div>`).join('')
+}
+
+function pwOpenNew() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  _pwEditingId = null; _pwPhotoB64 = null; _pwCrimes = []
+  pwClearForm()
+  document.getElementById('pwFormEyebrow').textContent   = 'New Wanted Entry'
+  document.getElementById('pwFormTitleDisp').textContent = 'Add Individual'
+  document.getElementById('pwDeleteBtn').style.display   = 'none'
+  document.getElementById('pwDeleteBtn2').style.display  = 'none'
+  document.getElementById('pwWelcome').style.display     = 'none'
+  document.getElementById('pwFormInner').style.display   = 'block'
+  document.getElementById('pwWantedSince').value = new Date().toISOString().split('T')[0]
+  pwRenderList()
+}
+
+function pwOpenEdit(id) {
+  const w = _wantedList.find(x => x.id === id); if (!w) return
+  _pwEditingId = id; _pwPhotoB64 = null
+  pwPopulate(w)
+  document.getElementById('pwFormEyebrow').textContent   = 'Editing · ' + (w.case_no||'')
+  document.getElementById('pwFormTitleDisp').textContent = w.full_name || 'Edit Entry'
+  document.getElementById('pwDeleteBtn').style.display   = _canWrite ? 'inline-flex' : 'none'
+  document.getElementById('pwDeleteBtn2').style.display  = _canWrite ? 'inline-flex' : 'none'
+  document.getElementById('pwWelcome').style.display     = 'none'
+  document.getElementById('pwFormInner').style.display   = 'block'
+  pwRenderList()
+}
+
+function pwCancel() {
+  _pwEditingId = null
+  document.getElementById('pwFormInner').style.display = 'none'
+  document.getElementById('pwWelcome').style.display   = 'flex'
+  pwRenderList()
+}
+
+function pwPopulate(w) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||'' }
+  set('pwCaseNo', w.case_no); set('pwSuspectId', w.suspect_id); set('pwWantedSince', w.wanted_since)
+  set('pwFullName', w.full_name); set('pwAlias', w.alias); set('pwDob', w.dob)
+  set('pwNationality', w.nationality); set('pwBounty', w.bounty); set('pwBountyNote', w.bounty_note)
+  set('pwDebrief', w.debrief); set('pwLastLocation', w.last_location); set('pwAffiliation', w.affiliation)
+  set('pwDetName', w.det_name); set('pwDetRank', w.det_rank); set('pwDetDiv', w.det_division)
+  set('pwPhotoUrl', w.photo_url)
+  pwSetThreat(w.threat_level || 'critical')
+  pwSetStatus(w.status || 'At Large')
+  try { _pwCrimes = JSON.parse(w.crimes || '[]') } catch { _pwCrimes = [] }
+  pwRenderCrimes()
+  if (w.photo_url) {
+    document.getElementById('pwPhotoPreview').src = w.photo_url
+    document.getElementById('pwPhotoPreviewWrap').style.display = 'block'
+    document.getElementById('pwPhotoPlaceholder').style.display = 'none'
+  } else { pwClearPhotoPreview() }
+}
+
+function pwClearForm() {
+  ['pwCaseNo','pwSuspectId','pwFullName','pwAlias','pwDob','pwNationality','pwBounty',
+   'pwBountyNote','pwDebrief','pwLastLocation','pwAffiliation','pwDetName','pwDetRank',
+   'pwDetDiv','pwPhotoUrl'].forEach(id => { const el=document.getElementById(id); if(el) el.value='' })
+  pwSetThreat('critical'); pwSetStatus('At Large')
+  _pwCrimes = []; pwRenderCrimes(); pwClearPhotoPreview(); _pwPhotoB64 = null
+}
+
+function pwSetThreat(val) {
+  document.getElementById('pwThreatLevel').value = val
+  document.querySelectorAll('#pwThreatToggle .pw-threat-opt').forEach(el => {
+    const lvl = el.textContent.trim().toLowerCase()
+    el.className = `pw-threat-opt${lvl === val ? ' sel-'+lvl : ''}`
+  })
+}
+
+function pwSetStatus(val) {
+  document.getElementById('pwStatus').value = val
+  const map = { 'At Large':'atlarge', 'Captured':'captured', 'Deceased':'deceased' }
+  document.querySelectorAll('#pwStatusToggle .pw-status-opt').forEach(el => {
+    const lbl = el.textContent.trim()
+    el.className = `pw-status-opt${lbl === val ? ' sel-'+(map[lbl]||'') : ''}`
+  })
+}
+
+function pwAddCrime() {
+  const inp = document.getElementById('pwCrimeInput')
+  const val = inp.value.trim(); if (!val) return
+  _pwCrimes.push(val); inp.value = ''; pwRenderCrimes()
+}
+function pwRemoveCrime(idx) { _pwCrimes.splice(idx, 1); pwRenderCrimes() }
+function pwRenderCrimes() {
+  const el = document.getElementById('pwCrimesTags')
+  document.getElementById('pwCrimesHidden').value = JSON.stringify(_pwCrimes)
+  el.innerHTML = _pwCrimes.length
+    ? _pwCrimes.map((c,i) => `<span class="pw-crime-tag">${escHtml(c)}<button class="pw-crime-remove" onclick="pwRemoveCrime(${i})">✕</button></span>`).join('')
+    : '<span class="pw-crimes-empty">No charges added yet.</span>'
+}
+
+function pwHandlePhotoUpload(input) {
+  const file = input.files[0]; if (!file) return
+  const r = new FileReader()
+  r.onload = e => {
+    _pwPhotoB64 = e.target.result
+    document.getElementById('pwPhotoPreview').src = e.target.result
+    document.getElementById('pwPhotoPreviewWrap').style.display = 'block'
+    document.getElementById('pwPhotoPlaceholder').style.display = 'none'
+    document.getElementById('pwPhotoUrl').value = ''
+  }
+  r.readAsDataURL(file)
+}
+function pwHandlePhotoUrl(url) {
+  if (!url) { pwClearPhotoPreview(); return }
+  _pwPhotoB64 = null
+  document.getElementById('pwPhotoPreview').src = url
+  document.getElementById('pwPhotoPreviewWrap').style.display = 'block'
+  document.getElementById('pwPhotoPlaceholder').style.display = 'none'
+}
+function pwClearPhoto() { _pwPhotoB64 = null; document.getElementById('pwPhotoUrl').value = ''; pwClearPhotoPreview() }
+function pwClearPhotoPreview() {
+  document.getElementById('pwPhotoPreview').src = ''
+  document.getElementById('pwPhotoPreviewWrap').style.display = 'none'
+  document.getElementById('pwPhotoPlaceholder').style.display = 'flex'
+}
+
+async function pwSave() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  const g = id => document.getElementById(id)
+  const caseNo   = g('pwCaseNo').value.trim()
+  const fullName = g('pwFullName').value.trim()
+  const bounty   = g('pwBounty').value.trim()
+  const debrief  = g('pwDebrief').value.trim()
+  const since    = g('pwWantedSince').value.trim()
+  if (!caseNo)   { showToast('Case number required', 'error'); return }
+  if (!fullName) { showToast('Full name required', 'error'); return }
+  if (!bounty)   { showToast('Bounty amount required', 'error'); return }
+  if (!debrief)  { showToast('Debrief required', 'error'); return }
+  if (!since)    { showToast('Wanted since date required', 'error'); return }
+
+  const payload = {
+    id: _pwEditingId, case_no: caseNo, suspect_id: g('pwSuspectId').value.trim(),
+    wanted_since: since, full_name: fullName, alias: g('pwAlias').value.trim(),
+    dob: g('pwDob').value.trim(), nationality: g('pwNationality').value.trim(),
+    bounty, bounty_note: g('pwBountyNote').value.trim(), debrief,
+    last_location: g('pwLastLocation').value.trim(), affiliation: g('pwAffiliation').value.trim(),
+    threat_level: g('pwThreatLevel').value, status: g('pwStatus').value,
+    crimes: JSON.stringify(_pwCrimes),
+    det_name: g('pwDetName').value.trim(), det_rank: g('pwDetRank').value.trim(),
+    det_division: g('pwDetDiv').value.trim(),
+    photo_base64: _pwPhotoB64 || null,
+    photo_url: !_pwPhotoB64 ? g('pwPhotoUrl').value.trim() : null,
+  }
+
+  const btn = document.getElementById('pwSaveBtn')
+  btn.disabled = true; btn.textContent = 'Saving...'
+  const token = sessionStorage.getItem('cib_token')
+  try {
+    const res  = await fetch(PW_API, {
+      method: _pwEditingId ? 'PUT' : 'POST',
+      headers: { 'Content-Type':'application/json', 'x-session-token': token||'' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+    if (json.success) {
+      showToast(_pwEditingId ? 'Entry updated' : 'Entry published', 'success')
+      _pwEditingId = json.data.id
+      await pwLoadList(); pwOpenEdit(_pwEditingId)
+    } else { showToast(json.error||'Save failed','error') }
+  } catch (e) { showToast('Network error','error') }
+  finally { btn.disabled=false; btn.textContent='Save & Publish' }
+}
+
+function pwConfirmDelete() {
+  if (!_pwEditingId || !_canWrite) return
+  document.getElementById('pwDeleteModal').classList.add('visible')
+}
+async function pwExecuteDelete() {
+  document.getElementById('pwDeleteModal').classList.remove('visible')
+  if (!_pwEditingId) return
+  const token = sessionStorage.getItem('cib_token')
+  try {
+    const res  = await fetch(`${PW_API}?id=${_pwEditingId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type':'application/json', 'x-session-token': token||'' },
+      body: JSON.stringify({ reason:'Deleted via PA Manager' }),
+    })
+    const json = await res.json()
+    if (json.success) { showToast('Entry removed','success'); _pwEditingId=null; await pwLoadList(); pwCancel() }
+    else { showToast(json.error||'Delete failed','error') }
+  } catch (e) { showToast('Network error','error') }
 }
 
 </script>
