@@ -136,6 +136,10 @@
 
     <div class="nx-sidebar-footer">
       <div class="nx-sidebar-footer-text">NEXUS v1.0 · CIB Internal Portal<br>All activity is logged &amp; monitored<br>Session expires after 30 min idle</div>
+      <button class="nx-help-btn" onclick="ObSystem.replayGuide()" title="Replay portal guide">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+        Panduan Portal
+      </button>
     </div>
   </nav>
 
@@ -820,6 +824,37 @@
      Bahasa Indonesia · Audio per step · Highlight overlay
      ═══════════════════════════════════════════════════════════ -->
 <style>
+/* ── Sidebar help button ── */
+.nx-help-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.15);
+  color: rgba(201,168,76,0.5);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+.nx-help-btn:hover {
+  background: rgba(201,168,76,0.07);
+  border-color: rgba(201,168,76,0.4);
+  color: var(--gold, #C9A84C);
+}
+.nx-help-btn svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.nx-help-btn:hover svg { opacity: 1; }
+
 /* ── Onboarding backdrop ──
    No longer applies its own dark bg — spotlight box-shadow does all dimming.
    Still used as a full-screen pointer-events catcher. */
@@ -1698,7 +1733,8 @@
 
     // Called by PortalAuth.onReady after session resolves
     init: async function (session) {
-      _session = session
+      _session = session  // always cache — replayGuide() needs it
+
       const done = await checkOnboarded()
       if (done) return  // already onboarded — do nothing
 
@@ -1711,6 +1747,29 @@
       setTimeout(() => {
         confirm().classList.add('ob-active')
       }, 400)
+    },
+
+    // Manually re-launch the guide — called by the "?" sidebar button.
+    // Works even after onboarding is marked done in the DB.
+    replayGuide: function () {
+      // If guide is already running, do nothing
+      if (_active) return
+
+      const session = _session
+      const rank = session?.rank || 'Petugas'
+      const name = session?.name || session?.badge || 'Anonim'
+
+      // Rebuild steps (session data may have been unavailable on first load)
+      _steps = buildSteps(rank, name)
+
+      // Close confirm prompt if somehow still showing
+      confirm().classList.remove('ob-active')
+
+      // Start guide from step 1
+      backdrop().classList.add('ob-active')
+      _stepIdx = 0
+      _active  = true
+      renderStep(0)
     },
 
     startGuide: function () {
