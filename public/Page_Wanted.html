@@ -14,10 +14,8 @@
 <link rel="stylesheet" href="shared/styles/site-header.css"/>
 <script type="module" src="shared/components/site-header.js"></script>
 <link rel="stylesheet" href="styles/wanted.css"/>
-
-<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <style>
 /* ── Loading / empty states ── */
 .mw-loading {
@@ -65,83 +63,34 @@
   color:var(--muted); opacity:0.5;
 }
 
-/* ── Export Button ── */
-.export-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 18px;
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid rgba(201,168,76,0.35);
-  color: rgba(201,168,76,0.75);
-  font-family: 'Roboto Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-.export-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(201,168,76,0.06);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.export-btn:hover {
-  border-color: rgba(201,168,76,0.7);
-  color: #C9A84C;
-  background: rgba(201,168,76,0.05);
-}
-.export-btn:hover::before { opacity: 1; }
-.export-btn:active { transform: scale(0.98); }
-.export-btn svg {
-  flex-shrink: 0;
-  opacity: 0.8;
-}
-.export-btn.exporting {
-  pointer-events: none;
-  opacity: 0.5;
-}
-.export-btn.exporting .export-btn-text::after {
-  content: '...';
-}
-
-/* ── Export Toast ── */
-.mw-toast {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  z-index: 9999;
-  background: #0e0e0e;
-  border: 1px solid rgba(201,168,76,0.4);
-  color: rgba(201,168,76,0.9);
-  font-family: 'Roboto Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 12px 20px;
+/* ── Export Poster Button ── */
+.export-poster-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.3s, transform 0.3s;
-  pointer-events: none;
-}
-.mw-toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-.mw-toast-dot {
-  width: 6px; height: 6px;
-  background: #C9A84C;
-  border-radius: 50%;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 14px;
+  background: rgba(6,12,24,0.9);
+  border: none;
+  border-top: 1px solid rgba(192,57,43,0.3);
+  color: rgba(240,237,228,0.55);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   flex-shrink: 0;
+}
+.export-poster-btn:hover {
+  background: rgba(192,57,43,0.12);
+  color: #C0392B;
+  border-top-color: rgba(192,57,43,0.6);
+}
+.export-poster-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 </style>
 </head>
@@ -178,23 +127,23 @@
 
   <!-- Wanted list container — populated by JS -->
   <div class="wanted-list" id="mwWantedList">
+
+    <!-- Loading state -->
     <div class="mw-loading" id="mwLoadingState">
       <div class="mw-loading-text">Retrieving Priority Target Data...</div>
       <div class="mw-loading-bar"><div class="mw-loading-progress"></div></div>
     </div>
+
   </div>
+  <!-- END .wanted-list -->
 
 </div>
-
-<!-- Export toast notification -->
-<div class="mw-toast" id="mwToast">
-  <div class="mw-toast-dot"></div>
-  <span id="mwToastText">Poster exported</span>
-</div>
+<!-- END .mw-wrap -->
 
 <!-- FOOTER -->
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
+
 <script src="shared/scripts/site-ui.js"></script>
 <script src="scripts/wanted.js"></script>
 
@@ -227,16 +176,6 @@ const STATUS_COLORS = {
   cleared:    'var(--muted)',
 }
 
-// Canvas hex equivalents for CSS vars (used in poster drawing)
-const GOLD   = '#C9A84C'
-const RED    = '#C0392B'
-const BG     = '#0A0A0A'
-const BG2    = '#111111'
-const BORDER = 'rgba(201,168,76,0.18)'
-const MUTED  = '#666666'
-const WHITE  = '#FFFFFF'
-const DIM    = '#AAAAAA'
-
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
@@ -248,443 +187,6 @@ function formatDate(d) {
   } catch { return d }
 }
 
-// ── Toast helper ──────────────────────────────────────────
-let _toastTimer = null
-function showToast(msg) {
-  const el = document.getElementById('mwToast')
-  document.getElementById('mwToastText').textContent = msg
-  el.classList.add('show')
-  clearTimeout(_toastTimer)
-  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000)
-}
-
-// ── QR Code helper — returns a PNG data-URL via hidden div ──
-function generateQRDataURL(text, size) {
-  return new Promise((resolve) => {
-    const wrapper = document.createElement('div')
-    wrapper.style.cssText = 'position:fixed;left:-9999px;top:-9999px;'
-    document.body.appendChild(wrapper)
-    new QRCode(wrapper, {
-      text,
-      width:  size,
-      height: size,
-      colorDark:  '#000000',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M,
-    })
-    // QRCode renders synchronously into a canvas/img
-    setTimeout(() => {
-      const img = wrapper.querySelector('img') || wrapper.querySelector('canvas')
-      let url = ''
-      if (img && img.tagName === 'IMG') url = img.src
-      else if (img && img.tagName === 'CANVAS') url = img.toDataURL('image/png')
-      document.body.removeChild(wrapper)
-      resolve(url)
-    }, 80)
-  })
-}
-
-// ── Load image cross-origin helper ───────────────────────
-function loadImage(src) {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload  = () => resolve(img)
-    img.onerror = () => resolve(null)
-    img.src = src
-  })
-}
-
-// ── Draw rounded rect helper ─────────────────────────────
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.lineTo(x + w - r, y)
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
-  ctx.lineTo(x + w, y + h - r)
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  ctx.lineTo(x + r, y + h)
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
-  ctx.lineTo(x, y + r)
-  ctx.quadraticCurveTo(x, y, x + r, y)
-  ctx.closePath()
-}
-
-// ── Wrap text helper ─────────────────────────────────────
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = String(text || '').split(' ')
-  let line = ''
-  let curY = y
-  for (let i = 0; i < words.length; i++) {
-    const test = line + words[i] + ' '
-    if (ctx.measureText(test).width > maxWidth && i > 0) {
-      ctx.fillText(line.trim(), x, curY)
-      line = words[i] + ' '
-      curY += lineHeight
-    } else {
-      line = test
-    }
-  }
-  if (line.trim()) ctx.fillText(line.trim(), x, curY)
-  return curY
-}
-
-// ════════════════════════════════════════════════════════════
-//  POSTER EXPORT — 1200×1200 square, fully fixed-coordinate
-//  Layout zones (all Y values are absolute, never dynamic):
-//
-//  [0   – 50 ] top border pad
-//  [50  – 90 ] ZONE A: header eyebrow
-//  [90  – 95 ] divider line
-//  [95  – 200] ZONE B: WANTED title + threat badge
-//  [200 – 205] divider line
-//  [205 – 620] ZONE C: photo (left) + identity block (right)
-//  [620 – 625] divider line
-//  [625 – 730] ZONE D: bounty + meta 3-grid  (full width)
-//  [730 – 735] divider line
-//  [735 – 880] ZONE E: debrief (capped, clipped)
-//  [880 – 885] divider line
-//  [885 – 980] ZONE F: charges tags
-//  [980 – 985] divider line
-//  [985 –1150] ZONE G: bottom footer — QR left, warning text right
-//  [1150–1200] bottom border pad / ref bar
-// ════════════════════════════════════════════════════════════
-async function exportWantedPoster(w) {
-  const S = 1200  // square
-  const PAD = 44  // inner margin from border
-
-  const canvas = document.createElement('canvas')
-  canvas.width  = S
-  canvas.height = S
-  const ctx = canvas.getContext('2d')
-
-  await document.fonts.ready
-
-  // ── helpers ──────────────────────────────────────────────
-  function line(x1, y1, x2, y2, color = 'rgba(201,168,76,0.22)', lw = 1) {
-    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore()
-  }
-  function hline(y, color, lw) { line(PAD, y, S-PAD, y, color, lw) }
-  function label(txt, x, y, font, color, align='left') {
-    ctx.save(); ctx.font=font; ctx.fillStyle=color; ctx.textAlign=align
-    ctx.fillText(String(txt||''), x, y); ctx.restore()
-  }
-  // clip text to maxPx wide (ellipsis)
-  function clampText(ctx2, txt, maxPx) {
-    txt = String(txt||'')
-    if (ctx2.measureText(txt).width <= maxPx) return txt
-    while (txt.length && ctx2.measureText(txt+'…').width > maxPx) txt = txt.slice(0,-1)
-    return txt + '…'
-  }
-
-  // ── BACKGROUND ───────────────────────────────────────────
-  ctx.fillStyle = '#0B0B0B'; ctx.fillRect(0,0,S,S)
-
-  // grid texture
-  ctx.save(); ctx.strokeStyle='rgba(201,168,76,0.028)'; ctx.lineWidth=1
-  for (let x=0;x<=S;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,S);ctx.stroke()}
-  for (let y=0;y<=S;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(S,y);ctx.stroke()}
-  ctx.restore()
-
-  // outer double border
-  ctx.save()
-  ctx.strokeStyle='rgba(201,168,76,0.45)'; ctx.lineWidth=1.5; ctx.strokeRect(26,26,S-52,S-52)
-  ctx.strokeStyle='rgba(201,168,76,0.12)'; ctx.lineWidth=1;   ctx.strokeRect(32,32,S-64,S-64)
-  ctx.restore()
-
-  // corner ticks
-  const CL=26
-  ;[[32,32],[S-32,32],[32,S-32],[S-32,S-32]].forEach(([cx,cy])=>{
-    const dx=cx<S/2?1:-1, dy=cy<S/2?1:-1
-    ctx.save(); ctx.strokeStyle=GOLD; ctx.lineWidth=2
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+dx*CL,cy); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx,cy+dy*CL); ctx.stroke()
-    ctx.restore()
-  })
-
-  // ── ZONE A  [50–90] eyebrow header ───────────────────────
-  const hGrad = ctx.createLinearGradient(0,50,0,90)
-  hGrad.addColorStop(0,'rgba(201,168,76,0.13)'); hGrad.addColorStop(1,'rgba(201,168,76,0)')
-  ctx.fillStyle=hGrad; ctx.fillRect(PAD,50,S-PAD*2,40)
-
-  ctx.save()
-  ctx.font='500 11px "Roboto Mono",monospace'
-  ctx.fillStyle='rgba(201,168,76,0.65)'; ctx.textAlign='left'
-  ctx.fillText('CENTRAL  INVESTIGATION  BUREAU   ·   PRIORITY  TARGET', PAD+12, 76)
-  ctx.textAlign='right'
-  ctx.fillStyle='rgba(201,168,76,0.4)'
-  ctx.font='400 10px "Roboto Mono",monospace'
-  ctx.fillText(`CASE NO. ${w.case_number||'—'}`, S-PAD-12, 76)
-  ctx.restore()
-  hline(90)
-
-  // ── ZONE B  [95–200] WANTED title + threat badge ─────────
-  ctx.save()
-  ctx.font='700 100px "Oswald",sans-serif'; ctx.fillStyle=WHITE; ctx.textAlign='center'
-  ctx.fillText('WANTED', S/2, 175)
-  ctx.restore()
-
-  // underline
-  ctx.fillStyle=GOLD; ctx.fillRect(S/2-140,182,280,2)
-
-  // threat badge — fixed width centred
-  const threatMap={critical:'#8B1010',high:'#C0392B',medium:'#C67C00',low:'#1E7F3A'}
-  const tColor=threatMap[w.threat_level]||threatMap.high
-  const tLabel=`THREAT LEVEL : ${(THREAT_LABELS[w.threat_level]||'HIGH').toUpperCase()}`
-  ctx.save()
-  roundRect(ctx, S/2-110, 188, 220, 28, 2); ctx.fillStyle=tColor; ctx.fill()
-  ctx.font='600 11px "Roboto Mono",monospace'; ctx.fillStyle=WHITE; ctx.textAlign='center'
-  ctx.fillText(tLabel, S/2, 207)
-  ctx.restore()
-  hline(218)
-
-  // ── ZONE C  [222–618] photo LEFT + identity RIGHT ────────
-  // Photo column: x=44..404  (360 wide, 396 tall)
-  const PX=PAD, PY=222, PW=360, PH=396
-  // Info column: x=424..S-44
-  const IX=424, IY=222, IW=S-424-PAD
-
-  // --- photo ---
-  ctx.save(); ctx.strokeStyle='rgba(201,168,76,0.35)'; ctx.lineWidth=1; ctx.strokeRect(PX,PY,PW,PH); ctx.restore()
-  ctx.fillStyle='#181818'; ctx.fillRect(PX+1,PY+1,PW-2,PH-2)
-
-  if (w.photo_url) {
-    const img = await loadImage(w.photo_url)
-    if (img) {
-      ctx.save()
-      ctx.beginPath(); ctx.rect(PX+1,PY+1,PW-2,PH-2); ctx.clip()
-      const ir=img.width/img.height, br=PW/PH
-      let sx,sy,sw,sh
-      if(ir>br){sh=img.height;sw=sh*br;sx=(img.width-sw)/2;sy=0}
-      else{sw=img.width;sh=sw/br;sx=0;sy=(img.height-sh)/2}
-      ctx.drawImage(img,sx,sy,sw,sh,PX+1,PY+1,PW-2,PH-2)
-      // vignette
-      const vg=ctx.createLinearGradient(0,PY,0,PY+PH)
-      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.6)')
-      ctx.fillStyle=vg; ctx.fillRect(PX+1,PY+1,PW-2,PH-2)
-      ctx.restore()
-    }
-  } else {
-    ctx.save(); ctx.fillStyle='rgba(201,168,76,0.06)'; ctx.font='bold 200px "Oswald",sans-serif'
-    ctx.textAlign='center'; ctx.fillText('?', PX+PW/2, PY+PH*0.72); ctx.restore()
-  }
-
-  // case strip — always at bottom of photo box, fixed height 44
-  const CSY = PY+PH-44
-  ctx.fillStyle='rgba(0,0,0,0.82)'; ctx.fillRect(PX+1, CSY, PW-2, 44)
-  label(`CASE NO. ${w.case_number||'—'}`, PX+12, CSY+16, '500 10px "Roboto Mono",monospace', 'rgba(201,168,76,0.8)')
-  label(`WANTED SINCE: ${formatDate(w.wanted_since)}`, PX+12, CSY+34, '400 10px "Roboto Mono",monospace', 'rgba(255,255,255,0.45)')
-
-  // --- identity right column — fixed rows ─────────────────
-  let iy = IY
-
-  // alias (optional, 18px tall)
-  if (w.alias) {
-    label(`AKA  "${w.alias.toUpperCase()}"`, IX, iy+14, '400 11px "Roboto Mono",monospace', 'rgba(201,168,76,0.6)')
-    iy += 22
-  }
-
-  // name — auto-size, max 2 lines of 42px → 30px fallback
-  ctx.save()
-  const nameStr = String(w.full_name||'UNKNOWN').toUpperCase()
-  let nameFSize = 46
-  ctx.font=`700 ${nameFSize}px "Oswald",sans-serif`
-  while (ctx.measureText(nameStr).width > IW && nameFSize > 24) { nameFSize -= 2; ctx.font=`700 ${nameFSize}px "Oswald",sans-serif` }
-  ctx.fillStyle=WHITE; ctx.textAlign='left'
-  ctx.fillText(nameStr, IX, iy+nameFSize)
-  ctx.restore()
-  iy += nameFSize + 8
-
-  // meta row: ID | DOB | NAT
-  ctx.save()
-  ctx.font='400 10px "Roboto Mono",monospace'; ctx.fillStyle='rgba(255,255,255,0.38)'; ctx.textAlign='left'
-  const metaParts=[
-    w.suspect_id?`ID: ${w.suspect_id}`:null,
-    `DOB: ${w.dob||'UNKNOWN'}`,
-    `NAT: ${w.nationality||'UNKNOWN'}`,
-  ].filter(Boolean)
-  const metaStr=clampText(ctx, metaParts.join('   |   '), IW)
-  ctx.fillText(metaStr, IX, iy+12)
-  ctx.restore()
-  iy += 24
-
-  // divider
-  line(IX, iy, IX+IW, iy, 'rgba(201,168,76,0.2)')
-  iy += 18
-
-  // status + affiliation 2-column (fixed Y inside info col)
-  const colW2 = Math.floor(IW/2)
-  ;[
-    {label:'Status', value: STATUS_LABELS[w.status]||'At Large',
-     color: w.status==='at_large'?RED : w.status==='in_custody'?'#27ae60':MUTED},
-    {label:'Affiliation', value: w.affiliation||'UNKNOWN', color: WHITE},
-  ].forEach((cell,i)=>{
-    const cx=IX+i*colW2
-    ctx.save()
-    ctx.strokeStyle='rgba(201,168,76,0.12)'; ctx.lineWidth=1; ctx.strokeRect(cx,iy,colW2,50)
-    ctx.font='400 9px "Roboto Mono",monospace'; ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.textAlign='left'
-    ctx.fillText(cell.label.toUpperCase(), cx+10, iy+15)
-    ctx.font='600 16px "Oswald",sans-serif'; ctx.fillStyle=cell.color
-    ctx.fillText(clampText(ctx, String(cell.value).toUpperCase(), colW2-20), cx+10, iy+38)
-    ctx.restore()
-  })
-  iy += 60
-
-  // last known loc (full width)
-  ctx.save()
-  ctx.strokeStyle='rgba(201,168,76,0.12)'; ctx.lineWidth=1; ctx.strokeRect(IX,iy,IW,50)
-  ctx.font='400 9px "Roboto Mono",monospace'; ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.textAlign='left'
-  ctx.fillText('LAST KNOWN LOCATION', IX+10, iy+15)
-  ctx.font='600 16px "Oswald",sans-serif'; ctx.fillStyle=WHITE
-  ctx.fillText(clampText(ctx, String(w.last_known_loc||'UNKNOWN').toUpperCase(), IW-20), IX+10, iy+38)
-  ctx.restore()
-
-  hline(620)
-
-  // ── ZONE D  [625–728] bounty + 3-cell meta grid ──────────
-  const ZDY=625, ZDH=100
-  // bounty box — left half
-  const bW=Math.floor((S-PAD*2)*0.46)
-  ctx.save()
-  roundRect(ctx,PAD,ZDY,bW,ZDH,2)
-  ctx.fillStyle='rgba(201,168,76,0.06)'; ctx.fill()
-  ctx.strokeStyle='rgba(201,168,76,0.22)'; ctx.lineWidth=1; ctx.stroke()
-  ctx.font='500 10px "Roboto Mono",monospace'; ctx.fillStyle='rgba(201,168,76,0.6)'; ctx.textAlign='left'
-  ctx.fillText('BOUNTY ON CAPTURE', PAD+14, ZDY+20)
-  ctx.font='700 36px "Oswald",sans-serif'; ctx.fillStyle=GOLD
-  ctx.fillText(clampText(ctx, String(w.bounty_amount||'TBD').toUpperCase(), bW-28), PAD+14, ZDY+68)
-  ctx.font='400 9px "Roboto Mono",monospace'; ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.textAlign='right'
-  ctx.fillText(clampText(ctx, String(w.bounty_note||'Authorized by CIB Director'), bW-20), PAD+bW-12, ZDY+90)
-  ctx.restore()
-
-  // 3-cell right half: each cell fixed
-  const cellsData=[
-    {label:'DETECTIVE', value: w.detective_name||'—'},
-    {label:'RANK',      value: w.detective_rank||'—'},
-    {label:'DIVISION',  value: w.detective_division||'—'},
-  ]
-  const cStart=PAD+bW+12, cTotal=S-PAD-cStart, cW3=Math.floor(cTotal/3)
-  cellsData.forEach((c,i)=>{
-    const cx=cStart+i*cW3
-    ctx.save()
-    ctx.strokeStyle='rgba(201,168,76,0.12)'; ctx.lineWidth=1; ctx.strokeRect(cx,ZDY,cW3,ZDH)
-    ctx.font='400 9px "Roboto Mono",monospace'; ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.textAlign='left'
-    ctx.fillText(c.label, cx+10, ZDY+20)
-    ctx.font='600 14px "Oswald",sans-serif'; ctx.fillStyle=WHITE
-    ctx.fillText(clampText(ctx,String(c.value).toUpperCase(),cW3-20), cx+10, ZDY+50)
-    ctx.restore()
-  })
-
-  hline(730)
-
-  // ── ZONE E  [735–878] debrief — clipped to box ───────────
-  const ZEY=735, ZEH=143
-  if (w.debrief) {
-    ctx.save()
-    ctx.font='500 10px "Roboto Mono",monospace'; ctx.fillStyle='rgba(201,168,76,0.55)'; ctx.textAlign='left'
-    ctx.fillText('SUSPECT DEBRIEF', PAD, ZEY+14)
-    ctx.restore()
-    line(PAD, ZEY+20, S-PAD, ZEY+20, 'rgba(201,168,76,0.18)')
-
-    // clip debrief text to zone height
-    ctx.save()
-    ctx.rect(PAD, ZEY+26, S-PAD*2, ZEH-30); ctx.clip()
-    ctx.font='300 13px "Roboto",sans-serif'; ctx.fillStyle='rgba(255,255,255,0.58)'; ctx.textAlign='left'
-    // manual wrap
-    const dbWords = String(w.debrief||'').split(' ')
-    const dbMaxW  = S-PAD*2
-    let dbLine='', dbY=ZEY+42
-    for (const word of dbWords) {
-      const test=dbLine+word+' '
-      if (ctx.measureText(test).width>dbMaxW && dbLine) {
-        ctx.fillText(dbLine.trim(), PAD, dbY); dbLine=word+' '; dbY+=18
-        if (dbY > ZEY+ZEH-4) break
-      } else dbLine=test
-    }
-    if (dbLine.trim() && dbY <= ZEY+ZEH-4) ctx.fillText(dbLine.trim(), PAD, dbY)
-    ctx.restore()
-  }
-
-  hline(882)
-
-  // ── ZONE F  [886–978] charges ────────────────────────────
-  const ZFY=886, ZFH=92
-  const charges = Array.isArray(w.charges) ? w.charges : []
-  if (charges.length) {
-    ctx.save()
-    ctx.font='500 10px "Roboto Mono",monospace'; ctx.fillStyle='rgba(201,168,76,0.55)'; ctx.textAlign='left'
-    ctx.fillText('CHARGES & OFFENSES', PAD, ZFY+14)
-    ctx.restore()
-    line(PAD, ZFY+20, S-PAD, ZFY+20, 'rgba(201,168,76,0.18)')
-
-    // draw tags — clip zone, max 2 rows
-    ctx.save()
-    ctx.rect(PAD, ZFY+24, S-PAD*2, ZFH-28); ctx.clip()
-    ctx.font='500 10px "Roboto Mono",monospace'
-    let tagX=PAD, tagY=ZFY+30, tagRow=0
-    for (const charge of charges) {
-      const tw=ctx.measureText(charge.toUpperCase()).width+22
-      if (tagX+tw > S-PAD) {
-        if (tagRow>=1) break  // max 2 rows
-        tagX=PAD; tagY+=28; tagRow++
-      }
-      roundRect(ctx, tagX, tagY, tw, 22, 2)
-      ctx.fillStyle='rgba(192,57,43,0.16)'; ctx.fill()
-      ctx.strokeStyle='rgba(192,57,43,0.45)'; ctx.lineWidth=1; ctx.stroke()
-      ctx.fillStyle='rgba(255,255,255,0.72)'; ctx.textAlign='left'
-      ctx.fillText(charge.toUpperCase(), tagX+11, tagY+15)
-      tagX+=tw+7
-    }
-    ctx.restore()
-  } else {
-    // empty slot — keep spacing clean
-  }
-
-  hline(982)
-
-  // ── ZONE G  [986–1148] footer: QR + warning ──────────────
-  const ZGY=986, ZGH=162
-  ctx.fillStyle='rgba(201,168,76,0.03)'; ctx.fillRect(PAD,ZGY,S-PAD*2,ZGH)
-
-  // QR
-  const qrSize=110
-  const qrUrl=window.location.origin+'/Page_Wanted.html'
-  const qrData=await generateQRDataURL(qrUrl, qrSize*2)
-  if (qrData) {
-    const qrImg=await loadImage(qrData)
-    if (qrImg) {
-      ctx.fillStyle=WHITE; ctx.fillRect(PAD+4, ZGY+10, qrSize, qrSize)
-      ctx.drawImage(qrImg, PAD+4, ZGY+10, qrSize, qrSize)
-    }
-  }
-  label('SCAN TO VIEW', PAD+4+qrSize/2, ZGY+qrSize+24, '400 8px "Roboto Mono",monospace', 'rgba(201,168,76,0.5)', 'center')
-  label('FULL WANTED LIST', PAD+4+qrSize/2, ZGY+qrSize+36, '400 8px "Roboto Mono",monospace', 'rgba(201,168,76,0.5)', 'center')
-
-  // warning text — right of QR
-  const ftX=PAD+qrSize+24
-  label('IF YOU HAVE INFORMATION REGARDING THIS INDIVIDUAL,',   ftX, ZGY+28,  '400 10px "Roboto Mono",monospace', 'rgba(201,168,76,0.55)')
-  label('CONTACT THE CIB TIP HOTLINE IMMEDIATELY.',             ftX, ZGY+46,  '400 10px "Roboto Mono",monospace', 'rgba(201,168,76,0.55)')
-  label('DO NOT ATTEMPT TO APPREHEND.  ARMED & DANGEROUS.',     ftX, ZGY+80,  '600 12px "Roboto Mono",monospace', 'rgba(192,57,43,0.85)')
-  label('ISSUED BY CENTRAL INVESTIGATION BUREAU · SAN ANDREAS', ftX, ZGY+114, '400 9px "Roboto Mono",monospace',  'rgba(255,255,255,0.2)')
-  label('REWARD AVAILABLE UPON CONFIRMED CAPTURE',              ftX, ZGY+130, '400 9px "Roboto Mono",monospace',  'rgba(201,168,76,0.3)')
-
-  // ── bottom ref bar ────────────────────────────────────────
-  hline(1152)
-  ctx.fillStyle='rgba(201,168,76,0.06)'; ctx.fillRect(PAD,1153,S-PAD*2,26)
-  const exportDate=new Date().toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()
-  label(`EXPORTED: ${exportDate} · CIB CLASSIFIED`, PAD+10, 1170, '400 9px "Roboto Mono",monospace', 'rgba(201,168,76,0.4)')
-  label(`REF: ${w.case_number||w.suspect_id||'CIB-WANTED'}`, S-PAD-10, 1170, '400 9px "Roboto Mono",monospace', 'rgba(201,168,76,0.4)', 'right')
-
-  // ── download ──────────────────────────────────────────────
-  const fileName=`CIB_WANTED_${String(w.full_name||'SUSPECT').replace(/\s+/g,'_').toUpperCase()}.png`
-  const link=document.createElement('a')
-  link.download=fileName; link.href=canvas.toDataURL('image/png'); link.click()
-}
-
-// ════════════════════════════════════════════════════════════
-//  Card HTML builder
-// ════════════════════════════════════════════════════════════
 function buildCardHTML(w, index) {
   const num        = String(index + 1).padStart(2, '0')
   const threatCls  = 'threat-' + (w.threat_level || 'high')
@@ -735,9 +237,6 @@ function buildCardHTML(w, index) {
     `NATIONALITY: ${escHtml(w.nationality || 'UNKNOWN')}`,
   ].filter(Boolean).join(' &nbsp;|&nbsp; ')
 
-  // Encode wanted data as JSON for the export button
-  const wData = escHtml(JSON.stringify(w))
-
   return `
     <div class="wanted-card">
 
@@ -748,17 +247,6 @@ function buildCardHTML(w, index) {
           <div class="photo-case-id">CASE NO. ${escHtml(w.case_number || '—')}</div>
           <div class="photo-date-wanted">WANTED SINCE: <span>${formatDate(w.wanted_since)}</span></div>
         </div>
-
-        <!-- EXPORT BUTTON -->
-        <button class="export-btn" onclick="handleExport(this, '${wData}')" title="Export as wanted poster image">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span class="export-btn-text">Export Poster</span>
-        </button>
-
       </div>
 
       <!-- RIGHT: INFO COLUMN -->
@@ -804,35 +292,308 @@ function buildCardHTML(w, index) {
         ${detBlock}
 
       </div>
-    </div>`
+    </div>
+
+    <!-- Off-screen export poster host for this card -->
+    <div id="poster-host-${escHtml(w.case_number||String(index))}" style="position:fixed;left:-9999px;top:0;width:900px;height:506px;z-index:-1;pointer-events:none;"></div>
+  `
+    // Append export button into the photo-case-strip via data attributes
+    // (done via a wrapper so we can inject the button alongside the strip)
+    const cardId = escHtml(w.case_number || String(index))
+    return `
+    <div class="wanted-card" id="wcard-${cardId}">
+
+      <!-- LEFT: PHOTO COLUMN -->
+      <div class="suspect-photo-col">
+        ${photoBlock}
+        <div class="photo-case-strip">
+          <div class="photo-case-id">CASE NO. ${escHtml(w.case_number || '—')}</div>
+          <div class="photo-date-wanted">WANTED SINCE: <span>${formatDate(w.wanted_since)}</span></div>
+        </div>
+        <button class="export-poster-btn" onclick="exportWantedPoster('${cardId}')">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          EXPORT POSTER
+        </button>
+      </div>
+
+      <!-- RIGHT: INFO COLUMN -->
+      <div class="suspect-info">
+
+        <div class="suspect-header">
+          <div class="suspect-name-block">
+            ${w.alias ? `<div class="suspect-alias">AKA "${escHtml(w.alias)}"</div>` : ''}
+            <div class="suspect-name">${escHtml(w.full_name)}</div>
+            <div class="suspect-id">${metaId}</div>
+          </div>
+          <div class="threat-badge ${threatCls}">
+            <div class="threat-badge-label">Threat Level</div>
+            <div class="threat-badge-level">${escHtml(threatLbl)}</div>
+          </div>
+        </div>
+
+        <div class="bounty-row">
+          <div>
+            <div class="bounty-label">Bounty on Capture</div>
+            <div class="bounty-note">${escHtml(w.bounty_note || 'Authorized by CIB Director')}</div>
+          </div>
+          <div class="bounty-amount">${escHtml(w.bounty_amount || 'TBD')}</div>
+        </div>
+
+        <div class="suspect-meta-grid">
+          <div class="meta-cell">
+            <div class="meta-cell-label">Last Known Location</div>
+            <div class="meta-cell-value">${escHtml(w.last_known_loc || '—')}</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-cell-label">Affiliation</div>
+            <div class="meta-cell-value">${escHtml(w.affiliation || 'UNKNOWN')}</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-cell-label">Status</div>
+            <div class="meta-cell-value" style="color:${statusClr};">${escHtml(statusLbl)}</div>
+          </div>
+        </div>
+
+        ${debriefBlock}
+        ${chargesBlock}
+        ${detBlock}
+
+      </div>
+    </div>
+    <div id="poster-host-${cardId}" style="position:fixed;left:-9999px;top:0;width:900px;height:506px;z-index:-1;pointer-events:none;"></div>`
 }
 
-// ── Export button handler ──────────────────────────────────
-async function handleExport(btn, wDataEncoded) {
-  if (btn.classList.contains('exporting')) return
-  btn.classList.add('exporting')
-  const span = btn.querySelector('.export-btn-text')
-  const origText = span.textContent
-  span.textContent = 'Generating'
+// ═══════════════════════════════════════════════════════════
+//  WANTED POSTER EXPORT ENGINE
+//  Renders a 900×506px (16:9) poster matching the card design
+//  into an off-screen div, captures with html2canvas, downloads.
+//  A QR code linking to Page_Wanted.html is embedded bottom-right.
+// ═══════════════════════════════════════════════════════════
+
+// Lookup map — populated after loadWantedList
+const _wantedDataMap = {}
+
+function buildQrDataUri(text) {
+  return new Promise((resolve) => {
+    try {
+      const tmp = document.createElement('div')
+      tmp.style.cssText = 'position:fixed;left:-9999px;top:0;'
+      document.body.appendChild(tmp)
+      new QRCode(tmp, {
+        text, width: 120, height: 120,
+        colorDark: '#F0EDE4', colorLight: '#060C18',
+        correctLevel: QRCode.CorrectLevel.M,
+      })
+      setTimeout(() => {
+        const canvas = tmp.querySelector('canvas')
+        const img    = tmp.querySelector('img')
+        const uri    = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '')
+        document.body.removeChild(tmp)
+        resolve(uri)
+      }, 150)
+    } catch(e) { resolve('') }
+  })
+}
+
+async function exportWantedPoster(cardId) {
+  const w = _wantedDataMap[cardId]
+  if (!w) { alert('Data not found for this card.'); return }
+
+  const btn = document.querySelector(`#wcard-${cardId} .export-poster-btn`)
+  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true }
 
   try {
-    // Decode the HTML-escaped JSON
-    const raw  = wDataEncoded.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
-    const w    = JSON.parse(raw)
-    await exportWantedPoster(w)
-    showToast(`Poster exported — ${w.full_name || 'suspect'}`)
-  } catch (err) {
+    // Build QR pointing to this page
+    const pageUrl  = window.location.origin + window.location.pathname
+    const qrUri    = await buildQrDataUri(pageUrl)
+
+    // Threat colours matching the page design
+    const threatColors = {
+      critical: { bg: 'rgba(192,57,43,0.15)', border: '#C0392B', text: '#C0392B' },
+      high:     { bg: 'rgba(192,57,43,0.1)',  border: 'rgba(192,57,43,0.6)', text: '#C0392B' },
+      medium:   { bg: 'rgba(201,168,76,0.1)', border: 'rgba(201,168,76,0.5)', text: '#C9A84C' },
+      low:      { bg: 'rgba(39,174,96,0.1)',  border: 'rgba(39,174,96,0.4)', text: '#27AE60' },
+    }
+    const tc        = threatColors[w.threat_level || 'high']
+    const threatLbl = THREAT_LABELS[w.threat_level] || 'High'
+    const statusLbl = STATUS_LABELS[w.status] || 'At Large'
+    const statusClr = STATUS_COLORS[w.status] || 'var(--red-alert)'
+    const charges   = Array.isArray(w.charges) ? w.charges : []
+
+    const metaId = [
+      w.suspect_id ? `SUSPECT ID: ${w.suspect_id}` : null,
+      `DOB: ${w.dob || 'UNKNOWN'}`,
+      `NATIONALITY: ${w.nationality || 'UNKNOWN'}`,
+    ].filter(Boolean).join('  |  ')
+
+    const chargeTagsHtml = charges.map(c =>
+      `<span style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;padding:3px 10px;text-transform:uppercase;background:rgba(192,57,43,0.12);color:#C0392B;border:1px solid rgba(192,57,43,0.35);white-space:nowrap;">${c}</span>`
+    ).join('')
+
+    const debriefHtml = w.debrief
+      ? `<div style="margin-top:14px;">
+           <div style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:rgba(240,237,228,0.35);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:5px;">SUSPECT DEBRIEF</div>
+           <div style="font-family:'Roboto',sans-serif;font-size:11px;color:rgba(240,237,228,0.55);line-height:1.65;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${w.debrief}</div>
+         </div>`
+      : ''
+
+    const detHtml = (w.detective_name || w.detective_initials)
+      ? `<div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:10px 14px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);">
+           <div style="width:32px;height:32px;border-radius:50%;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;font-family:'Roboto Mono',monospace;font-size:10px;color:#C9A84C;flex-shrink:0;">${w.detective_initials || '??'}</div>
+           <div style="flex:1;min-width:0;">
+             <div style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(240,237,228,0.35);text-transform:uppercase;margin-bottom:2px;">Primary Detective</div>
+             <div style="font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;color:#F0EDE4;text-transform:uppercase;">${w.detective_name || '—'}</div>
+             <div style="font-family:'Roboto Mono',monospace;font-size:9px;color:rgba(240,237,228,0.4);">${w.detective_rank || ''}</div>
+           </div>
+           <div style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:rgba(240,237,228,0.35);text-align:right;flex-shrink:0;">${w.detective_division || ''}</div>
+         </div>`
+      : ''
+
+    const photoHtml = w.photo_url
+      ? `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;" crossorigin="anonymous"/>`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0A0F1E;">
+           <svg width="52" height="52" viewBox="0 0 24 24" fill="rgba(255,255,255,0.06)"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+         </div>`
+
+    const qrHtml = qrUri
+      ? `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+           <div style="font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:2px;color:rgba(240,237,228,0.3);text-transform:uppercase;text-align:center;">SCAN FOR<br>FULL RECORD</div>
+           <div style="padding:4px;background:#060C18;border:1px solid rgba(192,57,43,0.4);box-shadow:0 0 10px rgba(192,57,43,0.2);">
+             <img src="${qrUri}" style="width:64px;height:64px;display:block;image-rendering:pixelated;"/>
+           </div>
+         </div>`
+      : ''
+
+    // Build the poster DOM
+    const host = document.getElementById(`poster-host-${cardId}`)
+    if (!host) return
+
+    host.innerHTML = `
+    <div id="poster-root-${cardId}" style="
+      width:900px; height:506px;
+      background:#060C18;
+      display:flex; flex-direction:row;
+      font-family:'Roboto Mono',monospace;
+      position:relative; overflow:hidden;
+      box-sizing:border-box;
+    ">
+      <!-- Scan lines -->
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:20;"></div>
+      <!-- Grid overlay -->
+      <div style="position:absolute;inset:0;
+        background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+        background-size:40px 40px;
+        pointer-events:none;z-index:1;"></div>
+
+      <!-- LEFT: PHOTO COLUMN -->
+      <div style="width:280px;flex-shrink:0;position:relative;border-right:3px solid #C0392B;display:flex;flex-direction:column;">
+        <!-- Photo -->
+        <div style="flex:1;overflow:hidden;position:relative;background:#080D1A;">
+          ${photoHtml}
+          <!-- Vignette bottom -->
+          <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(6,12,24,0.85));z-index:2;"></div>
+        </div>
+        <!-- Case strip -->
+        <div style="padding:10px 14px 12px;background:#060C18;border-top:1px solid rgba(255,255,255,0.07);">
+          <div style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(240,237,228,0.4);text-transform:uppercase;margin-bottom:3px;">CASE NO. ${w.case_number || '—'}</div>
+          <div style="font-family:'Roboto Mono',monospace;font-size:8px;color:rgba(240,237,228,0.3);">WANTED SINCE: <span style="color:#C0392B;">${formatDate(w.wanted_since)}</span></div>
+        </div>
+        <!-- Red top-edge accent -->
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#C0392B,rgba(192,57,43,0.2));z-index:3;"></div>
+        <!-- Corner marks -->
+        <div style="position:absolute;top:8px;left:8px;width:12px;height:12px;border-top:1px solid rgba(192,57,43,0.5);border-left:1px solid rgba(192,57,43,0.5);z-index:4;"></div>
+      </div>
+
+      <!-- RIGHT: INFO COLUMN -->
+      <div style="flex:1;display:flex;flex-direction:column;padding:22px 24px 18px;min-width:0;position:relative;z-index:5;">
+
+        <!-- Header: name + threat badge -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;">
+          <div style="flex:1;min-width:0;">
+            ${w.alias ? `<div style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(240,237,228,0.4);text-transform:uppercase;margin-bottom:4px;">AKA "${w.alias}"</div>` : ''}
+            <div style="font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#F0EDE4;line-height:1.05;margin-bottom:6px;">${w.full_name || '—'}</div>
+            <div style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1px;color:rgba(240,237,228,0.35);">${metaId}</div>
+          </div>
+          <div style="flex-shrink:0;padding:8px 14px;border:1px solid ${tc.border};background:${tc.bg};text-align:center;min-width:90px;">
+            <div style="font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:3px;color:${tc.text};text-transform:uppercase;opacity:0.8;margin-bottom:3px;">THREAT LEVEL</div>
+            <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;letter-spacing:3px;color:${tc.text};text-transform:uppercase;">${threatLbl}</div>
+          </div>
+        </div>
+
+        <!-- Bounty row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);margin-bottom:12px;">
+          <div>
+            <div style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:3px;color:rgba(240,237,228,0.35);text-transform:uppercase;margin-bottom:2px;">BOUNTY ON CAPTURE</div>
+            <div style="font-family:'Roboto Mono',monospace;font-size:9px;color:rgba(240,237,228,0.35);font-style:italic;">${w.bounty_note || 'Authorized by CIB Director'}</div>
+          </div>
+          <div style="font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;letter-spacing:2px;color:#C9A84C;">${w.bounty_amount || 'TBD'}</div>
+        </div>
+
+        <!-- Meta grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid rgba(255,255,255,0.08);margin-bottom:12px;">
+          ${[
+            ['LAST KNOWN LOCATION', w.last_known_loc || '—'],
+            ['AFFILIATION', w.affiliation || 'UNKNOWN'],
+            ['STATUS', statusLbl],
+          ].map(([label, val], i) =>
+            `<div style="padding:8px 12px;${i < 2 ? 'border-right:1px solid rgba(255,255,255,0.08);' : ''}">
+               <div style="font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:2px;color:rgba(240,237,228,0.3);text-transform:uppercase;margin-bottom:4px;">${label}</div>
+               <div style="font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:1px;color:${label === 'STATUS' ? (STATUS_COLORS[w.status] || '#C0392B') : '#F0EDE4'};text-transform:uppercase;">${val}</div>
+             </div>`
+          ).join('')}
+        </div>
+
+        <!-- Debrief + detective (flex fills remaining space) -->
+        <div style="flex:1;min-height:0;overflow:hidden;">
+          ${debriefHtml}
+          ${detHtml}
+        </div>
+
+        <!-- Charges + QR row at bottom -->
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+          <div style="flex:1;min-width:0;">
+            ${charges.length ? `
+              <div style="font-family:'Roboto Mono',monospace;font-size:7px;letter-spacing:3px;color:rgba(240,237,228,0.3);text-transform:uppercase;margin-bottom:6px;">CHARGES &amp; OFFENSES</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;">${chargeTagsHtml}</div>` : ''}
+          </div>
+          <!-- QR code -->
+          <div style="flex-shrink:0;">${qrHtml}</div>
+        </div>
+
+        <!-- CIB stamp bottom-right corner mark -->
+        <div style="position:absolute;bottom:12px;right:12px;width:12px;height:12px;border-bottom:1px solid rgba(192,57,43,0.4);border-right:1px solid rgba(192,57,43,0.4);"></div>
+        <div style="position:absolute;top:12px;right:12px;width:12px;height:12px;border-top:1px solid rgba(192,57,43,0.4);border-right:1px solid rgba(192,57,43,0.4);"></div>
+      </div>
+    </div>`
+
+    // Wait a frame for the DOM + image to paint
+    await new Promise(r => setTimeout(r, 200))
+
+    const root = document.getElementById(`poster-root-${cardId}`)
+    const canvas = await html2canvas(root, {
+      width: 900, height: 506,
+      scale: 2,           // outputs 1800×1012 — crisp retina
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#060C18',
+      logging: false,
+    })
+
+    const link = document.createElement('a')
+    link.href     = canvas.toDataURL('image/jpeg', 0.95)
+    link.download = `CIB-WANTED-${(w.case_number || w.full_name || 'poster').replace(/[^a-zA-Z0-9-]/g,'_').toUpperCase()}.jpg`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    // Reset button
+    if (btn) { btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> EXPORT POSTER'; btn.disabled = false }
+  } catch(err) {
     console.error('Export failed:', err)
-    showToast('Export failed. Please try again.')
-  } finally {
-    btn.classList.remove('exporting')
-    span.textContent = origText
+    if (btn) { btn.textContent = 'EXPORT FAILED'; btn.disabled = false; setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> EXPORT POSTER' }, 2500) }
   }
 }
 
-// ════════════════════════════════════════════════════════════
-//  Data loader
-// ════════════════════════════════════════════════════════════
 async function loadWantedList() {
   const listEl = document.getElementById('mwWantedList')
 
@@ -844,6 +605,7 @@ async function loadWantedList() {
 
     const data = (json.data || []).filter(w => w.status !== 'cleared')
 
+    // Update count bar
     const activeCount = data.filter(w => w.status === 'at_large').length
     document.getElementById('mwCountNum').textContent = String(activeCount).padStart(2, '0')
 
@@ -869,6 +631,13 @@ async function loadWantedList() {
 
     listEl.innerHTML = data.map((w, i) => buildCardHTML(w, i)).join('')
 
+    // Store each record for export engine
+    data.forEach((w, i) => {
+      const cardId = w.case_number || String(i)
+      _wantedDataMap[cardId] = w
+    })
+
+    // Re-trigger scroll reveal for new cards
     if (window.SiteUi && SiteUi.initScrollReveal) {
       SiteUi.initScrollReveal()
     }
@@ -884,6 +653,7 @@ async function loadWantedList() {
   }
 }
 
+// Initialize
 loadWantedList()
 </script>
 </body>
