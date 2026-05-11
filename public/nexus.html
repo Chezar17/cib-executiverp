@@ -1267,7 +1267,7 @@
       // ── Step 6 · Documents section ───────────────────────────
       {
         label:  'Seksi Documents',
-        target: '.dash-cat:first-child',
+        target: '#panel-dashboard [onclick*="guidebook"]',
         pos:    'right',
         audio:  'ob_step_06_documents.mp3',
         text:   `Seksi Documents berisi tiga dokumen fundamental yang wajib kamu kuasai sebagai anggota CIB.\n\nMasing-masing dokumen memiliki tingkat akses yang berbeda — pastikan kamu membaca sesuai clearance-mu.`,
@@ -1275,7 +1275,7 @@
       // ── Step 7 · CIB Guidebook ───────────────────────────────
       {
         label:  'CIB Guidebook',
-        target: '.dash-mod.mod-gold:first-child',
+        target: '#panel-dashboard [onclick*="guidebook"]',
         pos:    'right',
         audio:  'ob_step_07_guidebook.mp3',
         text:   `CIB Guidebook adalah manual operasional lengkap yang mencakup semua prosedur standar CIB — mulai dari aturan engagement, rantai komando, hingga protokol lapangan.\n\nWajib dibaca oleh semua personel.`,
@@ -1283,7 +1283,7 @@
       // ── Step 8 · Penal Codes ─────────────────────────────────
       {
         label:  'Penal Codes',
-        target: '.dash-mod.mod-gold:nth-child(2)',
+        target: '#panel-dashboard [onclick*="penal"]',
         pos:    'right',
         audio:  'ob_step_08_penal.mp3',
         text:   `Penal Codes berisi kode hukum pidana resmi Negara Bagian San Andreas.\n\nGunakan ini sebagai referensi saat melakukan penangkapan, pengajuan dakwaan, atau konsultasi hukum dalam operasi lapangan.`,
@@ -1291,18 +1291,20 @@
       // ── Step 9 · Main Directory ───────────────────────────────
       {
         label:  'Main Directory',
-        target: '.dash-mod.mod-red:first-child',
-        pos:    'right',
+        target: '#panel-dashboard [onclick*="directory"]',
+        pos:    'left',
         audio:  'ob_step_09_directory.mp3',
         text:   `Main Directory adalah direktori induk seluruh berkas CIB — termasuk arsip kasus, laporan operasi, catatan intelijen, log pengawasan, dan dokumentasi bukti.\n\nAkses dokumen ini memerlukan clearance Top Secret.`,
       },
       // ── Step 10 · Intelligence section ───────────────────────
+      // Target the Intelligence dash-cat wrapper directly via its label child text
       {
         label:  'Seksi Intelligence',
-        target: '#panel-dashboard .dash-cat:nth-child(2)',
+        target: '#panel-dashboard [onclick*="weapons"]',
         pos:    'right',
         audio:  'ob_step_10_intelligence.mp3',
         text:   `Sekarang kita masuk ke Seksi Intelligence — bagian paling sensitif di NEXUS.\n\nSeksi ini berisi empat modul intelijen operasional yang digunakan oleh divisi GRD dan CID. Semua modul di sini bersifat Top Secret dan hanya dapat diakses oleh personel dengan clearance yang sesuai.`,
+        targetParent: true,   // flag: spotlight the parent dash-cat, not just this card
       },
       // ── Step 11 · Weapons Tracker ────────────────────────────
       {
@@ -1328,7 +1330,7 @@
         audio:  'ob_step_13_informant.mp3',
         text:   `Informant Registry adalah basis data aman yang menyimpan seluruh informan aktif, tidak aktif, maupun yang sudah terbakar — yang saat ini terdaftar di Central Investigation Bureau.\n\nIdentitas setiap informan adalah informasi paling sensitif di seluruh portal. Akses tanpa otorisasi merupakan pelanggaran berat dan dapat berujung pada pemecatan serta tuntutan pidana.`,
       },
-      // ── Step 14 · HVC — spotlight the dashboard card ─────────
+      // ── Step 14 · HVC dashboard card ─────────────────────────
       {
         label:  'High Value Criminal',
         target: '#panel-dashboard .dash-mod.mod-hvc',
@@ -1387,7 +1389,7 @@
   // ── Spotlight positioning ──────────────────────────────────
   let _lastHighlightedEl = null   // track so we can remove the class when moving on
 
-  function positionSpotlight(selector) {
+  function positionSpotlight(selector, targetElOverride) {
     const sp = spotlight()
 
     // Remove highlight from the previously spotlighted element
@@ -1400,7 +1402,9 @@
       sp.className = 'ob-hidden'
       return
     }
-    const el = document.querySelector(selector)
+
+    // targetElOverride lets callers pass a pre-resolved element (e.g. a parent wrapper)
+    const el = targetElOverride || document.querySelector(selector)
     if (!el) { sp.className = 'ob-hidden'; return }
 
     const r = el.getBoundingClientRect()
@@ -1537,14 +1541,24 @@
     // Show card first (so we can measure its height), then position
     card().style.display = 'block'
 
+    // Resolve the actual DOM element to spotlight.
+    // If step.targetParent is true, walk up to the nearest .dash-cat wrapper.
+    let _resolvedEl = null
+    if (step.target) {
+      const found = document.querySelector(step.target)
+      if (found) {
+        _resolvedEl = step.targetParent ? (found.closest('.dash-cat') || found) : found
+      }
+    }
+
     // Initial position (instant, before scroll)
-    positionSpotlight(step.target)
+    positionSpotlight(step.target, _resolvedEl)
     setTimeout(() => { positionCard(step.target, step.pos) }, 20)
 
     // Re-position after scroll animation settles (~500ms)
     // This ensures spotlight is on the now-visible element
     setTimeout(() => {
-      positionSpotlight(step.target)
+      positionSpotlight(step.target, _resolvedEl)
       positionCard(step.target, step.pos)
     }, 520)
 
