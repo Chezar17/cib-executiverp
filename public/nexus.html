@@ -311,7 +311,7 @@
               <div class="dash-mod-name">Weapons Tracker</div>
               <div class="dash-mod-desc">Active arms networks · Seizure logs · Supply chain</div>
               <div class="dash-mod-footer">
-                <span class="dash-mod-meta">GRD Division</span>
+                <span class="dash-mod-meta">GRD & CID Division</span>
                 <span class="dash-mod-arrow">›</span>
               </div>
             </div>
@@ -321,7 +321,7 @@
                 <div class="dash-mod-icon">
                   <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                 </div>
-                <span class="dash-mod-badge">GRD Database</span>
+                <span class="dash-mod-badge">CIB Database</span>
               </div>
               <div class="dash-mod-name">Gang Intel</div>
               <div class="dash-mod-desc">Active gang profiles · Territorial maps · Threat assessments</div>
@@ -407,9 +407,9 @@
                 <span class="dash-mod-badge" style="background:rgba(79,195,247,0.12);color:#4fc3f7;border-color:rgba(79,195,247,0.3);">Form 0001</span>
               </div>
               <div class="dash-mod-name" style="color:#4fc3f7;">Investigation Reports</div>
-              <div class="dash-mod-desc">CID Form 0001 · Full case documentation · PDF export</div>
+              <div class="dash-mod-desc">CIB Form 0001 · Full case documentation · PDF export</div>
               <div class="dash-mod-footer">
-                <span class="dash-mod-meta">CID · Top Secret</span>
+                <span class="dash-mod-meta">CIB · Top Secret</span>
                 <span class="dash-mod-arrow" style="color:#4fc3f7;">›</span>
               </div>
             </div>
@@ -495,7 +495,7 @@
         <div class="lp-eyebrow">GRD Intelligence · Active Monitoring</div>
         <div class="lp-title">Weapon Trafficking Tracker</div>
         <div class="lp-divider"></div>
-        <div class="lp-desc">Live tracker of known illegal arms networks operating within San Andreas. Maintained by the Gang Recon Division, this board includes active supply routes, seizure records, known distributors, inter-agency coordination logs, and ongoing interdiction efforts. Updated in real time by GRD field officers. Access restricted to GRD personnel and CIB Command.</div>
+        <div class="lp-desc">Live tracker of known illegal arms networks operating within San Andreas. Maintained by the Gang Recon Division, this board includes active supply routes, seizure records, known distributors, inter-agency coordination logs, and ongoing interdiction efforts. Updated in real time by GRD field officers. Access restricted to GRD & CID personnel and CIB Command.</div>
         <div class="lp-tags"><span class="lp-tag lp-tag-ts">Top Secret</span><span class="lp-tag" style="background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);">CIB Eyes Only</span></div>
       </div>
       <div class="lp-embed" aria-label="Weapon trafficking tracker">
@@ -553,7 +553,7 @@
         <div class="lp-title">Investigation Reports</div>
         <div class="lp-divider"></div>
         <div class="lp-desc">Secure repository for all formal Investigation Reports filed by CIB detectives. Each report covers the complete documentation of a criminal case including victim and suspect details, witness affidavits, forensic evidence, autopsy results, and final case closure. Reports can be created, edited, and exported as official PDF documents matching the CID Form 0001 standard format.</div>
-        <div class="lp-tags"><span class="lp-tag lp-tag-ts">Top Secret</span><span class="lp-tag lp-tag-r">CID Only</span><span class="lp-tag lp-tag-i">Form 0001</span></div>
+        <div class="lp-tags"><span class="lp-tag lp-tag-ts">Top Secret</span><span class="lp-tag lp-tag-r">CIB Only</span><span class="lp-tag lp-tag-i">Form 0001</span></div>
         <a class="lp-open-btn" href="reports/reports.html" style="background:#4fc3f7;color:#0a0f1e;">Open Reports Module <span class="lp-open-btn-arrow">&rsaquo;</span></a>
       </div>
       <div class="lp-info-strip">
@@ -934,6 +934,11 @@
     backdrop-filter 0.25s ease;
   box-shadow:0 24px 64px rgba(0,0,0,0.7);
   overflow:hidden;
+  /* Cap card height so buttons are always visible regardless of text length.
+     Flex-column layout keeps header and footer fixed; only body scrolls. */
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
   /* Smooth repositioning — never snap */
   will-change: top, left, opacity;
 }
@@ -943,6 +948,7 @@
   background:linear-gradient(135deg,rgba(12,20,40,1),rgba(8,14,28,1));
   border-bottom:1px solid rgba(201,168,76,0.15);
   position:relative;overflow:hidden;
+  flex-shrink:0; /* never compress — always fully visible */
 }
 .ob-card-header::before {
   content:'';position:absolute;inset:0;
@@ -1005,7 +1011,15 @@
 }
 
 /* ── Content area ── */
-.ob-card-body { padding:20px 22px 0; }
+.ob-card-body {
+  padding:20px 22px 0;
+  flex:1;           /* take all available space between header and footer */
+  overflow-y:auto;  /* scroll if text is too tall — footer stays visible  */
+  scrollbar-width:thin;
+  scrollbar-color:rgba(201,168,76,0.25) transparent;
+}
+.ob-card-body::-webkit-scrollbar { width:4px; }
+.ob-card-body::-webkit-scrollbar-thumb { background:rgba(201,168,76,0.25); border-radius:2px; }
 .ob-step-label {
   font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;
   color:var(--gold,#C9A84C);text-transform:uppercase;opacity:0.7;margin-bottom:8px;
@@ -1025,6 +1039,7 @@
 /* ── Progress dots ── */
 .ob-progress {
   display:flex;align-items:center;gap:5px;padding:14px 22px 0;
+  flex-shrink:0; /* progress dots always visible above footer */
 }
 .ob-dot {
   width:5px;height:5px;border-radius:50%;
@@ -1041,9 +1056,11 @@
 /* ── Footer buttons ── */
 .ob-card-footer {
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 22px 18px;margin-top:14px;
+  padding:14px 22px 18px;margin-top:0;
   border-top:1px solid rgba(255,255,255,0.06);
   gap:10px;
+  flex-shrink:0; /* always visible — never pushed off screen by long text */
+  background:#080E1C; /* solid bg so it doesn't bleed into scrolled text */
 }
 .ob-btn {
   font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;
@@ -1366,7 +1383,7 @@
         target: '#panel-dashboard [onclick*="informant"]',
         pos:    'left',
         audio:  'ob_step_13_informant.mp3',
-        text:   `Informant Registry adalah basis data aman yang menyimpan seluruh informan aktif, tidak aktif, maupun yang sudah terbakar — yang saat ini terdaftar di Central Investigation Bureau.\n\nIdentitas setiap informan adalah informasi paling sensitif di seluruh portal. Akses tanpa otorisasi merupakan pelanggaran berat dan dapat berujung pada pemecatan serta tuntutan pidana.`,
+        text:   `Informant Registry adalah basis data aman yang menyimpan seluruh informan aktif, tidak aktif, maupun yang sudah ketahuan (burned) — yang saat ini terdaftar di Central Investigation Bureau.\n\nIdentitas setiap informan adalah informasi paling sensitif di seluruh portal. Akses tanpa otorisasi merupakan pelanggaran berat dan dapat berujung pada pemecatan serta tuntutan pidana.`,
       },
       // ── Step 14 · HVC dashboard card ─────────────────────────
       {
@@ -1571,6 +1588,10 @@
 
     c.style.left = best.left + 'px'
     c.style.top  = best.top  + 'px'
+
+    // Reset body scroll to top on each new step
+    const body = document.querySelector('.ob-card-body')
+    if (body) body.scrollTop = 0
 
     // If still overlapping (tiny screen), make card semi-transparent
     // so the spotlighted element is still readable through it.
