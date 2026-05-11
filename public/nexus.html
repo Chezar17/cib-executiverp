@@ -349,7 +349,7 @@
                 </div>
                 <span class="dash-mod-badge">Priority</span>
               </div>
-              <div class="dash-mod-name">HVC Targets</div>
+              <div class="dash-mod-name">High-value criminals Targets</div>
               <div class="dash-mod-desc">High-value criminals · Active warrants · Threat profiles</div>
               <div class="dash-mod-footer">
                 <span class="dash-mod-meta">Command Eyes Only</span>
@@ -1027,7 +1027,17 @@
   min-width:100px;
 }
 .ob-btn-next:hover { background:#d4ac50; }
-.ob-btn-next:disabled { opacity:0.5;cursor:not-allowed; }
+.ob-btn-back {
+  background:none;
+  border:1px solid rgba(255,255,255,0.15);
+  color:rgba(240,237,228,0.55);
+  font-family:'Roboto Mono',monospace;
+  font-size:10px;letter-spacing:2px;
+  padding:9px 16px;cursor:pointer;
+  transition:all 0.15s;
+}
+.ob-btn-back:hover { color:rgba(240,237,228,0.85);border-color:rgba(255,255,255,0.3); }
+.ob-btn-back:disabled { opacity:0.25;cursor:not-allowed; }
 
 /* ── Confirm prompt (need assistance?) ── */
 #ob-confirm {
@@ -1160,7 +1170,10 @@
   <div class="ob-progress" id="obProgress"></div>
   <div class="ob-card-footer">
     <button class="ob-btn ob-btn-skip" onclick="ObSystem.endGuide()">Lewati Semua</button>
-    <button class="ob-btn ob-btn-next" id="obNextBtn" onclick="ObSystem.nextStep()">Lanjut →</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="ob-btn ob-btn-back" id="obBackBtn" onclick="ObSystem.prevStep()">← Kembali</button>
+      <button class="ob-btn ob-btn-next" id="obNextBtn" onclick="ObSystem.nextStep()">Lanjut →</button>
+    </div>
   </div>
 </div>
 
@@ -1286,7 +1299,7 @@
       // ── Step 10 · Intelligence section ───────────────────────
       {
         label:  'Seksi Intelligence',
-        target: '.dash-cat:nth-child(2)',
+        target: '#panel-dashboard .dash-cat:nth-child(2)',
         pos:    'right',
         audio:  'ob_step_10_intelligence.mp3',
         text:   `Sekarang kita masuk ke Seksi Intelligence — bagian paling sensitif di NEXUS.\n\nSeksi ini berisi empat modul intelijen operasional yang digunakan oleh divisi GRD dan CID. Semua modul di sini bersifat Top Secret dan hanya dapat diakses oleh personel dengan clearance yang sesuai.`,
@@ -1315,11 +1328,11 @@
         audio:  'ob_step_13_informant.mp3',
         text:   `Informant Registry adalah basis data aman yang menyimpan seluruh informan aktif, tidak aktif, maupun yang sudah terbakar — yang saat ini terdaftar di Central Investigation Bureau.\n\nIdentitas setiap informan adalah informasi paling sensitif di seluruh portal. Akses tanpa otorisasi merupakan pelanggaran berat dan dapat berujung pada pemecatan serta tuntutan pidana.`,
       },
-      // ── Step 14 · HVC ────────────────────────────────────────
+      // ── Step 14 · HVC — spotlight the dashboard card ─────────
       {
         label:  'High Value Criminal',
-        target: '.nx-nav-item.nav-hvc',
-        pos:    'right',
+        target: '#panel-dashboard .dash-mod.mod-hvc',
+        pos:    'left',
         audio:  'ob_step_14_hvc.mp3',
         text:   `HIGH VALUE CRIMINAL REGISTRY — direktori rahasia seluruh target kriminal bernilai tinggi yang sedang dilacak oleh CIB.\n\nSetiap entri mencakup profil lengkap, riwayat kejahatan, koneksi jaringan, dan status operasi yang sedang berjalan. Data ini hanya dapat diakses oleh personel dengan otorisasi khusus dari CIB Command.`,
       },
@@ -1349,6 +1362,7 @@
   const confirm   = () => $('ob-confirm')
   const audio     = () => $('ob-audio')
   const nextBtn   = () => $('obNextBtn')
+  const backBtn   = () => $('obBackBtn')
 
   // ── Audio ──────────────────────────────────────────────────
   function playStepAudio(filename) {
@@ -1468,7 +1482,7 @@
     el.innerHTML = ''
     let i = 0
     const chars = text.split('')
-    nextBtn().disabled = true
+    nextBtn().disabled = false   // always enabled — user can skip typing
 
     function tick() {
       if (i < chars.length) {
@@ -1482,7 +1496,7 @@
         i++
         _typeTimer = setTimeout(tick, TYPE_SPEED_MS)
       } else {
-        // Typing done — show cursor briefly then enable next
+        // Typing done — show cursor briefly then run callback
         const cursor = document.createElement('span')
         cursor.className = 'ob-cursor'
         el.appendChild(cursor)
@@ -1513,7 +1527,10 @@
     $('obStepLabel').textContent = step.label
     $('obStepBadge').textContent = `${idx + 1} / ${_steps.length}`
     nextBtn().textContent = idx === _steps.length - 1 ? 'Selesai ✓' : 'Lanjut →'
-    nextBtn().disabled = true
+    nextBtn().disabled = false   // always enabled
+
+    // Back button: disabled only on the very first step
+    if (backBtn()) backBtn().disabled = (idx === 0)
 
     updateProgress()
 
@@ -1632,6 +1649,14 @@
         ObSystem.endGuide()
         return
       }
+      renderStep(_stepIdx)
+    },
+
+    prevStep: function () {
+      if (!_active || _stepIdx <= 0) return
+      stopAudio()
+      clearTimeout(_typeTimer)
+      _stepIdx--
       renderStep(_stepIdx)
     },
 
