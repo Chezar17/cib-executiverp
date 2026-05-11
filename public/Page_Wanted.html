@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -14,6 +14,53 @@
 <link rel="stylesheet" href="shared/styles/site-header.css"/>
 <script type="module" src="shared/components/site-header.js"></script>
 <link rel="stylesheet" href="styles/wanted.css"/>
+<style>
+/* ── Loading / empty states ── */
+.mw-loading {
+  display:flex; flex-direction:column; align-items:center;
+  gap:18px; padding:80px 40px; text-align:center;
+}
+.mw-loading-bar {
+  width:200px; height:1px; background:rgba(255,255,255,0.08); overflow:hidden;
+}
+.mw-loading-progress {
+  height:100%; width:0%; background:var(--gold);
+  animation:mwLoad 1.4s ease forwards;
+}
+@keyframes mwLoad { to { width:100%; } }
+.mw-loading-text {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:3px;
+  color:var(--muted); text-transform:uppercase; opacity:0.6;
+}
+.mw-empty {
+  display:flex; flex-direction:column; align-items:center;
+  gap:14px; padding:80px 40px; text-align:center;
+}
+.mw-empty-icon {
+  font-family:'Oswald',sans-serif; font-size:48px; letter-spacing:2px;
+  color:rgba(201,168,76,0.2);
+}
+.mw-empty-title {
+  font-family:'Oswald',sans-serif; font-size:18px; letter-spacing:4px;
+  color:var(--muted); text-transform:uppercase; opacity:0.5;
+}
+.mw-empty-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1px;
+  color:var(--muted); opacity:0.4;
+}
+.mw-error {
+  display:flex; flex-direction:column; align-items:center;
+  gap:12px; padding:60px 40px; text-align:center;
+}
+.mw-error-title {
+  font-family:'Oswald',sans-serif; font-size:16px; letter-spacing:3px;
+  color:var(--red-alert); text-transform:uppercase; opacity:0.7;
+}
+.mw-error-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px;
+  color:var(--muted); opacity:0.5;
+}
+</style>
 </head>
 <body>
 
@@ -40,141 +87,20 @@
 
   <div class="count-bar">
     <div class="count-bar-left">
-      <div class="count-num">01</div>
+      <div class="count-num" id="mwCountNum">—</div>
       <div class="count-label">Active Wanted<br>Individuals</div>
     </div>
-    <div class="count-bar-right">LAST UPDATED: 20 APR 2026 &middot; 08:00 HRS +7 GMT &nbsp;|&nbsp; CIB PRIORITY LIST</div>
+    <div class="count-bar-right" id="mwLastUpdated">LOADING... &nbsp;|&nbsp; CIB PRIORITY LIST</div>
   </div>
 
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       WANTED LIST
-       To add a new suspect, copy the block between
-       "SUSPECT ENTRY START" and "SUSPECT ENTRY END",
-       paste it at the TOP of this list, and fill in the fields.
-       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <div class="wanted-list">
+  <!-- Wanted list container — populated by JS -->
+  <div class="wanted-list" id="mwWantedList">
 
-
-    <!-- â•â•â•â•â•â•â• SUSPECT ENTRY START â•â•â•â•â•â•â• -->
-    <div class="wanted-card">
-
-      <!-- LEFT: PHOTO COLUMN -->
-      <div class="suspect-photo-col">
-
-        <div class="suspect-photo">
-          <!--
-            HOW TO ADD PHOTO:
-            Delete the <div class="photo-placeholder"> block below
-            and replace with:
-            <img src="suspect-1.jpg" alt="D. Morales"/>
-
-            Recommended: portrait photo, 400x500px minimum.
-            Place the image in the same folder as this HTML file.
-          -->
-          <div class="photo-placeholder">
-            <svg viewBox="0 0 24 24"></svg>
-              <img src="images/ss_1.png" alt="D. Morales"/>
-          </div>
-        </div>
-
-        <!-- Case strip below photo -->
-        <div class="photo-case-strip">
-          <!-- EDIT: Case number -->
-          <div class="photo-case-id">CASE NO. CIB-MW-2026-002</div>
-          <!-- EDIT: Date suspect was added to wanted list -->
-          <div class="photo-date-wanted">WANTED SINCE: <span>April 7, 2026</span></div>
-        </div>
-
-      </div>
-
-      <!-- RIGHT: INFO COLUMN -->
-      <div class="suspect-info">
-
-        <!-- Name + Threat Level -->
-        <div class="suspect-header">
-          <div class="suspect-name-block">
-            <!-- EDIT: Alias (nickname), if none delete this line -->
-            <div class="suspect-alias">AKA "John Doe"</div>
-            <!-- EDIT: Full name -->
-            <div class="suspect-name">KILLER OF CHIEF ANKOOW ALREX</div>
-            <!-- EDIT: Suspect ID / DOB -->
-            <div class="suspect-id">SUSPECT ID: SS-01 &nbsp;|&nbsp; DOB: UNKNOWN &nbsp;|&nbsp; NATIONALITY: UNKNOWN</div>
-          </div>
-          <!-- EDIT: Change class to threat-critical / threat-high / threat-medium / threat-low -->
-          <div class="threat-badge threat-critical">
-            <div class="threat-badge-label">Threat Level</div>
-            <div class="threat-badge-level">Critical</div>
-          </div>
-        </div>
-
-        <!-- Bounty -->
-        <div class="bounty-row">
-          <div>
-            <div class="bounty-label">Bounty on Capture</div>
-            <!-- EDIT: Bounty note -->
-            <div class="bounty-note">Dead or Alive &middot; Authorized by CIB Director</div>
-          </div>
-          <!-- EDIT: Bounty amount -->
-          <div class="bounty-amount">$10,000</div>
-        </div>
-
-        <!-- Quick meta stats -->
-        <div class="suspect-meta-grid">
-          <!-- EDIT: Last known location -->
-          <div class="meta-cell">
-            <div class="meta-cell-label">Last Known Location</div>
-            <div class="meta-cell-value">South of Casino, LS</div>
-          </div>
-          <!-- EDIT: Gang/Organization affiliation -->
-          <div class="meta-cell">
-            <div class="meta-cell-label">Affiliation</div>
-            <div class="meta-cell-value">UNKNOWN</div>
-          </div>
-          <!-- EDIT: Status -->
-          <div class="meta-cell">
-            <div class="meta-cell-label">Status</div>
-            <div class="meta-cell-value" style="color:var(--red-alert);">At Large</div>
-          </div>
-        </div>
-
-        <!-- Debrief -->
-        <div style="margin-bottom:20px;">
-          <div class="suspect-section-title">Suspect Debrief</div>
-          <!-- EDIT: Debrief paragraph — background, history, behavior -->
-          <div class="suspect-debrief">This debrief is focused on the unidentified suspect known as John Doe, who is now wanted in connection with the abduction and murder of Chief Fire Department Ankoow Alrex. Evidence and witness statements place the subject among the armed assailants involved in the coordinated attack near the Casino and the subsequent homicide at the O”™Neil House. The subject is believed to be part of a larger criminal group consisting of more than five offenders who executed a planned kidnapping using firearms, intimidation, and lethal violence. Incident Involvement Approach with extreme caution.</div>
-        </div>
-
-        <!-- Crimes list -->
-        <div class="crimes-block">
-          <div class="suspect-section-title">Charges & Offenses</div>
-          <div class="crimes-list">
-            <!-- EDIT: Add or remove <span class="crime-tag"> items as needed -->
-            <span class="crime-tag">Murder of A Government Employee</span>
-            <span class="crime-tag">Kidnapping</span>
-            <span class="crime-tag">Desecration of Human Corpse</span>
-            <span class="crime-tag">Illegal Possession of Human Remains</span>
-            <span class="crime-tag">Criminal use of a Firearm</span>
-          </div>
-        </div>
-
-        <!-- Primary Detective -->
-        <div class="detective-row">
-          <!-- EDIT: Detective initials (shown in avatar circle) -->
-          <div class="detective-avatar">EM</div>
-          <div class="detective-info">
-            <div class="detective-label">Primary Detective</div>
-            <!-- EDIT: Detective full name -->
-            <div class="detective-name">Det. Elias Makya</div>
-            <!-- EDIT: Detective rank -->
-            <div class="detective-rank">Head of CID &middot; Badge #26104</div>
-          </div>
-          <!-- EDIT: Detective's division and contact -->
-          <div class="detective-division">Criminal Investigation Division<br/>Los Santos County Sherriff</div>
-        </div>
-
-      </div>
+    <!-- Loading state -->
+    <div class="mw-loading" id="mwLoadingState">
+      <div class="mw-loading-text">Retrieving Priority Target Data...</div>
+      <div class="mw-loading-bar"><div class="mw-loading-progress"></div></div>
     </div>
-    <!-- â•â•â•â•â•â•â• SUSPECT ENTRY END â•â•â•â•â•â•â• -->  
 
   </div>
   <!-- END .wanted-list -->
@@ -187,11 +113,211 @@
 <script type="module" src="shared/components/site-footer.js"></script>
 
 <script src="shared/scripts/site-ui.js"></script>
-
-
-
 <script src="scripts/wanted.js"></script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  Page_Wanted.html — Dynamic Wanted List Loader
+//  Fetches from GET /api/press-releases?type=wanted (public)
+// ════════════════════════════════════════════════════════════
+
+const MW_API = '/api/press-releases?type=wanted'
+
+const THREAT_LABELS = {
+  critical: 'Critical',
+  high:     'High',
+  medium:   'Medium',
+  low:      'Low',
+}
+
+const STATUS_LABELS = {
+  at_large:   'At Large',
+  in_custody: 'In Custody',
+  deceased:   'Deceased',
+  cleared:    'Cleared',
+}
+
+const STATUS_COLORS = {
+  at_large:   'var(--red-alert)',
+  in_custody: '#27ae60',
+  deceased:   'var(--muted)',
+  cleared:    'var(--muted)',
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function formatDate(d) {
+  if (!d) return 'Unknown'
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })
+  } catch { return d }
+}
+
+function buildCardHTML(w, index) {
+  const num        = String(index + 1).padStart(2, '0')
+  const threatCls  = 'threat-' + (w.threat_level || 'high')
+  const threatLbl  = THREAT_LABELS[w.threat_level] || w.threat_level || 'High'
+  const statusLbl  = STATUS_LABELS[w.status] || w.status || 'At Large'
+  const statusClr  = STATUS_COLORS[w.status] || 'var(--red-alert)'
+  const charges    = Array.isArray(w.charges) ? w.charges : []
+
+  const photoBlock = w.photo_url
+    ? `<div class="suspect-photo">
+        <img src="${escHtml(w.photo_url)}" alt="${escHtml(w.alias || w.full_name)}"
+             onerror="this.parentElement.innerHTML='<div class=\\'photo-placeholder\\'><svg viewBox=\\'0 0 24 24\\'></svg></div>'"/>
+      </div>`
+    : `<div class="suspect-photo">
+        <div class="photo-placeholder">
+          <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+        </div>
+      </div>`
+
+  const detBlock = (w.detective_name || w.detective_initials) ? `
+    <div class="detective-row">
+      <div class="detective-avatar">${escHtml(w.detective_initials || '??')}</div>
+      <div class="detective-info">
+        <div class="detective-label">Primary Detective</div>
+        <div class="detective-name">${escHtml(w.detective_name || '—')}</div>
+        <div class="detective-rank">${escHtml(w.detective_rank || '')}</div>
+      </div>
+      <div class="detective-division">${escHtml(w.detective_division || '')}</div>
+    </div>` : ''
+
+  const chargesBlock = charges.length ? `
+    <div class="crimes-block">
+      <div class="suspect-section-title">Charges &amp; Offenses</div>
+      <div class="crimes-list">
+        ${charges.map(c => `<span class="crime-tag">${escHtml(c)}</span>`).join('')}
+      </div>
+    </div>` : ''
+
+  const debriefBlock = w.debrief ? `
+    <div style="margin-bottom:20px;">
+      <div class="suspect-section-title">Suspect Debrief</div>
+      <div class="suspect-debrief">${escHtml(w.debrief)}</div>
+    </div>` : ''
+
+  const metaId = [
+    w.suspect_id ? `SUSPECT ID: ${escHtml(w.suspect_id)}` : null,
+    `DOB: ${escHtml(w.dob || 'UNKNOWN')}`,
+    `NATIONALITY: ${escHtml(w.nationality || 'UNKNOWN')}`,
+  ].filter(Boolean).join(' &nbsp;|&nbsp; ')
+
+  return `
+    <div class="wanted-card">
+
+      <!-- LEFT: PHOTO COLUMN -->
+      <div class="suspect-photo-col">
+        ${photoBlock}
+        <div class="photo-case-strip">
+          <div class="photo-case-id">CASE NO. ${escHtml(w.case_number || '—')}</div>
+          <div class="photo-date-wanted">WANTED SINCE: <span>${formatDate(w.wanted_since)}</span></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: INFO COLUMN -->
+      <div class="suspect-info">
+
+        <div class="suspect-header">
+          <div class="suspect-name-block">
+            ${w.alias ? `<div class="suspect-alias">AKA "${escHtml(w.alias)}"</div>` : ''}
+            <div class="suspect-name">${escHtml(w.full_name)}</div>
+            <div class="suspect-id">${metaId}</div>
+          </div>
+          <div class="threat-badge ${threatCls}">
+            <div class="threat-badge-label">Threat Level</div>
+            <div class="threat-badge-level">${escHtml(threatLbl)}</div>
+          </div>
+        </div>
+
+        <div class="bounty-row">
+          <div>
+            <div class="bounty-label">Bounty on Capture</div>
+            <div class="bounty-note">${escHtml(w.bounty_note || 'Authorized by CIB Director')}</div>
+          </div>
+          <div class="bounty-amount">${escHtml(w.bounty_amount || 'TBD')}</div>
+        </div>
+
+        <div class="suspect-meta-grid">
+          <div class="meta-cell">
+            <div class="meta-cell-label">Last Known Location</div>
+            <div class="meta-cell-value">${escHtml(w.last_known_loc || '—')}</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-cell-label">Affiliation</div>
+            <div class="meta-cell-value">${escHtml(w.affiliation || 'UNKNOWN')}</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-cell-label">Status</div>
+            <div class="meta-cell-value" style="color:${statusClr};">${escHtml(statusLbl)}</div>
+          </div>
+        </div>
+
+        ${debriefBlock}
+        ${chargesBlock}
+        ${detBlock}
+
+      </div>
+    </div>`
+}
+
+async function loadWantedList() {
+  const listEl = document.getElementById('mwWantedList')
+
+  try {
+    const res  = await fetch(MW_API)
+    const json = await res.json()
+
+    if (!json.success) throw new Error(json.error || 'Failed to load')
+
+    const data = (json.data || []).filter(w => w.status !== 'cleared')
+
+    // Update count bar
+    const activeCount = data.filter(w => w.status === 'at_large').length
+    document.getElementById('mwCountNum').textContent = String(activeCount).padStart(2, '0')
+
+    if (data.length > 0) {
+      const latest = data[0]?.updated_at || data[0]?.created_at
+      if (latest) {
+        const d = new Date(latest)
+        const dateStr = d.toLocaleDateString('en-US', { day:'2-digit', month:'short', year:'numeric' }).toUpperCase()
+        const timeStr = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:false }) + ' HRS'
+        document.getElementById('mwLastUpdated').textContent = `LAST UPDATED: ${dateStr} · ${timeStr} +7 GMT | CIB PRIORITY LIST`
+      }
+    }
+
+    if (data.length === 0) {
+      listEl.innerHTML = `
+        <div class="mw-empty">
+          <div class="mw-empty-icon">◎</div>
+          <div class="mw-empty-title">No Active Wanted Individuals</div>
+          <div class="mw-empty-sub">The CIB Most Wanted list is currently empty. Check back for updates.</div>
+        </div>`
+      return
+    }
+
+    listEl.innerHTML = data.map((w, i) => buildCardHTML(w, i)).join('')
+
+    // Re-trigger scroll reveal for new cards
+    if (window.SiteUi && SiteUi.initScrollReveal) {
+      SiteUi.initScrollReveal()
+    }
+
+  } catch (err) {
+    console.error('Failed to load wanted list:', err)
+    listEl.innerHTML = `
+      <div class="mw-error">
+        <div class="mw-error-title">Failed to Load Priority Target Data</div>
+        <div class="mw-error-sub">Unable to retrieve data from CIB servers. Please try again later.</div>
+      </div>`
+    document.getElementById('mwCountNum').textContent = '—'
+  }
+}
+
+// Initialize
+loadWantedList()
+</script>
 </body>
 </html>
-
-

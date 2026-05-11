@@ -389,6 +389,47 @@ body { display:flex; flex-direction:column; background:#060A14; }
 }
 @keyframes gateLoad { to { width:100%; } }
 
+/* ── Module tabs ── */
+.pa-module-tabs {
+  display:flex; border-bottom:1px solid var(--navy-border);
+  flex-shrink:0; background:#040810;
+}
+.pa-module-tab {
+  flex:1; display:flex; align-items:center; justify-content:center; gap:7px;
+  padding:11px 8px;
+  font-family:"Roboto Mono",monospace; font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--muted); background:transparent;
+  border:none; border-bottom:2px solid transparent;
+  cursor:pointer; transition:all 0.15s;
+}
+.pa-module-tab svg { width:13px; height:13px; fill:currentColor; opacity:0.7; }
+.pa-module-tab:hover { color:var(--white); background:rgba(255,255,255,0.03); }
+.pa-module-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+.pa-module-tab.active.wanted-tab { color:var(--red-alert); border-bottom-color:var(--red-alert); }
+
+/* Threat level toggle */
+.pa-threat-opt {
+  flex:1; padding:8px 4px; border:1px solid var(--navy-border);
+  background:#0D1526; cursor:pointer; transition:all 0.15s;
+  font-family:"Roboto Mono",monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); text-align:center;
+}
+.pa-threat-opt:not(:first-child) { border-left:none; }
+.pa-threat-opt:hover { background:rgba(255,255,255,0.04); color:var(--white); }
+.pa-threat-opt.selected-critical { background:rgba(192,57,43,0.2); color:#e74c3c; border-color:rgba(192,57,43,0.5); }
+.pa-threat-opt.selected-high     { background:rgba(230,126,34,0.15); color:#e67e22; border-color:rgba(230,126,34,0.4); }
+.pa-threat-opt.selected-medium   { background:rgba(241,196,15,0.12); color:#f1c40f; border-color:rgba(241,196,15,0.35); }
+.pa-threat-opt.selected-low      { background:rgba(39,174,96,0.12); color:#27ae60; border-color:rgba(39,174,96,0.35); }
+
+/* Wanted list item status dot */
+.w-status-dot {
+  width:6px; height:6px; border-radius:50%; flex-shrink:0;
+}
+.w-status-at_large  { background:#e74c3c; box-shadow:0 0 6px rgba(231,76,60,0.6); }
+.w-status-in_custody { background:#27ae60; }
+.w-status-deceased  { background:var(--muted); }
+.w-status-cleared   { background:var(--muted); opacity:0.4; }
+
 /* Scrollbar */
 .pa-list-scroll::-webkit-scrollbar,
 .pa-form-pane::-webkit-scrollbar { width:4px; }
@@ -515,7 +556,7 @@ body { display:flex; flex-direction:column; background:#060A14; }
     <img class="pa-topbar-logo" src="../images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
     <span class="pa-topbar-brand">NEXUS</span>
     <div class="pa-topbar-divider"></div>
-    <span class="pa-topbar-sub">Public Affairs · Press Release Manager</span>
+    <span class="pa-topbar-sub" id="paTopbarSub">Public Affairs · Press Release Manager</span>
   </div>
   <div class="pa-topbar-right">
     <span class="pa-topbar-badge">PAO INTERNAL</span>
@@ -531,21 +572,46 @@ body { display:flex; flex-direction:column; background:#060A14; }
 <!-- SHELL -->
 <div class="pa-shell" id="paShell" style="display:none;">
 
-  <!-- Left pane: list -->
+  <!-- Left pane: tabbed list -->
   <div class="pa-list-pane">
-    <div class="pa-list-header">
-      <div class="pa-list-title">Press Releases</div>
-      <div class="pa-list-sub">All published & draft entries</div>
+
+    <!-- Module tabs -->
+    <div class="pa-module-tabs">
+      <button class="pa-module-tab active" id="tabPressBtn" onclick="switchModule('press')">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+        Press Releases
+      </button>
+      <button class="pa-module-tab" id="tabWantedBtn" onclick="switchModule('wanted')">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        Most Wanted
+      </button>
     </div>
 
-    <button class="pa-new-btn" onclick="openNewForm()">
+    <div class="pa-list-header" id="listHeaderPress">
+      <div class="pa-list-title">Press Releases</div>
+      <div class="pa-list-sub">All published &amp; draft entries</div>
+    </div>
+    <div class="pa-list-header" id="listHeaderWanted" style="display:none;">
+      <div class="pa-list-title" style="color:var(--red-alert);">Most Wanted</div>
+      <div class="pa-list-sub">Active wanted individuals</div>
+    </div>
+
+    <button class="pa-new-btn" id="paNewPressBtn" onclick="openNewForm()">
       <div class="pa-new-btn-icon">+</div>
       <span class="pa-new-btn-text">New Press Release</span>
+    </button>
+    <button class="pa-new-btn" id="paNewWantedBtn" onclick="openNewWantedForm()" style="display:none;">
+      <div class="pa-new-btn-icon" style="border-color:rgba(192,57,43,0.5);background:rgba(192,57,43,0.1);color:var(--red-alert);">+</div>
+      <span class="pa-new-btn-text" style="color:var(--red-alert);">Add Wanted Individual</span>
     </button>
 
     <div class="pa-list-scroll" id="paReleaseList">
       <div class="pa-list-empty">Loading releases...</div>
     </div>
+    <div class="pa-list-scroll" id="paWantedList" style="display:none;">
+      <div class="pa-list-empty">Loading wanted list...</div>
+    </div>
+
   </div>
 
   <!-- Right pane: form / welcome -->
@@ -773,9 +839,210 @@ body { display:flex; flex-direction:column; background:#060A14; }
       <div class="pa-denied-sub">Secret or Top Secret clearance required to manage press releases.</div>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════
+         WANTED LIST FORM (shown when module = wanted)
+         ══════════════════════════════════════════════════ -->
+
+    <!-- Wanted welcome state -->
+    <div class="pa-welcome" id="paWantedWelcome" style="display:none;">
+      <div class="pa-welcome-icon" style="background:rgba(192,57,43,0.1);border-color:rgba(192,57,43,0.3);">
+        <svg viewBox="0 0 24 24" style="fill:var(--red-alert);"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+      </div>
+      <div class="pa-welcome-title" style="color:var(--red-alert);">Most Wanted Manager</div>
+      <div class="pa-welcome-sub">Select a wanted individual from the list or add a new entry. Published entries appear live on the public Most Wanted page.</div>
+    </div>
+
+    <!-- Wanted form -->
+    <div class="pa-form-inner" id="paWantedFormInner" style="display:none;">
+
+      <div class="pa-form-header">
+        <div>
+          <div class="pa-form-eyebrow" id="paWantedFormEyebrow">New Wanted Entry</div>
+          <div class="pa-form-title" id="paWantedFormTitle" style="color:var(--red-alert);">Add Wanted Individual</div>
+        </div>
+        <div class="pa-form-actions">
+          <button class="pa-btn pa-btn-danger" id="paWantedDeleteBtn" onclick="confirmWantedDelete()" style="display:none;">Delete Entry</button>
+          <button class="pa-btn pa-btn-secondary" onclick="cancelWantedForm()">Cancel</button>
+          <button class="pa-btn" id="paWantedSaveBtn" onclick="saveWanted()" style="background:rgba(192,57,43,0.15);color:var(--red-alert);border:1px solid rgba(192,57,43,0.4);">Save to Wanted List</button>
+        </div>
+      </div>
+
+      <!-- ── Identification ── -->
+      <div class="pa-section-label" style="color:var(--red-alert);">Suspect Identification</div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label">Case Number <span class="req">*</span></label>
+          <input class="pa-input" id="wCaseNumber" placeholder="CIB-MW-2026-003"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Suspect ID</label>
+          <input class="pa-input" id="wSuspectId" placeholder="SS-02"/>
+        </div>
+      </div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label">Alias / AKA</label>
+          <input class="pa-input" id="wAlias" placeholder="John Doe"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Full Name / Charge Label <span class="req">*</span></label>
+          <input class="pa-input" id="wFullName" placeholder="KILLER OF CHIEF ANKOOW ALREX"/>
+        </div>
+      </div>
+      <div class="pa-field-row cols-3">
+        <div class="pa-field">
+          <label class="pa-label">Date of Birth</label>
+          <input class="pa-input" id="wDob" placeholder="Unknown"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Nationality</label>
+          <input class="pa-input" id="wNationality" placeholder="Unknown"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Wanted Since</label>
+          <input class="pa-input" id="wWantedSince" type="date"/>
+        </div>
+      </div>
+
+      <!-- ── Threat & Bounty ── -->
+      <div class="pa-section-label" style="color:var(--red-alert);">Threat Level & Bounty</div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label">Threat Level <span class="req">*</span></label>
+          <div class="pa-type-toggle">
+            <div class="pa-threat-opt" id="threatCritical" onclick="selectThreat('critical')">🔴 Critical</div>
+            <div class="pa-threat-opt" id="threatHigh"     onclick="selectThreat('high')">🟠 High</div>
+            <div class="pa-threat-opt" id="threatMedium"   onclick="selectThreat('medium')">🟡 Medium</div>
+            <div class="pa-threat-opt" id="threatLow"      onclick="selectThreat('low')">🟢 Low</div>
+          </div>
+          <input type="hidden" id="wThreatLevel" value="critical"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Status <span class="req">*</span></label>
+          <select class="pa-select" id="wStatus">
+            <option value="at_large">At Large</option>
+            <option value="in_custody">In Custody</option>
+            <option value="deceased">Deceased</option>
+            <option value="cleared">Cleared / Removed</option>
+          </select>
+        </div>
+      </div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label">Bounty Amount</label>
+          <input class="pa-input" id="wBountyAmount" placeholder="0,000"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Bounty Note</label>
+          <input class="pa-input" id="wBountyNote" placeholder="Dead or Alive · Authorized by CIB Director"/>
+        </div>
+      </div>
+
+      <!-- ── Intel ── -->
+      <div class="pa-section-label" style="color:var(--red-alert);">Intelligence</div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label">Last Known Location</label>
+          <input class="pa-input" id="wLastLoc" placeholder="South of Casino, LS"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Gang / Organization Affiliation</label>
+          <input class="pa-input" id="wAffiliation" placeholder="Unknown"/>
+        </div>
+      </div>
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label">Suspect Debrief</label>
+          <textarea class="pa-textarea" id="wDebrief" rows="5" placeholder="Background, behavior, incident involvement..."></textarea>
+        </div>
+      </div>
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label">Charges & Offenses <span style="opacity:0.5;font-size:9px;">(one per line)</span></label>
+          <textarea class="pa-textarea" id="wCharges" rows="4" placeholder="Murder of A Government Employee&#10;Kidnapping&#10;Criminal use of a Firearm"></textarea>
+        </div>
+      </div>
+
+      <!-- ── Detective ── -->
+      <div class="pa-section-label" style="color:var(--red-alert);">Primary Detective</div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label">Detective Initials</label>
+          <input class="pa-input" id="wDetInitials" placeholder="EM" maxlength="4"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Detective Full Name</label>
+          <input class="pa-input" id="wDetName" placeholder="Det. Elias Makya"/>
+        </div>
+      </div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label">Rank & Badge</label>
+          <input class="pa-input" id="wDetRank" placeholder="Head of CID · Badge #26104"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Division</label>
+          <input class="pa-input" id="wDetDivision" placeholder="Criminal Investigation Division"/>
+        </div>
+      </div>
+
+      <!-- ── Photo ── -->
+      <div class="pa-section-label" style="color:var(--red-alert);">Suspect Photo</div>
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <div class="pa-photo-area" id="paWantedPhotoArea">
+            <div id="paWantedPhotoPreviewWrap" style="display:none;">
+              <img class="pa-photo-preview" id="paWantedPhotoPreview" src="" alt="Preview"/>
+            </div>
+            <div class="pa-photo-placeholder" id="paWantedPhotoPlaceholder">
+              <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+              <span>No photo selected — portrait recommended 400×500px</span>
+            </div>
+            <div class="pa-photo-btns">
+              <label class="pa-photo-btn" style="cursor:pointer;">
+                Upload File
+                <input type="file" id="paWantedPhotoUpload" accept="image/*" style="display:none;" onchange="handleWantedPhotoUpload(this)"/>
+              </label>
+              <button class="pa-photo-btn pa-photo-clear" onclick="clearWantedPhoto()">✕ Remove</button>
+            </div>
+          </div>
+          <div class="pa-photo-url-row">
+            <span class="pa-photo-url-label">Or use URL:</span>
+            <input class="pa-input" id="wPhotoUrl" placeholder="https://..." style="font-size:10px;" oninput="handleWantedPhotoUrlInput(this.value)"/>
+          </div>
+        </div>
+      </div>
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label">Photo Caption</label>
+          <input class="pa-input" id="wPhotoCaption" placeholder="IMAGE: Description of suspect..."/>
+        </div>
+      </div>
+
+      <!-- Bottom save -->
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--navy-border);">
+        <button class="pa-btn pa-btn-danger" id="paWantedDeleteBtn2" onclick="confirmWantedDelete()" style="display:none;">Delete Entry</button>
+        <button class="pa-btn pa-btn-secondary" onclick="cancelWantedForm()">Cancel</button>
+        <button class="pa-btn" onclick="saveWanted()" style="background:rgba(192,57,43,0.15);color:var(--red-alert);border:1px solid rgba(192,57,43,0.4);">Save to Wanted List</button>
+      </div>
+
+    </div><!-- /paWantedFormInner -->
+
   </div><!-- /pa-form-pane -->
 
 </div><!-- /pa-shell -->
+
+<!-- Wanted delete confirmation modal -->
+<div class="pa-modal-backdrop" id="paWantedDeleteModal">
+  <div class="pa-modal">
+    <div class="pa-modal-title">Remove from Wanted List</div>
+    <div class="pa-modal-text">Are you sure you want to remove this individual from the Most Wanted list? The entry will no longer appear on the public page. It is soft-deleted and retained in the audit log.</div>
+    <div class="pa-modal-btns">
+      <button class="pa-btn pa-btn-secondary" onclick="closeWantedDeleteModal()">Cancel</button>
+      <button class="pa-btn pa-btn-danger" onclick="executeWantedDelete()">Remove</button>
+    </div>
+  </div>
+</div>
 
 <!-- Delete confirmation modal -->
 <div class="pa-modal-backdrop" id="paDeleteModal">
@@ -1157,7 +1424,335 @@ function formatDisplayDate(d) {
   } catch { return d }
 }
 
+// ══════════════════════════════════════════════════════════════
+//  MODULE SWITCHING — Press Releases vs Wanted List
+// ══════════════════════════════════════════════════════════════
+
+let _currentModule = 'press'  // 'press' | 'wanted'
+let _wanteds       = []
+let _editingWantedId = null
+let _wantedPhotoBase64 = null
+
+function switchModule(mod) {
+  _currentModule = mod
+  const isWanted = mod === 'wanted'
+
+  // Tab states
+  document.getElementById('tabPressBtn').classList.toggle('active', !isWanted)
+  document.getElementById('tabWantedBtn').classList.toggle('active', isWanted)
+  document.getElementById('tabWantedBtn').classList.toggle('wanted-tab', isWanted)
+
+  // Topbar subtitle
+  document.getElementById('paTopbarSub').textContent = isWanted
+    ? 'Public Affairs · Most Wanted Manager'
+    : 'Public Affairs · Press Release Manager'
+
+  // List pane switching
+  document.getElementById('listHeaderPress').style.display  = isWanted ? 'none' : 'block'
+  document.getElementById('listHeaderWanted').style.display = isWanted ? 'block' : 'none'
+  document.getElementById('paNewPressBtn').style.display    = isWanted ? 'none' : 'flex'
+  document.getElementById('paNewWantedBtn').style.display   = isWanted ? 'flex' : 'none'
+  document.getElementById('paReleaseList').style.display    = isWanted ? 'none' : 'block'
+  document.getElementById('paWantedList').style.display     = isWanted ? 'block' : 'none'
+
+  // Right pane: hide everything press-related, show wanted welcome
+  if (isWanted) {
+    document.getElementById('paFormInner').style.display       = 'none'
+    document.getElementById('paWelcome').style.display         = 'none'
+    document.getElementById('paDenied').style.display          = 'none'
+    document.getElementById('paWantedFormInner').style.display = 'none'
+    document.getElementById('paWantedWelcome').style.display   = _canWrite ? 'flex' : 'none'
+    if (!_wanteds.length) loadWanted()
+    else renderWantedList()
+  } else {
+    document.getElementById('paWantedFormInner').style.display = 'none'
+    document.getElementById('paWantedWelcome').style.display   = 'none'
+    document.getElementById('paFormInner').style.display       = 'none'
+    document.getElementById('paWelcome').style.display         = _canWrite ? 'flex' : 'none'
+    document.getElementById('paDenied').style.display          = _canWrite ? 'none' : 'flex'
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  WANTED LIST — CRUD
+// ══════════════════════════════════════════════════════════════
+
+const MW_API = '/api/press-releases?type=wanted'
+
+async function loadWanted() {
+  try {
+    const res  = await fetch(MW_API)
+    const json = await res.json()
+    if (json.success) {
+      _wanteds = json.data || []
+      renderWantedList()
+    } else {
+      showToast('Failed to load wanted list', 'error')
+    }
+  } catch (e) {
+    showToast('Network error loading wanted list', 'error')
+  }
+}
+
+function renderWantedList() {
+  const el = document.getElementById('paWantedList')
+  if (!_wanteds.length) {
+    el.innerHTML = '<div class="pa-list-empty">No entries yet.<br>Add the first one.</div>'
+    return
+  }
+  const threatColor = { critical:'var(--red-alert)', high:'#e67e22', medium:'#f1c40f', low:'#27ae60' }
+  el.innerHTML = _wanteds.map(w => {
+    const statusClass = 'w-status-' + (w.status || 'at_large')
+    const tc = threatColor[w.threat_level] || 'var(--red-alert)'
+    return `<div class="pa-list-item${_editingWantedId === w.id ? ' active' : ''}" onclick="openEditWantedForm('${w.id}')">
+      <div class="pa-item-type-row">
+        <span class="pa-item-badge badge-main" style="color:${tc};border-color:${tc}33;background:${tc}18;">${escHtml(w.threat_level || 'high').toUpperCase()}</span>
+        <div class="w-status-dot ${statusClass}" title="${w.status}"></div>
+        <span class="pa-item-number">${escHtml(w.case_number || '')}</span>
+      </div>
+      <div class="pa-item-title">${escHtml(w.alias ? w.alias + ' — ' : '')}${escHtml(w.full_name || '')}</div>
+      <div class="pa-item-meta">${escHtml(w.last_known_loc || '—')} · ${escHtml(w.status?.replace('_',' ') || '—')}</div>
+    </div>`
+  }).join('')
+}
+
+function openNewWantedForm() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  _editingWantedId   = null
+  _wantedPhotoBase64 = null
+  clearWantedFormFields()
+  document.getElementById('paWantedFormEyebrow').textContent = 'New Wanted Entry'
+  document.getElementById('paWantedFormTitle').textContent   = 'Add Wanted Individual'
+  document.getElementById('paWantedDeleteBtn').style.display  = 'none'
+  document.getElementById('paWantedDeleteBtn2').style.display = 'none'
+  document.getElementById('paWantedWelcome').style.display    = 'none'
+  document.getElementById('paWantedFormInner').style.display  = 'block'
+  // default dates
+  const today = new Date().toISOString().split('T')[0]
+  document.getElementById('wWantedSince').value = today
+  renderWantedList()
+}
+
+function openEditWantedForm(id) {
+  const w = _wanteds.find(x => x.id === id)
+  if (!w) return
+  _editingWantedId   = id
+  _wantedPhotoBase64 = null
+  populateWantedForm(w)
+  document.getElementById('paWantedFormEyebrow').textContent = 'Editing · ' + (w.case_number || '')
+  document.getElementById('paWantedFormTitle').textContent   = w.full_name || 'Edit Entry'
+  document.getElementById('paWantedDeleteBtn').style.display  = _canWrite ? 'inline-flex' : 'none'
+  document.getElementById('paWantedDeleteBtn2').style.display = _canWrite ? 'inline-flex' : 'none'
+  document.getElementById('paWantedWelcome').style.display    = 'none'
+  document.getElementById('paWantedFormInner').style.display  = 'block'
+  setWantedFormReadOnly(!_canWrite)
+  renderWantedList()
+}
+
+function populateWantedForm(w) {
+  document.getElementById('wCaseNumber').value    = w.case_number    || ''
+  document.getElementById('wSuspectId').value     = w.suspect_id     || ''
+  document.getElementById('wAlias').value         = w.alias          || ''
+  document.getElementById('wFullName').value      = w.full_name      || ''
+  document.getElementById('wDob').value           = w.dob            || ''
+  document.getElementById('wNationality').value   = w.nationality    || ''
+  document.getElementById('wWantedSince').value   = w.wanted_since   || ''
+  document.getElementById('wBountyAmount').value  = w.bounty_amount  || ''
+  document.getElementById('wBountyNote').value    = w.bounty_note    || ''
+  document.getElementById('wLastLoc').value       = w.last_known_loc || ''
+  document.getElementById('wAffiliation').value   = w.affiliation    || ''
+  document.getElementById('wStatus').value        = w.status         || 'at_large'
+  document.getElementById('wDebrief').value       = w.debrief        || ''
+  document.getElementById('wCharges').value       = (w.charges || []).join('
+')
+  document.getElementById('wDetInitials').value   = w.detective_initials  || ''
+  document.getElementById('wDetName').value       = w.detective_name      || ''
+  document.getElementById('wDetRank').value       = w.detective_rank      || ''
+  document.getElementById('wDetDivision').value   = w.detective_division  || ''
+  document.getElementById('wPhotoCaption').value  = w.photo_caption       || ''
+  document.getElementById('wPhotoUrl').value      = w.photo_url           || ''
+  selectThreat(w.threat_level || 'critical')
+  if (w.photo_url) {
+    document.getElementById('paWantedPhotoPreview').src            = w.photo_url
+    document.getElementById('paWantedPhotoPreviewWrap').style.display = 'block'
+    document.getElementById('paWantedPhotoPlaceholder').style.display = 'none'
+  } else {
+    clearWantedPhotoPreview()
+  }
+}
+
+function clearWantedFormFields() {
+  const ids = ['wCaseNumber','wSuspectId','wAlias','wFullName','wDob','wNationality',
+               'wWantedSince','wBountyAmount','wBountyNote','wLastLoc','wAffiliation',
+               'wDebrief','wCharges','wDetInitials','wDetName','wDetRank','wDetDivision',
+               'wPhotoCaption','wPhotoUrl']
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = '' })
+  document.getElementById('wStatus').value = 'at_large'
+  selectThreat('critical')
+  clearWantedPhotoPreview()
+  _wantedPhotoBase64 = null
+}
+
+function cancelWantedForm() {
+  _editingWantedId = null
+  document.getElementById('paWantedFormInner').style.display = 'none'
+  document.getElementById('paWantedWelcome').style.display   = _canWrite ? 'flex' : 'none'
+  renderWantedList()
+}
+
+function setWantedFormReadOnly(ro) {
+  const ids = ['wCaseNumber','wSuspectId','wAlias','wFullName','wDob','wNationality',
+               'wWantedSince','wBountyAmount','wBountyNote','wLastLoc','wAffiliation',
+               'wStatus','wDebrief','wCharges','wDetInitials','wDetName','wDetRank',
+               'wDetDivision','wPhotoCaption','wPhotoUrl']
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = ro })
+  document.querySelectorAll('.pa-threat-opt').forEach(el => el.style.pointerEvents = ro ? 'none' : '')
+  document.getElementById('paWantedSaveBtn').disabled = ro
+}
+
+// ── Threat level toggle ──────────────────────────────────────
+function selectThreat(level) {
+  document.getElementById('wThreatLevel').value = level
+  const levels = ['critical','high','medium','low']
+  levels.forEach(l => {
+    const el = document.getElementById('threat' + l.charAt(0).toUpperCase() + l.slice(1))
+    if (el) {
+      el.className = 'pa-threat-opt' + (l === level ? ' selected-' + l : '')
+    }
+  })
+}
+
+// ── Photo handling for Wanted ────────────────────────────────
+function handleWantedPhotoUpload(input) {
+  const file = input.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    _wantedPhotoBase64 = e.target.result
+    document.getElementById('paWantedPhotoPreview').src            = e.target.result
+    document.getElementById('paWantedPhotoPreviewWrap').style.display = 'block'
+    document.getElementById('paWantedPhotoPlaceholder').style.display = 'none'
+    document.getElementById('wPhotoUrl').value = ''
+  }
+  reader.readAsDataURL(file)
+}
+function handleWantedPhotoUrlInput(url) {
+  if (!url) { clearWantedPhotoPreview(); return }
+  _wantedPhotoBase64 = null
+  document.getElementById('paWantedPhotoPreview').src            = url
+  document.getElementById('paWantedPhotoPreviewWrap').style.display = 'block'
+  document.getElementById('paWantedPhotoPlaceholder').style.display = 'none'
+}
+function clearWantedPhoto() {
+  _wantedPhotoBase64 = null
+  document.getElementById('wPhotoUrl').value = ''
+  clearWantedPhotoPreview()
+}
+function clearWantedPhotoPreview() {
+  document.getElementById('paWantedPhotoPreview').src            = ''
+  document.getElementById('paWantedPhotoPreviewWrap').style.display = 'none'
+  document.getElementById('paWantedPhotoPlaceholder').style.display = 'flex'
+}
+
+// ── Save wanted entry ────────────────────────────────────────
+async function saveWanted() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  const caseNum  = document.getElementById('wCaseNumber').value.trim()
+  const fullName = document.getElementById('wFullName').value.trim()
+  if (!caseNum)  { showToast('Case number is required', 'error'); return }
+  if (!fullName) { showToast('Name / charge label is required', 'error'); return }
+
+  const chargesRaw = document.getElementById('wCharges').value
+  const charges = chargesRaw.split('
+').map(s => s.trim()).filter(Boolean)
+
+  const token = sessionStorage.getItem('cib_token')
+  const payload = {
+    id:                  _editingWantedId,
+    case_number:         caseNum,
+    alias:               document.getElementById('wAlias').value.trim(),
+    full_name:           fullName,
+    suspect_id:          document.getElementById('wSuspectId').value.trim(),
+    dob:                 document.getElementById('wDob').value.trim(),
+    nationality:         document.getElementById('wNationality').value.trim(),
+    threat_level:        document.getElementById('wThreatLevel').value,
+    bounty_amount:       document.getElementById('wBountyAmount').value.trim(),
+    bounty_note:         document.getElementById('wBountyNote').value.trim(),
+    last_known_loc:      document.getElementById('wLastLoc').value.trim(),
+    affiliation:         document.getElementById('wAffiliation').value.trim(),
+    status:              document.getElementById('wStatus').value,
+    debrief:             document.getElementById('wDebrief').value.trim(),
+    charges,
+    detective_initials:  document.getElementById('wDetInitials').value.trim(),
+    detective_name:      document.getElementById('wDetName').value.trim(),
+    detective_rank:      document.getElementById('wDetRank').value.trim(),
+    detective_division:  document.getElementById('wDetDivision').value.trim(),
+    photo_base64:        _wantedPhotoBase64 || null,
+    photo_url_direct:    !_wantedPhotoBase64 ? document.getElementById('wPhotoUrl').value.trim() : null,
+    photo_caption:       document.getElementById('wPhotoCaption').value.trim(),
+    wanted_since:        document.getElementById('wWantedSince').value,
+  }
+
+  const method = _editingWantedId ? 'PUT' : 'POST'
+  const btn = document.getElementById('paWantedSaveBtn')
+  btn.disabled = true; btn.textContent = 'Saving...'
+
+  try {
+    const res  = await fetch(MW_API, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token || '' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+    if (json.success) {
+      showToast(_editingWantedId ? 'Wanted entry updated' : 'Suspect added to wanted list', 'success')
+      _editingWantedId = json.data.id
+      await loadWanted()
+      openEditWantedForm(_editingWantedId)
+    } else {
+      showToast(json.error || 'Save failed', 'error')
+    }
+  } catch (e) {
+    showToast('Network error saving entry', 'error')
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save to Wanted List'
+  }
+}
+
+// ── Delete wanted entry ──────────────────────────────────────
+function confirmWantedDelete() {
+  if (!_editingWantedId || !_canWrite) return
+  document.getElementById('paWantedDeleteModal').classList.add('visible')
+}
+function closeWantedDeleteModal() {
+  document.getElementById('paWantedDeleteModal').classList.remove('visible')
+}
+async function executeWantedDelete() {
+  closeWantedDeleteModal()
+  if (!_editingWantedId) return
+  const token = sessionStorage.getItem('cib_token')
+  try {
+    const res  = await fetch(`${MW_API}&id=${_editingWantedId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token || '' },
+      body: JSON.stringify({ reason: 'Removed via PA Manager' }),
+    })
+    const json = await res.json()
+    if (json.success) {
+      showToast('Suspect removed from wanted list', 'success')
+      _editingWantedId = null
+      await loadWanted()
+      cancelWantedForm()
+    } else {
+      showToast(json.error || 'Delete failed', 'error')
+    }
+  } catch (e) {
+    showToast('Network error', 'error')
+  }
+}
+
 // ── Rich Text Editor ─────────────────────────────────────────
+
 const _rteEditor  = () => document.getElementById('paRteEditor')
 const _rteHidden  = () => document.getElementById('fieldBody')
 
