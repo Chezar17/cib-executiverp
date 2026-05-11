@@ -1968,10 +1968,9 @@ document.addEventListener('DOMContentLoaded', () => {
       positionCard(step.target, step.pos, _resolvedEl)
     }, 520)
 
-    // Type text, then play audio
-    typeText(step.text, () => {
-      playStepAudio(step.audio)
-    })
+    // Play audio immediately — parallel to typewriter, not after it
+    playStepAudio(step.audio)
+    typeText(step.text)
 
     // Auto-scroll so the highlighted element is clearly visible
     if (step.target) {
