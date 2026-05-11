@@ -934,11 +934,6 @@
     backdrop-filter 0.25s ease;
   box-shadow:0 24px 64px rgba(0,0,0,0.7);
   overflow:hidden;
-  /* Cap card height so buttons are always visible regardless of text length.
-     Flex-column layout keeps header and footer fixed; only body scrolls. */
-  max-height: calc(100vh - 48px);
-  display: flex;
-  flex-direction: column;
   /* Smooth repositioning — never snap */
   will-change: top, left, opacity;
 }
@@ -948,7 +943,6 @@
   background:linear-gradient(135deg,rgba(12,20,40,1),rgba(8,14,28,1));
   border-bottom:1px solid rgba(201,168,76,0.15);
   position:relative;overflow:hidden;
-  flex-shrink:0; /* never compress — always fully visible */
 }
 .ob-card-header::before {
   content:'';position:absolute;inset:0;
@@ -1011,15 +1005,7 @@
 }
 
 /* ── Content area ── */
-.ob-card-body {
-  padding:20px 22px 0;
-  flex:1;           /* take all available space between header and footer */
-  overflow-y:auto;  /* scroll if text is too tall — footer stays visible  */
-  scrollbar-width:thin;
-  scrollbar-color:rgba(201,168,76,0.25) transparent;
-}
-.ob-card-body::-webkit-scrollbar { width:4px; }
-.ob-card-body::-webkit-scrollbar-thumb { background:rgba(201,168,76,0.25); border-radius:2px; }
+.ob-card-body { padding:20px 22px 0; }
 .ob-step-label {
   font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;
   color:var(--gold,#C9A84C);text-transform:uppercase;opacity:0.7;margin-bottom:8px;
@@ -1039,7 +1025,6 @@
 /* ── Progress dots ── */
 .ob-progress {
   display:flex;align-items:center;gap:5px;padding:14px 22px 0;
-  flex-shrink:0; /* progress dots always visible above footer */
 }
 .ob-dot {
   width:5px;height:5px;border-radius:50%;
@@ -1056,11 +1041,9 @@
 /* ── Footer buttons ── */
 .ob-card-footer {
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 22px 18px;margin-top:0;
+  padding:14px 22px 18px;margin-top:14px;
   border-top:1px solid rgba(255,255,255,0.06);
   gap:10px;
-  flex-shrink:0; /* always visible — never pushed off screen by long text */
-  background:#080E1C; /* solid bg so it doesn't bleed into scrolled text */
 }
 .ob-btn {
   font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;
@@ -1588,10 +1571,6 @@
 
     c.style.left = best.left + 'px'
     c.style.top  = best.top  + 'px'
-
-    // Reset body scroll to top on each new step
-    const body = document.querySelector('.ob-card-body')
-    if (body) body.scrollTop = 0
 
     // If still overlapping (tiny screen), make card semi-transparent
     // so the spotlighted element is still readable through it.
