@@ -892,9 +892,15 @@
   border:1px solid rgba(201,168,76,0.25);
   border-top:3px solid var(--gold,#C9A84C);
   z-index:8010;
-  transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+  transition:
+    top     0.38s cubic-bezier(0.22,1,0.36,1),
+    left    0.38s cubic-bezier(0.22,1,0.36,1),
+    opacity 0.25s ease,
+    backdrop-filter 0.25s ease;
   box-shadow:0 24px 64px rgba(0,0,0,0.7);
   overflow:hidden;
+  /* Smooth repositioning — never snap */
+  will-change: top, left, opacity;
 }
 /* ── Guide header ── */
 .ob-card-header {
@@ -1456,58 +1462,92 @@
     const vw = window.innerWidth
     const vh = window.innerHeight
     const cw = 420
+    // Re-measure card height — it may have changed with new content
+    c.style.opacity = '0'   // hide briefly for accurate measurement
     const ch = c.offsetHeight || 300
+    c.style.opacity = ''
     const margin = 16
 
     if (!selector || pos === 'centre') {
-      c.style.left = ((vw - cw) / 2) + 'px'
-      c.style.top  = ((vh - ch) / 2) + 'px'
+      c.style.left    = ((vw - cw) / 2) + 'px'
+      c.style.top     = ((vh - ch) / 2) + 'px'
+      c.style.opacity = '1'
       return
     }
 
-    // Use the pre-resolved element (e.g. dash-cat parent) when provided,
-    // so the card positions relative to the actual spotlighted region.
     const el = resolvedEl || document.querySelector(selector)
     if (!el) {
-      c.style.left = ((vw - cw) / 2) + 'px'
-      c.style.top  = ((vh - ch) / 2) + 'px'
+      c.style.left    = ((vw - cw) / 2) + 'px'
+      c.style.top     = ((vh - ch) / 2) + 'px'
+      c.style.opacity = '1'
       return
     }
 
     const r   = el.getBoundingClientRect()
-    const pad = 16
+    const pad = 20
 
-    let left, top
-    switch (pos) {
-      case 'right':
-        left = r.right + pad
-        top  = Math.max(margin, r.top - 20)
-        // Clamp to viewport
-        if (left + cw > vw - margin) left = r.left - cw - pad
-        break
-      case 'left':
-        left = r.left - cw - pad
-        top  = Math.max(margin, r.top - 20)
-        if (left < margin) left = r.right + pad
-        break
-      case 'below':
-        left = Math.max(margin, r.left)
-        top  = r.bottom + pad
-        if (left + cw > vw - margin) left = vw - cw - margin
-        break
-      case 'above':
-        left = Math.max(margin, r.left)
-        top  = r.top - ch - pad
-        if (top < margin) top = r.bottom + pad
-        if (left + cw > vw - margin) left = vw - cw - margin
-        break
-      default:
-        left = (vw - cw) / 2
-        top  = (vh - ch) / 2
+    // ── Returns {left,top} clamped to viewport ───────────────
+    function computePos(p) {
+      let left, top
+      switch (p) {
+        case 'right':
+          left = r.right + pad
+          top  = Math.max(margin, r.top)
+          break
+        case 'left':
+          left = r.left - cw - pad
+          top  = Math.max(margin, r.top)
+          break
+        case 'below':
+          top  = r.bottom + pad
+          left = r.left + r.width / 2 - cw / 2
+          break
+        case 'above':
+          top  = r.top - ch - pad
+          left = r.left + r.width / 2 - cw / 2
+          break
+        default:
+          return { left: (vw-cw)/2, top: (vh-ch)/2, overlaps: false, fits: true }
+      }
+      left = Math.max(margin, Math.min(vw - cw - margin, left))
+      top  = Math.max(margin, Math.min(vh - ch - margin, top))
+
+      // Overlap check — does the card rect intersect the spotlight rect?
+      const cRight  = left + cw
+      const cBottom = top  + ch
+      const overlaps = !(cRight < r.left - 8 || left > r.right + 8 ||
+                         cBottom < r.top  - 8 || top  > r.bottom + 8)
+
+      // Fits check — card not clipped by viewport
+      const fits = (top >= margin && left >= margin &&
+                    left + cw <= vw - margin && top + ch <= vh - margin)
+      return { left, top, overlaps, fits }
     }
 
-    c.style.left = Math.max(margin, Math.min(vw - cw - margin, left)) + 'px'
-    c.style.top  = Math.max(margin, Math.min(vh - ch - margin, top))  + 'px'
+    // Try requested pos → opposite → remaining sides
+    const opposite = { right:'left', left:'right', below:'above', above:'below' }
+    const order = [pos, opposite[pos], 'right', 'left', 'above', 'below']
+    let best = null
+    for (const p of order) {
+      const candidate = computePos(p)
+      if (!candidate.overlaps && candidate.fits) { best = candidate; break }
+      if (!best) best = candidate   // keep first as last-resort fallback
+    }
+
+    c.style.left = best.left + 'px'
+    c.style.top  = best.top  + 'px'
+
+    // If still overlapping (tiny screen), make card semi-transparent
+    // so the spotlighted element is still readable through it.
+    if (best.overlaps) {
+      c.style.opacity        = '0.75'
+      c.style.backdropFilter = 'blur(3px)'
+      c.style.webkitBackdropFilter = 'blur(3px)'
+    } else {
+      c.style.opacity        = '1'
+      c.style.backdropFilter = ''
+      c.style.webkitBackdropFilter = ''
+    }
   }
 
   // ── Typewriter dialogue ────────────────────────────────────
