@@ -119,9 +119,16 @@ function normalizePdfCrop(raw) {
  * Uses background-image so Chromium prints the chosen crop predictably.
  */
 function pdfFramedPhotoHtml(url, orientation, crop, portraitW, portraitH, landscapeW, landscapeH, fallbackInnerHtml) {
-  const landscape = orientation === "landscape";
-  const boxW = landscape ? landscapeW : portraitW;
-  const boxH = landscape ? landscapeH : portraitH;
+  let boxW;
+  let boxH;
+  if (orientation === "square") {
+    const side = Math.min(portraitW, portraitH, landscapeW, landscapeH);
+    boxW = boxH = side;
+  } else {
+    const landscape = orientation === "landscape";
+    boxW = landscape ? landscapeW : portraitW;
+    boxH = landscape ? landscapeH : portraitH;
+  }
   if (!url) {
     return `<div class="mugshot-box" style="width:${boxW}px;height:${boxH}px;max-width:100%">${fallbackInnerHtml}</div>`;
   }
@@ -203,7 +210,33 @@ function evidenceWas(e) {
 
 /** Witness occupation: form saves welfare_occupation (legacy occupation). */
 function witnessOccupation(w) {
-  return w?.welfare_occupation ?? w?.occupation ?? "";
+  const base = w?.welfare_occupation ?? w?.occupation ?? "";
+  if (asPdfBool(w?.is_expert) && String(w?.expertise || "").trim())
+    return (base ? `${base} — ` : "") + String(w.expertise || "");
+  return base;
+}
+
+const DETECTIVE_RANK_ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+/** Detective 3 → Detective III (Arabic ranks 1–10). */
+function normalizeDetectiveRankRoman(text) {
+  if (text == null || text === "") return "";
+  let s = String(text);
+  s = s.replace(/\bDetective\.?\s*(\d{1,2})\b/gi, (_, num) => {
+    const n = parseInt(num, 10);
+    if (n >= 1 && n <= 10) return `Detective ${DETECTIVE_RANK_ROMAN[n]}`;
+    return `Detective ${num}`;
+  });
+  s = s.replace(/\bDet\.?\s*(\d{1,2})\b/gi, (_, num) => {
+    const n = parseInt(num, 10);
+    if (n >= 1 && n <= 10) return `Det. ${DETECTIVE_RANK_ROMAN[n]}`;
+    return `Det. ${num}`;
+  });
+  return s;
+}
+
+function evidenceCropAspectLabel(e) {
+  const a = String(e?.image_crop_aspect || "free").toLowerCase();
+  return a === "square" ? "Square (1:1)" : "Free";
 }
 
 // ── CSS ────────────────────────────────────────────────────────────────────
@@ -467,10 +500,18 @@ export function buildPDFDocument(r) {
   </tr></table>`;
 
   body += `<table class="pdf-solid-table"><tr>
-    <td><div class="lbl">15. LEAD INVESTIGATORS</div>${esc(r.lead_investigators || "")}</td>
+    <td><div class="lbl">15. LEAD INVESTIGATORS</div>${esc(normalizeDetectiveRankRoman(r.lead_investigators || ""))}</td>
     <td><div class="lbl">16a. PROSECUTOR</div>${esc(r.prosecutor || "TBA")}</td>
     <td style="width:18%"><div class="lbl">16b. TIME START</div>${fmtDate(r.prosecutor_time_start)}</td>
     <td style="width:18%"><div class="lbl">16c. TIME END</div>${fmtDate(r.prosecutor_time_end)}</td>
+  </tr></table>`;
+
+  body += `<table class="pdf-solid-table"><tr>
+    <td><div class="lbl">FIRST RESPONDER (NAME)</div>${esc(r.first_responder_name || "")}</td>
+    <td><div class="lbl">FIRST RESPONDER (OCCUPATION)</div>${esc(r.first_responder_occupation || "")}</td>
+  </tr><tr>
+    <td><div class="lbl">MEDIC INVOLVED (NAME)</div>${esc(r.medic_involved_name || "")}</td>
+    <td><div class="lbl">MEDIC INVOLVED (ROLE)</div>${esc(r.medic_involved_role || "")}</td>
   </tr></table>`;
 
   // 17. Victims summary — each victim row-group stays on one sheet when possible
@@ -480,7 +521,9 @@ export function buildPDFDocument(r) {
     r.victims.forEach((v) => {
       body += `<tbody class="pdf-row-group"><tr>
       <td>${esc(v.id_code || "")}</td><td>${esc(v.full_name || "")}</td><td>${esc(v.age || "")}</td><td>${esc(v.sex || "")}</td><td>${esc(v.race || "")}</td><td>${esc(v.telephone || "-")}</td><td>${esc(v.welfare_occupation || "")}</td></tr>
-      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>Notes: ${esc(v.notes || "-")}</td><td colspan="3" style="font-size:7.5pt;color:#444">Welfare, Occupation<br/>${esc(v.welfare_occupation || "")}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(v.family || "-")}</td></tr>
+      <tr><td colspan="7" style="font-size:7.5pt;color:#444">Cause of death: ${esc(v.cause_of_death || "—")} &nbsp;|&nbsp; Cause of injury: ${esc(v.cause_of_injury || "—")}<br/>
+      Family / contact: ${esc(v.family_contact_name || "—")} &nbsp; ${esc(v.family_contact_phone || "")}<br/>
+      Medical debrief: ${esc(v.medical_debrief || v.notes || "—")}</td></tr>
       </tbody>`;
     });
     body += `</table>`;
@@ -493,7 +536,8 @@ export function buildPDFDocument(r) {
     r.suspects.forEach((s) => {
       body += `<tbody class="pdf-row-group"><tr>
       <td>${esc(s.id_code || "")}</td><td>${esc(s.full_name || "")}</td><td>${esc(s.age || "")}</td><td>${esc(s.sex || "")}</td><td>${esc(s.race || "")}</td><td>${esc(s.telephone || "-")}</td><td>${esc(s.welfare_occupation || "")}</td></tr>
-      <tr><td style="font-size:7.5pt;color:#444">PERSONAL<br/>${esc(s.telephone || "-")}</td><td colspan="3" style="font-size:7.5pt;color:#444">Status, Welfare, Occupation<br/>${esc(s.welfare_occupation || "-")}</td><td colspan="3" style="font-size:7.5pt;color:#444">FAMILY<br/>${esc(s.family || "-")}</td></tr>
+      <tr><td colspan="7" style="font-size:7.5pt;color:#444">Affiliation: ${esc(s.affiliation || "—")} &nbsp;|&nbsp; Phone: ${esc(s.telephone || "—")}<br/>
+      Reason of suspicion: ${esc(s.reason_of_suspicion || "—")}</td></tr>
       <tr><td colspan="7" style="font-size:7.5pt;color:#444">Interrogations: ${esc(s.interrogation_url || "-")}</td></tr>
       </tbody>`;
     });
@@ -527,20 +571,34 @@ export function buildPDFDocument(r) {
   body += `</div>`;
 
   // ── SECTION B: DEBRIEF ──────────────────────────────────────────────────
-  if (r.debrief_entries && r.debrief_entries.length) {
+  const hasDebrief = r.debrief_entries && r.debrief_entries.length;
+  const hasIncidentPad =
+    !!(r.incident_report_optional && String(r.incident_report_optional).trim()) ||
+    !!(r.incident_report_written_by && String(r.incident_report_written_by).trim());
+  if (hasDebrief || hasIncidentPad) {
     body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
       ph,
       "B. Debrief of Incident",
     )}`;
-    r.debrief_entries.forEach((d, i) => {
-      body += `<div class="debrief-entry-block print-keep">`;
-      body += `<table class="compact-avoid"><tr>
+    if (hasIncidentPad) {
+      body += `<div class="print-keep" style="margin-bottom:12px">`;
+      body += `<table class="pdf-solid-table"><tr>
+        <td><div class="lbl">Incident report (optional)</div><div class="narrative">${esc(r.incident_report_optional || "")}</div></td>
+      </tr><tr>
+        <td><div class="lbl">Written by</div>${esc(r.incident_report_written_by || "")}</td>
+      </tr></table></div>`;
+    }
+    if (hasDebrief) {
+      r.debrief_entries.forEach((d, i) => {
+        body += `<div class="debrief-entry-block print-keep">`;
+        body += `<table class="compact-avoid"><tr>
         <td style="width:40%"><div class="lbl">${i + 1}a. TITLE</div>${esc(d.title || "")}</td>
         <td><div class="lbl">b. DATE OF INCIDENT</div>${fmtDate(d.date_of_incident)}</td>
       </tr></table>`;
-      body += `<div class="narrative">${esc(d.content || "")}</div>`;
-      body += `</div>`;
-    });
+        body += `<div class="narrative">${esc(d.content || "")}</div>`;
+        body += `</div>`;
+      });
+    }
     body += `</div>`;
     body += `</div>`;
   }
@@ -578,6 +636,11 @@ export function buildPDFDocument(r) {
           "&ldquo;SUSPECT MUGSHOT/<br/>AVAILABLE PICTURE&rdquo;",
         )}</td>
       </tr></table>`;
+      body += `<table class="pdf-solid-table" style="margin-top:8px;width:100%"><tr>
+        <td style="width:35%"><div class="lbl">Affiliation</div>${esc(s.affiliation || "")}</td>
+        <td style="width:20%"><div class="lbl">Telephone</div>${esc(s.telephone || "")}</td>
+        <td><div class="lbl">Reason of suspicion</div>${esc(s.reason_of_suspicion || "")}</td>
+      </tr></table>`;
       body += `</div>`;
     });
     body += `</div>`;
@@ -601,10 +664,16 @@ export function buildPDFDocument(r) {
         <td style="width:10%"><div class="lbl">RACE (e)</div>${esc(v.race || "")}</td>
         <td style="width:16%"><div class="lbl">TELEPHONE (f)</div>${esc(v.telephone || "-")}</td>
       </tr><tr>
-        <td colspan="2"><div class="lbl">Welfare, Occupation</div>${esc(v.welfare_occupation || "")}</td>
-        <td colspan="3"><div class="lbl">Notes</div>${esc(v.notes || "-")}</td>
+        <td colspan="5"><div class="lbl">Welfare, Occupation</div>${esc(v.welfare_occupation || "")}</td>
       </tr><tr>
-        <td colspan="5"><div class="lbl">FAMILY</div>${esc(v.family || "-")}</td>
+        <td colspan="5"><div class="lbl">Cause of death</div>${esc(v.cause_of_death || "—")}</td>
+      </tr><tr>
+        <td colspan="5"><div class="lbl">Cause of injury</div>${esc(v.cause_of_injury || "—")}</td>
+      </tr><tr>
+        <td colspan="2"><div class="lbl">Family / contact (name)</div>${esc(v.family_contact_name || "—")}</td>
+        <td colspan="3"><div class="lbl">Family / contact (phone)</div>${esc(v.family_contact_phone || "—")}</td>
+      </tr><tr>
+        <td colspan="5"><div class="lbl">Medical debrief</div><div class="narrative">${esc(v.medical_debrief || v.notes || "")}</div></td>
       </tr></table>`;
       if (v.autopsy_by || v.autopsy_summary) {
         body += `<div class="print-keep">`;
@@ -651,7 +720,11 @@ export function buildPDFDocument(r) {
           <td></td>
           <td><div class="lbl">d. Welfare</div>${esc(w.welfare || "")}</td>
           <td colspan="2"><div class="lbl">e. Occupation</div>${esc(witnessOccupation(w))}</td>
-        </tr></table>`;
+        </tr>`;
+      if (asPdfBool(w.is_expert)) {
+        body += `<tr><td></td><td colspan="3"><div class="lbl">Expert witness</div>${chk(true)} &nbsp; ${esc(w.expertise || "")}</td></tr>`;
+      }
+      body += `</table>`;
       body += `<div class="lbl" style="margin-top:5px">f. Content</div>`;
       body += `<div class="narrative">${esc(w.content || "")}</div>`;
       body += `<div class="sign-line">[${esc(w.full_name || "")}]</div>`;
@@ -673,7 +746,7 @@ export function buildPDFDocument(r) {
           <td style="width:15%"><div class="lbl">c. STATUS OF EVIDENCE</div>${esc(e.evidence_status || "")}</td>
           <td style="width:18%"><div class="lbl">d. DATE OF RETRIEVAL</div>${fmtDate(e.date_of_retrieval)}</td>
         </tr></table>`;
-      body += `<div class="lbl" style="margin-top:4px">l. IMAGE</div>`;
+      body += `<div class="lbl" style="margin-top:4px">l. IMAGE (${esc(evidenceCropAspectLabel(e))})</div>`;
       body += pdfFramedPhotoHtml(
         e.image_url,
         e.image_orientation || "landscape",
@@ -723,7 +796,7 @@ export function buildPDFDocument(r) {
     <td><div class="lbl">b. SIGNATURE &mdash; d. DATE</div>${fmtDate(r.closure_date)}</td>
     <td style="width:20%"><div class="lbl">c. RETURNED TO SERVICE</div>${fmtDate(r.closure_returned_to_service)}</td>
   </tr><tr>
-    <td colspan="2"><div class="lbl">c. NAME</div>${esc(r.closure_detective_name || "")}</td>
+    <td colspan="2"><div class="lbl">c. NAME</div>${esc(normalizeDetectiveRankRoman(r.closure_detective_name || ""))}</td>
     <td colspan="3"></td>
   </tr></table>`;
 
@@ -838,6 +911,12 @@ export const DEMO_REPORT = {
   detective_cleared_forensics: false,
   detective_referred_to: null,
   detective_date_referral: null,
+  first_responder_name: null,
+  first_responder_occupation: null,
+  medic_involved_name: null,
+  medic_involved_role: null,
+  incident_report_optional: null,
+  incident_report_written_by: null,
   debrief_entries: [],
   victims: [],
   suspects: [],

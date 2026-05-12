@@ -105,6 +105,27 @@
 .ir-section        { display: none; }
 .ir-section.active { display: block; }
 
+/* Victim welfare: cause panels */
+.victim-welfare-popout {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  border-radius: 4px;
+  background: rgba(201, 168, 76, 0.06);
+  box-shadow: 0 0 0 1px rgba(13, 21, 37, 0.8);
+}
+.victim-welfare-popout .popout-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #C9A84C;
+  margin-bottom: 10px;
+}
+
+.witness-expert-row {
+  margin-top: 8px;
+}
+
 /* ── Cards ── */
 .ir-card {
   background: #0F1928;
@@ -314,7 +335,13 @@ select option      { background: #111827; }
   display: block;
   margin-bottom: 8px;
 }
-.ir-photo-modal-orient .check-item { margin-right: 16px; }
+.ir-photo-modal-orient-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+.ir-photo-modal-orient .check-item { margin-right: 0; }
 .ir-photo-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
 .ir-photo-modal-actions--top { justify-content: flex-start; margin-top: 10px; }
 .ir-photo-modal-crop-wrap {

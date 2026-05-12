@@ -44,6 +44,24 @@ function setCheckbox(id, val) {
   if (el) el.checked = !!val;
 }
 
+/** Detective 3 → Detective III (Arabic 1–10 only). */
+const DETECTIVE_RANK_ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+function normalizeDetectiveRankRoman(text) {
+  if (text == null || text === '') return '';
+  let s = String(text);
+  s = s.replace(/\bDetective\.?\s*(\d{1,2})\b/gi, (_, num) => {
+    const n = parseInt(num, 10);
+    if (n >= 1 && n <= 10) return `Detective ${DETECTIVE_RANK_ROMAN[n]}`;
+    return `Detective ${num}`;
+  });
+  s = s.replace(/\bDet\.?\s*(\d{1,2})\b/gi, (_, num) => {
+    const n = parseInt(num, 10);
+    if (n >= 1 && n <= 10) return `Det. ${DETECTIVE_RANK_ROMAN[n]}`;
+    return `Det. ${num}`;
+  });
+  return s;
+}
+
 // ── loading overlay ─────────────────────────────────────────
 function showLoad(label) {
   const ov = document.getElementById('pdf-loading-overlay');
@@ -171,6 +189,20 @@ function addSuspect(data) {
     <div class="form-group">
       <label>Interrogation Summary</label>
       <textarea id="sus-interro-${n}" rows="3" placeholder="Summary of interrogation if conducted...">${esc(data?.interrogation_summary)}</textarea>
+    </div>
+    <div class="form-grid form-grid-2" style="margin-top:12px">
+      <div class="form-group">
+        <label>Affiliation <span class="hint">Gang/Community</span></label>
+        <input type="text" id="sus-aff-${n}" placeholder="" value="${esc(data?.affiliation)}"/>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" id="sus-phone-${n}" placeholder="" value="${esc(data?.telephone)}"/>
+      </div>
+      <div class="form-group span-2">
+        <label>Reason of Suspicion</label>
+        <textarea id="sus-reason-${n}" rows="2" placeholder="Why is this person identified as suspect">${esc(data?.reason_of_suspicion)}</textarea>
+      </div>
     </div>`;
   document.getElementById('suspectContainer').appendChild(div);
   syncPhotoRowFromData('suspect', n, data || {});
@@ -227,10 +259,10 @@ function addVictim(data) {
           <div class="form-group">
             <label>Welfare</label>
             <select id="vic-welfare-${n}">
-              <option ${welfareMatch(data?.welfare_occupation,'Deceased')}>Deceased</option>
-              <option ${welfareMatch(data?.welfare_occupation,'Alive')}>Alive</option>
-              <option ${welfareMatch(data?.welfare_occupation,'Critical')}>Critical</option>
-              <option ${welfareMatch(data?.welfare_occupation,'Unknown')}>Unknown</option>
+              <option value="Deceased" ${welfareMatch(data?.welfare_occupation,'Deceased')}>Deceased</option>
+              <option value="Alive" ${welfareMatch(data?.welfare_occupation,'Alive')}>Alive</option>
+              <option value="Critical" ${welfareMatch(data?.welfare_occupation,'Critical')}>Critical</option>
+              <option value="Unknown" ${welfareMatch(data?.welfare_occupation,'Unknown')}>Unknown</option>
             </select>
           </div>
           <div class="form-group">
@@ -240,10 +272,31 @@ function addVictim(data) {
         </div>
       </div>
     </div>
-    <hr class="ir-divider"/>
+    <div id="vic-panel-death-${n}" class="victim-welfare-popout" style="display:none">
+      <div class="popout-title">Cause of Death</div>
+      <div class="form-group">
+        <textarea id="vic-cod-${n}" rows="3" placeholder="">${esc(data?.cause_of_death)}</textarea>
+      </div>
+    </div>
+    <div id="vic-panel-injury-${n}" class="victim-welfare-popout" style="display:none">
+      <div class="popout-title">Cause of Injury</div>
+      <div class="form-group">
+        <textarea id="vic-coi-${n}" rows="3" placeholder="">${esc(data?.cause_of_injury)}</textarea>
+      </div>
+    </div>
+    <div class="form-grid form-grid-2" style="margin-top:12px">
+      <div class="form-group">
+        <label>Family / Contact Person &mdash; Name</label>
+        <input type="text" id="vic-fam-name-${n}" placeholder="" value="${esc(data?.family_contact_name)}"/>
+      </div>
+      <div class="form-group">
+        <label>Family / Contact Person &mdash; Phone Number</label>
+        <input type="text" id="vic-fam-phone-${n}" placeholder="" value="${esc(data?.family_contact_phone)}"/>
+      </div>
+    </div>
     <div class="form-group" style="margin-bottom:14px">
-      <label>Additional Notes / Family</label>
-      <textarea id="vic-notes-${n}" rows="2" placeholder="Any additional notes...">${esc(data?.notes)}</textarea>
+      <label>Medical Debrief</label>
+      <textarea id="vic-med-${n}" rows="3" placeholder="Informasi dari dokter yang mengurus pasien.">${esc(data?.medical_debrief || data?.notes)}</textarea>
     </div>
     <hr class="ir-divider"/>
     <div style="margin-bottom:10px">
@@ -261,6 +314,7 @@ function addVictim(data) {
     </div>`;
   document.getElementById('victimContainer').appendChild(div);
   syncPhotoRowFromData('victim', n, data || {});
+  bindVictimWelfarePanels(n);
 }
 
 // Helper: select welfare from stored string
@@ -273,6 +327,19 @@ function welfareOccPart(stored) {
   if (!stored) return '';
   const parts = stored.split(' / ');
   return parts.length > 1 ? parts.slice(1).join(' / ') : '';
+}
+
+function bindVictimWelfarePanels(n) {
+  const sel = document.getElementById(`vic-welfare-${n}`);
+  const death = document.getElementById(`vic-panel-death-${n}`);
+  const inj = document.getElementById(`vic-panel-injury-${n}`);
+  const sync = () => {
+    const v = (sel && sel.value) || '';
+    if (death) death.style.display = v === 'Deceased' ? 'block' : 'none';
+    if (inj) inj.style.display = v === 'Critical' ? 'block' : 'none';
+  };
+  if (sel) sel.addEventListener('change', sync);
+  sync();
 }
 
 // ── SECTION E: Witnesses ─────────────────────────────────────
@@ -289,8 +356,8 @@ function addWitness(data) {
     </div>
     <div class="form-grid form-grid-3" style="margin-bottom:10px">
       <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="wit-name-${n}" placeholder="Witness Name" value="${esc(data?.full_name)}"/>
+        <label>Name</label>
+        <input type="text" id="wit-name-${n}" placeholder="" value="${esc(data?.full_name)}"/>
       </div>
       <div class="form-group">
         <label>Status</label>
@@ -311,15 +378,35 @@ function addWitness(data) {
         </select>
       </div>
     </div>
+    <div class="form-group witness-expert-row">
+      <label class="check-item"><input type="checkbox" id="wit-expert-${n}" ${data?.is_expert ? 'checked' : ''}/><span>Expert Witness (Saksi Ahli)</span></label>
+    </div>
+    <div id="wit-exp-row-${n}" class="witness-expert-row" style="display:${data?.is_expert ? 'block' : 'none'}">
+      <div class="form-group" style="margin-bottom:10px">
+        <label>Occupation / Expertise</label>
+        <input type="text" id="wit-exp-${n}" placeholder="" value="${esc(data?.expertise)}"/>
+      </div>
+    </div>
     <div class="form-group" style="margin-bottom:10px">
       <label>Occupation</label>
-      <input type="text" id="wit-occ-${n}" placeholder="e.g. Detective of CIB" value="${esc(data?.welfare_occupation)}"/>
+      <input type="text" id="wit-occ-${n}" placeholder="e.g. Detective of CIB" value="${esc(data?.welfare_occupation ?? data?.occupation)}"/>
     </div>
     <div class="form-group">
       <label>Affidavit / Testimony Content</label>
       <textarea id="wit-content-${n}" rows="5" placeholder="Full testimony content...">${esc(data?.content)}</textarea>
     </div>`;
   document.getElementById('witnessContainer').appendChild(div);
+  bindWitnessExpertRow(n);
+}
+
+function bindWitnessExpertRow(n) {
+  const cb = document.getElementById(`wit-expert-${n}`);
+  const row = document.getElementById(`wit-exp-row-${n}`);
+  const sync = () => {
+    if (row) row.style.display = cb && cb.checked ? 'block' : 'none';
+  };
+  if (cb) cb.addEventListener('change', sync);
+  sync();
 }
 
 // ── SECTION F: Evidence ──────────────────────────────────────
@@ -329,6 +416,7 @@ function addEvidence(data) {
   const div = document.createElement('div');
   div.className = 'repeat-item';
   div.id = `evidence-${n}`;
+  const evOriInit = normalizePhotoOrientation(data?.image_orientation, 'landscape');
   div.innerHTML = `
     <div class="repeat-item-header">
       <div class="repeat-item-id">EVIDENCE ID: e.${n}</div>
@@ -343,7 +431,7 @@ function addEvidence(data) {
           <p>CLICK TO SET URL</p>
           <div id="ev-pthumb-${n}" class="photo-thumb-fill"></div>
           <input type="hidden" id="ev-purl-${n}" value=""/>
-          <input type="hidden" id="ev-pori-${n}" value="${data?.image_orientation === 'portrait' ? 'portrait' : 'landscape'}"/>
+          <input type="hidden" id="ev-pori-${n}" value="${evOriInit}"/>
           <input type="hidden" id="ev-pcrop-${n}" value=""/>
         </div>
       </div>
@@ -356,10 +444,10 @@ function addEvidence(data) {
           <div class="form-group">
             <label>Evidence Was</label>
             <select id="ev-was-${n}">
-              <option ${selMatch(data?.evidence_was,'Secured')}>Secured</option>
-              <option ${selMatch(data?.evidence_was,'Unsecured')}>Unsecured</option>
-              <option ${selMatch(data?.evidence_was,'Destroyed')}>Destroyed</option>
-              <option ${selMatch(data?.evidence_was,'Lost')}>Lost</option>
+              <option ${selMatch(data?.evidence_was ?? data?.was_status,'Secured')}>Secured</option>
+              <option ${selMatch(data?.evidence_was ?? data?.was_status,'Unsecured')}>Unsecured</option>
+              <option ${selMatch(data?.evidence_was ?? data?.was_status,'Destroyed')}>Destroyed</option>
+              <option ${selMatch(data?.evidence_was ?? data?.was_status,'Lost')}>Lost</option>
             </select>
           </div>
           <div class="form-group">
@@ -377,6 +465,13 @@ function addEvidence(data) {
             <label>Date of Retrieval</label>
             <input type="date" id="ev-date-${n}" value="${esc(data?.date_of_retrieval)}"/>
           </div>
+          <div class="form-group">
+            <label>Crop</label>
+            <select id="ev-aspect-${n}">
+              <option value="free" ${selMatch(data?.image_crop_aspect || 'free','free')}>Free</option>
+              <option value="square" ${selMatch(data?.image_crop_aspect,'square')}>Square</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -386,6 +481,8 @@ function addEvidence(data) {
     </div>`;
   document.getElementById('evidenceContainer').appendChild(div);
   syncPhotoRowFromData('evidence', n, data || {});
+  const asp = document.getElementById(`ev-aspect-${n}`);
+  if (asp) asp.addEventListener('change', () => renderPhotoThumb('evidence', n));
 }
 
 // Helper: select match
@@ -401,6 +498,13 @@ function esc(v) {
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+}
+
+/** Mugshot / victim photo / exhibit frame: portrait | landscape | square (1:1). */
+function normalizePhotoOrientation(raw, fallback) {
+  const s = String(raw || '').toLowerCase();
+  if (s === 'landscape' || s === 'portrait' || s === 'square') return s;
+  return fallback;
 }
 
 // ── Remote image modal (Cropper.js) ──────────────────────────────────
@@ -420,18 +524,18 @@ function storedImageTriple(kind, data) {
   if (kind === 'suspect')
     return {
       url: data.mugshot_url || '',
-      orientation: String(data.mugshot_orientation || 'portrait').toLowerCase(),
+      orientation: normalizePhotoOrientation(data.mugshot_orientation, 'portrait'),
       crop: cropFromDb(data.mugshot_crop),
     };
   if (kind === 'victim')
     return {
       url: data.photo_url || '',
-      orientation: String(data.photo_orientation || 'portrait').toLowerCase(),
+      orientation: normalizePhotoOrientation(data.photo_orientation, 'portrait'),
       crop: cropFromDb(data.photo_crop),
     };
   return {
     url: data.image_url || '',
-    orientation: String(data.image_orientation || 'landscape').toLowerCase(),
+    orientation: normalizePhotoOrientation(data.image_orientation, 'landscape'),
     crop: cropFromDb(data.image_crop),
   };
 }
@@ -540,10 +644,15 @@ function renderPhotoThumb(kind, rowN) {
   );
   if (!thumb || !urlEl || !box) return;
   const ori = ((oriEl && oriEl.value) || 'portrait').toLowerCase();
-  const landscape = ori === 'landscape';
-  if (kind === 'evidence') {
-    thumb.style.aspectRatio = landscape ? '180 / 110' : '110 / 180';
+  if (ori === 'square') {
+    thumb.style.aspectRatio = '1 / 1';
+  } else if (kind === 'evidence') {
+    const landscape = ori === 'landscape';
+    const aspEl = document.getElementById(`ev-aspect-${rowN}`);
+    const sq = aspEl && aspEl.value === 'square';
+    thumb.style.aspectRatio = sq ? '1 / 1' : landscape ? '180 / 110' : '110 / 180';
   } else {
+    const landscape = ori === 'landscape';
     thumb.style.aspectRatio = landscape ? '150 / 120' : '120 / 150';
   }
   const url = (urlEl.value || '').trim();
@@ -569,8 +678,15 @@ function syncPhotoRowFromData(kind, rowN, data) {
   if (!u || !o || !c) return;
   const t = storedImageTriple(kind, data);
   u.value = t.url || '';
-  o.value = t.orientation === 'landscape' ? 'landscape' : 'portrait';
+  o.value = normalizePhotoOrientation(t.orientation, kind === 'evidence' ? 'landscape' : 'portrait');
   c.value = t.crop && isValidNormalizedCrop(t.crop) ? JSON.stringify(t.crop) : '';
+  if (kind === 'evidence') {
+    const aspEl = document.getElementById(`ev-aspect-${rowN}`);
+    if (aspEl) {
+      const sq = String(data?.image_crop_aspect || 'free').toLowerCase() === 'square';
+      aspEl.value = sq ? 'square' : 'free';
+    }
+  }
   renderPhotoThumb(kind, rowN);
 }
 
@@ -586,10 +702,13 @@ function destroyIrPhotoCropper() {
 }
 
 function modalAspectRatio() {
+  if (!irPhotoModalContext) return 1;
+  const sqFrame = document.getElementById('irPhotoModalOrientS');
+  if (sqFrame && sqFrame.checked) return 1;
+  const { kind, evidenceSquare } = irPhotoModalContext;
+  if (kind === 'evidence' && evidenceSquare) return 1;
   const orientL = document.getElementById('irPhotoModalOrientL');
   const landscape = orientL && orientL.checked;
-  if (!irPhotoModalContext) return 1;
-  const { kind } = irPhotoModalContext;
   if (kind === 'evidence') return landscape ? 180 / 110 : 110 / 180;
   return landscape ? 150 / 120 : 120 / 150;
 }
@@ -609,9 +728,18 @@ function openPhotoModal(kind, rowN, evt) {
     evt.stopPropagation();
   }
   irPhotoModalContext = { kind, rowN };
+  if (kind === 'evidence') {
+    const a = document.getElementById(`ev-aspect-${rowN}`);
+    irPhotoModalContext.evidenceSquare = !!(a && a.value === 'square');
+  } else {
+    irPhotoModalContext.evidenceSquare = false;
+  }
   const p = photoPrefix(kind);
   const url = (document.getElementById(`${p}-purl-${rowN}`)?.value || '').trim();
-  const ori = (document.getElementById(`${p}-pori-${rowN}`)?.value || (kind === 'evidence' ? 'landscape' : 'portrait')).toLowerCase();
+  const ori = normalizePhotoOrientation(
+    document.getElementById(`${p}-pori-${rowN}`)?.value || (kind === 'evidence' ? 'landscape' : 'portrait'),
+    kind === 'evidence' ? 'landscape' : 'portrait',
+  );
 
   ensureFreshModalImage();
 
@@ -620,9 +748,11 @@ function openPhotoModal(kind, rowN, evt) {
 
   const rp = document.getElementById('irPhotoModalOrientP');
   const rl = document.getElementById('irPhotoModalOrientL');
-  if (rp && rl) {
-    rp.checked = ori !== 'landscape';
+  const rs = document.getElementById('irPhotoModalOrientS');
+  if (rp && rl && rs) {
+    rp.checked = ori === 'portrait';
     rl.checked = ori === 'landscape';
+    rs.checked = ori === 'square';
   }
 
   const shell = document.getElementById('irPhotoModal');
@@ -705,6 +835,12 @@ function irPhotoModalLoadPreview() {
   img.src = url;
 }
 
+function irPhotoModalSavedOrientation() {
+  if (document.getElementById('irPhotoModalOrientS')?.checked) return 'square';
+  if (document.getElementById('irPhotoModalOrientL')?.checked) return 'landscape';
+  return 'portrait';
+}
+
 function irPhotoModalSave() {
   const ctx = irPhotoModalContext;
   if (!ctx) return closePhotoModal();
@@ -713,8 +849,7 @@ function irPhotoModalSave() {
     if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast) PortalAuth.showToast('URL required', 'error');
     return;
   }
-  const orientL = document.getElementById('irPhotoModalOrientL');
-  const orient = orientL && orientL.checked ? 'landscape' : 'portrait';
+  const orient = irPhotoModalSavedOrientation();
   const p = photoPrefix(ctx.kind);
   const img = document.getElementById('irPhotoModalImg');
   let cropStr = '';
@@ -783,7 +918,9 @@ function collectSuspects() {
       welfare_occupation  : getVal(`sus-occ-${n}`) || null,
       description         : getVal(`sus-desc-${n}`) || null,
       interrogation_summary: getVal(`sus-interro-${n}`) || null,
-      telephone           : null,
+      affiliation         : getVal(`sus-aff-${n}`) || null,
+      reason_of_suspicion : getVal(`sus-reason-${n}`) || null,
+      telephone           : getVal(`sus-phone-${n}`) || null,
       family              : null,
       mugshot_url           : getVal(`sus-purl-${n}`) || null,
       mugshot_orientation   : getVal(`sus-pori-${n}`) || 'portrait',
@@ -811,8 +948,13 @@ function collectVictims() {
       race            : getVal(`vic-race-${n}`) || null,
       telephone       : null,
       welfare_occupation : welfareOcc || null,
-      notes           : getVal(`vic-notes-${n}`) || null,
+      notes           : null,
       family          : null,
+      cause_of_death  : getVal(`vic-cod-${n}`) || null,
+      cause_of_injury : getVal(`vic-coi-${n}`) || null,
+      family_contact_name : getVal(`vic-fam-name-${n}`) || null,
+      family_contact_phone : getVal(`vic-fam-phone-${n}`) || null,
+      medical_debrief : getVal(`vic-med-${n}`) || null,
       autopsy_by      : getVal(`vic-doctor-${n}`) || null,
       autopsy_summary : getVal(`vic-autopsy-${n}`) || null,
       photo_url       : getVal(`vic-purl-${n}`) || null,
@@ -836,6 +978,8 @@ function collectWitnesses() {
       welfare           : getVal(`wit-welfare-${n}`) || null,
       welfare_occupation: getVal(`wit-occ-${n}`) || null,
       content           : getVal(`wit-content-${n}`) || null,
+      is_expert         : getCheckboxValue(`wit-expert-${n}`),
+      expertise         : getVal(`wit-exp-${n}`) || null,
       telephone         : null,
       family            : null
     });
@@ -859,6 +1003,7 @@ function collectEvidences() {
       image_url        : getVal(`ev-purl-${n}`) || null,
       image_orientation : getVal(`ev-pori-${n}`) || 'landscape',
       image_crop       : parseCropFromHidden(getVal(`ev-pcrop-${n}`)),
+      image_crop_aspect : getVal(`ev-aspect-${n}`) === 'square' ? 'square' : 'free',
     });
   });
   return out;
@@ -891,13 +1036,19 @@ function buildPayload() {
     jurisdiction_sast        : getCheckboxValue('jur_sast'),
     jurisdiction_lscs        : getCheckboxValue('jur_lscs'),
     jurisdiction_state       : getCheckboxValue('jur_state'),
-    lead_investigators       : getVal('lead_investigators') || null,
+    lead_investigators       : normalizeDetectiveRankRoman(getVal('lead_investigators')) || null,
     prosecutor               : getVal('prosecutor') || null,
     prosecutor_time_start    : getVal('prosecutor_time_start') || null,
     prosecutor_time_end      : getVal('prosecutor_time_end') || null,
     suspect_status           : getCheckedRadio('suspectStatus') || null,
     suspect_disposition      : getCheckedRadio('suspectDisp') || null,
     suspect_notes            : getVal('suspect_notes') || null,
+    first_responder_name       : getVal('first_responder_name') || null,
+    first_responder_occupation : getVal('first_responder_occupation') || null,
+    medic_involved_name        : getVal('medic_involved_name') || null,
+    medic_involved_role        : getVal('medic_involved_role') || null,
+    incident_report_optional   : getVal('incident_report_optional') || null,
+    incident_report_written_by : getVal('incident_report_written_by') || null,
     closure_summary          : getVal('closure_summary') || null,
     closure_forensic         : getVal('closure_forensic') || null,
     closure_suspect_id       : getVal('closure_suspect_id') || null,
@@ -905,7 +1056,7 @@ function buildPayload() {
     closure_time_received    : getVal('closure_time_received') || null,
     closure_time_arrived     : getVal('closure_time_arrived') || null,
     closure_type             : getCheckedRadio('closure_type') || 'CID',
-    closure_detective_name   : getVal('closure_detective_name') || null,
+    closure_detective_name   : normalizeDetectiveRankRoman(getVal('closure_detective_name')) || null,
     closure_date             : getVal('closure_date') || null,
     closure_returned_to_service: getVal('closure_returned_to_service') || null,
     case_referred_to         : refs.join(',') || null,
@@ -1029,6 +1180,12 @@ function populateForm(r) {
   setCheckbox('jur_lscs',  r.jurisdiction_lscs);
   setCheckbox('jur_state', r.jurisdiction_state);
   setVal('lead_investigators',    r.lead_investigators);
+  setVal('first_responder_name',       r.first_responder_name);
+  setVal('first_responder_occupation', r.first_responder_occupation);
+  setVal('medic_involved_name',        r.medic_involved_name);
+  setVal('medic_involved_role',        r.medic_involved_role || '');
+  setVal('incident_report_optional',   r.incident_report_optional);
+  setVal('incident_report_written_by', r.incident_report_written_by);
   setVal('prosecutor',            r.prosecutor);
   setVal('prosecutor_time_start', r.prosecutor_time_start);
   setVal('prosecutor_time_end',   r.prosecutor_time_end);
@@ -1162,7 +1319,7 @@ function applySessionDefaults() {
   }
 
   if (!getVal('lead_investigators') && leadLine) {
-    setVal('lead_investigators', leadLine);
+    setVal('lead_investigators', normalizeDetectiveRankRoman(leadLine));
   }
 
   const anyJur = getCheckboxValue('jur_lspd') || getCheckboxValue('jur_sast')
@@ -1196,7 +1353,7 @@ function applySessionDefaults() {
 
   // Section G — closure: detective line + type + file opened
   if (!getVal('closure_detective_name') && leadLine) {
-    setVal('closure_detective_name', leadLine);
+    setVal('closure_detective_name', normalizeDetectiveRankRoman(leadLine));
   }
   if (!getVal('prosecutor_final_name')) {
     setVal('prosecutor_final_name', 'TBA');
