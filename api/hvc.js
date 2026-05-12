@@ -291,3 +291,67 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+// ============================================================
+//  CIB — ONBOARDING FLAG  (appended to hvc.js, no new file)
+//  Endpoint: /api/hvc?action=onboarding
+//
+//  GET  /api/hvc?action=onboarding          → get has_onboarded for current user
+//  POST /api/hvc?action=onboarding          → mark current user as onboarded
+//
+//  ── Supabase DDL (run once) ──────────────────────────────────
+//  ALTER TABLE users ADD COLUMN IF NOT EXISTS has_onboarded BOOLEAN NOT NULL DEFAULT false;
+//
+//  That's it — one column on the existing 'users' table.
+// ============================================================
+
+export async function handleOnboarding(req, res) {
+  const session = await requireSession(req, res)
+  if (!session) return
+
+  const supabase = getSupabase()
+  const badge    = session.badge  // primary key / identifier for the user row
+
+  try {
+    if (!allowMethods(req, res, ['GET', 'POST'])) return
+
+    if (req.method === 'GET') {
+      const { data, error } = await supabase
+        .from('users')
+        .select('has_onboarded')
+        .eq('badge', badge)
+        .single()
+
+      if (error) throw error
+      return res.status(200).json({ success: true, has_onboarded: data?.has_onboarded ?? false })
+    }
+
+    if (req.method === 'POST') {
+      const { error } = await supabase
+        .from('users')
+        .update({ has_onboarded: true })
+        .eq('badge', badge)
+
+      if (error) throw error
+      return res.status(200).json({ success: true })
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' })
+
+  } catch(err) {
+    console.error('Onboarding API error:', err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+// ── Route multiplexer ─────────────────────────────────────────
+// The default export above handles /api/hvc (HVC CRUD).
+// To expose the onboarding sub-route, add this to your Vercel
+// routing OR create api/onboarding.js with just:
+//
+//   import { handleOnboarding } from './hvc.js'
+//   export default handleOnboarding
+//
+// That single-line file keeps everything in one place
+// while giving Vercel a clean route at /api/onboarding.
+// ────────────────────────────────────────────────────────────

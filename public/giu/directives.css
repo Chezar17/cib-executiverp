@@ -1300,28 +1300,40 @@ body.page-visible > :not(#access-gate) {
   overflow: hidden;
 }
 /* The zoomable group: image + pins + spotlight all live here so they scale together */
+/* The group fills the pane and is the zoom/pan target */
 .wm-brief-map-group {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform-origin: center center;
-  transition: transform 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  will-change: transform;
+  transition: transform 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform-origin 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, transform-origin;
 }
-/* Markers layer fills the whole group so left/top % match the image */
+/* wmbImgWrap is sized by JS to match the image aspect ratio.
+   Everything inside uses left/top % = exact image pixel %. */
+#wmbImgWrap {
+  position: relative;
+  flex-shrink: 0;
+  /* width/height set by JS after image loads */
+}
+.wm-brief-map-img {
+  display: block;
+  width: 100%; height: 100%;
+  opacity: 0.55;
+  filter: contrast(1.1) brightness(0.8);
+  pointer-events: none;
+  user-select: none;
+}
+/* Markers layer: now a sibling of the zoom group, covers the whole pane.
+   Pins are positioned in screen-pixel coords by JS — never scaled, always crisp. */
 #wmbMarkersLayer {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
-}
-.wm-brief-map-img {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0.55;
-  filter: contrast(1.1) brightness(0.8);
+  z-index: 6;   /* above zoom group (z:auto) and grid (z:3), below corners (z:4) */
 }
 .wm-brief-spotlight {
   position: absolute;
@@ -1330,9 +1342,10 @@ body.page-visible > :not(#access-gate) {
   transform: translate(-50%, -50%);
 }
 .wm-brief-spotlight-ring {
-  width: 60px; height: 60px;
+  /* Smaller at high zoom — the group is scaled 4-5×, so 20px ring = 80-100px visible */
+  width: 20px; height: 20px;
   border-radius: 50%;
-  border: 2px solid rgba(201,168,76,0.6);
+  border: 1.5px solid rgba(201,168,76,0.7);
   animation: spotPulse 1.5s ease-out infinite;
 }
 @keyframes spotPulse {
@@ -1341,11 +1354,11 @@ body.page-visible > :not(#access-gate) {
 }
 .wm-brief-spotlight-dot {
   position: absolute; top: 50%; left: 50%;
-  width: 12px; height: 12px;
+  width: 5px; height: 5px;
   border-radius: 50%;
   background: var(--gold);
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 20px rgba(201,168,76,0.8);
+  box-shadow: 0 0 8px rgba(201,168,76,0.9), 0 0 2px #fff;
 }
 
 /* crosshair lines from spotlight to map center */
@@ -1610,6 +1623,19 @@ body.page-visible > :not(#access-gate) {
   letter-spacing: 0.3px;
 }
 
+/* Image strip inside the objective phase header */
+.wm-brief-obj-img-strip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+/* Objective thumbnails are slightly taller to give them more presence */
+.wm-brief-obj-img-strip .wm-brief-img-thumb {
+  width: 80px;
+  height: 60px;
+}
+
 /* ── Accumulating markers list ── */
 .wm-brief-markers-list {
   flex: 1; overflow-y: auto;
@@ -1661,37 +1687,37 @@ body.page-visible > :not(#access-gate) {
   color: var(--gold); margin-top: 6px; opacity: 0.8;
 }
 
-/* ── Brief map pins (persistent layer) ── */
+/* ── Brief map pins (outside zoom group — always 1:1 device pixels, no blur) ── */
 .wm-brief-pin {
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);   /* JS also sets this; keep as fallback */
+  transform-origin: center center;
   z-index: 3;
   display: flex; flex-direction: column; align-items: center;
   pointer-events: none;
-  animation: pinReveal 0.4s ease both;
-}
-@keyframes pinReveal {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 .wm-brief-pin-dot {
-  width: 22px; height: 22px; border-radius: 50%;
+  width: 14px; height: 14px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 9px; font-weight: 700;
-  color: #fff; border: 2px solid rgba(255,255,255,0.25);
-  box-shadow: 0 0 10px currentColor;
+  font-family: var(--mono); font-size: 6px; font-weight: 700;
+  color: #fff; border: 1.5px solid rgba(255,255,255,0.5);
+  box-shadow: 0 0 5px var(--pin-color, #888);
 }
 .wm-brief-pin.is-objective .wm-brief-pin-dot {
-  width: 28px; height: 28px; font-size: 12px;
-  box-shadow: 0 0 18px var(--pin-color, #E74C3C), 0 0 40px rgba(231,76,60,0.3);
+  width: 18px; height: 18px; font-size: 8px;
+  border-width: 2px;
+  box-shadow: 0 0 8px var(--pin-color, #E74C3C), 0 0 16px rgba(231,76,60,0.35);
 }
 .wm-brief-pin-label {
   font-family: var(--mono);
-  font-size: 8px; letter-spacing: 1px;
-  color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-  white-space: nowrap; margin-top: 3px;
-  background: rgba(0,0,0,0.6); padding: 1px 5px;
-  max-width: 100px; overflow: hidden; text-overflow: ellipsis;
+  font-size: 6px; letter-spacing: 0.5px;
+  color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,1);
+  white-space: nowrap; margin-top: 2px;
+  background: rgba(0,0,0,0.75); padding: 1px 4px;
+  max-width: 80px; overflow: hidden; text-overflow: ellipsis;
+  border-radius: 1px;
 }
 
 /* ── Intel pane flex layout override ── */
@@ -1807,4 +1833,365 @@ body.page-visible > :not(#access-gate) {
 .wm-brief-voice input:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   WARMAP — PHOTO UPLOAD SLOTS (pin modal)
+════════════════════════════════════════════════════════════ */
+
+.wm-photo-slots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.wm-photo-slot {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.wm-photo-slot--filled {
+  border-color: rgba(201,168,76,0.35);
+}
+.wm-photo-slot:hover {
+  border-color: rgba(255,255,255,0.18);
+}
+
+/* Empty slot — plus button */
+.wm-photo-add {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.2);
+  transition: color 0.15s, background 0.15s;
+}
+.wm-photo-add:hover {
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.03);
+}
+.wm-photo-add svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+.wm-photo-add span {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Filled slot — photo preview */
+.wm-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* NEW badge overlay */
+.wm-photo-slot-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: rgba(201,168,76,0.9);
+  color: #000;
+  padding: 1px 5px;
+  pointer-events: none;
+}
+
+/* Remove button */
+.wm-photo-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0,0,0,0.8);
+  border: 1px solid rgba(192,57,43,0.5);
+  color: var(--red);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s;
+  z-index: 2;
+}
+.wm-photo-remove:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+/* Expand button on saved photos */
+.wm-photo-slot-expand {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.15s;
+}
+.wm-photo-slot-expand:hover {
+  background: rgba(201,168,76,0.8);
+  color: #000;
+}
+
+.wm-photo-hint {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  opacity: 0.4;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+/* ════════════════════════════════════════════════════════════
+   BRIEF MODE — IMAGE STRIP & COUNT BADGE
+════════════════════════════════════════════════════════════ */
+
+/* Image count badge next to marker type in intel pane */
+.wm-brief-img-count {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.25);
+  padding: 2px 7px;
+}
+
+/* Horizontal scrollable photo strip in the intel pane marker card */
+.wm-brief-img-strip {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201,168,76,0.3) transparent;
+}
+.wm-brief-img-strip::-webkit-scrollbar { height: 3px; }
+.wm-brief-img-strip::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); }
+
+.wm-brief-img-thumb {
+  position: relative;
+  width: 80px;
+  height: 60px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.wm-brief-img-thumb:hover {
+  border-color: rgba(201,168,76,0.5);
+}
+.wm-brief-img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  filter: brightness(0.85);
+  transition: filter 0.2s;
+}
+.wm-brief-img-thumb:hover img {
+  filter: brightness(1);
+}
+.wm-brief-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+}
+.wm-brief-img-overlay svg {
+  width: 18px;
+  height: 18px;
+  fill: #fff;
+}
+.wm-brief-img-thumb:hover .wm-brief-img-overlay {
+  opacity: 1;
+  background: rgba(0,0,0,0.35);
+}
+
+/* ════════════════════════════════════════════════════════════
+   PHOTO LIGHTBOX — fullscreen viewer
+════════════════════════════════════════════════════════════ */
+
+.wm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(0,0,0,0.97);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.wm-lightbox.open {
+  display: flex;
+}
+
+.wm-lightbox-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar */
+.wm-lightbox-topbar {
+  height: 48px;
+  flex-shrink: 0;
+  background: rgba(5,7,15,0.98);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  gap: 16px;
+}
+.wm-lightbox-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wm-lightbox-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: modalDotBlink 1s step-end infinite;
+}
+.wm-lightbox-title {
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.wm-lightbox-counter {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.wm-lightbox-close {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--muted);
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.wm-lightbox-close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* Image area */
+.wm-lightbox-img-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 24px 80px;
+}
+.wm-lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  animation: lightboxIn 0.25s ease both;
+}
+@keyframes lightboxIn {
+  from { opacity:0; transform:scale(0.97); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+/* Prev / Next nav arrows */
+.wm-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  z-index: 2;
+}
+.wm-lightbox-nav:hover {
+  background: rgba(192,57,43,0.7);
+  border-color: var(--red);
+  color: #fff;
+}
+.wm-lightbox-prev { left: 16px; }
+.wm-lightbox-next { right: 16px; }
+
+/* Thumbnail strip at bottom */
+.wm-lightbox-strip {
+  height: 72px;
+  flex-shrink: 0;
+  background: rgba(5,7,15,0.98);
+  border-top: 1px solid var(--line-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(192,57,43,0.3) transparent;
 }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -14,6 +14,130 @@
 <link rel="stylesheet" href="shared/styles/site-header.css"/>
 <script type="module" src="shared/components/site-header.js"></script>
 <link rel="stylesheet" href="styles/wanted.css"/>
+
+<!-- QR Code library (no build step needed) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+/* ── Loading / empty states ── */
+.mw-loading {
+  display:flex; flex-direction:column; align-items:center;
+  gap:18px; padding:80px 40px; text-align:center;
+}
+.mw-loading-bar {
+  width:200px; height:1px; background:rgba(255,255,255,0.08); overflow:hidden;
+}
+.mw-loading-progress {
+  height:100%; width:0%; background:var(--gold);
+  animation:mwLoad 1.4s ease forwards;
+}
+@keyframes mwLoad { to { width:100%; } }
+.mw-loading-text {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:3px;
+  color:var(--muted); text-transform:uppercase; opacity:0.6;
+}
+.mw-empty {
+  display:flex; flex-direction:column; align-items:center;
+  gap:14px; padding:80px 40px; text-align:center;
+}
+.mw-empty-icon {
+  font-family:'Oswald',sans-serif; font-size:48px; letter-spacing:2px;
+  color:rgba(201,168,76,0.2);
+}
+.mw-empty-title {
+  font-family:'Oswald',sans-serif; font-size:18px; letter-spacing:4px;
+  color:var(--muted); text-transform:uppercase; opacity:0.5;
+}
+.mw-empty-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1px;
+  color:var(--muted); opacity:0.4;
+}
+.mw-error {
+  display:flex; flex-direction:column; align-items:center;
+  gap:12px; padding:60px 40px; text-align:center;
+}
+.mw-error-title {
+  font-family:'Oswald',sans-serif; font-size:16px; letter-spacing:3px;
+  color:var(--red-alert); text-transform:uppercase; opacity:0.7;
+}
+.mw-error-sub {
+  font-family:'Roboto Mono',monospace; font-size:10px;
+  color:var(--muted); opacity:0.5;
+}
+
+/* ── Export Button ── */
+.card-export-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.35);
+  color: rgba(201,168,76,0.7);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+.card-export-btn:hover {
+  background: rgba(201,168,76,0.1);
+  border-color: rgba(201,168,76,0.7);
+  color: #c9a84c;
+}
+.card-export-btn svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+.card-export-btn.exporting {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Make card relatively positioned for the absolute button */
+.wanted-card {
+  position: relative;
+}
+
+/* ── Export Toast ── */
+#mwExportToast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #0d1117;
+  border: 1px solid rgba(201,168,76,0.4);
+  color: #c9a84c;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 9999;
+  white-space: nowrap;
+}
+#mwExportToast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Hidden QR render container ── */
+#mwQrContainer {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  width: 120px;
+  height: 120px;
+}
+</style>
 </head>
 <body>
 
@@ -40,158 +164,832 @@
 
   <div class="count-bar">
     <div class="count-bar-left">
-      <div class="count-num">01</div>
+      <div class="count-num" id="mwCountNum">—</div>
       <div class="count-label">Active Wanted<br>Individuals</div>
     </div>
-    <div class="count-bar-right">LAST UPDATED: 20 APR 2026 &middot; 08:00 HRS +7 GMT &nbsp;|&nbsp; CIB PRIORITY LIST</div>
+    <div class="count-bar-right" id="mwLastUpdated">LOADING... &nbsp;|&nbsp; CIB PRIORITY LIST</div>
   </div>
 
-  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       WANTED LIST
-       To add a new suspect, copy the block between
-       "SUSPECT ENTRY START" and "SUSPECT ENTRY END",
-       paste it at the TOP of this list, and fill in the fields.
-       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-  <div class="wanted-list">
-
-
-    <!-- â•â•â•â•â•â•â• SUSPECT ENTRY START â•â•â•â•â•â•â• -->
-    <div class="wanted-card">
-
-      <!-- LEFT: PHOTO COLUMN -->
-      <div class="suspect-photo-col">
-
-        <div class="suspect-photo">
-          <!--
-            HOW TO ADD PHOTO:
-            Delete the <div class="photo-placeholder"> block below
-            and replace with:
-            <img src="suspect-1.jpg" alt="D. Morales"/>
-
-            Recommended: portrait photo, 400x500px minimum.
-            Place the image in the same folder as this HTML file.
-          -->
-          <div class="photo-placeholder">
-            <svg viewBox="0 0 24 24"></svg>
-              <img src="images/ss_1.png" alt="D. Morales"/>
-          </div>
-        </div>
-
-        <!-- Case strip below photo -->
-        <div class="photo-case-strip">
-          <!-- EDIT: Case number -->
-          <div class="photo-case-id">CASE NO. CIB-MW-2026-002</div>
-          <!-- EDIT: Date suspect was added to wanted list -->
-          <div class="photo-date-wanted">WANTED SINCE: <span>April 7, 2026</span></div>
-        </div>
-
-      </div>
-
-      <!-- RIGHT: INFO COLUMN -->
-      <div class="suspect-info">
-
-        <!-- Name + Threat Level -->
-        <div class="suspect-header">
-          <div class="suspect-name-block">
-            <!-- EDIT: Alias (nickname), if none delete this line -->
-            <div class="suspect-alias">AKA "John Doe"</div>
-            <!-- EDIT: Full name -->
-            <div class="suspect-name">KILLER OF CHIEF ANKOOW ALREX</div>
-            <!-- EDIT: Suspect ID / DOB -->
-            <div class="suspect-id">SUSPECT ID: SS-01 &nbsp;|&nbsp; DOB: UNKNOWN &nbsp;|&nbsp; NATIONALITY: UNKNOWN</div>
-          </div>
-          <!-- EDIT: Change class to threat-critical / threat-high / threat-medium / threat-low -->
-          <div class="threat-badge threat-critical">
-            <div class="threat-badge-label">Threat Level</div>
-            <div class="threat-badge-level">Critical</div>
-          </div>
-        </div>
-
-        <!-- Bounty -->
-        <div class="bounty-row">
-          <div>
-            <div class="bounty-label">Bounty on Capture</div>
-            <!-- EDIT: Bounty note -->
-            <div class="bounty-note">Dead or Alive &middot; Authorized by CIB Director</div>
-          </div>
-          <!-- EDIT: Bounty amount -->
-          <div class="bounty-amount">$10,000</div>
-        </div>
-
-        <!-- Quick meta stats -->
-        <div class="suspect-meta-grid">
-          <!-- EDIT: Last known location -->
-          <div class="meta-cell">
-            <div class="meta-cell-label">Last Known Location</div>
-            <div class="meta-cell-value">South of Casino, LS</div>
-          </div>
-          <!-- EDIT: Gang/Organization affiliation -->
-          <div class="meta-cell">
-            <div class="meta-cell-label">Affiliation</div>
-            <div class="meta-cell-value">UNKNOWN</div>
-          </div>
-          <!-- EDIT: Status -->
-          <div class="meta-cell">
-            <div class="meta-cell-label">Status</div>
-            <div class="meta-cell-value" style="color:var(--red-alert);">At Large</div>
-          </div>
-        </div>
-
-        <!-- Debrief -->
-        <div style="margin-bottom:20px;">
-          <div class="suspect-section-title">Suspect Debrief</div>
-          <!-- EDIT: Debrief paragraph — background, history, behavior -->
-          <div class="suspect-debrief">This debrief is focused on the unidentified suspect known as John Doe, who is now wanted in connection with the abduction and murder of Chief Fire Department Ankoow Alrex. Evidence and witness statements place the subject among the armed assailants involved in the coordinated attack near the Casino and the subsequent homicide at the O”™Neil House. The subject is believed to be part of a larger criminal group consisting of more than five offenders who executed a planned kidnapping using firearms, intimidation, and lethal violence. Incident Involvement Approach with extreme caution.</div>
-        </div>
-
-        <!-- Crimes list -->
-        <div class="crimes-block">
-          <div class="suspect-section-title">Charges & Offenses</div>
-          <div class="crimes-list">
-            <!-- EDIT: Add or remove <span class="crime-tag"> items as needed -->
-            <span class="crime-tag">Murder of A Government Employee</span>
-            <span class="crime-tag">Kidnapping</span>
-            <span class="crime-tag">Desecration of Human Corpse</span>
-            <span class="crime-tag">Illegal Possession of Human Remains</span>
-            <span class="crime-tag">Criminal use of a Firearm</span>
-          </div>
-        </div>
-
-        <!-- Primary Detective -->
-        <div class="detective-row">
-          <!-- EDIT: Detective initials (shown in avatar circle) -->
-          <div class="detective-avatar">EM</div>
-          <div class="detective-info">
-            <div class="detective-label">Primary Detective</div>
-            <!-- EDIT: Detective full name -->
-            <div class="detective-name">Det. Elias Makya</div>
-            <!-- EDIT: Detective rank -->
-            <div class="detective-rank">Head of CID &middot; Badge #26104</div>
-          </div>
-          <!-- EDIT: Detective's division and contact -->
-          <div class="detective-division">Criminal Investigation Division<br/>Los Santos County Sherriff</div>
-        </div>
-
-      </div>
+  <!-- Wanted list container — populated by JS -->
+  <div class="wanted-list" id="mwWantedList">
+    <!-- Loading state -->
+    <div class="mw-loading" id="mwLoadingState">
+      <div class="mw-loading-text">Retrieving Priority Target Data...</div>
+      <div class="mw-loading-bar"><div class="mw-loading-progress"></div></div>
     </div>
-    <!-- â•â•â•â•â•â•â• SUSPECT ENTRY END â•â•â•â•â•â•â• -->  
-
   </div>
-  <!-- END .wanted-list -->
 
 </div>
-<!-- END .mw-wrap -->
+
+<!-- Export toast notification -->
+<div id="mwExportToast">⬇ Card Exported</div>
+
+<!-- Hidden QR code render target -->
+<div id="mwQrContainer"></div>
 
 <!-- FOOTER -->
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
 
 <script src="shared/scripts/site-ui.js"></script>
-
-
-
 <script src="scripts/wanted.js"></script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  Page_Wanted.html — Dynamic Wanted List Loader
+//  Fetches from GET /api/press-releases?type=wanted (public)
+// ════════════════════════════════════════════════════════════
+
+const MW_API = '/api/press-releases?type=wanted'
+
+const THREAT_LABELS = {
+  critical: 'Critical',
+  high:     'High',
+  medium:   'Medium',
+  low:      'Low',
+}
+
+const STATUS_LABELS = {
+  at_large:   'At Large',
+  in_custody: 'In Custody',
+  deceased:   'Deceased',
+  cleared:    'Cleared',
+}
+
+const STATUS_COLORS = {
+  at_large:   'var(--red-alert)',
+  in_custody: '#27ae60',
+  deceased:   'var(--muted)',
+  cleared:    'var(--muted)',
+}
+
+// Canvas hex equivalents (no CSS vars)
+const STATUS_HEX = {
+  at_large:   '#c0392b',
+  in_custody: '#27ae60',
+  deceased:   '#666',
+  cleared:    '#666',
+}
+const THREAT_BORDER_HEX = {
+  critical: '#c0392b',
+  high:     '#e67e22',
+  medium:   '#f1c40f',
+  low:      '#27ae60',
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function formatDate(d) {
+  if (!d) return 'Unknown'
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })
+  } catch { return d }
+}
+
+function buildCardHTML(w, index) {
+  const num        = String(index + 1).padStart(2, '0')
+  const threatCls  = 'threat-' + (w.threat_level || 'high')
+  const threatLbl  = THREAT_LABELS[w.threat_level] || w.threat_level || 'High'
+  const statusLbl  = STATUS_LABELS[w.status] || w.status || 'At Large'
+  const statusClr  = STATUS_COLORS[w.status] || 'var(--red-alert)'
+  const charges    = Array.isArray(w.charges) ? w.charges : []
+
+  const photoBlock = w.photo_url
+    ? `<div class="suspect-photo">
+        <img src="${escHtml(w.photo_url)}" alt="${escHtml(w.alias || w.full_name)}"
+             onerror="this.parentElement.innerHTML='<div class=\\'photo-placeholder\\'><svg viewBox=\\'0 0 24 24\\'></svg></div>'"/>
+      </div>`
+    : `<div class="suspect-photo">
+        <div class="photo-placeholder">
+          <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+        </div>
+      </div>`
+
+  const detBlock = (w.detective_name || w.detective_initials) ? `
+    <div class="detective-row">
+      <div class="detective-avatar">${escHtml(w.detective_initials || '??')}</div>
+      <div class="detective-info">
+        <div class="detective-label">Primary Detective</div>
+        <div class="detective-name">${escHtml(w.detective_name || '—')}</div>
+        <div class="detective-rank">${escHtml(w.detective_rank || '')}</div>
+      </div>
+      <div class="detective-division">${escHtml(w.detective_division || '')}</div>
+    </div>` : ''
+
+  const chargesBlock = charges.length ? `
+    <div class="crimes-block">
+      <div class="suspect-section-title">Charges &amp; Offenses</div>
+      <div class="crimes-list">
+        ${charges.map(c => `<span class="crime-tag">${escHtml(c)}</span>`).join('')}
+      </div>
+    </div>` : ''
+
+  const debriefBlock = w.debrief ? `
+    <div style="margin-bottom:20px;">
+      <div class="suspect-section-title">Suspect Debrief</div>
+      <div class="suspect-debrief">${escHtml(w.debrief)}</div>
+    </div>` : ''
+
+  const metaId = [
+    w.suspect_id ? `SUSPECT ID: ${escHtml(w.suspect_id)}` : null,
+    `DOB: ${escHtml(w.dob || 'UNKNOWN')}`,
+    `NATIONALITY: ${escHtml(w.nationality || 'UNKNOWN')}`,
+  ].filter(Boolean).join(' &nbsp;|&nbsp; ')
+
+  // Serialize data for export
+  const exportData = escHtml(JSON.stringify(w))
+
+  return `
+    <div class="wanted-card" data-export-index="${index}">
+
+      <!-- LEFT: PHOTO COLUMN -->
+      <div class="suspect-photo-col">
+        ${photoBlock}
+        <div class="photo-case-strip">
+          <div class="photo-case-id">CASE NO. ${escHtml(w.case_number || '—')}</div>
+          <div class="photo-date-wanted">WANTED SINCE: <span>${formatDate(w.wanted_since)}</span></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: INFO COLUMN -->
+      <div class="suspect-info">
+
+        <div class="suspect-header">
+          <div class="suspect-name-block">
+            ${w.alias ? `<div class="suspect-alias">AKA "${escHtml(w.alias)}"</div>` : ''}
+            <div class="suspect-name">${escHtml(w.full_name)}</div>
+            <div class="suspect-id">${metaId}</div>
+          </div>
+          <div class="threat-badge ${threatCls}">
+            <div class="threat-badge-label">Threat Level</div>
+            <div class="threat-badge-level">${escHtml(threatLbl)}</div>
+          </div>
+        </div>
+
+        <div class="bounty-row">
+          <div>
+            <div class="bounty-label">Bounty on Capture</div>
+            <div class="bounty-note">${escHtml(w.bounty_note || 'Authorized by CIB Director')}</div>
+          </div>
+          <div class="bounty-amount">${escHtml(w.bounty_amount || 'TBD')}</div>
+        </div>
+
+        <div class="suspect-meta-grid">
+          <div class="meta-cell">
+            <div class="meta-cell-label">Last Known Location</div>
+            <div class="meta-cell-value">${escHtml(w.last_known_loc || '—')}</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-cell-label">Affiliation</div>
+            <div class="meta-cell-value">${escHtml(w.affiliation || 'UNKNOWN')}</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-cell-label">Status</div>
+            <div class="meta-cell-value" style="color:${statusClr};">${escHtml(statusLbl)}</div>
+          </div>
+        </div>
+
+        ${debriefBlock}
+        ${chargesBlock}
+        ${detBlock}
+
+      </div>
+
+      <!-- EXPORT BUTTON -->
+      <button class="card-export-btn" data-export='${exportData}' title="Export as image">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export
+      </button>
+
+    </div>`
+}
+
+async function loadWantedList() {
+  const listEl = document.getElementById('mwWantedList')
+
+  try {
+    const res  = await fetch(MW_API)
+    const json = await res.json()
+
+    if (!json.success) throw new Error(json.error || 'Failed to load')
+
+    const data = (json.data || []).filter(w => w.status !== 'cleared')
+
+    // Update count bar
+    const activeCount = data.filter(w => w.status === 'at_large').length
+    document.getElementById('mwCountNum').textContent = String(activeCount).padStart(2, '0')
+
+    if (data.length > 0) {
+      const latest = data[0]?.updated_at || data[0]?.created_at
+      if (latest) {
+        const d = new Date(latest)
+        const dateStr = d.toLocaleDateString('en-US', { day:'2-digit', month:'short', year:'numeric' }).toUpperCase()
+        const timeStr = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:false }) + ' HRS'
+        document.getElementById('mwLastUpdated').textContent = `LAST UPDATED: ${dateStr} · ${timeStr} +7 GMT | CIB PRIORITY LIST`
+      }
+    }
+
+    if (data.length === 0) {
+      listEl.innerHTML = `
+        <div class="mw-empty">
+          <div class="mw-empty-icon">◎</div>
+          <div class="mw-empty-title">No Active Wanted Individuals</div>
+          <div class="mw-empty-sub">The CIB Most Wanted list is currently empty. Check back for updates.</div>
+        </div>`
+      return
+    }
+
+    listEl.innerHTML = data.map((w, i) => buildCardHTML(w, i)).join('')
+
+    // Attach export listeners
+    document.querySelectorAll('.card-export-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const raw = btn.getAttribute('data-export')
+        const w = JSON.parse(raw)
+        exportWantedCard(w, btn)
+      })
+    })
+
+    // Re-trigger scroll reveal for new cards
+    if (window.SiteUi && SiteUi.initScrollReveal) {
+      SiteUi.initScrollReveal()
+    }
+
+  } catch (err) {
+    console.error('Failed to load wanted list:', err)
+    listEl.innerHTML = `
+      <div class="mw-error">
+        <div class="mw-error-title">Failed to Load Priority Target Data</div>
+        <div class="mw-error-sub">Unable to retrieve data from CIB servers. Please try again later.</div>
+      </div>`
+    document.getElementById('mwCountNum').textContent = '—'
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  EXPORT ENGINE — Canvas-based poster export
+// ════════════════════════════════════════════════════════════
+
+function showToast(msg) {
+  const t = document.getElementById('mwExportToast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 2800)
+}
+
+/**
+ * Generate QR code as an ImageBitmap/canvas snapshot
+ * @param {string} url
+ * @param {number} size
+ * @returns {Promise<HTMLCanvasElement>}
+ */
+function generateQrCanvas(url, size) {
+  return new Promise((resolve, reject) => {
+    const container = document.getElementById('mwQrContainer')
+    container.innerHTML = ''
+    container.style.width  = size + 'px'
+    container.style.height = size + 'px'
+
+    try {
+      new QRCode(container, {
+        text:           url,
+        width:          size,
+        height:         size,
+        colorDark:      '#c9a84c',
+        colorLight:     '#0d1117',
+        correctLevel:   QRCode.CorrectLevel.M,
+      })
+      // QRCode lib renders synchronously via canvas or img
+      setTimeout(() => {
+        const qrCanvas = container.querySelector('canvas')
+        if (qrCanvas) {
+          resolve(qrCanvas)
+        } else {
+          // Fallback: try img tag
+          const qrImg = container.querySelector('img')
+          if (qrImg) {
+            const tmpC = document.createElement('canvas')
+            tmpC.width = size; tmpC.height = size
+            const ctx = tmpC.getContext('2d')
+            qrImg.onload = () => { ctx.drawImage(qrImg, 0, 0, size, size); resolve(tmpC) }
+            if (qrImg.complete) { ctx.drawImage(qrImg, 0, 0, size, size); resolve(tmpC) }
+          } else {
+            reject(new Error('QR render failed'))
+          }
+        }
+      }, 80)
+    } catch(e) { reject(e) }
+  })
+}
+
+/**
+ * Load an image from URL into ImageBitmap, resolving even on CORS failures
+ * @param {string} url
+ * @returns {Promise<HTMLImageElement|null>}
+ */
+function loadImage(url) {
+  return new Promise(resolve => {
+    if (!url) return resolve(null)
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload  = () => resolve(img)
+    img.onerror = () => resolve(null)   // graceful fallback
+    img.src = url
+  })
+}
+
+/**
+ * Wrap text to fit within maxWidth, returning array of lines
+ */
+function wrapText(ctx, text, maxWidth) {
+  const words = text.split(' ')
+  const lines = []
+  let current = ''
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current)
+      current = word
+    } else {
+      current = test
+    }
+  }
+  if (current) lines.push(current)
+  return lines
+}
+
+/**
+ * Draw a rounded rectangle path
+ */
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+  ctx.lineTo(x + r, y + h)
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+  ctx.lineTo(x, y + r)
+  ctx.quadraticCurveTo(x, y, x + r, y)
+  ctx.closePath()
+}
+
+async function exportWantedCard(w, btn) {
+  btn.classList.add('exporting')
+  btn.textContent = 'Generating…'
+
+  try {
+    // ── Canvas dimensions ──────────────────────────────────
+    const SCALE   = 2          // retina
+    const W       = 960
+    const H       = 560
+    const PHOTO_W = 260
+    const PAD     = 28
+
+    const canvas = document.createElement('canvas')
+    canvas.width  = W * SCALE
+    canvas.height = H * SCALE
+    const ctx = canvas.getContext('2d')
+    ctx.scale(SCALE, SCALE)
+
+    // ── Background ─────────────────────────────────────────
+    // Deep navy base
+    ctx.fillStyle = '#0d1117'
+    ctx.fillRect(0, 0, W, H)
+
+    // Subtle grid overlay
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)'
+    ctx.lineWidth   = 1
+    const GRID = 40
+    for (let x = 0; x <= W; x += GRID) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
+    }
+    for (let y = 0; y <= H; y += GRID) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
+    }
+
+    // Left accent stripe (red/gold based on threat)
+    const threatBorder = THREAT_BORDER_HEX[w.threat_level] || '#c0392b'
+    ctx.fillStyle = threatBorder
+    ctx.fillRect(0, 0, 4, H)
+
+    // Top header bar
+    const headerH = 44
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'
+    ctx.fillRect(0, 0, W, headerH)
+
+    // CIB header text
+    ctx.fillStyle  = '#c9a84c'
+    ctx.font       = '500 10px "Roboto Mono", monospace'
+    ctx.letterSpacing = '3px'
+    ctx.fillText('CENTRAL INVESTIGATION BUREAU', PAD + 6, 27)
+
+    // Right header — MOST WANTED label
+    ctx.fillStyle = '#c0392b'
+    ctx.font      = '700 11px "Oswald", sans-serif'
+    ctx.letterSpacing = '4px'
+    const mwLabel = 'MOST WANTED'
+    const mwW = ctx.measureText(mwLabel).width
+    ctx.fillText(mwLabel, W - PAD - mwW, 27)
+
+    // Header bottom separator
+    ctx.strokeStyle = 'rgba(201,168,76,0.25)'
+    ctx.lineWidth   = 1
+    ctx.beginPath(); ctx.moveTo(0, headerH); ctx.lineTo(W, headerH); ctx.stroke()
+
+    // ── Load suspect photo ─────────────────────────────────
+    const suspectImg = await loadImage(w.photo_url)
+
+    const photoX = PAD + 4
+    const photoY = headerH + PAD
+    const photoH = H - headerH - PAD * 2 - 44  // leave room for footer strip
+    const photoActualW = PHOTO_W - 8
+
+    // Photo frame shadow
+    ctx.shadowColor   = 'rgba(0,0,0,0.6)'
+    ctx.shadowBlur    = 20
+    ctx.shadowOffsetX = 4
+    ctx.shadowOffsetY = 4
+
+    ctx.fillStyle = '#141b24'
+    ctx.fillRect(photoX, photoY, photoActualW, photoH)
+
+    ctx.shadowColor = 'transparent'
+    ctx.shadowBlur  = 0
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 0
+
+    if (suspectImg) {
+      // Crop-fill the photo
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(photoX, photoY, photoActualW, photoH)
+      ctx.clip()
+
+      const imgAspect   = suspectImg.naturalWidth / suspectImg.naturalHeight
+      const frameAspect = photoActualW / photoH
+      let drawW, drawH, drawX, drawY
+      if (imgAspect > frameAspect) {
+        drawH = photoH; drawW = drawH * imgAspect
+        drawX = photoX - (drawW - photoActualW) / 2; drawY = photoY
+      } else {
+        drawW = photoActualW; drawH = drawW / imgAspect
+        drawX = photoX; drawY = photoY - (drawH - photoH) / 2
+      }
+      ctx.drawImage(suspectImg, drawX, drawY, drawW, drawH)
+      ctx.restore()
+
+      // Gradient vignette over photo
+      const vg = ctx.createLinearGradient(photoX, photoY + photoH * 0.4, photoX, photoY + photoH)
+      vg.addColorStop(0, 'rgba(13,17,23,0)')
+      vg.addColorStop(1, 'rgba(13,17,23,0.75)')
+      ctx.fillStyle = vg
+      ctx.fillRect(photoX, photoY, photoActualW, photoH)
+    } else {
+      // Placeholder silhouette
+      ctx.fillStyle = '#1a2232'
+      ctx.fillRect(photoX, photoY, photoActualW, photoH)
+      ctx.fillStyle = 'rgba(201,168,76,0.08)'
+      ctx.font = '80px "Oswald"'
+      ctx.textAlign = 'center'
+      ctx.fillText('?', photoX + photoActualW / 2, photoY + photoH / 2 + 28)
+      ctx.textAlign = 'left'
+    }
+
+    // Photo left edge accent
+    ctx.fillStyle = 'rgba(201,168,76,0.6)'
+    ctx.fillRect(photoX, photoY, 2, photoH)
+
+    // Case strip at bottom of photo
+    const caseStripY = photoY + photoH
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'
+    ctx.fillRect(photoX, caseStripY, photoActualW, 38)
+
+    ctx.fillStyle = 'rgba(201,168,76,0.55)'
+    ctx.font      = '500 8px "Roboto Mono"'
+    ctx.letterSpacing = '1.5px'
+    ctx.fillText('CASE NO. ' + (w.case_number || '—'), photoX + 8, caseStripY + 13)
+
+    ctx.fillStyle = '#e0c97b'
+    ctx.font      = '500 9px "Roboto Mono"'
+    ctx.fillText('WANTED SINCE: ' + formatDate(w.wanted_since), photoX + 8, caseStripY + 28)
+
+    // ── Right info column ──────────────────────────────────
+    const infoX = photoX + photoActualW + 20
+    const infoW = W - infoX - PAD
+    let   curY  = headerH + PAD
+
+    // Alias
+    if (w.alias) {
+      ctx.fillStyle    = 'rgba(201,168,76,0.6)'
+      ctx.font         = '400 10px "Roboto Mono"'
+      ctx.letterSpacing = '2px'
+      ctx.fillText('AKA "' + w.alias + '"', infoX, curY + 12)
+      curY += 20
+    }
+
+    // Full name
+    ctx.fillStyle    = '#f0e6cc'
+    ctx.font         = '700 32px "Oswald"'
+    ctx.letterSpacing = '1px'
+    ctx.fillText((w.full_name || 'UNKNOWN').toUpperCase(), infoX, curY + 32)
+    curY += 44
+
+    // Meta ID line
+    const metaParts = [
+      w.suspect_id ? 'SUSPECT ID: ' + w.suspect_id : null,
+      'DOB: ' + (w.dob || 'UNKNOWN'),
+      'NATIONALITY: ' + (w.nationality || 'UNKNOWN'),
+    ].filter(Boolean).join('  |  ')
+
+    ctx.fillStyle    = 'rgba(255,255,255,0.35)'
+    ctx.font         = '400 9px "Roboto Mono"'
+    ctx.letterSpacing = '1px'
+    ctx.fillText(metaParts, infoX, curY)
+    curY += 6
+
+    // Separator
+    ctx.strokeStyle = 'rgba(201,168,76,0.2)'
+    ctx.lineWidth   = 1
+    ctx.beginPath(); ctx.moveTo(infoX, curY); ctx.lineTo(infoX + infoW, curY); ctx.stroke()
+    curY += 14
+
+    // Threat badge
+    const threatLbl  = THREAT_LABELS[w.threat_level] || 'High'
+    const badgeColor = THREAT_BORDER_HEX[w.threat_level] || '#c0392b'
+    const BADGE_W    = 110
+    const BADGE_H    = 40
+    const BADGE_X    = infoX + infoW - BADGE_W
+    const BADGE_Y    = headerH + PAD + (w.alias ? 20 : 0) - 4
+
+    ctx.strokeStyle = badgeColor
+    ctx.lineWidth   = 1.5
+    roundRect(ctx, BADGE_X, BADGE_Y, BADGE_W, BADGE_H, 3)
+    ctx.stroke()
+    ctx.fillStyle = badgeColor + '22'
+    ctx.fill()
+
+    ctx.fillStyle    = 'rgba(255,255,255,0.4)'
+    ctx.font         = '400 8px "Roboto Mono"'
+    ctx.letterSpacing = '2px'
+    ctx.textAlign    = 'center'
+    ctx.fillText('THREAT LEVEL', BADGE_X + BADGE_W / 2, BADGE_Y + 14)
+
+    ctx.fillStyle    = badgeColor
+    ctx.font         = '700 13px "Oswald"'
+    ctx.letterSpacing = '3px'
+    ctx.fillText(threatLbl.toUpperCase(), BADGE_X + BADGE_W / 2, BADGE_Y + 30)
+    ctx.textAlign = 'left'
+
+    // Bounty row
+    const bountyRowY = curY
+    ctx.fillStyle    = 'rgba(255,255,255,0.08)'
+    roundRect(ctx, infoX, bountyRowY, infoW, 46, 4)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+    ctx.lineWidth   = 1
+    ctx.stroke()
+
+    ctx.fillStyle    = 'rgba(201,168,76,0.6)'
+    ctx.font         = '500 8px "Roboto Mono"'
+    ctx.letterSpacing = '2px'
+    ctx.fillText('BOUNTY ON CAPTURE', infoX + 12, bountyRowY + 16)
+
+    ctx.fillStyle    = 'rgba(255,255,255,0.3)'
+    ctx.font         = '300 8px "Roboto"'
+    ctx.letterSpacing = '0.5px'
+    ctx.fillText(w.bounty_note || 'Authorized by CIB Director', infoX + 12, bountyRowY + 30)
+
+    ctx.fillStyle    = '#c9a84c'
+    ctx.font         = '700 22px "Oswald"'
+    ctx.letterSpacing = '1px'
+    ctx.textAlign    = 'right'
+    ctx.fillText(w.bounty_amount || 'TBD', infoX + infoW - 12, bountyRowY + 31)
+    ctx.textAlign = 'left'
+    curY += 58
+
+    // Meta grid (3 cells)
+    const cells = [
+      { label: 'Last Known Location', value: w.last_known_loc || '—' },
+      { label: 'Affiliation',         value: w.affiliation || 'UNKNOWN' },
+      { label: 'Status',              value: STATUS_LABELS[w.status] || 'At Large', color: STATUS_HEX[w.status] || '#c0392b' },
+    ]
+    const cellW = Math.floor(infoW / 3) - 4
+
+    cells.forEach((cell, i) => {
+      const cx = infoX + i * (cellW + 6)
+      ctx.fillStyle = 'rgba(255,255,255,0.05)'
+      roundRect(ctx, cx, curY, cellW, 42, 3)
+      ctx.fill()
+
+      ctx.fillStyle    = 'rgba(255,255,255,0.3)'
+      ctx.font         = '400 7px "Roboto Mono"'
+      ctx.letterSpacing = '1.5px'
+      ctx.fillText(cell.label.toUpperCase(), cx + 10, curY + 14)
+
+      ctx.fillStyle    = cell.color || '#f0e6cc'
+      ctx.font         = '600 11px "Oswald"'
+      ctx.letterSpacing = '1px'
+      // Wrap long values
+      const wrapped = wrapText(ctx, cell.value.toUpperCase(), cellW - 20)
+      ctx.fillText(wrapped[0] || '', cx + 10, curY + 32)
+    })
+    curY += 54
+
+    // Debrief
+    if (w.debrief) {
+      ctx.fillStyle    = 'rgba(201,168,76,0.5)'
+      ctx.font         = '400 7.5px "Roboto Mono"'
+      ctx.letterSpacing = '1.5px'
+      ctx.fillText('SUSPECT DEBRIEF', infoX, curY)
+      curY += 14
+
+      ctx.fillStyle    = 'rgba(255,255,255,0.55)'
+      ctx.font         = '300 10px "Roboto"'
+      ctx.letterSpacing = '0.2px'
+      const debriefLines = wrapText(ctx, w.debrief, infoW)
+      let linesDrawn = 0
+      for (const line of debriefLines) {
+        if (curY + 14 > H - 80) break
+        ctx.fillText(line, infoX, curY)
+        curY += 14
+        linesDrawn++
+      }
+      curY += 4
+    }
+
+    // Charges
+    const charges = Array.isArray(w.charges) ? w.charges : []
+    if (charges.length && curY < H - 80) {
+      ctx.fillStyle    = 'rgba(201,168,76,0.5)'
+      ctx.font         = '400 7.5px "Roboto Mono"'
+      ctx.letterSpacing = '1.5px'
+      ctx.fillText('CHARGES & OFFENSES', infoX, curY)
+      curY += 14
+
+      let tagX = infoX
+      charges.forEach(charge => {
+        const tagText = charge.toUpperCase()
+        ctx.font = '500 8px "Roboto Mono"'
+        ctx.letterSpacing = '1px'
+        const tagW = ctx.measureText(tagText).width + 18
+        if (tagX + tagW > infoX + infoW - 5) { tagX = infoX; curY += 22 }
+        if (curY + 18 > H - 80) return
+
+        ctx.fillStyle   = 'rgba(192,57,43,0.18)'
+        roundRect(ctx, tagX, curY - 10, tagW, 18, 2)
+        ctx.fill()
+        ctx.strokeStyle = 'rgba(192,57,43,0.5)'
+        ctx.lineWidth   = 0.8
+        ctx.stroke()
+
+        ctx.fillStyle = '#e07070'
+        ctx.fillText(tagText, tagX + 9, curY + 2)
+        tagX += tagW + 6
+      })
+      curY += 26
+    }
+
+    // Detective row
+    if ((w.detective_name || w.detective_initials) && curY < H - 60) {
+      ctx.fillStyle   = 'rgba(255,255,255,0.05)'
+      roundRect(ctx, infoX, curY, infoW, 42, 4)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+      ctx.lineWidth   = 1
+      ctx.stroke()
+
+      // Avatar circle
+      const avR = 16
+      const avX = infoX + 20
+      const avY = curY + 21
+      ctx.fillStyle = 'rgba(201,168,76,0.15)'
+      ctx.beginPath(); ctx.arc(avX, avY, avR, 0, Math.PI * 2); ctx.fill()
+      ctx.strokeStyle = 'rgba(201,168,76,0.4)'
+      ctx.lineWidth   = 1
+      ctx.stroke()
+
+      const initials = (w.detective_initials || '??').substring(0, 2)
+      ctx.fillStyle    = '#c9a84c'
+      ctx.font         = '600 11px "Oswald"'
+      ctx.letterSpacing = '1px'
+      ctx.textAlign    = 'center'
+      ctx.fillText(initials, avX, avY + 4)
+      ctx.textAlign    = 'left'
+
+      ctx.fillStyle    = 'rgba(201,168,76,0.5)'
+      ctx.font         = '400 7px "Roboto Mono"'
+      ctx.letterSpacing = '2px'
+      ctx.fillText('PRIMARY DETECTIVE', infoX + 44, curY + 14)
+
+      ctx.fillStyle    = '#f0e6cc'
+      ctx.font         = '600 11px "Oswald"'
+      ctx.letterSpacing = '1px'
+      ctx.fillText((w.detective_name || '—').toUpperCase(), infoX + 44, curY + 28)
+
+      ctx.fillStyle    = 'rgba(255,255,255,0.35)'
+      ctx.font         = '300 8px "Roboto"'
+      ctx.letterSpacing = '0.3px'
+      ctx.fillText(w.detective_rank || '', infoX + 44, curY + 40)
+
+      if (w.detective_division) {
+        ctx.fillStyle    = 'rgba(255,255,255,0.3)'
+        ctx.font         = '400 8px "Roboto Mono"'
+        ctx.letterSpacing = '1px'
+        ctx.textAlign    = 'right'
+        ctx.fillText(w.detective_division, infoX + infoW - 12, curY + 28)
+        ctx.textAlign    = 'left'
+      }
+    }
+
+    // ── QR Code ───────────────────────────────────────────
+    const qrSize   = 88
+    const qrX      = W - qrSize - PAD
+    const qrY      = H - qrSize - 44
+    const qrUrl    = window.location.origin + window.location.pathname
+
+    try {
+      const qrCanvas = await generateQrCanvas(qrUrl, qrSize)
+
+      // QR background panel
+      ctx.fillStyle   = '#0d1117'
+      ctx.strokeStyle = 'rgba(201,168,76,0.3)'
+      ctx.lineWidth   = 1
+      roundRect(ctx, qrX - 8, qrY - 8, qrSize + 16, qrSize + 30, 4)
+      ctx.fill()
+      ctx.stroke()
+
+      ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize)
+
+      ctx.fillStyle    = 'rgba(201,168,76,0.5)'
+      ctx.font         = '400 7px "Roboto Mono"'
+      ctx.letterSpacing = '1.5px'
+      ctx.textAlign    = 'center'
+      ctx.fillText('SCAN FOR FULL FILE', qrX + qrSize / 2, qrY + qrSize + 14)
+      ctx.textAlign    = 'left'
+    } catch(e) {
+      console.warn('QR generation failed:', e)
+    }
+
+    // ── Footer strip ───────────────────────────────────────
+    const footerY = H - 36
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'
+    ctx.fillRect(0, footerY, W, 36)
+
+    ctx.strokeStyle = 'rgba(201,168,76,0.2)'
+    ctx.lineWidth   = 1
+    ctx.beginPath(); ctx.moveTo(0, footerY); ctx.lineTo(W, footerY); ctx.stroke()
+
+    const exportedAt = new Date().toLocaleString('en-US', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).toUpperCase()
+
+    ctx.fillStyle    = 'rgba(201,168,76,0.4)'
+    ctx.font         = '400 8px "Roboto Mono"'
+    ctx.letterSpacing = '1.5px'
+    ctx.fillText('CIB · PRIORITY TARGET EXPORT · CONFIDENTIAL', PAD + 6, footerY + 22)
+
+    ctx.fillStyle    = 'rgba(255,255,255,0.25)'
+    ctx.font         = '300 8px "Roboto Mono"'
+    ctx.letterSpacing = '1px'
+    ctx.textAlign    = 'right'
+    ctx.fillText('GENERATED: ' + exportedAt + ' +7 GMT', W - PAD, footerY + 22)
+    ctx.textAlign    = 'left'
+
+    // ── Download ───────────────────────────────────────────
+    const filename = 'CIB-WANTED-' + (w.full_name || 'SUSPECT').replace(/\s+/g, '_').toUpperCase() + '.png'
+    const link = document.createElement('a')
+    link.download = filename
+    link.href     = canvas.toDataURL('image/png')
+    link.click()
+
+    showToast('⬇ Card Exported: ' + filename)
+
+  } catch (err) {
+    console.error('Export failed:', err)
+    showToast('Export failed — see console')
+  } finally {
+    btn.classList.remove('exporting')
+    btn.innerHTML = `
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export`
+  }
+}
+
+// Initialize
+loadWantedList()
+</script>
 </body>
 </html>
-
-

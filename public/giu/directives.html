@@ -539,11 +539,28 @@
         Coordinates: <span id="wmCoordDisplay" style="color:var(--gold);">—</span>
       </div>
 
+      <!-- ── LOCATION PHOTOS ─────────────────────────────────── -->
+      <div class="dir-form-group" style="margin-top:16px;">
+        <label class="dir-form-label">
+          Location / Objective Photos
+          <span style="font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;font-weight:400;text-transform:none;margin-left:8px;">up to 5 · used in briefing</span>
+        </label>
+
+        <!-- Photo slot grid -->
+        <div class="wm-photo-slots" id="wmPhotoSlots">
+          <!-- 5 slots rendered by JS -->
+        </div>
+        <div class="wm-photo-hint">JPG / PNG / WEBP · max 4 MB each · photos appear in Brief Mode when this marker is presented</div>
+      </div>
+
     </div>
     <div class="dir-modal-error" id="wmMarkerError"></div>
     <div class="dir-modal-submit-row">
+      <button class="dir-modal-cancel" id="wmDeleteBtn" style="display:none;color:var(--red);border-color:rgba(192,57,43,0.3);" onclick="deleteWmMarker()">Delete Marker</button>
       <button class="dir-modal-cancel" onclick="closeWmModal()">Cancel</button>
-      <button class="dir-modal-submit" id="wmMarkerSubmit" onclick="submitWmMarker()">Pin Location</button>
+      <button class="dir-modal-submit" id="wmMarkerSubmit" onclick="submitWmMarker()">
+        <span class="btn-spinner"></span><span class="btn-label">Pin Location</span>
+      </button>
     </div>
   </div>
 </div>
@@ -577,17 +594,22 @@
   <div class="wm-brief-body">
     <!-- Left: map with all phase markers visible -->
     <div class="wm-brief-map-pane">
-      <!-- All zoomable content lives inside this group so map + pins + spotlight scale together -->
+      <!-- All zoomable content lives inside this group so map + spotlight scale together -->
       <div class="wm-brief-map-group" id="wmbMapGroup">
-        <img class="wm-brief-map-img" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'"/>
-        <!-- Persistent phase markers layer -->
-        <div id="wmbMarkersLayer"></div>
-        <!-- Active spotlight -->
-        <div class="wm-brief-spotlight" id="wmbSpotlight">
-          <div class="wm-brief-spotlight-ring"></div>
-          <div class="wm-brief-spotlight-dot"></div>
+        <!-- wmbImgWrap is sized to the image's exact aspect ratio in JS.
+             Pins at left/top % of this wrapper = exact pixel match. -->
+        <div id="wmbImgWrap">
+          <img class="wm-brief-map-img" id="wmbMapImg" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'" onload="onBriefImgLoad()"/>
+          <!-- Spotlight sits inside the zoom group so it scales with the map -->
+          <div class="wm-brief-spotlight" id="wmbSpotlight">
+            <div class="wm-brief-spotlight-ring"></div>
+            <div class="wm-brief-spotlight-dot"></div>
+          </div>
         </div>
       </div>
+      <!-- Markers layer lives OUTSIDE the zoom group — pins are never scaled,
+           so they are always crisp. JS positions them in screen-pixel coords. -->
+      <div id="wmbMarkersLayer"></div>
       <!-- These stay fixed on top of the pane, outside the zoom group -->
       <div class="wm-brief-grid"></div>
       <div class="wm-brief-corner tl"></div>
@@ -603,6 +625,8 @@
         <div class="wm-brief-phase-eyebrow" id="wmbPhaseEyebrow">PHASE 1</div>
         <div class="wm-brief-phase-objective" id="wmbPhaseObjective">—</div>
         <div class="wm-brief-phase-obj-notes" id="wmbPhaseObjNotes"></div>
+        <!-- Objective images — rendered by renderBriefPhase when objective has images -->
+        <div class="wm-brief-obj-img-strip" id="wmbPhaseObjImages" style="display:none;"></div>
       </div>
       <!-- Marker list — grows as user clicks Next -->
       <div class="wm-brief-markers-list" id="wmbMarkersList"></div>
@@ -1429,7 +1453,26 @@ function renderMembers() {
     return
   }
 
-  grid.innerHTML = _allMembers.map((m, i) => buildMemberCard(m, i)).join('')
+  // Sort: entries starting with a number come first (numeric ascending),
+  // then alphabetical callsigns (case-insensitive). Handles mixed e.g. "1-GHOST", "ALPHA", "2-REAPER"
+  const sorted = [..._allMembers].sort((a, b) => {
+    const ca = (a._member?.callsign || a.name || '').trim()
+    const cb = (b._member?.callsign || b.name || '').trim()
+    const aIsNum = /^\d/.test(ca)
+    const bIsNum = /^\d/.test(cb)
+    if (aIsNum && bIsNum) {
+      // both numeric-prefixed: sort by leading number then rest
+      const numA = parseFloat(ca) || 0
+      const numB = parseFloat(cb) || 0
+      if (numA !== numB) return numA - numB
+      return ca.localeCompare(cb, undefined, { numeric: true })
+    }
+    if (aIsNum) return -1   // numbers before letters
+    if (bIsNum) return  1
+    return ca.localeCompare(cb, undefined, { sensitivity: 'base' })
+  })
+
+  grid.innerHTML = sorted.map((m, i) => buildMemberCard(m, i)).join('')
 }
 
 function buildMemberCard(row, index) {
@@ -1541,6 +1584,7 @@ function openMemberModal() {
   document.getElementById('memberModalLabel').textContent  = 'GIU · ADD MEMBER'
   document.getElementById('memberModalSubmit').textContent = 'Add Member'
   document.getElementById('memberModalSubmit').onclick     = submitMember
+  document.getElementById('memberModalSubmit').disabled    = false
   setModalError('memberModalError', '')
   document.getElementById('memberModal').classList.add('open')
   setTimeout(() => document.getElementById('mCallsign').focus(), 80)
@@ -1561,6 +1605,7 @@ function openEditMember(id) {
   document.getElementById('memberModalLabel').textContent  = 'GIU · EDIT MEMBER — ' + (m.callsign || '')
   document.getElementById('memberModalSubmit').textContent = 'Save Changes'
   document.getElementById('memberModalSubmit').onclick     = submitMember
+  document.getElementById('memberModalSubmit').disabled    = false
   setModalError('memberModalError', '')
   document.getElementById('memberModal').classList.add('open')
 }
@@ -1603,6 +1648,8 @@ async function submitMember() {
     showToast(_editingMemberId ? 'Member updated.' : 'Member added.', 'success')
   } catch (e) {
     setModalError('memberModalError', e.message.toUpperCase())
+  } finally {
+    // Always re-enable — button stays visible on error, must work fresh on next open
     setBtnLoading(btn, false)
   }
 }
@@ -1732,7 +1779,14 @@ async function loadWarmap() {
   try {
     const res = await wmApiFetch('GET', '/api/informants?type=warmap')
     if (!res.ok) throw new Error(res.data?.error || 'Failed to load markers')
-    _allMarkers = res.data.data || []
+    // Deep-copy every _marker + its images array so no two markers
+    // ever share the same object reference — prevents image bleed.
+    _allMarkers = (res.data.data || []).map(row => ({
+      ...row,
+      _marker: row._marker
+        ? { ...row._marker, images: Array.isArray(row._marker.images) ? [...row._marker.images] : [] }
+        : {}
+    }))
   } catch(e) {
     showToast('War Map: ' + e.message, 'error')
     _allMarkers = []
@@ -2014,6 +2068,9 @@ function populateDirectiveDropdown() {
 }
 
 function openWmModal() {
+  // Reset photo state — new marker has no saved images
+  _wmResetPhotoState([])
+
   // Pre-fill type from toolbar selection
   const typeEl = document.getElementById('wmType')
   if (typeEl) typeEl.value = _wmMarkerType
@@ -2043,6 +2100,7 @@ function openWmModal() {
   }
 
   document.getElementById('wmMarkerModal').classList.add('open')
+  renderWmPhotoSlots()
 }
 
 // Show warning if the selected phase already has an objective marker
@@ -2079,6 +2137,9 @@ function openWmEditModal(id) {
   _wmPendingX   = mk.x
   _wmPendingY   = mk.y
 
+  // Load THIS marker's saved images — isolated so other markers are unaffected
+  _wmResetPhotoState(mk.images || [])
+
   document.getElementById('wmLabel').value = mk.label || ''
   document.getElementById('wmDesc').value  = mk.description || ''
   document.getElementById('wmPhase').value = mk.phase !== null && mk.phase !== undefined ? mk.phase : ''
@@ -2100,6 +2161,9 @@ function openWmEditModal(id) {
   document.getElementById('wmMarkerSubmit').textContent = 'Save Changes'
   document.getElementById('wmMarkerSubmit').onclick = submitWmMarker
   document.getElementById('wmMarkerModal').classList.add('open')
+
+  // Render photo slots now that modal is open and images are loaded
+  renderWmPhotoSlots()
 }
 
 function closeWmModal() {
@@ -2147,6 +2211,14 @@ async function submitWmMarker() {
   btn.disabled = true; btn.textContent = _wmEditingId ? 'Saving…' : 'Pinning…'
 
   try {
+    // Collect images here directly — no monkey-patching needed
+    let images = []
+    try {
+      images = await wmCollectImages()
+    } catch (imgErr) {
+      throw new Error('Photo error: ' + imgErr.message)
+    }
+
     const body = {
       x:              _wmPendingX,
       y:              _wmPendingY,
@@ -2156,23 +2228,35 @@ async function submitWmMarker() {
       directive_id:   dirId,
       directive_code: dirCode,
       phase:          phase,
+      images:         images.filter(Boolean),
     }
 
     if (_wmEditingId) {
       const res = await wmApiFetch('PUT', '/api/informants?type=warmap', { id: _wmEditingId, ...body })
       if (!res.ok) throw new Error(res.data?.error || 'Update failed')
       const idx = _allMarkers.findIndex(x => x.id === _wmEditingId)
-      if (idx !== -1) _allMarkers[idx] = res.data.data
+      if (idx !== -1) {
+        // Deep-copy so this marker never shares object refs with others
+        const mk = res.data.data._marker || {}
+        _allMarkers[idx] = {
+          ...res.data.data,
+          _marker: { ...mk, images: Array.isArray(mk.images) ? [...mk.images] : [] }
+        }
+      }
       showToast('Marker updated.', 'info')
     } else {
       const res = await wmApiFetch('POST', '/api/informants?type=warmap', body)
       if (!res.ok) throw new Error(res.data?.error || 'Create failed')
-      _allMarkers.push(res.data.data)
+      const mk = res.data.data._marker || {}
+      _allMarkers.push({
+        ...res.data.data,
+        _marker: { ...mk, images: Array.isArray(mk.images) ? [...mk.images] : [] }
+      })
       showToast('Marker placed on war map.', 'success')
     }
 
     renderMarkers()
-    buildPhaseFilterButtons()  // rebuild in case a new phase was used
+    buildPhaseFilterButtons()
     closeWmModal()
   } catch(e) {
     setModalError('wmMarkerError', e.message.toUpperCase())
@@ -2433,7 +2517,13 @@ function startBriefing() {
     vt.disabled = true
     _briefVoiceEnabled = false
   }
-  renderBriefPhase()
+  // Size the image wrapper once layout is available, then render pins.
+  // We no longer need getBoundingClientRect for pin placement (direct % now),
+  // but sizeBriefImgWrap needs offsetWidth/Height which needs layout.
+  requestAnimationFrame(() => {
+    sizeBriefImgWrap()
+    requestAnimationFrame(() => renderBriefPhase())
+  })
 
   // ── Play briefing background music ────────────────────────
   const music  = document.getElementById('briefingMusic')
@@ -2561,9 +2651,29 @@ function renderBriefPhase() {
   document.getElementById('wmbPhaseObjective').textContent = objMk.label || '— No Objective Set'
   document.getElementById('wmbPhaseObjNotes').textContent  = objMk.description || ''
 
-  // Directive link on objective
-  const objDirEl = document.getElementById('wmbPhaseObjDir')
-  // (injected below if needed, skip for now)
+  // ── Objective images ───────────────────────────────────────
+  // Render the image strip for the objective marker so its photos
+  // appear in the phase header throughout the entire phase brief.
+  const objImgEl = document.getElementById('wmbPhaseObjImages')
+  if (objImgEl) {
+    const objImgs = (objMk.images || []).filter(Boolean)
+    if (objImgs.length) {
+      objImgEl.style.display = ''
+      objImgEl.innerHTML = objImgs.map((url, i) => {
+        const safeUrl = url.replace(/'/g, '%27')
+        return `
+          <div class="wm-brief-img-thumb" onclick="openBriefPhoto('${safeUrl}','${escHtml(objMk.label||'')}',${i+1},${objImgs.length})">
+            <img src="${url}" alt="Objective photo ${i+1}" loading="lazy"/>
+            <div class="wm-brief-img-overlay">
+              <svg viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6v-6z"/></svg>
+            </div>
+          </div>`
+      }).join('')
+    } else {
+      objImgEl.style.display = 'none'
+      objImgEl.innerHTML = ''
+    }
+  }
 
   // ── Map: show all markers in this phase that are revealed ──
   renderBriefMapMarkers(phase)
@@ -2576,10 +2686,14 @@ function renderBriefPhase() {
 
   const sp   = spotlightTarget ? (spotlightTarget._marker || {}) : {}
   const spot = document.getElementById('wmbSpotlight')
-  if (spot) {
-    spot.style.left       = (sp.x || 50) + '%'
-    spot.style.top        = (sp.y || 50) + '%'
+  if (spot && sp.x != null) {
+    // Direct % — spotlight lives inside wmbImgWrap, same coordinate space as pins
+    spot.style.left       = sp.x + '%'
+    spot.style.top        = sp.y + '%'
     spot.style.transition = 'left 0.5s ease, top 0.5s ease'
+  } else if (spot) {
+    spot.style.left = '50%'
+    spot.style.top  = '50%'
   }
 
   const coordsEl = document.getElementById('wmbCoords')
@@ -2590,6 +2704,7 @@ function renderBriefPhase() {
   // ── Zoom the whole map group to the active marker ─────────
   const isPhaseObj = _briefMarkerStep === 0  // phase objective = more dramatic zoom
   if (sp.x != null && sp.y != null) {
+    // Pass raw % — zoomBriefMapTo uses % of wmbImgWrap which equals image %
     zoomBriefMapTo(sp.x, sp.y, isPhaseObj)
   } else {
     resetBriefMapZoom()
@@ -2633,25 +2748,177 @@ function renderBriefPhase() {
   })
 }
 
-// ── Briefing map zoom — moves the WHOLE group (img + pins + spotlight) ──
-// x/y are percentages (0–100) matching the marker coordinate system.
-// The group is 100%×100% of the pane with transform-origin at its centre,
-// so we shift by (50 - x)% / (50 - y)% to bring that point to the centre.
+// ── Briefing map zoom ─────────────────────────────────────────────────────
+// Strategy: set transform-origin to the exact marker position (as % of the
+// group), then scale. The browser pivots around that point so the marker
+// lands exactly at the centre of the viewport — no translate math needed.
+//
+// Scale levels:
+//   Phase objective reveal   → 5.0×  (dramatic establishing zoom)
+//   Sub-marker reveal        → 4.0×  (tight tactical zoom)
+//
+// Counter-scaling: pins and labels inside the group would appear huge at 4-5×
+// zoom. We apply scale(1/currentScale) to the markers layer so they stay a
+// constant pixel size on screen regardless of map zoom.
+// The spotlight stays unscaled — it's already tiny (5px dot) and should
+// track exactly with the map pixel it marks.
+
+// ── Live pin tracking during zoom transition ──────────────────────────────────
+// Instead of repainting pins only at the END of the zoom (which causes them to
+// appear in the wrong place for the entire 0.85s transition), we run a
+// requestAnimationFrame loop that repositions each existing pin element every
+// frame.  The loop starts when a zoom begins and stops automatically once the
+// CSS transition finishes — no timers, no jumps, no drift.
+
+let _briefTrackingRaf  = null   // active rAF handle
+let _briefTrackingEnd  = 0      // timestamp when tracking should stop
+
+function startBriefPinTracking(durationMs) {
+  // Cancel any existing loop first
+  if (_briefTrackingRaf) cancelAnimationFrame(_briefTrackingRaf)
+  _briefTrackingEnd = performance.now() + durationMs + 50  // tiny buffer past transition
+
+  function tick(now) {
+    repositionBriefPins()
+    if (now < _briefTrackingEnd) {
+      _briefTrackingRaf = requestAnimationFrame(tick)
+    } else {
+      _briefTrackingRaf = null
+      // Final authoritative repaint once transition has fully settled
+      if (_briefPhases.length) renderBriefMapMarkers(_briefPhases[_briefPhaseIdx])
+    }
+  }
+  _briefTrackingRaf = requestAnimationFrame(tick)
+}
+
+// Reposition existing pin elements in-place — no DOM rebuild
+function repositionBriefPins() {
+  const layer = document.getElementById('wmbMarkersLayer')
+  if (!layer || !_briefPhases.length) return
+  const phase = _briefPhases[_briefPhaseIdx]
+  if (!phase) return
+  const revealedAll = [phase.objective, ...phase.markers.slice(0, _briefMarkerStep)].filter(Boolean)
+  const pins = layer.querySelectorAll('.wm-brief-pin')
+  revealedAll.forEach((m, idx) => {
+    const mk = m._marker || {}
+    const pin = pins[idx]
+    if (!pin) return
+    const { x, y } = getBriefPinScreenPos(mk.x || 0, mk.y || 0)
+    pin.style.left = x + 'px'
+    pin.style.top  = y + 'px'
+  })
+}
+
+let _briefCurrentScale = 1
+
 function zoomBriefMapTo(xPct, yPct, isPhaseObjective) {
   const group = document.getElementById('wmbMapGroup')
+  const wrap  = document.getElementById('wmbImgWrap')
   if (!group) return
-  const scale = isPhaseObjective ? 2.4 : 2.0
-  const tx = (50 - xPct)   // % of group width  to shift
-  const ty = (50 - yPct)   // % of group height to shift
-  group.style.transform = `scale(${scale}) translate(${tx}%, ${ty}%)`
+
+  _briefCurrentScale = isPhaseObjective ? 5.0 : 4.0
+
+  if (wrap && group.offsetWidth && wrap.offsetWidth) {
+    const groupW = group.offsetWidth
+    const groupH = group.offsetHeight
+    const wrapW  = wrap.offsetWidth
+    const wrapH  = wrap.offsetHeight
+    const wrapOffX = (groupW - wrapW) / 2
+    const wrapOffY = (groupH - wrapH) / 2
+    const markerPx = wrapOffX + (xPct / 100) * wrapW
+    const markerPy = wrapOffY + (yPct / 100) * wrapH
+    group.style.transformOrigin = `${(markerPx / groupW * 100).toFixed(4)}% ${(markerPy / groupH * 100).toFixed(4)}%`
+  } else {
+    group.style.transformOrigin = `${xPct}% ${yPct}%`
+  }
+
+  group.style.transform = `scale(${_briefCurrentScale})`
+
+  // Track pins live for the full duration of the CSS transition (850ms)
+  startBriefPinTracking(850)
 }
 
 function resetBriefMapZoom() {
   const group = document.getElementById('wmbMapGroup')
-  if (group) group.style.transform = 'scale(1) translate(0%, 0%)'
+  if (!group) return
+  _briefCurrentScale = 1
+  group.style.transform       = 'scale(1)'
+  group.style.transformOrigin = 'center center'
+  startBriefPinTracking(850)
 }
 
-// Render all revealed markers for this phase on the brief map
+// applyBriefCounterScale is no longer needed — wmbMarkersLayer is outside the
+// zoom group so pins are always rendered at 1:1 device pixels (no blur).
+
+// ── Brief map image sizing ────────────────────────────────────────────────────
+// #wmbImgWrap is sized to the image's natural aspect ratio, constrained to fit
+// the pane. Once sized, pins at left/top % directly equal image pixel %.
+// No getBoundingClientRect, no math — zero drift.
+function sizeBriefImgWrap() {
+  const img  = document.getElementById('wmbMapImg')
+  const pane = document.querySelector('.wm-brief-map-pane')
+  const wrap = document.getElementById('wmbImgWrap')
+  if (!img || !pane || !wrap) return false
+
+  const natW = img.naturalWidth
+  const natH = img.naturalHeight
+  if (!natW || !natH) return false
+
+  const paneW = pane.clientWidth  || pane.offsetWidth
+  const paneH = pane.clientHeight || pane.offsetHeight
+  if (!paneW || !paneH) return false
+
+  // Fit the image inside the pane, maintaining aspect ratio (letterbox)
+  const scale = Math.min(paneW / natW, paneH / natH)
+  const w = Math.round(natW * scale)
+  const h = Math.round(natH * scale)
+
+  wrap.style.width  = w + 'px'
+  wrap.style.height = h + 'px'
+  return true
+}
+
+// Called by <img onload> and by startBriefing
+function onBriefImgLoad() {
+  sizeBriefImgWrap()
+  // If briefing is already open, re-render to reposition any pins
+  if (document.getElementById('wmBriefingOverlay').classList.contains('open')) {
+    renderBriefPhase()
+  }
+}
+
+// Re-size the wrap if the pane is resized (window resize, etc.)
+;(function() {
+  const pane = document.querySelector('.wm-brief-map-pane')
+  if (!pane || typeof ResizeObserver === 'undefined') return
+  new ResizeObserver(() => {
+    if (!document.getElementById('wmBriefingOverlay').classList.contains('open')) return
+    sizeBriefImgWrap()
+  }).observe(pane)
+})()
+
+// ── Pin placement — screen-pixel coords outside zoom group ───────────────────
+// wmbMarkersLayer is now a sibling of wmbMapGroup (NOT inside it), so it is
+// never affected by the CSS zoom transform.  We calculate where each pin
+// should appear on screen by reading the current bounding rect of wmbImgWrap
+// (which is inside the zoomed group and therefore already reflects the zoom),
+// then convert the stored x/y % to pane-relative pixel coordinates.
+// Result: pins are always rendered at 1:1 device pixels — zero blur.
+
+function getBriefPinScreenPos(xPct, yPct) {
+  const pane = document.querySelector('.wm-brief-map-pane')
+  const wrap = document.getElementById('wmbImgWrap')
+  if (!pane || !wrap) return { x: 0, y: 0 }
+
+  const paneRect = pane.getBoundingClientRect()
+  const wrapRect = wrap.getBoundingClientRect()
+
+  // Pixel position of the map coordinate relative to pane top-left
+  const x = (wrapRect.left - paneRect.left) + (xPct / 100) * wrapRect.width
+  const y = (wrapRect.top  - paneRect.top)  + (yPct / 100) * wrapRect.height
+  return { x, y }
+}
+
 function renderBriefMapMarkers(phase) {
   const layer = document.getElementById('wmbMarkersLayer')
   if (!layer) return
@@ -2664,20 +2931,23 @@ function renderBriefMapMarkers(phase) {
     const color = WM_TYPE_COLORS[mk.marker_type || 'intel'] || '#888'
     const isObj = mk.marker_type === 'objective' || m === phase.objective
 
+    const { x, y } = getBriefPinScreenPos(mk.x || 0, mk.y || 0)
+
     const pin = document.createElement('div')
     pin.className = 'wm-brief-pin' + (isObj ? ' is-objective' : '')
-    pin.style.left   = (mk.x || 0) + '%'
-    pin.style.top    = (mk.y || 0) + '%'
+    // Screen-pixel position relative to pane (layer is absolute inside pane)
+    pin.style.left = x + 'px'
+    pin.style.top  = y + 'px'
     pin.style.setProperty('--pin-color', color)
 
-    // Number badge: objective = ★, others = index
-    const badge = isObj ? '★' : String(idx)   // idx 0 = objective so sub-markers start at 1
+    const badge = isObj ? '★' : String(idx)
     pin.innerHTML = `
       <div class="wm-brief-pin-dot" style="background:${color};">${badge}</div>
       <div class="wm-brief-pin-label">${escHtml(mk.label || '')}</div>`
 
     layer.appendChild(pin)
   })
+  // No counter-scale needed — layer is outside the zoom group
 }
 
 // Build the accumulating text list in the intel pane
@@ -2699,15 +2969,30 @@ function renderBriefMarkersList(phase, revealedNonObj) {
     const item = document.createElement('div')
     item.className = 'wm-brief-marker-item'
     item.style.animationDelay = '0ms'  // already revealed, no delay
+    // Build image strip for this marker
+    const imgs = (mk.images || []).filter(Boolean)
+    const imgStripHtml = imgs.length ? `
+      <div class="wm-brief-img-strip">
+        ${imgs.map((url, i) => `
+          <div class="wm-brief-img-thumb" onclick="openBriefPhoto('${url}', '${escHtml(mk.label||'')}', ${i+1}, ${imgs.length})">
+            <img src="${url}" alt="Location photo ${i+1}" loading="lazy"/>
+            <div class="wm-brief-img-overlay">
+              <svg viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6v-6z"/></svg>
+            </div>
+          </div>`).join('')}
+      </div>` : ''
+
     item.innerHTML = `
       <div class="wm-brief-marker-item-top">
         <div class="wm-brief-marker-num" style="background:${color};">${idx + 1}</div>
         <div class="wm-brief-marker-type" style="color:${color};">${typeLabel.toUpperCase()}</div>
         ${mk.phase != null ? `<div class="wm-brief-marker-phase">P${mk.phase}</div>` : ''}
+        ${imgs.length ? `<div class="wm-brief-img-count"><svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:currentColor;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg> ${imgs.length}</div>` : ''}
       </div>
       <div class="wm-brief-marker-label">${escHtml(mk.label || '—')}</div>
       ${mk.description ? `<div class="wm-brief-marker-desc">${escHtml(mk.description)}</div>` : ''}
-      ${linked ? `<div class="wm-brief-marker-dir">⬡ ${escHtml(mk.directive_code || '')} — ${escHtml(linked.name || '')}</div>` : ''}`
+      ${linked ? `<div class="wm-brief-marker-dir">⬡ ${escHtml(mk.directive_code || '')} — ${escHtml(linked.name || '')}</div>` : ''}
+      ${imgStripHtml}`
 
     list.appendChild(item)
   })
@@ -2734,7 +3019,230 @@ document.addEventListener('keydown', e => {
   }
 })
 
+
+// ════════════════════════════════════════════════════════════
+//  WARMAP PHOTO MANAGEMENT
+//  No monkey-patching. State is owned here and reset explicitly
+//  by openWmModal() and openWmEditModal() before slots render.
+//
+//  _wmPendingPhotos[i]  — File object chosen, not yet saved
+//  _wmExistingPhotos[i] — base64/URL already in DB
+//  _wmBlobUrls[i]       — blob URL created for preview; revoked
+//                         on re-render to prevent memory leaks
+// ════════════════════════════════════════════════════════════
+
+let _wmPendingPhotos  = [null, null, null, null, null]
+let _wmExistingPhotos = [null, null, null, null, null]
+let _wmBlobUrls       = [null, null, null, null, null]
+
+// ── Reset photo state for a specific marker (or blank for new) ──
+function _wmResetPhotoState(savedImages) {
+  // Revoke all blob URLs from the previous modal open
+  _wmBlobUrls.forEach(u => { if (u) { try { URL.revokeObjectURL(u) } catch(_) {} } })
+  _wmBlobUrls       = [null, null, null, null, null]
+  _wmPendingPhotos  = [null, null, null, null, null]
+  _wmExistingPhotos = [null, null, null, null, null]
+
+  // Populate existing images for this marker
+  if (Array.isArray(savedImages)) {
+    savedImages.forEach((url, i) => {
+      if (i < 5 && url) _wmExistingPhotos[i] = url
+    })
+  }
+}
+
+// ── Render the 5 photo slots inside the pin modal ─────────
+function renderWmPhotoSlots() {
+  const container = document.getElementById('wmPhotoSlots')
+  if (!container) return
+
+  // Revoke old blob URLs before wiping the DOM
+  _wmBlobUrls.forEach(u => { if (u) { try { URL.revokeObjectURL(u) } catch(_) {} } })
+  _wmBlobUrls = [null, null, null, null, null]
+  container.innerHTML = ''
+
+  for (let i = 0; i < 5; i++) {
+    const existing = _wmExistingPhotos[i]
+    const pending  = _wmPendingPhotos[i]
+
+    const slot = document.createElement('div')
+    slot.className = 'wm-photo-slot' + (existing || pending ? ' wm-photo-slot--filled' : '')
+
+    if (pending) {
+      // Create a tracked blob URL for preview
+      const blobUrl = URL.createObjectURL(pending)
+      _wmBlobUrls[i] = blobUrl
+      slot.innerHTML = `
+        <img class="wm-photo-preview" src="${blobUrl}" alt="Preview"/>
+        <div class="wm-photo-slot-badge">NEW</div>
+        <button class="wm-photo-remove" onclick="wmRemovePhoto(${i})" title="Remove">&#x2715;</button>`
+    } else if (existing) {
+      const safeUrl = existing.replace(/'/g, '%27')
+      slot.innerHTML = `
+        <img class="wm-photo-preview" src="${existing}" alt="Saved photo"/>
+        <button class="wm-photo-remove" onclick="wmRemovePhoto(${i})" title="Remove">&#x2715;</button>
+        <div class="wm-photo-slot-expand" onclick="openBriefPhoto('${safeUrl}','Photo',${i+1},5)">&#x26F6;</div>`
+    } else {
+      slot.innerHTML = `
+        <div class="wm-photo-add" onclick="wmTriggerUpload(${i})">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          <span>Photo ${i + 1}</span>
+        </div>`
+    }
+    container.appendChild(slot)
+
+    // Fresh file input per slot — prevents stale event listeners
+    const inp = document.createElement('input')
+    inp.type          = 'file'
+    inp.accept        = 'image/*'
+    inp.style.display = 'none'
+    inp.dataset.slot  = i
+    inp.addEventListener('change', e => wmHandleFileSelect(e, i))
+    container.appendChild(inp)
+  }
+}
+
+function wmTriggerUpload(i) {
+  const inputs = document.getElementById('wmPhotoSlots').querySelectorAll('input[type=file]')
+  if (inputs[i]) inputs[i].click()
+}
+
+function wmHandleFileSelect(e, i) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (file.size > 4 * 1024 * 1024) {
+    showToast('Max image size is 4 MB', 'error')
+    e.target.value = ''
+    return
+  }
+  _wmPendingPhotos[i] = file
+  renderWmPhotoSlots()
+}
+
+function wmRemovePhoto(i) {
+  if (_wmBlobUrls[i]) { try { URL.revokeObjectURL(_wmBlobUrls[i]) } catch(_) {} _wmBlobUrls[i] = null }
+  _wmPendingPhotos[i]  = null
+  _wmExistingPhotos[i] = null
+  renderWmPhotoSlots()
+}
+
+// ── Convert File → base64 data-URL ────────────────────────
+function wmFileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload  = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('File read failed'))
+    reader.readAsDataURL(file)
+  })
+}
+
+// ── Collect final images: existing kept, pending → base64 ──
+async function wmCollectImages() {
+  const result = []
+  for (let i = 0; i < 5; i++) {
+    if (_wmPendingPhotos[i]) {
+      result.push(await wmFileToBase64(_wmPendingPhotos[i]))
+    } else if (_wmExistingPhotos[i]) {
+      result.push(_wmExistingPhotos[i])
+    } else {
+      result.push(null)
+    }
+  }
+  return result
+}
+
+// ════════════════════════════════════════════════════════════
+//  BRIEF MODE PHOTO LIGHTBOX
+//  Opens a fullscreen photo viewer when a thumbnail is clicked
+//  in the brief mode intel pane.
+// ════════════════════════════════════════════════════════════
+
+let _lightboxImages  = []
+let _lightboxIndex   = 0
+
+function openBriefPhoto(url, markerLabel, photoNum, total) {
+  _lightboxImages = []
+  _lightboxIndex  = photoNum - 1
+
+  // Find all images for this marker by locating it in _allMarkers
+  const marker = _allMarkers.find(m => {
+    const imgs = (m._marker?.images || []).filter(Boolean)
+    return imgs.includes(url)
+  })
+  _lightboxImages = marker ? (marker._marker?.images || []).filter(Boolean) : [url]
+  _lightboxIndex  = _lightboxImages.indexOf(url)
+  if (_lightboxIndex < 0) _lightboxIndex = 0
+
+  renderLightbox()
+  document.getElementById('wmPhotoLightbox').classList.add('open')
+  document.body.style.overflow = 'hidden'
+}
+
+function closeLightbox() {
+  document.getElementById('wmPhotoLightbox').classList.remove('open')
+  document.body.style.overflow = ''
+}
+
+function lightboxNav(dir) {
+  _lightboxIndex = (_lightboxIndex + dir + _lightboxImages.length) % _lightboxImages.length
+  renderLightbox()
+}
+
+function renderLightbox() {
+  const img     = document.getElementById('wmLightboxImg')
+  const counter = document.getElementById('wmLightboxCounter')
+  const label   = document.getElementById('wmLightboxLabel')
+  const prev    = document.getElementById('wmLightboxPrev')
+  const next    = document.getElementById('wmLightboxNext')
+
+  if (img)     img.src = _lightboxImages[_lightboxIndex] || ''
+  if (counter) counter.textContent = `${_lightboxIndex + 1} / ${_lightboxImages.length}`
+  if (prev)    prev.style.display  = _lightboxImages.length > 1 ? 'flex' : 'none'
+  if (next)    next.style.display  = _lightboxImages.length > 1 ? 'flex' : 'none'
+}
+
+// Keyboard nav for lightbox
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('wmPhotoLightbox')
+  if (!lb?.classList.contains('open')) return
+  if (e.key === 'Escape')      closeLightbox()
+  if (e.key === 'ArrowLeft')   lightboxNav(-1)
+  if (e.key === 'ArrowRight')  lightboxNav(1)
+})
+
 </script>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PHOTO LIGHTBOX — Brief mode fullscreen photo viewer
+════════════════════════════════════════════════════════ -->
+<div class="wm-lightbox" id="wmPhotoLightbox" onclick="if(event.target===this)closeLightbox()">
+  <div class="wm-lightbox-box">
+
+    <!-- Topbar -->
+    <div class="wm-lightbox-topbar">
+      <div class="wm-lightbox-topbar-left">
+        <div class="wm-lightbox-dot"></div>
+        <span class="wm-lightbox-title">LOCATION INTELLIGENCE</span>
+        <span class="wm-lightbox-counter" id="wmLightboxCounter">1 / 1</span>
+      </div>
+      <button class="wm-lightbox-close" onclick="closeLightbox()">&#x2715; Close</button>
+    </div>
+
+    <!-- Image area -->
+    <div class="wm-lightbox-img-wrap">
+      <button class="wm-lightbox-nav wm-lightbox-prev" id="wmLightboxPrev" onclick="lightboxNav(-1)">&#8592;</button>
+      <img class="wm-lightbox-img" id="wmLightboxImg" src="" alt="Location photo"/>
+      <button class="wm-lightbox-nav wm-lightbox-next" id="wmLightboxNext" onclick="lightboxNav(1)">&#8594;</button>
+    </div>
+
+    <!-- Thumbnail strip -->
+    <div class="wm-lightbox-strip" id="wmLightboxStrip"></div>
+
+  </div>
+</div>
 
 </body>
 </html>

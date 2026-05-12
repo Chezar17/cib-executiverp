@@ -25,13 +25,12 @@
 
   <div class="login-card">
 
-    <!-- top status bar -->
+
     <div class="login-status-bar">
       <span class="login-status-left">CIB · SECURE PERSONNEL PORTAL</span>
       <span class="login-status-right">SYS-AUTH v1.0 &ndash; SECURE CHANNEL ACTIVE</span>
     </div>
 
-    <!-- card body -->
     <div class="login-body">
 
       <img class="login-seal" id="secretSeal" src="images/cib-logo.png" alt="CIB Seal"
@@ -42,8 +41,6 @@
       <div class="login-title">Detective Portal</div>
       <div class="login-subtitle">Authorized Personnel Only</div>
       <div class="login-divider"></div>
-
-      <!-- DEV NOTICE -->
       <div class="dev-notice">
         <span class="dev-notice-icon">&#9888;</span>
         <div class="dev-notice-text">
@@ -51,8 +48,6 @@
           This login portal is currently not functional and is still under active development. Authentication is temporarily disabled. Authorized personnel should use the <span style="color:var(--gold);font-weight:bold;">classified access channel</span> to log in.
         </div>
       </div>
-
-      <!-- Badge Number -->
       <div class="form-group" style="opacity:0.45;pointer-events:none;">
         <label class="form-label" for="badge-main">CIB Credentials</label>
         <div class="form-input-wrap">
@@ -63,8 +58,6 @@
         </div>
         <div class="form-hint">Login via this form is currently disabled</div>
       </div>
-
-      <!-- Password -->
       <div class="form-group" style="opacity:0.45;pointer-events:none;">
         <label class="form-label" for="password-main">Password</label>
         <div class="form-input-wrap">
@@ -93,7 +86,7 @@
         </div>
       </div>
 
-    </div><!-- /login-body -->
+    </div>
 
     <div class="login-footer-bar">
       <span class="login-footer-left">&copy; 2026 CENTRAL INVESTIGATION BUREAU</span>
@@ -102,10 +95,6 @@
 
   </div>
 </div>
-
-<!-- ══════════════════════════════════════════════════
-     SURVEILLANCE OVERLAY
-══════════════════════════════════════════════════ -->
 <div id="surv-overlay">
   <div class="surv-corner surv-corner-tr"></div>
   <div class="surv-corner surv-corner-bl"></div>
@@ -241,11 +230,6 @@
 
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
-
-
-<!-- ══════════════════════════════════════════════════
-     SECRET LOGIN MODAL
-══════════════════════════════════════════════════ -->
 <div id="secret-modal">
   <div class="secret-modal-box">
 
@@ -259,8 +243,6 @@
       <div class="secret-modal-title">Personnel Access</div>
       <div class="secret-modal-sub">Enter your credentials to access the portal</div>
       <div class="secret-modal-divider"></div>
-
-      <!-- Badge / Name -->
       <div class="form-group">
         <label class="form-label" for="s-badge">Name</label>
         <div class="form-input-wrap">
@@ -271,8 +253,6 @@
         </div>
         <div class="form-hint">Enter your Name</div>
       </div>
-
-      <!-- Password -->
       <div class="form-group">
         <label class="form-label" for="s-password">Password</label>
         <div class="form-input-wrap">
@@ -282,19 +262,11 @@
           <input class="form-input" type="password" id="s-password" placeholder="Enter your password" autocomplete="off"/>
         </div>
       </div>
-
-      <!-- Attempt counter -->
       <div id="s-attempts-display" style="display:none;margin-bottom:10px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-align:right;text-transform:uppercase;"></div>
-
-      <!-- Submit -->
       <button class="login-btn" id="s-loginBtn" onclick="handleSecretLogin()">Access Portal</button>
-
-      <!-- Error box -->
       <div id="s-loginError" style="display:none;margin-top:14px;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.4);border-left:3px solid var(--red-alert);padding:10px 14px;">
         <div id="s-loginErrorMsg" style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red-alert);text-transform:uppercase;"></div>
       </div>
-
-      <!-- Success overlay -->
       <div id="s-success-overlay" style="display:none;position:absolute;inset:0;background:rgba(10,15,30,0.97);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:16px;border-top:3px solid #27AE60;">
         <div id="s-success-icon" style="width:64px;height:64px;border:2px solid #27AE60;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:successPulse 0.6s ease forwards;">
           <svg fill="currentColor" viewBox="0 0 24 24" style="width:32px;height:32px;fill:#27AE60;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -309,13 +281,6 @@
     </div>
   </div>
 </div>
-
-
-<!-- ══════════════════════════════════════════════════
-     CHANGE PASSWORD MODAL
-     Shown automatically when mustChangePassword === true
-     after a successful login.
-══════════════════════════════════════════════════ -->
 <div id="chpw-modal">
   <div class="chpw-box">
 
@@ -330,7 +295,7 @@
 
     <div class="chpw-body">
 
-      <!-- mandatory alert -->
+
       <div class="chpw-alert">
         <span class="chpw-alert-icon">&#9888;</span>
         <div class="chpw-alert-text">
@@ -339,7 +304,7 @@
         </div>
       </div>
 
-      <!-- Current password -->
+
       <div class="form-group">
         <label class="form-label" for="chpw-old">Current Password</label>
         <div class="form-input-wrap">
@@ -349,8 +314,6 @@
           <input class="form-input" type="password" id="chpw-old" placeholder="Enter current password" autocomplete="current-password"/>
         </div>
       </div>
-
-      <!-- New password -->
       <div class="form-group">
         <label class="form-label" for="chpw-new">New Password</label>
         <div class="form-input-wrap">
@@ -359,7 +322,6 @@
           </span>
           <input class="form-input" type="password" id="chpw-new" placeholder="Enter new password" autocomplete="new-password" oninput="chpwStrength(this.value)"/>
         </div>
-        <!-- strength bar -->
         <div class="chpw-strength-wrap">
           <div class="chpw-strength-bar-track">
             <div class="chpw-strength-bar-fill" id="chpw-strength-fill"></div>
@@ -367,8 +329,6 @@
           <span class="chpw-strength-label" id="chpw-strength-label">&nbsp;</span>
         </div>
       </div>
-
-      <!-- Verify new password -->
       <div class="form-group">
         <label class="form-label" for="chpw-verify">Verify New Password</label>
         <div class="form-input-wrap">
@@ -378,18 +338,12 @@
           <input class="form-input" type="password" id="chpw-verify" placeholder="Re-enter new password" autocomplete="new-password"/>
         </div>
       </div>
-
-      <!-- Error -->
       <div id="chpw-error">
         <div id="chpw-error-msg"></div>
       </div>
-
-      <!-- Save button -->
       <button class="login-btn" id="chpw-save-btn" onclick="handleChangePassword()" style="margin-top:16px;">
         Save New Password
       </button>
-
-      <!-- Success overlay (inside chpw-body) -->
       <div id="chpw-success">
         <div style="width:60px;height:60px;border:2px solid #27AE60;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:successPulse 0.6s ease forwards;">
           <svg fill="#27AE60" viewBox="0 0 24 24" style="width:30px;height:30px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -410,26 +364,9 @@
 <script src="scripts/login.js"></script>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-//  CHANGE PASSWORD — frontend logic
-// ═══════════════════════════════════════════════════════════
 
-// Holds the token + badge returned by the login endpoint
-// so we can use them in the change-password call.
 let _chpwToken = null
 let _chpwBadge = null
-
-/**
- * Called by the existing login success handler (in login.js)
- * when mustChangePassword === true.
- *
- * Usage (in login.js, where you currently do sessionStorage.setItem calls):
- *   if (data.user.mustChangePassword) {
- *     openChangePasswordModal(data.token, data.user.badge)
- *   } else {
- *     // proceed as normal
- *   }
- */
 function openChangePasswordModal(token, badge) {
   _chpwToken = token
   _chpwBadge = badge
@@ -444,7 +381,6 @@ function openChangePasswordModal(token, badge) {
   document.getElementById('chpw-modal').classList.add('open')
 }
 
-// ── Password-strength indicator ───────────────────────────
 function chpwStrength(pw) {
   const fill  = document.getElementById('chpw-strength-fill')
   const label = document.getElementById('chpw-strength-label')
@@ -470,8 +406,6 @@ function chpwStrength(pw) {
   label.textContent     = s.text
   label.style.color     = s.color
 }
-
-// ── Error display ─────────────────────────────────────────
 function chpwSetError(msg) {
   const box = document.getElementById('chpw-error')
   const txt = document.getElementById('chpw-error-msg')
@@ -479,13 +413,11 @@ function chpwSetError(msg) {
   else     { txt.textContent = '';  box.style.display = 'none'  }
 }
 
-// ── SHA-256 helper (same as login.js uses) ────────────────
 async function sha256hex(str) {
   const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
 }
 
-// ── Main change-password handler ─────────────────────────
 async function handleChangePassword() {
   const oldPw    = document.getElementById('chpw-old').value.trim()
   const newPw    = document.getElementById('chpw-new').value
@@ -494,7 +426,6 @@ async function handleChangePassword() {
 
   chpwSetError('')
 
-  // ── Client-side validation ────────────────────────────
   if (!oldPw)              return chpwSetError('CURRENT PASSWORD IS REQUIRED')
   if (!newPw)              return chpwSetError('NEW PASSWORD IS REQUIRED')
   if (newPw.length < 8)   return chpwSetError('NEW PASSWORD MUST BE AT LEAST 8 CHARACTERS')
@@ -528,19 +459,14 @@ async function handleChangePassword() {
       return chpwSetError((data.error || 'UNKNOWN ERROR').toUpperCase())
     }
 
-    // ── Success: show overlay, then redirect to login ─────
     const successEl  = document.getElementById('chpw-success')
     const redirectBar = document.getElementById('chpw-redirect-bar')
     successEl.classList.add('show')
-
-    // Clear any stale session data — user must re-login
     sessionStorage.clear()
 
-    // Animate redirect bar, then re-open the login modal
     setTimeout(() => { redirectBar.style.width = '100%' }, 50)
     setTimeout(() => {
       document.getElementById('chpw-modal').classList.remove('open')
-      // Re-open the secret login modal so they can log in fresh
       document.getElementById('secret-modal').classList.add('open')
       document.getElementById('s-badge').value    = _chpwBadge || ''
       document.getElementById('s-password').value = ''
