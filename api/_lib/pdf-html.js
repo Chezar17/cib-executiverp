@@ -857,23 +857,24 @@ export function buildPDFDocument(r) {
     body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
       "E. Witness affidavits",
     )}`;
-    r.witnesses.forEach((w) => {
+    r.witnesses.forEach((w, wi) => {
+      const wNum = wi + 1;
+      const wid = esc(w.id_code || "w." + wNum);
       body += `<div class="witness-affidavit-block">`;
       body += `<table class="compact-avoid pdf-solid-table pdf-table-keep witness-affidavit-table"><tr>
-          <td style="width:8%"><div class="lbl">No.</div>${esc(w.id_code || "")}</td>
-          <td colspan="3" style="font-weight:bold;font-size:10pt">AFFIDAVIT</td>
+          <td colspan="4" class="pdf-id-row">Witness No. ${wNum}: ${wid}</td>
         </tr><tr>
-          <td></td>
-          <td style="width:25%"><div class="lbl">a. Name</div>${esc(w.full_name || "")}</td>
-          <td style="width:20%"><div class="lbl">b. Witness ID Code</div>${esc(w.id_code || "")}</td>
-          <td><div class="lbl">c. Status</div>${esc(w.status || "")}</td>
+          <td colspan="4" style="font-weight:bold;font-size:10pt;padding:6px 8px">AFFIDAVIT</td>
         </tr><tr>
-          <td></td>
-          <td><div class="lbl">d. Welfare</div>${esc(w.welfare || "")}</td>
-          <td colspan="2"><div class="lbl">e. Occupation</div>${esc(witnessOccupation(w))}</td>
+          <td colspan="2"><div class="lbl">a. Name</div>${esc(w.full_name || "")}</td>
+          <td style="width:22%"><div class="lbl">b. Witness ID Code</div>${esc(w.id_code || "")}</td>
+          <td style="width:22%"><div class="lbl">c. Status</div>${esc(w.status || "")}</td>
+        </tr><tr>
+          <td style="width:26%"><div class="lbl">d. Welfare</div>${esc(w.welfare || "")}</td>
+          <td colspan="3"><div class="lbl">e. Occupation</div>${esc(witnessOccupation(w))}</td>
         </tr>`;
       if (asPdfBool(w.is_expert)) {
-        body += `<tr><td></td><td colspan="3"><div class="lbl">Expert witness</div>${chk(true)} &nbsp; ${esc(w.expertise || "")}</td></tr>`;
+        body += `<tr><td colspan="4"><div class="lbl">Expert witness</div>${chk(true)} &nbsp; ${esc(w.expertise || "")}</td></tr>`;
       }
       body += `<tr><td colspan="4"><div class="lbl">f. Content</div><div class="narrative">${esc(w.content || "")}</div></td></tr>`;
       body += `<tr><td colspan="4" class="witness-declaration-cell">${esc(WITNESS_TRUTH_DECLARATION)}</td></tr>`;
