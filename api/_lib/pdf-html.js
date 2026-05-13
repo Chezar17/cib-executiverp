@@ -69,10 +69,10 @@ function watermarkBodyHtml() {
     ";bottom:" +
     m.bottom +
     ";z-index:0;" +
-    "pointer-events:none;opacity:0.26;" +
+    "pointer-events:none;opacity:0.44;" +
     "background-image:url('" +
     WM_SRC +
-    "');background-size:52% auto;background-position:center center;background-repeat:no-repeat;" +
+    "');background-size:62% auto;background-position:center center;background-repeat:no-repeat;" +
     '-webkit-print-color-adjust:exact;print-color-adjust:exact" aria-hidden="true"></div>'
   );
 }
@@ -274,7 +274,7 @@ const CSS = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Consolas, "Courier New", monospace;
   font-size: 10pt;
   color: #000;
   background: #fff;
@@ -292,7 +292,14 @@ a { color: #000; }
     print-color-adjust: exact !important;
   }
 }
-.pdf-root { position: relative; z-index: 1; isolation: auto; }
+.pdf-root {
+  position: relative;
+  z-index: 1;
+  isolation: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 /* block flow for printable pages */
 .page { display: block; }
 .page-body { display: block; }
@@ -308,10 +315,17 @@ a { color: #000; }
   padding-bottom: 8px;
   border-bottom: 1px solid #ddd;
 }
-.debrief-entry-block,
-.witness-affidavit-block {
+.debrief-entry-block {
   break-inside: auto;
   page-break-inside: auto;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+/* One affidavit = one unbroken unit (metadata + content + declaration + signature). */
+.witness-affidavit-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #ddd;
@@ -352,6 +366,12 @@ table.pdf-solid-table > tr {
   page-break-inside: avoid;
 }
 table.pdf-table-keep {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+table.pdf-table-keep > thead > tr,
+table.pdf-table-keep > tbody > tr,
+table.pdf-table-keep > tr {
   break-inside: avoid !important;
   page-break-inside: avoid !important;
 }
@@ -423,7 +443,7 @@ td, th {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
-/* Witness declaration row inside affidavit table — splittable with parent table */
+/* Witness declaration row inside affidavit table — keep with same table (parent is pdf-table-keep). */
 table.witness-affidavit-table td.witness-declaration-cell {
   width: 100%;
   padding: 12px 14px;
@@ -484,7 +504,7 @@ table.witness-sign-row td {
   line-height: 13px; font-size: 9pt; vertical-align: middle;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.chkbox-on { font-weight: bold; font-family: Arial, Helvetica, sans-serif; }
+.chkbox-on { font-weight: bold; font-family: Consolas, "Courier New", monospace; }
 .chk-mark {
   display: inline-block;
   font-weight: bold;
@@ -502,6 +522,16 @@ table.witness-sign-row td {
 table.closure-table { page-break-inside: avoid; break-inside: avoid; }
 table.closure-table tr { break-inside: avoid; page-break-inside: avoid; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+/* Chromium PDF often drops or clips the outer right edge with collapse alone — frame the printable tables */
+table.pdf-solid-table,
+table.pdf-summary-table,
+table.pdf-evidence-split-table,
+table.closure-table {
+  border: 1px solid #000;
+}
+table[style*="border:none"] {
+  border: none !important;
+}
 th { background: #eee; border: 1px solid #000; padding: 3px 6px; font-size: 8pt; text-align: left; font-weight: bold; }
 td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: top; }
 .narrative {
@@ -829,7 +859,7 @@ export function buildPDFDocument(r) {
     )}`;
     r.witnesses.forEach((w) => {
       body += `<div class="witness-affidavit-block">`;
-      body += `<table class="compact-avoid pdf-solid-table witness-affidavit-table"><tr>
+      body += `<table class="compact-avoid pdf-solid-table pdf-table-keep witness-affidavit-table"><tr>
           <td style="width:8%"><div class="lbl">No.</div>${esc(w.id_code || "")}</td>
           <td colspan="3" style="font-weight:bold;font-size:10pt">AFFIDAVIT</td>
         </tr><tr>

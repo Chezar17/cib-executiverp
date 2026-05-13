@@ -58,7 +58,7 @@ export function buildPdfHeaderTemplate(formId) {
   const padR = PDF_MARGIN_MM.right
   const id = escPdfTemplateText(formId)
   return `
-<div style="width:100%;box-sizing:border-box;margin:0;padding:6px ${padR} 8px ${padL};font-size:8pt;line-height:1.25;font-family:Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+<div style="width:100%;box-sizing:border-box;margin:0;padding:6px ${padR} 8px ${padL};font-size:8pt;line-height:1.25;font-family:Consolas,'Courier New',monospace;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
   <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
     <tr>
       <td style="vertical-align:bottom;padding:0 10px 4px 0;font-weight:bold;letter-spacing:0.35px;">CRIMINAL INVESTIGATION DIVISION – STATE OF SAN ANDREAS</td>
@@ -93,7 +93,7 @@ export function buildPdfFooterTemplate(logoDataUrl) {
     : ''
 
   return `
-<div style="width:100%;box-sizing:border-box;margin:0;padding:0 ${padR} 0 ${padL};font-size:8px;line-height:1.35;font-family:Arial,Helvetica,sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+<div style="width:100%;box-sizing:border-box;margin:0;padding:0 ${padR} 0 ${padL};font-size:8px;line-height:1.35;font-family:Consolas,'Courier New',monospace;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
   <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border-top:1px solid #aaa;">
     <tr>
       ${logoCell}
