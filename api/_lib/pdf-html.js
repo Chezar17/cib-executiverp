@@ -154,6 +154,31 @@ function pdfFramedPhotoHtml(url, orientation, crop, portraitW, portraitH, landsc
   );
 }
 
+/** Evidence exhibit: fills grid column height (matches text column); uses same crop math as framed photos. */
+function pdfEvidencePhotoFillHtml(url, crop, fallbackInnerHtml) {
+  if (!url) {
+    return `<div class="pdf-evidence-photo-fill pdf-evidence-photo-fill--empty">${fallbackInnerHtml}</div>`;
+  }
+  const u = cssUrlForPdfAttr(url);
+  const c = normalizePdfCrop(crop);
+  let bgSize;
+  let bgPos;
+  if (!c || (c.nw >= 0.999 && c.nh >= 0.999)) {
+    bgSize = "cover";
+    bgPos = "50% 50%";
+  } else {
+    const sx = (100 / c.nw).toFixed(6);
+    const sy = (100 / c.nh).toFixed(6);
+    const px = c.nw >= 0.999 ? 50 : (c.nx / (1 - c.nw)) * 100;
+    const py = c.nh >= 0.999 ? 50 : (c.ny / (1 - c.nh)) * 100;
+    bgSize = sx + "% " + sy + "%";
+    bgPos = px.toFixed(4) + "% " + py.toFixed(4) + "%";
+  }
+  return (
+    `<div class="pdf-evidence-photo-fill" style="background-image:url('${u}');background-size:${bgSize};background-position:${bgPos};"></div>`
+  );
+}
+
 /** Supabase/JSON sometimes sends booleans as strings; PDF needs stable truth test. */
 export function asPdfBool(v) {
   if (v === true || v === 1) return true;
@@ -329,6 +354,46 @@ table.compact-avoid tr {
 .section-banner + .section-title {
   break-before: avoid;
   page-break-before: avoid;
+}
+/* Evidence row: photo column stretches to full height of name/summary column */
+.pdf-evidence-split-grid {
+  display: grid;
+  grid-template-columns: 62% 38%;
+  width: 100%;
+  align-items: stretch;
+  border: 1px solid #000;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.pdf-evidence-split-grid > .pdf-evidence-fields-cell {
+  padding: 8px;
+  border-right: 1px solid #000;
+}
+.pdf-evidence-split-grid > .pdf-evidence-photo-cell {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 100%;
+}
+.pdf-evidence-photo-fill {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 180px;
+  margin-top: 4px;
+  border: 1px solid #000;
+  background-repeat: no-repeat;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.pdf-evidence-photo-fill--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8pt;
+  color: #666;
+  text-align: center;
+  padding: 12px;
 }
 .section-banner {
   font-size: 11pt;
@@ -734,31 +799,30 @@ export function buildPDFDocument(r) {
     body += `</div>`;
   }
 
-  // ── SECTION F: EVIDENCES ────────────────────────────────────────────────
+  // ── SECTION F: EVIDENCE ───────────────────────────────────────────────────
   if (r.evidences && r.evidences.length) {
-    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "F. Evidences")}`;
-    r.evidences.forEach((e) => {
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "F. Evidence")}`;
+    r.evidences.forEach((e, evidIdx) => {
       body += `<div class="evidence-card-block print-keep">`;
-      body += `<table class="compact-avoid"><tr>
-          <td style="width:10%"><div class="lbl">Evidence ID</div>${esc(e.id_code || "")}</td>
-          <td><div class="lbl">a. NAME OF EVIDENCE</div>${esc(e.name || "")}</td>
-          <td style="width:15%"><div class="lbl">b. EVIDENCE WAS</div>${esc(evidenceWas(e))}</td>
-          <td style="width:15%"><div class="lbl">c. STATUS OF EVIDENCE</div>${esc(e.evidence_status || "")}</td>
-          <td style="width:18%"><div class="lbl">d. DATE OF RETRIEVAL</div>${fmtDate(e.date_of_retrieval)}</td>
-        </tr></table>`;
-      body += `<div class="lbl" style="margin-top:4px">l. IMAGE (${esc(evidenceCropAspectLabel(e))})</div>`;
-      body += pdfFramedPhotoHtml(
-        e.image_url,
-        e.image_orientation || "landscape",
-        e.image_crop,
-        110,
-        180,
-        180,
-        110,
-        '<span style="font-size:8pt;color:#888">Exhibit</span>',
-      );
-      body += `<div class="lbl">Summary of evidences</div>`;
-      body += `<div class="narrative">${esc(e.summary || "")}</div>`;
+      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Evidence ID: ${esc(e.id_code || "e." + (evidIdx + 1))}</div>`;
+      body += `<div class="pdf-evidence-split-grid"><div class="pdf-evidence-fields-cell">
+          <table class="compact-avoid" style="width:100%"><tr>
+            <td colspan="3"><div class="lbl">a. NAME OF EVIDENCE</div>${esc(e.name || "")}</td>
+          </tr><tr>
+            <td style="width:34%"><div class="lbl">b. EVIDENCE WAS</div>${esc(evidenceWas(e))}</td>
+            <td style="width:33%"><div class="lbl">c. STATUS OF EVIDENCE</div>${esc(e.evidence_status || "")}</td>
+            <td style="width:33%"><div class="lbl">d. DATE OF RETRIEVAL</div>${fmtDate(e.date_of_retrieval)}</td>
+          </tr></table>
+          <div class="lbl" style="margin-top:8px">Summary of evidences</div>
+          <div class="narrative">${esc(e.summary || "")}</div>
+        </div><div class="pdf-evidence-photo-cell">
+          <div class="lbl">l. IMAGE (${esc(evidenceCropAspectLabel(e))})</div>
+          ${pdfEvidencePhotoFillHtml(
+            e.image_url,
+            e.image_crop,
+            "&ldquo;EXHIBIT PHOTO/<br/>AVAILABLE PICTURE&rdquo;",
+          )}
+        </div></div>`;
       body += `</div>`;
     });
     body += `</div>`;
