@@ -11,9 +11,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 /** Same file as pdf-html cover logo — embedded in footer template (Chromium needs data URL). */
 const FOOTER_LOGO_PATH = path.join(__dirname, '../../public/images/cib-logo-pdf.png')
 
-/** Bottom slightly taller than default text margins — footer row carries larger CIB wordmark. */
+/** Top inset includes Chromium PDF header chrome (CID strip); bottom fits footer wordmark. */
 export const PDF_MARGIN_MM = Object.freeze({
-  top: '20mm',
+  top: '26mm',
   bottom: '28mm',
   left: '15mm',
   right: '15mm',
@@ -42,7 +42,35 @@ export function loadFooterLogoDataUrl() {
   return null
 }
 
-/** Minimal header slot for Chromium PDF (avoid layout quirks). */
+function escPdfTemplateText(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/**
+ * Repeats on every printed page (Puppeteer header margin). Matches body `.page-header` wording.
+ */
+export function buildPdfHeaderTemplate(formId) {
+  const padL = PDF_MARGIN_MM.left
+  const padR = PDF_MARGIN_MM.right
+  const id = escPdfTemplateText(formId)
+  return `
+<div style="width:100%;box-sizing:border-box;margin:0;padding:6px ${padR} 8px ${padL};font-size:8pt;line-height:1.25;font-family:Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+  <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="vertical-align:bottom;padding:0 10px 4px 0;font-weight:bold;letter-spacing:0.35px;">CRIMINAL INVESTIGATION DIVISION – STATE OF SAN ANDREAS</td>
+      <td style="vertical-align:bottom;padding:0 0 4px 10px;text-align:right;font-weight:bold;letter-spacing:0.35px;white-space:nowrap;">${id}</td>
+    </tr>
+    <tr><td colspan="2" style="border-bottom:2px solid #000;line-height:0;font-size:0;height:2px;padding:0">&nbsp;</td></tr>
+  </table>
+</div>
+`.trim()
+}
+
+/** @deprecated Prefer buildPdfHeaderTemplate(pdfFormIdFromReport(r)); placeholder kept for stray imports. */
 export const PDF_HEADER_TEMPLATE =
   '<div style="width:100%;height:1px;margin:0;padding:0;font-size:1px;line-height:1px;overflow:hidden;"></div>'
 

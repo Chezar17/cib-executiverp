@@ -57,7 +57,8 @@ const WM_SRC = loadWatermarkDataUrl();
 function watermarkBodyHtml() {
   if (!WM_SRC) return "";
   const m = PDF_MARGIN_MM;
-  // Match @page inset so the seal does not paint into the margin band (looked like full-bleed text on p.2+).
+  // Match @page inset (pdf-layout PDF_MARGIN_MM) so the seal stays in the printable content box on every sheet.
+  // Chromium repeats position:fixed backgrounds across PDF pages when printBackground is true.
   return (
     '<div class="wm-layer" style="position:fixed;left:' +
     m.left +
@@ -68,7 +69,7 @@ function watermarkBodyHtml() {
     ";bottom:" +
     m.bottom +
     ";z-index:0;" +
-    "pointer-events:none;opacity:0.22;" +
+    "pointer-events:none;opacity:0.26;" +
     "background-image:url('" +
     WM_SRC +
     "');background-size:52% auto;background-position:center center;background-repeat:no-repeat;" +
@@ -92,6 +93,10 @@ export function fmtDate(d) {
   if (parts.length !== 3) return String(d);
   return parts[2] + "/" + parts[1] + "/" + parts[0];
 }
+
+/** Printed below witness narrative, before signature line (full-width table). */
+const WITNESS_TRUTH_DECLARATION =
+  "I hereby declare that the information stated above is true and accurate to the best of my knowledge and professional expertise.";
 
 /** Minimal escaping for remote URLs inside single-quoted CSS `url('...')` in HTML attributes. */
 function cssUrlForPdfAttr(href) {
@@ -267,24 +272,46 @@ function evidenceCropAspectLabel(e) {
 // ── CSS ────────────────────────────────────────────────────────────────────
 const CSS = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; background: #fff; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  color: #000;
+  background: #fff;
+  position: relative;
+}
 a { color: #000; }
-/* Watermark: inline styles on .wm-layer (see watermarkBodyHtml); class hooks print colors */
-.wm-layer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* CID seal (api/_lib/assets/cid-seal-watermark.png) — fixed layer repeats on each PDF page */
+.wm-layer {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+@media print {
+  .wm-layer {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
 .pdf-root { position: relative; z-index: 1; isolation: auto; }
 /* block flow for printable pages */
 .page { display: block; }
 .page-body { display: block; }
 .page-break { page-break-before: always; padding-top: 2mm; }
 .print-keep { break-inside: avoid; page-break-inside: avoid; }
-/* Flow sections: pack multiple short items per sheet; keep each card intact when possible */
-.debrief-entry-block,
-.evidence-card-block,
-.witness-affidavit-block,
+/* Profile sections may span sheets; outer cards do not force one page */
 .suspect-detail-block,
-.victim-detail-block {
-  break-inside: avoid;
-  page-break-inside: avoid;
+.victim-detail-block,
+.evidence-card-block {
+  break-inside: auto;
+  page-break-inside: auto;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+.debrief-entry-block,
+.witness-affidavit-block {
+  break-inside: auto;
+  page-break-inside: auto;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #ddd;
@@ -300,33 +327,116 @@ a { color: #000; }
   border-bottom: none;
   margin-bottom: 0;
 }
-/* Summary listing: table may span sheets; each tbody group stays intact */
+/* Summary listing: may span sheets; split between victim/suspect groups; rows stay intact */
 table.pdf-summary-table {
   page-break-inside: auto;
   break-inside: auto;
 }
-/* Whole discrete tables stay on one sheet when possible */
-table.pdf-solid-table {
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-table.pdf-solid-table tr {
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-/* Summary tables: each victim/suspect row-group stays intact */
 tbody.pdf-row-group {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  break-inside: auto;
+  page-break-inside: auto;
 }
 tbody.pdf-row-group tr {
   break-inside: avoid;
   page-break-inside: avoid;
 }
-/* Legacy compact tables — rows do not split */
+/* Tables: prefer one page; may continue on next page between rows — borders close/open via row boundaries */
+table.pdf-solid-table {
+  break-inside: auto;
+  page-break-inside: auto;
+}
+table.pdf-solid-table > thead > tr,
+table.pdf-solid-table > tbody > tr,
+table.pdf-solid-table > tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.pdf-table-keep {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+table.compact-avoid {
+  break-inside: auto;
+  page-break-inside: auto;
+}
 table.compact-avoid tr {
   break-inside: avoid;
   page-break-inside: avoid;
+}
+.pdf-id-row {
+  font-size: 9pt;
+  font-weight: bold;
+  padding: 6px 8px;
+}
+/* Evidence: two-column table (replaces grid) — photo stacks under label inside cell */
+table.pdf-evidence-split-table {
+  width: 100%;
+  border-collapse: collapse;
+  break-inside: auto;
+  page-break-inside: auto;
+}
+table.pdf-evidence-split-table > tbody > tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.pdf-evidence-split-table td.pdf-evidence-fields-cell {
+  width: 62%;
+  vertical-align: top;
+  padding: 8px;
+}
+table.pdf-evidence-split-table td.pdf-evidence-photo-cell {
+  width: 38%;
+  vertical-align: top;
+  padding: 8px;
+}
+.pdf-evidence-photo-stack {
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  height: 100%;
+}
+.pdf-evidence-photo-fill {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 180px;
+  margin-top: 4px;
+  border: 1px solid #000;
+  background-repeat: no-repeat;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.pdf-evidence-photo-fill--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8pt;
+  color: #666;
+  text-align: center;
+  padding: 12px;
+}
+td .narrative,
+th .narrative {
+  break-inside: auto;
+  page-break-inside: auto;
+}
+td, th {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* Witness declaration row inside affidavit table — splittable with parent table */
+table.witness-affidavit-table td.witness-declaration-cell {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 9pt;
+  line-height: 1.65;
+  text-align: justify;
+  vertical-align: middle;
+}
+table.witness-sign-row td {
+  border-top: 1px solid #000;
+  padding-top: 10px;
+  margin-top: 0;
+  font-size: 8pt;
 }
 .section-title {
   background: #000; color: #fff; padding: 3px 8px;
@@ -354,46 +464,6 @@ table.compact-avoid tr {
 .section-banner + .section-title {
   break-before: avoid;
   page-break-before: avoid;
-}
-/* Evidence row: photo column stretches to full height of name/summary column */
-.pdf-evidence-split-grid {
-  display: grid;
-  grid-template-columns: 62% 38%;
-  width: 100%;
-  align-items: stretch;
-  border: 1px solid #000;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-.pdf-evidence-split-grid > .pdf-evidence-fields-cell {
-  padding: 8px;
-  border-right: 1px solid #000;
-}
-.pdf-evidence-split-grid > .pdf-evidence-photo-cell {
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  min-height: 100%;
-}
-.pdf-evidence-photo-fill {
-  flex: 1 1 auto;
-  width: 100%;
-  min-height: 180px;
-  margin-top: 4px;
-  border: 1px solid #000;
-  background-repeat: no-repeat;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-}
-.pdf-evidence-photo-fill--empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8pt;
-  color: #666;
-  text-align: center;
-  padding: 12px;
 }
 .section-banner {
   font-size: 11pt;
@@ -469,40 +539,34 @@ td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: t
 `;
 
 // ── Page chrome helpers ────────────────────────────────────────────────────
-function pageHeader(formId) {
-  return `<div class="page-header">
-    <span>CRIMINAL INVESTIGATION DIVISION &ndash; STATE OF SAN ANDREAS</span>
-    <span>${esc(formId)}</span>
-  </div>`;
+/** FORM 0001 (CID/DDMMYY) — must match Puppeteer header (`buildPdfHeaderTemplate`). */
+export function pdfFormIdFromReport(r) {
+  const d = r?.date_of_offense;
+  const tail = d
+    ? String(d).replace(/-/g, '').slice(6) +
+      String(d).replace(/-/g, '').slice(4, 6) +
+      String(d).slice(2, 4)
+    : 'DDMMYY';
+  return 'FORM 0001 (CID/' + tail + ')';
 }
 
 function sectionBanner(label) {
   return `<div class="section-banner">${esc(label)}</div>`;
 }
 
-/** Header + section ribbon as one unit; stops banners orphaning onto an empty sheet (Chromium PDF). */
-function pdfSectionIntro(ph, bannerLabel) {
-  return `<div class="pdf-section-intro">${ph}${sectionBanner(bannerLabel)}</div>`;
+/** Section ribbon only — CID strip repeats via Puppeteer header on every sheet. */
+function pdfSectionIntro(bannerLabel) {
+  return `<div class="pdf-section-intro">${sectionBanner(bannerLabel)}</div>`;
 }
 
-function pdfClosureIntro(ph) {
-  return `<div class="pdf-section-intro pdf-section-intro--closure">${ph}${sectionBanner(
+function pdfClosureIntro() {
+  return `<div class="pdf-section-intro pdf-section-intro--closure">${sectionBanner(
     "G. Closure",
   )}<div class="section-title" style="margin-top:4px">Investigation closure</div></div>`;
 }
 
 // ── Main builder ───────────────────────────────────────────────────────────
 export function buildPDFDocument(r) {
-  const formId =
-    "FORM 0001 (CID/" +
-    (r.date_of_offense
-      ? r.date_of_offense.replace(/-/g, "").slice(6) +
-        r.date_of_offense.replace(/-/g, "").slice(4, 6) +
-        r.date_of_offense.slice(2, 4)
-      : "DDMMYY") +
-    ")";
-
-  const ph = pageHeader(formId);
   const jurs = [
     ["LSPD", asPdfBool(r.jurisdiction_lspd)],
     ["SAST", asPdfBool(r.jurisdiction_sast)],
@@ -527,7 +591,7 @@ export function buildPDFDocument(r) {
   </div>`;
 
   // ── A. CLASSIFICATION (no extra page-break: cover already ends the sheet) ──
-  body += `<div class="page-body">${pdfSectionIntro(ph, "A. Classification")}`;
+  body += `<div class="page-body">${pdfSectionIntro("A. Classification")}`;
 
   body += `<table class="pdf-solid-table"><tr>
     <td style="width:32%"><div class="lbl">1. CATEGORY</div>
@@ -642,7 +706,6 @@ export function buildPDFDocument(r) {
     !!(r.incident_report_written_by && String(r.incident_report_written_by).trim());
   if (hasDebrief || hasIncidentPad) {
     body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
-      ph,
       "B. Debrief of Incident",
     )}`;
     if (hasIncidentPad) {
@@ -655,12 +718,11 @@ export function buildPDFDocument(r) {
     }
     if (hasDebrief) {
       r.debrief_entries.forEach((d, i) => {
-        body += `<div class="debrief-entry-block print-keep">`;
-        body += `<table class="compact-avoid"><tr>
+        body += `<div class="debrief-entry-block">`;
+        body += `<table class="compact-avoid pdf-solid-table"><tr>
         <td style="width:40%"><div class="lbl">${i + 1}a. TITLE</div>${esc(d.title || "")}</td>
         <td><div class="lbl">b. DATE OF INCIDENT</div>${fmtDate(d.date_of_incident)}</td>
-      </tr></table>`;
-        body += `<div class="narrative">${esc(d.content || "")}</div>`;
+      </tr><tr><td colspan="2"><div class="lbl">Entry</div><div class="narrative">${esc(d.content || "")}</div></td></tr></table>`;
         body += `</div>`;
       });
     }
@@ -671,13 +733,12 @@ export function buildPDFDocument(r) {
   // ── SECTION C: SUSPECTS DETAIL (continuous flow; multiple suspects per sheet when space allows) ──
   if (r.suspects && r.suspects.length) {
     const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "C. Suspect")}`;
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro("C. Suspect")}`;
     r.suspects.forEach((s, i) => {
       const L = (n) => ALPHA[i * 5 + n]; // 5 fields per suspect, progressive letters
       body += `<div class="suspect-detail-block">`;
-      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Suspect ID: ${esc(s.id_code || "s." + (i + 1))}</div>`;
-      body += `<table class="pdf-solid-table"><tr>
-        <td style="width:60%">
+      body += `<table class="pdf-solid-table suspect-detail-table"><tr><td colspan="2" class="pdf-id-row">Suspect ID: ${esc(s.id_code || "s." + (i + 1))}</td></tr><tr>
+        <td style="width:60%;vertical-align:top;padding:8px">
           <table class="compact-avoid" style="border:none;width:100%"><tr>
             <td style="border:none"><div class="lbl">${L(0)}. Name</div>${esc(s.full_name || "")}</td>
             <td style="border:none"><div class="lbl">${L(1)}. Description</div>${esc(s.description || "")}</td>
@@ -685,12 +746,11 @@ export function buildPDFDocument(r) {
             <td style="border:none"><div class="lbl">${L(2)}. DOB</div>${fmtDate(s.dob)}</td>
             <td style="border:none"><div class="lbl">${L(3)}. SEX</div>${esc(s.sex || "")}</td>
           </tr></table>
-          <br/>
-          <div class="lbl">${L(4)}. Interrogation</div>
+          <div class="lbl" style="margin-top:8px">${L(4)}. Interrogation</div>
           <div style="font-size:8pt;margin:4px 0">Interrogation: &nbsp;${s.interrogation_url ? `<a href="${esc(s.interrogation_url)}">${esc(s.interrogation_url)}</a>` : ""}</div>
           <div class="narrative">${esc(s.interrogation_summary || "")}</div>
         </td>
-        <td style="width:40%;vertical-align:top;text-align:center">${pdfFramedPhotoHtml(
+        <td style="width:40%;vertical-align:top;text-align:center;padding:8px">${pdfFramedPhotoHtml(
           s.mugshot_url,
           s.mugshot_orientation || "portrait",
           s.mugshot_crop,
@@ -700,12 +760,13 @@ export function buildPDFDocument(r) {
           120,
           "&ldquo;SUSPECT MUGSHOT/<br/>AVAILABLE PICTURE&rdquo;",
         )}</td>
-      </tr></table>`;
-      body += `<table class="pdf-solid-table" style="margin-top:8px;width:100%"><tr>
+      </tr><tr><td colspan="2" style="padding:6px 8px">
+        <table class="pdf-solid-table" style="margin:0;width:100%"><tr>
         <td style="width:35%"><div class="lbl">Affiliation</div>${esc(s.affiliation || "")}</td>
         <td style="width:20%"><div class="lbl">Telephone</div>${esc(s.telephone || "")}</td>
         <td><div class="lbl">Reason of suspicion</div>${esc(s.reason_of_suspicion || "")}</td>
-      </tr></table>`;
+      </tr></table>
+      </td></tr></table>`;
       body += `</div>`;
     });
     body += `</div>`;
@@ -714,12 +775,12 @@ export function buildPDFDocument(r) {
 
   // ── SECTION D: VICTIMS DETAIL ───────────────────────────────────────────
   if (r.victims && r.victims.length) {
-    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "D. Victim")}`;
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro("D. Victim")}`;
     r.victims.forEach((v, i) => {
+      const vid = esc(v.id_code || "v." + (i + 1));
       body += `<div class="victim-detail-block">`;
-      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Victim ID: ${esc(v.id_code || "v." + (i + 1))}</div>`;
-      body += `<table class="pdf-solid-table"><tr>
-        <td style="width:62%;vertical-align:top;padding:8px">
+      body += `<table class="pdf-solid-table victim-detail-table"><tr><td colspan="2" class="pdf-id-row">Victim ID: ${vid}</td></tr><tr>
+        <td style="vertical-align:top;padding:8px">
           <table class="pdf-solid-table" style="width:100%;margin:0"><tr>
         <td><div class="lbl">IDENTIFICATION (a)</div>
           First, Last Name, AKA<br/><strong>${esc(v.full_name || "")}</strong>
@@ -728,38 +789,34 @@ export function buildPDFDocument(r) {
         <td style="width:8%"><div class="lbl">SEX (d)</div>${esc(v.sex || "")}</td>
         <td style="width:10%"><div class="lbl">RACE (e)</div>${esc(v.race || "")}</td>
         <td style="width:16%"><div class="lbl">TELEPHONE (f)</div>${esc(v.telephone || "-")}</td>
-      </tr><tr>
-        <td colspan="5"><div class="lbl">Welfare, Occupation</div>${esc(v.welfare_occupation || "")}</td>
-      </tr><tr>
-        <td colspan="5"><div class="lbl">Cause of death</div>${esc(v.cause_of_death || "—")}</td>
-      </tr><tr>
-        <td colspan="5"><div class="lbl">Cause of injury</div>${esc(v.cause_of_injury || "—")}</td>
-      </tr><tr>
-        <td colspan="2"><div class="lbl">Family / contact (name)</div>${esc(v.family_contact_name || "—")}</td>
-        <td colspan="3"><div class="lbl">Family / contact (phone)</div>${esc(v.family_contact_phone || "—")}</td>
-      </tr><tr>
-        <td colspan="5"><div class="lbl">Medical debrief</div><div class="narrative">${esc(v.medical_debrief || v.notes || "")}</div></td>
-      </tr></table>`;
+      </tr></table>
+        </td>
+        <td rowspan="6" style="width:38%;vertical-align:top;text-align:center;padding:8px">${pdfFramedPhotoHtml(
+          v.photo_url,
+          v.photo_orientation || "portrait",
+          v.photo_crop,
+          120,
+          150,
+          150,
+          120,
+          "&ldquo;VICTIM PHOTO/<br/>AVAILABLE PICTURE&rdquo;",
+        )}</td>
+      </tr><tr><td style="padding:8px"><div class="lbl">Welfare, Occupation</div>${esc(v.welfare_occupation || "")}</td></tr>
+      <tr><td style="padding:8px"><div class="lbl">Cause of death</div>${esc(v.cause_of_death || "—")}</td></tr>
+      <tr><td style="padding:8px"><div class="lbl">Cause of injury</div>${esc(v.cause_of_injury || "—")}</td></tr>
+      <tr><td style="padding:8px"><table class="pdf-solid-table" style="width:100%;margin:0"><tr>
+        <td style="width:50%"><div class="lbl">Family / contact (name)</div>${esc(v.family_contact_name || "—")}</td>
+        <td style="width:50%"><div class="lbl">Family / contact (phone)</div>${esc(v.family_contact_phone || "—")}</td>
+      </tr></table></td></tr>
+      <tr><td style="padding:8px"><div class="lbl">Medical debrief</div><div class="narrative">${esc(v.medical_debrief || v.notes || "")}</div></td></tr>`;
       if (v.autopsy_by || v.autopsy_summary) {
-        body += `<div class="print-keep">`;
-        body += `<table class="pdf-solid-table" style="margin-top:8px"><tr>
+        body += `<tr><td colspan="2" style="padding:8px"><table class="pdf-solid-table" style="margin:0;width:100%"><tr>
           <td><div class="lbl">AUTOPSY (g)</div>
             <div style="font-size:8pt;margin:4px 0">Autopsy Report &ndash; By: <strong>${esc(v.autopsy_by || "")}</strong></div>
           </td>
-        </tr></table>`;
-        body += `<div class="narrative" style="margin-top:6px">${esc(v.autopsy_summary || "")}</div></div>`;
+        </tr></table><div class="narrative" style="margin-top:6px">${esc(v.autopsy_summary || "")}</div></td></tr>`;
       }
-      body += `</td><td style="width:38%;vertical-align:top;text-align:center;padding:8px">${pdfFramedPhotoHtml(
-        v.photo_url,
-        v.photo_orientation || "portrait",
-        v.photo_crop,
-        120,
-        150,
-        150,
-        120,
-        "&ldquo;VICTIM PHOTO/<br/>AVAILABLE PICTURE&rdquo;",
-      )}</td></tr></table>`;
-      body += `</div>`;
+      body += `</table></div>`;
     });
     body += `</div>`;
     body += `</div>`;
@@ -768,12 +825,11 @@ export function buildPDFDocument(r) {
   // ── SECTION E: WITNESSES ────────────────────────────────────────────────
   if (r.witnesses && r.witnesses.length) {
     body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(
-      ph,
       "E. Witness affidavits",
     )}`;
     r.witnesses.forEach((w) => {
-      body += `<div class="witness-affidavit-block print-keep">`;
-      body += `<table class="compact-avoid"><tr>
+      body += `<div class="witness-affidavit-block">`;
+      body += `<table class="compact-avoid pdf-solid-table witness-affidavit-table"><tr>
           <td style="width:8%"><div class="lbl">No.</div>${esc(w.id_code || "")}</td>
           <td colspan="3" style="font-weight:bold;font-size:10pt">AFFIDAVIT</td>
         </tr><tr>
@@ -789,11 +845,10 @@ export function buildPDFDocument(r) {
       if (asPdfBool(w.is_expert)) {
         body += `<tr><td></td><td colspan="3"><div class="lbl">Expert witness</div>${chk(true)} &nbsp; ${esc(w.expertise || "")}</td></tr>`;
       }
-      body += `</table>`;
-      body += `<div class="lbl" style="margin-top:5px">f. Content</div>`;
-      body += `<div class="narrative">${esc(w.content || "")}</div>`;
-      body += `<div class="sign-line">[${esc(w.full_name || "")}]</div>`;
-      body += `</div>`;
+      body += `<tr><td colspan="4"><div class="lbl">f. Content</div><div class="narrative">${esc(w.content || "")}</div></td></tr>`;
+      body += `<tr><td colspan="4" class="witness-declaration-cell">${esc(WITNESS_TRUTH_DECLARATION)}</td></tr>`;
+      body += `<tr class="witness-sign-row"><td colspan="4">[${esc(w.full_name || "")}]</td></tr>`;
+      body += `</table></div>`;
     });
     body += `</div>`;
     body += `</div>`;
@@ -801,11 +856,11 @@ export function buildPDFDocument(r) {
 
   // ── SECTION F: EVIDENCE ───────────────────────────────────────────────────
   if (r.evidences && r.evidences.length) {
-    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro(ph, "F. Evidence")}`;
+    body += `<div class="page page-break"><div class="page-body">${pdfSectionIntro("F. Evidence")}`;
     r.evidences.forEach((e, evidIdx) => {
-      body += `<div class="evidence-card-block print-keep">`;
-      body += `<div style="font-size:9pt;font-weight:bold;margin-bottom:8px">Evidence ID: ${esc(e.id_code || "e." + (evidIdx + 1))}</div>`;
-      body += `<div class="pdf-evidence-split-grid"><div class="pdf-evidence-fields-cell">
+      body += `<div class="evidence-card-block">`;
+      body += `<table class="pdf-solid-table pdf-evidence-split-table"><tr><td colspan="2" class="pdf-id-row">Evidence ID: ${esc(e.id_code || "e." + (evidIdx + 1))}</td></tr><tr>
+        <td class="pdf-evidence-fields-cell">
           <table class="compact-avoid" style="width:100%"><tr>
             <td colspan="3"><div class="lbl">a. NAME OF EVIDENCE</div>${esc(e.name || "")}</td>
           </tr><tr>
@@ -815,14 +870,16 @@ export function buildPDFDocument(r) {
           </tr></table>
           <div class="lbl" style="margin-top:8px">Summary of evidences</div>
           <div class="narrative">${esc(e.summary || "")}</div>
-        </div><div class="pdf-evidence-photo-cell">
+        </td>
+        <td class="pdf-evidence-photo-cell"><div class="pdf-evidence-photo-stack">
           <div class="lbl">l. IMAGE (${esc(evidenceCropAspectLabel(e))})</div>
           ${pdfEvidencePhotoFillHtml(
             e.image_url,
             e.image_crop,
             "&ldquo;EXHIBIT PHOTO/<br/>AVAILABLE PICTURE&rdquo;",
           )}
-        </div></div>`;
+        </div></td>
+      </tr></table>`;
       body += `</div>`;
     });
     body += `</div>`;
@@ -830,7 +887,7 @@ export function buildPDFDocument(r) {
   }
 
   // ── SECTION G: CLOSURE ──────────────────────────────────────────────────
-  body += `<div class="page page-break"><div class="page-body">${pdfClosureIntro(ph)}`;
+  body += `<div class="page page-break"><div class="page-body">${pdfClosureIntro()}`;
   if (r.closure_summary) {
     body += `<div class="print-keep"><div class="lbl">I. Summary of Investigation</div>`;
     body += `<div class="narrative">${esc(r.closure_summary)}</div></div><br/>`;

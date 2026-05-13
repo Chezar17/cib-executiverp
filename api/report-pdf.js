@@ -11,10 +11,10 @@ import path from 'path'
 import { launch, defaultArgs } from 'puppeteer-core'
 import { requireSession } from './_lib/session.js'
 import { getSupabase } from './_lib/supabase.js'
-import { buildPDFDocument, DEMO_REPORT } from './_lib/pdf-html.js'
+import { buildPDFDocument, DEMO_REPORT, pdfFormIdFromReport } from './_lib/pdf-html.js'
 import {
-  PDF_HEADER_TEMPLATE,
   buildPdfFooterTemplate,
+  buildPdfHeaderTemplate,
   loadFooterLogoDataUrl,
 } from './_lib/pdf-layout.js'
 import { jsonApiError } from './_lib/api-error.js'
@@ -145,7 +145,7 @@ export default async function handler(req, res) {
       printBackground: true,
       margin: { top: '0', bottom: '0', left: '0', right: '0' },
       displayHeaderFooter: true,
-      headerTemplate: PDF_HEADER_TEMPLATE,
+      headerTemplate: buildPdfHeaderTemplate(pdfFormIdFromReport(report)),
       footerTemplate: buildPdfFooterTemplate(loadFooterLogoDataUrl()),
       preferCSSPageSize: true,
       scale: 1,
