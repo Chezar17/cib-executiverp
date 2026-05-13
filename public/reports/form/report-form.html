@@ -487,7 +487,7 @@
   <div class="ir-photo-modal-backdrop" onclick="closePhotoModal()" aria-hidden="true"></div>
   <div class="ir-photo-modal-panel" role="dialog" aria-modal="true" aria-labelledby="irPhotoModalTitle" onclick="event.stopPropagation()">
     <div class="ir-photo-modal-title" id="irPhotoModalTitle">Image from URL</div>
-    <p class="ir-photo-modal-hint">Paste a direct image HTTPS URL (same-origin avoids CORS issues for cropping).</p>
+    <p class="ir-photo-modal-hint">Paste a direct HTTPS image URL. <code>images.executiverp.id</code> is loaded through the portal so Cropper can read pixels (no CDN CORS).</p>
     <div class="form-group ir-photo-modal-field">
       <label for="irPhotoModalUrl">Image URL</label>
       <input type="text" id="irPhotoModalUrl" autocomplete="off" spellcheck="false" placeholder="https://… or /images/local.png"/>

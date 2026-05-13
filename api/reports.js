@@ -1,13 +1,16 @@
 // ============================================================
 //  CIB – Investigation Reports API
-//  GET  /api/reports       → list all reports (summary rows)
-//  POST /api/reports       → create new report + all sub-items
+//  GET  /api/reports                    → list all reports (summary rows)
+//  GET  /api/reports?nextCaseNumber=1   → preview next case number
+//  GET  /api/reports?imageProxy=1&url= → fetch allow-listed HTTPS image for Cropper (same-origin blob)
+//  POST /api/reports                     → create new report + all sub-items
 // ============================================================
-import { allowMethods }   from './_lib/http.js'
+import { allowMethods } from './_lib/http.js'
 import { requireSession } from './_lib/session.js'
-import { getSupabase }    from './_lib/supabase.js'
+import { getSupabase } from './_lib/supabase.js'
 import { getNextCaseNumber } from './_lib/ir-case-number.js'
 import { jsonApiError } from './_lib/api-error.js'
+import { handleReportImageProxy } from './_lib/image-proxy-handler.js'
 
 function actorFrom(req, session) {
   return req.headers['x-actor'] || session.badge || null
@@ -28,10 +31,27 @@ function irSubRowAudit(actor) {
 export default async function handler(req, res) {
   try {
     if (!allowMethods(req, res, ['GET', 'POST', 'OPTIONS'])) return
+
+    // Preflight for JSON POST + custom headers — no auth on OPTIONS.
+    if (req.method === 'OPTIONS') {
+      res.status(204).end()
+      return
+    }
+
     const session = await requireSession(req, res)
     if (!session) return
 
     const supabase = getSupabase()
+
+    // ── GET: image proxy for Cropper (CDN without CORS) ───────
+    const iq = req.query?.imageProxy
+    if (
+      req.method === 'GET' &&
+      (iq === '1' || iq === 'true' || String(iq || '').toLowerCase() === 'yes')
+    ) {
+      await handleReportImageProxy(req, res)
+      return
+    }
 
     // ── GET: next case number (preview for new form) ─────────
     if (req.method === 'GET' && (req.query?.nextCaseNumber === '1' || req.query?.next === '1')) {

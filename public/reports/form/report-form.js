@@ -511,6 +511,48 @@ function normalizePhotoOrientation(raw, fallback) {
 let irPhotoModalCropper = null;
 /** @type {{ kind: string, rowN: number } | null} */
 let irPhotoModalContext = null;
+/** Revoked when modal image is replaced or closed — blob URL from GET /api/reports?imageProxy=. */
+let irPhotoModalBlobUrl = null;
+
+/** Hostnames that use authenticated same-origin proxy; mirror reports API IMAGE_PROXY_HOSTS env default. */
+const IR_IMAGE_PROXY_SUFFIXES = ['images.executiverp.id'];
+
+function revokeIrPhotoModalBlobUrl() {
+  if (irPhotoModalBlobUrl) {
+    try {
+      URL.revokeObjectURL(irPhotoModalBlobUrl);
+    } catch (_) {
+      /* ignore */
+    }
+    irPhotoModalBlobUrl = null;
+  }
+}
+
+function imageHostUsesProxy(hostname) {
+  const h = String(hostname || '').toLowerCase();
+  return IR_IMAGE_PROXY_SUFFIXES.some((suffix) => suffix && (h === suffix || h.endsWith('.' + suffix)));
+}
+
+/** Decide load path for Cropper: proxy bypasses CDN CORS; elsewhere use direct src (+ anonymous if HTTPS). */
+function classifyImageModalUrl(raw) {
+  try {
+    const u = new URL(raw.trim(), typeof window !== 'undefined' ? window.location.href : '');
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return { kind: 'bad' };
+    if (u.username || u.password) return { kind: 'bad' };
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    if (origin && u.origin === origin)
+      return { kind: 'direct', useCorsImg: false, href: u.href };
+
+    const isHttps = u.protocol === 'https:';
+    if (isHttps && imageHostUsesProxy(u.hostname))
+      return { kind: 'proxy', href: u.href };
+
+    return { kind: 'direct', useCorsImg: isHttps, href: u.href };
+  } catch (_) {
+    return { kind: 'bad' };
+  }
+}
 
 function photoPrefix(kind) {
   if (kind === 'suspect') return 'sus';
@@ -590,6 +632,7 @@ function getCropperConstructor() {
 /** Cropper leaves wrappers on <img>; replace element before each init so cropping reliably works. */
 function ensureFreshModalImage() {
   destroyIrPhotoCropper();
+  revokeIrPhotoModalBlobUrl();
   const wrap = document.querySelector('.ir-photo-modal-crop-wrap');
   if (!wrap) return null;
   wrap.innerHTML = '';
@@ -783,7 +826,7 @@ function irPhotoModalEsc(e) {
   if (e.key === 'Escape') closePhotoModal();
 }
 
-function irPhotoModalLoadPreview() {
+async function irPhotoModalLoadPreview() {
   const url = document.getElementById('irPhotoModalUrl').value.trim();
   if (!url) {
     if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
@@ -798,8 +841,15 @@ function irPhotoModalLoadPreview() {
   }
   const img = ensureFreshModalImage();
   if (!img) return;
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
+
+  const plan = classifyImageModalUrl(url);
+  if (plan.kind === 'bad') {
+    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
+      PortalAuth.showToast('Invalid image URL', 'error');
+    return;
+  }
+
+  const initCropperAfterLoad = () => {
     try {
       irPhotoModalCropper = new CropperCtor(img, {
         aspectRatio: modalAspectRatio(),
@@ -828,11 +878,51 @@ function irPhotoModalLoadPreview() {
       }
     }
   };
+
+  img.onload = () => {
+    initCropperAfterLoad();
+  };
   img.onerror = () => {
     if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
       PortalAuth.showToast('Image failed to load (CORS or invalid URL). You can still save the URL without crop.', 'error');
   };
-  img.src = url;
+
+  try {
+    if (plan.kind === 'proxy') {
+      const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cib_token') : '';
+      const res = await fetch(`/api/reports?imageProxy=1&url=${encodeURIComponent(plan.href)}`, {
+        headers: token ? { 'x-session-token': token } : {},
+      });
+      if (!res.ok) {
+        let msg = 'Image proxy failed';
+        try {
+          const j = await res.json();
+          if (j?.error) msg = j.error;
+        } catch (_) {
+          /* ignore */
+        }
+        if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast) PortalAuth.showToast(msg, 'error');
+        return;
+      }
+      const blob = await res.blob();
+      revokeIrPhotoModalBlobUrl();
+      irPhotoModalBlobUrl = URL.createObjectURL(blob);
+      img.removeAttribute('crossorigin');
+      img.src = irPhotoModalBlobUrl;
+      return;
+    }
+
+    if (plan.kind === 'direct') {
+      if (plan.useCorsImg) img.crossOrigin = 'anonymous';
+      else {
+        img.removeAttribute('crossorigin');
+      }
+      img.src = plan.href;
+    }
+  } catch (e) {
+    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
+      PortalAuth.showToast('Image failed to load: ' + (e?.message || String(e)), 'error');
+  }
 }
 
 function irPhotoModalSavedOrientation() {
