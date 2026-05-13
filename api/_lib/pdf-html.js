@@ -468,14 +468,18 @@ td, th {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
-/* Witness declaration row inside affidavit table — keep with same table (parent is pdf-table-keep). */
-table.witness-affidavit-table td.witness-declaration-cell {
-  width: 100%;
-  padding: 12px 14px;
+/* Witness: narrative + sworn declaration live in one table row/cell so they are never split as separate rows */
+table.witness-affidavit-table td.witness-content-declaration-cell {
+  padding: 8px;
+  vertical-align: top;
+}
+table.witness-affidavit-table td.witness-content-declaration-cell .witness-declaration-follow {
+  margin-top: 12px;
+  padding: 12px 6px 0;
+  border-top: 1px solid #000;
   font-size: 9pt;
   line-height: 1.65;
   text-align: justify;
-  vertical-align: middle;
 }
 table.witness-sign-row td {
   border-top: 1px solid #000;
@@ -932,8 +936,7 @@ export function buildPDFDocument(r) {
       if (asPdfBool(w.is_expert)) {
         body += `<tr><td colspan="4"><div class="lbl">Expert witness</div>${chk(true)} &nbsp; ${esc(w.expertise || "")}</td></tr>`;
       }
-      body += `<tr><td colspan="4"><div class="lbl">f. Content</div><div class="narrative">${esc(w.content || "")}</div></td></tr>`;
-      body += `<tr><td colspan="4" class="witness-declaration-cell">${esc(WITNESS_TRUTH_DECLARATION)}</td></tr>`;
+      body += `<tr><td colspan="4" class="witness-content-declaration-cell"><div class="lbl">f. Content</div><div class="narrative">${esc(w.content || "")}</div><div class="witness-declaration-follow">${esc(WITNESS_TRUTH_DECLARATION)}</div></td></tr>`;
       body += `<tr class="witness-sign-row"><td colspan="4">[${esc(w.full_name || "")}]</td></tr>`;
       body += `</table></div>`;
     });
