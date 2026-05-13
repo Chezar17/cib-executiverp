@@ -305,10 +305,10 @@ a { color: #000; }
 .page-body { display: block; }
 .page-break { page-break-before: always; padding-top: 2mm; }
 .print-keep { break-inside: avoid; page-break-inside: avoid; }
-/* Evidence cards may span sheets */
+/* One evidence exhibit = one card (whole block avoids page splits when possible) */
 .evidence-card-block {
-  break-inside: auto;
-  page-break-inside: auto;
+  break-inside: avoid;
+  page-break-inside: avoid;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #ddd;
@@ -349,29 +349,41 @@ a { color: #000; }
   border-bottom: none;
   margin-bottom: 0;
 }
-/* Summary listing: may span sheets; split between victim/suspect groups; rows stay intact */
+/* Summary tables: one card per table (all victim / all suspect rows stay in one piece when possible) */
 table.pdf-summary-table {
-  page-break-inside: auto;
-  break-inside: auto;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  margin-bottom: 12px;
 }
 tbody.pdf-row-group {
-  break-inside: auto;
-  page-break-inside: auto;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 tbody.pdf-row-group tr {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
-/* Tables: prefer one page; may continue on next page between rows — borders close/open via row boundaries */
+table.pdf-summary-table thead tr {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+/* Each solid table = printable card; do not split across pages (engine may ignore if taller than sheet) */
 table.pdf-solid-table {
-  break-inside: auto;
-  page-break-inside: auto;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  margin-bottom: 12px;
 }
 table.pdf-solid-table > thead > tr,
 table.pdf-solid-table > tbody > tr,
 table.pdf-solid-table > tr {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+/* Nested grids inside a parent card — no extra “card” gap */
+table.pdf-solid-table table.pdf-solid-table,
+table.pdf-solid-table[style*="margin:0"],
+table.pdf-solid-table[style*="margin: 0"] {
+  margin-bottom: 0 !important;
 }
 table.pdf-table-keep {
   break-inside: avoid !important;
@@ -384,28 +396,33 @@ table.pdf-table-keep > tr {
   page-break-inside: avoid !important;
 }
 table.compact-avoid {
-  break-inside: auto;
-  page-break-inside: auto;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+/* Layout-only inner grids (no outer pdf-solid frame) */
+table.compact-avoid:not(.pdf-solid-table) {
+  margin-bottom: 0 !important;
 }
 table.compact-avoid tr {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 .pdf-id-row {
   font-size: 9pt;
   font-weight: bold;
   padding: 6px 8px;
 }
-/* Evidence: two-column table (replaces grid) — photo stacks under label inside cell */
+/* Evidence: two-column card — keep exhibit table intact */
 table.pdf-evidence-split-table {
   width: 100%;
   border-collapse: collapse;
-  break-inside: auto;
-  page-break-inside: auto;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  margin-bottom: 12px;
 }
 table.pdf-evidence-split-table > tbody > tr {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 table.pdf-evidence-split-table td.pdf-evidence-fields-cell {
   width: 62%;
@@ -542,15 +559,26 @@ table.victim-detail-table > tr > td {
   break-inside: avoid;
   page-break-inside: avoid;
 }
-table.closure-table { page-break-inside: avoid; break-inside: avoid; }
-table.closure-table tr { break-inside: avoid; page-break-inside: avoid; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+table.closure-table {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  margin-bottom: 12px;
+}
+table.closure-table tr {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+table.closure-table:last-child {
+  margin-bottom: 0;
+}
+table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
 /* Chromium PDF often drops or clips the outer right edge with collapse alone — frame the printable tables */
 table.pdf-solid-table,
 table.pdf-summary-table,
 table.pdf-evidence-split-table,
 table.closure-table {
   border: 1px solid #000;
+  border-radius: 3px;
 }
 table[style*="border:none"] {
   border: none !important;
