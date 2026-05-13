@@ -305,9 +305,7 @@ a { color: #000; }
 .page-body { display: block; }
 .page-break { page-break-before: always; padding-top: 2mm; }
 .print-keep { break-inside: avoid; page-break-inside: avoid; }
-/* Profile sections may span sheets; outer cards do not force one page */
-.suspect-detail-block,
-.victim-detail-block,
+/* Evidence cards may span sheets */
 .evidence-card-block {
   break-inside: auto;
   page-break-inside: auto;
@@ -315,9 +313,19 @@ a { color: #000; }
   padding-bottom: 8px;
   border-bottom: 1px solid #ddd;
 }
+/* One suspect / one victim = prefer intact; borders clone if Chromium splits rows/cells */
+.suspect-detail-block,
+.victim-detail-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+/* One debrief entry = one unbroken unit (ribbon + fields + narrative). */
 .debrief-entry-block {
-  break-inside: auto;
-  page-break-inside: auto;
+  break-inside: avoid;
+  page-break-inside: avoid;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #ddd;
@@ -457,6 +465,21 @@ table.witness-sign-row td {
   padding-top: 10px;
   margin-top: 0;
   font-size: 8pt;
+}
+/* Suspect/victim outer grids: ribbon glued to body; td fragments keep full stroke when paginating */
+table.suspect-detail-table > tbody > tr:first-child > td,
+table.victim-detail-table > tbody > tr:first-child > td,
+table.suspect-detail-table > tr:first-child > td,
+table.victim-detail-table > tr:first-child > td {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+table.suspect-detail-table > tbody > tr > td,
+table.victim-detail-table > tbody > tr > td,
+table.suspect-detail-table > tr > td,
+table.victim-detail-table > tr > td {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 .section-title {
   background: #000; color: #fff; padding: 3px 8px;
@@ -748,11 +771,16 @@ export function buildPDFDocument(r) {
     }
     if (hasDebrief) {
       r.debrief_entries.forEach((d, i) => {
+        const n = i + 1;
         body += `<div class="debrief-entry-block">`;
-        body += `<table class="compact-avoid pdf-solid-table"><tr>
-        <td style="width:40%"><div class="lbl">${i + 1}a. TITLE</div>${esc(d.title || "")}</td>
-        <td><div class="lbl">b. DATE OF INCIDENT</div>${fmtDate(d.date_of_incident)}</td>
-      </tr><tr><td colspan="2"><div class="lbl">Entry</div><div class="narrative">${esc(d.content || "")}</div></td></tr></table>`;
+        body += `<table class="compact-avoid pdf-solid-table pdf-table-keep debrief-entry-table"><tr>
+          <td colspan="2" class="pdf-id-row">Debrief No. ${n}</td>
+        </tr><tr>
+          <td colspan="2" style="font-weight:bold;font-size:10pt;padding:6px 8px">DEBRIEF ENTRY</td>
+        </tr><tr>
+          <td style="width:50%"><div class="lbl">${n}a. TITLE</div>${esc(d.title || "")}</td>
+          <td><div class="lbl">b. DATE OF INCIDENT</div>${fmtDate(d.date_of_incident)}</td>
+        </tr><tr><td colspan="2"><div class="lbl">Entry</div><div class="narrative">${esc(d.content || "")}</div></td></tr></table>`;
         body += `</div>`;
       });
     }
@@ -767,7 +795,7 @@ export function buildPDFDocument(r) {
     r.suspects.forEach((s, i) => {
       const L = (n) => ALPHA[i * 5 + n]; // 5 fields per suspect, progressive letters
       body += `<div class="suspect-detail-block">`;
-      body += `<table class="pdf-solid-table suspect-detail-table"><tr><td colspan="2" class="pdf-id-row">Suspect ID: ${esc(s.id_code || "s." + (i + 1))}</td></tr><tr>
+      body += `<table class="pdf-solid-table pdf-table-keep suspect-detail-table"><tr><td colspan="2" class="pdf-id-row">Suspect ID: ${esc(s.id_code || "s." + (i + 1))}</td></tr><tr>
         <td style="width:60%;vertical-align:top;padding:8px">
           <table class="compact-avoid" style="border:none;width:100%"><tr>
             <td style="border:none"><div class="lbl">${L(0)}. Name</div>${esc(s.full_name || "")}</td>
@@ -809,7 +837,7 @@ export function buildPDFDocument(r) {
     r.victims.forEach((v, i) => {
       const vid = esc(v.id_code || "v." + (i + 1));
       body += `<div class="victim-detail-block">`;
-      body += `<table class="pdf-solid-table victim-detail-table"><tr><td colspan="2" class="pdf-id-row">Victim ID: ${vid}</td></tr><tr>
+      body += `<table class="pdf-solid-table pdf-table-keep victim-detail-table"><tr><td colspan="2" class="pdf-id-row">Victim ID: ${vid}</td></tr><tr>
         <td style="vertical-align:top;padding:8px">
           <table class="pdf-solid-table" style="width:100%;margin:0"><tr>
         <td><div class="lbl">IDENTIFICATION (a)</div>
