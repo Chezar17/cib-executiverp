@@ -450,9 +450,10 @@
       </div>
 
       <div class="dir-form-group">
-        <label class="dir-form-label" style="color:var(--gold);">Profile Photo</label>
-        <input type="hidden" id="mPhotoUrl" value=""/>
-        <div class="dir-member-photo-upload">
+        <label class="dir-form-label" style="color:var(--gold);">Profile photo URL</label>
+        <input class="dir-form-input" type="text" id="mPhotoUrl" placeholder="https://… or /images/photo.jpg"
+          autocomplete="off" oninput="syncMemberPhotoThumb()"/>
+        <div class="dir-member-photo-upload" style="margin-top:12px;">
           <div class="dir-member-photo-thumb" id="mPhotoThumbWrap">
             <img id="mPhotoThumbImg" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:inherit;"/>
             <div class="dir-member-photo-thumb-ph" id="mPhotoThumbPh">
@@ -460,9 +461,9 @@
             </div>
           </div>
           <div class="dir-member-photo-upload-actions">
-            <button type="button" class="dir-card-btn" onclick="openMemberCropModal()" style="color:var(--gold);border-color:rgba(201,168,76,0.25);">Choose &amp; crop photo…</button>
-            <button type="button" class="dir-card-btn" onclick="clearMemberUploadedPhoto()" id="btnClearMemberPhoto" style="display:none;">Remove uploaded photo</button>
-            <div class="dir-form-hint">Square crop (like investigation report mugshots). Image is uploaded to secure storage.</div>
+            <button type="button" class="dir-card-btn" onclick="openMemberUrlPhotoModal()" style="color:var(--gold);border-color:rgba(201,168,76,0.25);">Preview &amp; adjust…</button>
+            <button type="button" class="dir-card-btn" onclick="clearMemberUploadedPhoto()" id="btnClearMemberPhoto" style="display:none;">Clear URL</button>
+            <div class="dir-form-hint">Same flow as Investigation Report: paste an HTTPS URL; <code style="color:var(--gold);font-size:10px;">images.executiverp.id</code> loads through the portal proxy. Only the URL is saved.</div>
           </div>
         </div>
       </div>
@@ -470,7 +471,7 @@
       <div class="dir-form-group">
         <label class="dir-form-label" style="color:var(--gold);">Photo Filename (optional fallback)</label>
         <input class="dir-form-input" type="text" id="mPhoto" placeholder="e.g. phantom.jpg"/>
-        <div class="dir-form-hint">If set, <code style="color:var(--gold);font-size:10px;">/images/</code> file is used when no uploaded photo URL is stored</div>
+        <div class="dir-form-hint">If set, <code style="color:var(--gold);font-size:10px;">/images/</code> file is used when no URL is saved above</div>
       </div>
 
     </div>
@@ -505,31 +506,33 @@
 </div>
 
 <!-- ════════════════════════════════════════════════
-     MEMBER PROFILE PHOTO — CROP (Cropper.js)
+     MEMBER PROFILE PHOTO — URL + proxy preview (Cropper.js)
+     Mirrors Investigation Report remote image modal.
 ════════════════════════════════════════════════ -->
-<div class="dir-modal-overlay" id="memberCropModal">
+<div class="dir-modal-overlay" id="memberUrlPhotoModal">
   <div class="dir-modal" style="border-top-color:var(--gold);max-width:580px;">
     <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
       <div class="dir-modal-topbar-left">
         <div class="dir-modal-dot" style="background:var(--gold);animation:none;"></div>
-        <span class="dir-modal-label" style="color:var(--gold);" id="memberCropModalLabel">PROFILE PHOTO</span>
+        <span class="dir-modal-label" style="color:var(--gold);" id="memberUrlPhotoModalLabel">PROFILE PHOTO</span>
       </div>
-      <button class="dir-modal-close" onclick="closeMemberCropModal()">✕</button>
+      <button class="dir-modal-close" onclick="closeMemberUrlPhotoModal()">✕</button>
     </div>
     <div class="dir-modal-body">
-      <input type="file" id="memberCropFile" accept="image/*" style="display:none" onchange="onMemberCropFileSelected(event)"/>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
-        <button type="button" class="dir-card-btn" onclick="document.getElementById('memberCropFile').click()" style="color:var(--gold);border-color:rgba(201,168,76,0.25);">Load image</button>
+      <input class="dir-form-input" type="text" id="memberUrlPhotoInput" placeholder="https://… or /images/photo.jpg" autocomplete="off"/>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+        <button type="button" class="dir-card-btn" onclick="memberUrlPhotoLoadPreview()" style="color:var(--gold);border-color:rgba(201,168,76,0.25);">Load preview</button>
       </div>
-      <div class="dir-member-crop-wrap" id="memberCropWrap">
-        <img id="memberCropImg" alt="" style="max-width:100%;display:block;"/>
+      <div class="dir-form-hint" style="margin-top:10px;">Remote hosts on the portal allowlist (e.g. <code style="color:var(--gold);font-size:10px;">images.executiverp.id</code>) load via <code style="color:var(--gold);font-size:10px;">/api/reports?imageProxy=</code>.</div>
+      <div class="dir-member-crop-wrap" id="memberUrlPhotoCropWrap" style="margin-top:12px;">
+        <img id="memberUrlPhotoCropImg" alt="" style="max-width:100%;display:block;"/>
       </div>
-      <div class="dir-form-hint" style="margin-top:10px;">Adjust the square crop, then upload. Output is optimized for member cards (512×512 JPEG).</div>
+      <div class="dir-form-hint" style="margin-top:10px;">Square crop is for preview only; saving stores the URL above.</div>
     </div>
-    <div class="dir-modal-error" id="memberCropModalError"></div>
+    <div class="dir-modal-error" id="memberUrlPhotoModalError"></div>
     <div class="dir-modal-submit-row">
-      <button class="dir-modal-cancel" onclick="closeMemberCropModal()">Cancel</button>
-      <button class="dir-modal-submit" id="memberCropUploadBtn" onclick="uploadCroppedMemberPhoto()" style="background:var(--gold);color:#000;">Upload cropped photo</button>
+      <button class="dir-modal-cancel" onclick="closeMemberUrlPhotoModal()">Cancel</button>
+      <button class="dir-modal-submit" id="memberUrlPhotoSaveBtn" onclick="memberUrlPhotoSave()" style="background:var(--gold);color:#000;">Save URL</button>
     </div>
   </div>
 </div>
@@ -1287,15 +1290,15 @@ document.getElementById('detailModal').addEventListener('click', function(e) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeCreateModal(); closeUpdateModal(); closeDetailModal()
-    closeMemberCropModal()
+    closeMemberUrlPhotoModal()
     closeMemberModal(); closeMemberDetailModal()
   }
 })
 document.getElementById('memberModal').addEventListener('click', function(e) {
   if (e.target === this) closeMemberModal()
 })
-document.getElementById('memberCropModal').addEventListener('click', function(e) {
-  if (e.target === this) closeMemberCropModal()
+document.getElementById('memberUrlPhotoModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMemberUrlPhotoModal()
 })
 document.getElementById('memberDetailModal').addEventListener('click', function(e) {
   if (e.target === this) closeMemberDetailModal()
@@ -1468,14 +1471,82 @@ function memberHasPhoto(m) {
   return !!(m && ((m.photo_url || '').trim() || (m.photo_filename || '').trim()))
 }
 
-/** Safe value for HTML img src (must work inside double-quoted attributes). */
-function memberPhotoSrcEscaped(m) {
+/** Escape for use inside double-quoted HTML attributes (e.g. img src). */
+function escapeHtmlAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+}
+
+/** Mirror reports form IR_IMAGE_PROXY_SUFFIXES — keep in sync with /api/reports image proxy allowlist. */
+const MEMBER_IMAGE_PROXY_SUFFIXES = ['images.executiverp.id']
+
+function memberHostnameUsesProxy(hostname) {
+  const h = String(hostname || '').toLowerCase()
+  return MEMBER_IMAGE_PROXY_SUFFIXES.some(suffix => suffix && (h === suffix || h.endsWith('.' + suffix)))
+}
+
+/** Same rules as Investigation Report classifyImageModalUrl — proxy for allowlisted HTTPS hosts. */
+function classifyMemberPhotoUrl(raw) {
+  try {
+    const u = new URL(String(raw || '').trim(), typeof window !== 'undefined' ? window.location.href : '')
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return { kind: 'bad' }
+    if (u.username || u.password) return { kind: 'bad' }
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    if (origin && u.origin === origin)
+      return { kind: 'direct', useCorsImg: false, href: u.href }
+
+    const isHttps = u.protocol === 'https:'
+    if (isHttps && memberHostnameUsesProxy(u.hostname))
+      return { kind: 'proxy', href: u.href }
+
+    return { kind: 'direct', useCorsImg: isHttps, href: u.href }
+  } catch (_) {
+    return { kind: 'bad' }
+  }
+}
+
+function memberStoredPhotoHref(m) {
   if (!m) return ''
-  const u = (m.photo_url || '').trim()
-  if (u) return escHtml(u)
-  const f = (m.photo_filename || '').trim()
-  if (f) return escHtml(`../images/${f}`)
-  return ''
+  const u = String(m.photo_url || '').trim()
+  if (u) return u
+  const f = String(m.photo_filename || '').trim()
+  if (!f) return ''
+  try {
+    return new URL(`../images/${f}`, window.location.href).href
+  } catch (_) {
+    return `../images/${f}`
+  }
+}
+
+/** Resolved img.src: proxy same-origin CDNs that need authenticated fetch (same as report photos). */
+function memberPhotoProxiedHrefForImg(storedHref) {
+  const s = String(storedHref || '').trim()
+  if (!s) return ''
+  try {
+    const u = new URL(s, window.location.href)
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    if (origin && u.origin === origin) return u.href
+    if (u.protocol === 'http:' || u.protocol === 'https:') {
+      if (u.username || u.password) return u.href
+      if (u.protocol === 'https:' && memberHostnameUsesProxy(u.hostname))
+        return `/api/reports?imageProxy=1&url=${encodeURIComponent(u.href)}`
+      return u.href
+    }
+    return u.href
+  } catch (_) {
+    return s
+  }
+}
+
+/** Safe value for HTML img src (quoted attribute + proxy for allowlisted remote hosts). */
+function memberPhotoSrcAttrEscaped(m) {
+  const href = memberStoredPhotoHref(m)
+  if (!href) return ''
+  return escapeHtmlAttr(memberPhotoProxiedHrefForImg(href))
 }
 
 const MEMBER_PHOTO_PLACEHOLDER_HTML = `<div class="dir-member-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
@@ -1494,7 +1565,9 @@ function bindMemberPhotoErrorHandlers(root) {
     }, { once: true })
   })
 }
-let _memberCropper = null
+let _memberUrlPhotoCropper = null
+/** @type {string | null} */
+let _memberUrlPhotoBlobUrl = null
 
 function getCropperCtor() {
   const C = window.Cropper
@@ -1503,125 +1576,161 @@ function getCropperCtor() {
   return null
 }
 
-function destroyMemberCropper() {
-  if (_memberCropper) {
-    try { _memberCropper.destroy() } catch (_) {}
-    _memberCropper = null
+function revokeMemberUrlPhotoBlobUrl() {
+  if (_memberUrlPhotoBlobUrl) {
+    try { URL.revokeObjectURL(_memberUrlPhotoBlobUrl) } catch (_) { /* ignore */ }
+    _memberUrlPhotoBlobUrl = null
   }
 }
 
-function openMemberCropModal() {
+function destroyMemberUrlPhotoCropper() {
+  if (_memberUrlPhotoCropper) {
+    try { _memberUrlPhotoCropper.destroy() } catch (_) { /* ignore */ }
+    _memberUrlPhotoCropper = null
+  }
+}
+
+/** Fresh image node for Cropper preview (mirrors Investigation Report modal). */
+function ensureFreshMemberUrlPhotoImg() {
+  const wrap = document.getElementById('memberUrlPhotoCropWrap')
+  if (!wrap) return null
+  destroyMemberUrlPhotoCropper()
+  wrap.innerHTML = ''
+  const img = document.createElement('img')
+  img.id = 'memberUrlPhotoCropImg'
+  img.alt = ''
+  img.style.cssText = 'max-width:100%;display:block'
+  wrap.appendChild(img)
+  return img
+}
+
+function openMemberUrlPhotoModal() {
   if (!_isTopSecret) return
   const L = memberOrgUiLabel(_memberOrg)
-  document.getElementById('memberCropModalLabel').textContent = `${L} · PROFILE PHOTO`
-  setModalError('memberCropModalError', '')
-  document.getElementById('memberCropFile').value = ''
-  destroyMemberCropper()
-  const wrap = document.getElementById('memberCropWrap')
-  if (wrap) {
-    wrap.innerHTML = ''
-    const img = document.createElement('img')
-    img.id = 'memberCropImg'
-    img.alt = ''
-    img.style.cssText = 'max-width:100%;display:block'
-    wrap.appendChild(img)
-  }
-  document.getElementById('memberCropModal').classList.add('open')
+  const label = document.getElementById('memberUrlPhotoModalLabel')
+  if (label) label.textContent = `${L} · PROFILE PHOTO`
+  setModalError('memberUrlPhotoModalError', '')
+  revokeMemberUrlPhotoBlobUrl()
+  destroyMemberUrlPhotoCropper()
+  const main = document.getElementById('mPhotoUrl')
+  const inp = document.getElementById('memberUrlPhotoInput')
+  if (inp && main) inp.value = (main.value || '').trim()
+  ensureFreshMemberUrlPhotoImg()
+  document.getElementById('memberUrlPhotoModal').classList.add('open')
 }
 
-function closeMemberCropModal() {
-  document.getElementById('memberCropModal').classList.remove('open')
-  document.getElementById('memberCropFile').value = ''
-  destroyMemberCropper()
-  const wrap = document.getElementById('memberCropWrap')
-  if (wrap) {
-    wrap.innerHTML = ''
-    const img = document.createElement('img')
-    img.id = 'memberCropImg'
-    img.alt = ''
-    img.style.cssText = 'max-width:100%;display:block'
-    wrap.appendChild(img)
-  }
+function closeMemberUrlPhotoModal() {
+  document.getElementById('memberUrlPhotoModal').classList.remove('open')
+  revokeMemberUrlPhotoBlobUrl()
+  destroyMemberUrlPhotoCropper()
+  ensureFreshMemberUrlPhotoImg()
 }
 
-function onMemberCropFileSelected(ev) {
-  const f = ev.target.files && ev.target.files[0]
-  if (!f || !f.type.startsWith('image/')) return
-  const reader = new FileReader()
-  reader.onload = () => {
-    destroyMemberCropper()
-    const wrap = document.getElementById('memberCropWrap')
-    wrap.innerHTML = ''
-    const img = document.createElement('img')
-    img.id = 'memberCropImg'
-    img.alt = ''
-    img.style.cssText = 'max-width:100%;display:block'
-    wrap.appendChild(img)
-    const Ctor = getCropperCtor()
-    if (!Ctor) {
-      setModalError('memberCropModalError', 'CROPPER.JS NOT LOADED — CHECK NETWORK / CDN')
+async function memberUrlPhotoLoadPreview() {
+  revokeMemberUrlPhotoBlobUrl()
+  const urlInput = document.getElementById('memberUrlPhotoInput')
+  const url = (urlInput && urlInput.value || '').trim()
+  if (!url) {
+    showToast('Enter an image URL first', 'error')
+    return
+  }
+  const CropperCtor = getCropperCtor()
+  if (!CropperCtor) {
+    showToast('Cropper.js failed to load (check network / CDN).', 'error')
+    return
+  }
+  const img = ensureFreshMemberUrlPhotoImg()
+  if (!img) return
+
+  const plan = classifyMemberPhotoUrl(url)
+  if (plan.kind === 'bad') {
+    showToast('Invalid image URL', 'error')
+    return
+  }
+
+  const initCropperAfterLoad = () => {
+    try {
+      destroyMemberUrlPhotoCropper()
+      _memberUrlPhotoCropper = new CropperCtor(img, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 0.92,
+        responsive: true,
+        restore: false,
+      })
+    } catch (err) {
+      showToast('Cropper failed: ' + (err?.message || err), 'error')
+    }
+  }
+
+  img.onload = () => initCropperAfterLoad()
+  img.onerror = () => {
+    showToast('Image failed to load (CORS or invalid URL). You can still save the URL.', 'error')
+  }
+
+  try {
+    if (plan.kind === 'proxy') {
+      const token = getToken()
+      const res = await fetch(`/api/reports?imageProxy=1&url=${encodeURIComponent(plan.href)}`, {
+        headers: token ? { 'x-session-token': token } : {},
+      })
+      if (!res.ok) {
+        let msg = 'Image proxy failed'
+        try {
+          const j = await res.json()
+          if (j?.error) msg = j.error
+        } catch (_) { /* ignore */ }
+        showToast(msg, 'error')
+        return
+      }
+      const blob = await res.blob()
+      revokeMemberUrlPhotoBlobUrl()
+      _memberUrlPhotoBlobUrl = URL.createObjectURL(blob)
+      img.removeAttribute('crossorigin')
+      img.src = _memberUrlPhotoBlobUrl
       return
     }
-    img.onload = () => {
-      setModalError('memberCropModalError', '')
-      try {
-        _memberCropper = new Ctor(img, {
-          aspectRatio: 1,
-          viewMode: 1,
-          autoCropArea: 0.92,
-          responsive: true,
-        })
-      } catch (err) {
-        setModalError('memberCropModalError', (err?.message || 'CROPPER FAILED').toUpperCase())
-      }
+    if (plan.kind === 'direct') {
+      if (plan.useCorsImg) img.crossOrigin = 'anonymous'
+      else img.removeAttribute('crossorigin')
+      img.src = plan.href
     }
-    img.src = reader.result
+  } catch (e) {
+    showToast('Image failed to load: ' + (e?.message || String(e)), 'error')
   }
-  reader.readAsDataURL(f)
 }
 
-async function uploadCroppedMemberPhoto() {
-  if (!_memberCropper) {
-    setModalError('memberCropModalError', 'LOAD AN IMAGE FIRST')
+function memberUrlPhotoSave() {
+  const urlInput = document.getElementById('memberUrlPhotoInput')
+  const url = (urlInput && urlInput.value || '').trim()
+  if (!url) {
+    showToast('URL required', 'error')
     return
   }
-  let canvas
-  try {
-    canvas = _memberCropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' })
-  } catch (_) {
-    canvas = null
-  }
-  if (!canvas) {
-    setModalError('memberCropModalError', 'COULD NOT BUILD CROP — TRY ANOTHER IMAGE')
+  if (classifyMemberPhotoUrl(url).kind === 'bad') {
+    showToast('Invalid image URL', 'error')
     return
   }
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.88)
-  const btn = document.getElementById('memberCropUploadBtn')
-  setBtnLoading(btn, true, 'Uploading...')
-  try {
-    const res = await apiFetch('POST', '/api/informants?type=member&upload=photo', { image_base64: dataUrl })
-    if (!res.ok) throw new Error(res.data?.error || 'Upload failed')
-    const url = res.data.url
-    if (!url) throw new Error('No URL returned')
-    document.getElementById('mPhotoUrl').value = url
-    syncMemberPhotoThumb()
-    showToast('Photo uploaded.', 'success')
-    closeMemberCropModal()
-  } catch (e) {
-    setModalError('memberCropModalError', e.message.toUpperCase())
-  } finally {
-    setBtnLoading(btn, false)
-  }
+  document.getElementById('mPhotoUrl').value = url
+  syncMemberPhotoThumb()
+  showToast('Photo URL saved.', 'success')
+  closeMemberUrlPhotoModal()
 }
 
 function syncMemberPhotoThumb() {
-  const url = (document.getElementById('mPhotoUrl').value || '').trim()
+  const raw = (document.getElementById('mPhotoUrl').value || '').trim()
   const img = document.getElementById('mPhotoThumbImg')
-  const ph  = document.getElementById('mPhotoThumbPh')
+  const ph = document.getElementById('mPhotoThumbPh')
   const clr = document.getElementById('btnClearMemberPhoto')
   if (!img || !ph) return
-  if (url) {
-    img.src = url
+  if (raw) {
+    let resolved = raw
+    try {
+      resolved = new URL(raw, window.location.href).href
+    } catch (_) {
+      resolved = raw
+    }
+    img.src = memberPhotoProxiedHrefForImg(resolved)
     img.style.display = ''
     ph.style.display = 'none'
     if (clr) clr.style.display = ''
@@ -1736,7 +1845,7 @@ function buildMemberCard(row, index) {
   const m         = row._member || {}
   const callsign  = escHtml(m.callsign || row.name || '—')
   const hasPhoto  = memberHasPhoto(m)
-  const photoSrc  = memberPhotoSrcEscaped(m)
+  const photoSrc  = memberPhotoSrcAttrEscaped(m)
   const tags      = (m.expertise || '').split(',').map(e => e.trim()).filter(Boolean)
   const tagHTML   = tags.map(t => `<span class="dir-member-tag">${escHtml(t)}</span>`).join('')
 
@@ -1785,7 +1894,7 @@ function openMemberDetail(id) {
   document.getElementById('memberDetailCallsign').textContent = m.callsign || '—'
 
   const hasPhoto = memberHasPhoto(m)
-  const photoSrc = memberPhotoSrcEscaped(m)
+  const photoSrc = memberPhotoSrcAttrEscaped(m)
 
   const tags    = (m.expertise || '').split(',').map(e => e.trim()).filter(Boolean)
   const tagHTML = tags.map(t => `<span class="dir-member-tag">${escHtml(t)}</span>`).join('')
@@ -1891,7 +2000,7 @@ function openEditMember(id) {
 
 function closeMemberModal() {
   document.getElementById('memberModal').classList.remove('open')
-  closeMemberCropModal()
+  closeMemberUrlPhotoModal()
   _editingMemberId = null
 }
 
