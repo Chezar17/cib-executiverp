@@ -2593,6 +2593,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Helpers ───────────────────────────────────────────────
 
   function getBadge() {
+    // _badge is set directly from the PortalAuth session via hookObSystem → startNotifSystem.
+    // Fallback to sessionStorage only as a safety net (e.g. tray opened before init).
     if (_badge) return _badge
     try {
       const raw = sessionStorage.getItem('cib_session')
@@ -2855,22 +2857,37 @@ document.addEventListener('DOMContentLoaded', () => {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
   }
 
-  // ── Init: wait for PortalAuth to complete, then fetch ─────
+  // ── Init: hook into ObSystem.init which PortalAuth calls after auth resolves ──
+  //
+  //  ObSystem.init(session) is the guaranteed post-auth entry point in nexus.html.
+  //  We wrap it so the notification system gets the confirmed badge the moment
+  //  PortalAuth hands it over — no blind setTimeout race condition.
 
-  function init() {
-    // Try to get badge — it may be set after PortalAuth resolves
-    const tryInit = () => {
-      getBadge()  // populate _badge if available
-      fetchNotifications()
+  function startNotifSystem(badge) {
+    _badge = badge || null
+    fetchNotifications()
+  }
+
+  // Wrap ObSystem.init — defer until the object exists (it's defined later in the same script block)
+  function hookObSystem() {
+    if (!window.ObSystem) {
+      // ObSystem not yet defined; retry on next tick
+      setTimeout(hookObSystem, 50)
+      return
     }
-    // Hook: wait a beat for PortalAuth to store session
-    setTimeout(tryInit, 1200)
+    const _origObInit = window.ObSystem.init.bind(window.ObSystem)
+    window.ObSystem.init = async function (session) {
+      // Boot notifications with the confirmed badge from the session
+      startNotifSystem(session?.badge || null)
+      // Then run normal ObSystem logic
+      return _origObInit(session)
+    }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init)
+    document.addEventListener('DOMContentLoaded', hookObSystem)
   } else {
-    init()
+    hookObSystem()
   }
 
 })()
