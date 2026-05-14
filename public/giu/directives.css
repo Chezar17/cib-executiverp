@@ -838,6 +838,22 @@ body.page-visible > :not(#access-gate) {
   width: 100%;
 }
 
+/*
+ * Fenrir tabs often list fewer rows than GIU → one grid track can grow to full
+ * viewport width and the card stretches into a „wide banner“. GIU dengan banyak
+ * kartu pakai beberapa kolom sehingga setiap kartu tetap seperti ubin.
+ * Dengan membatasi lebar kartu + center di sel grid, kedua tab tampak sama.
+ */
+#membersSection .dir-members-grid {
+  justify-items: center;
+}
+
+#membersSection .dir-member-card {
+  width: 100%;
+  max-width: 380px;
+  justify-self: center;
+}
+
 /* ── Member card ──────────────────────────────────────────── */
 .dir-member-card {
   background: var(--surface);

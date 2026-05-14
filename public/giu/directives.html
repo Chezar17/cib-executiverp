@@ -159,37 +159,14 @@
     <div class="dir-toolbar" id="membersToolbar">
       <span class="dir-members-count" id="membersCount">— members</span>
       <div class="dir-toolbar-sep"></div>
-      <button class="dir-new-btn hidden" id="btnNewMember" onclick="openMemberModal('giu')">
+      <button class="dir-new-btn hidden" id="btnNewMember" onclick="openMemberModalForCurrentTab()">
         <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
         Add Member
       </button>
     </div>
 
-    <!-- Members grid -->
+    <!-- Shared grid: GIU Members + Fenrir Members tabs use the same markup -->
     <div class="dir-members-grid" id="membersGrid">
-      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
-      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
-      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line full"></div></div>
-    </div>
-
-  </div>
-
-  <!-- ════════════════════
-       FENRIR MEMBERS SECTION
-  ════════════════════ -->
-  <div id="fenrirMembersSection" class="dir-members-page" style="display:none;">
-
-    <!-- Members toolbar -->
-    <div class="dir-toolbar" id="fenrirMembersToolbar">
-      <span class="dir-members-count" id="fenrirMembersCount">— members</span>
-      <div class="dir-toolbar-sep"></div>
-      <button class="dir-new-btn hidden" id="btnNewFenrirMember" onclick="openMemberModal('fenrir')">
-        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        Add Member
-      </button>
-    </div>
-
-    <div class="dir-members-grid" id="fenrirMembersGrid">
       <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
       <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
       <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line full"></div></div>
@@ -784,7 +761,6 @@ PortalAuth.init({
     document.getElementById('dirSectionTabs').style.display = 'flex'
     if (_isTopSecret) {
       document.getElementById('btnNewMember').classList.remove('hidden')
-      document.getElementById('btnNewFenrirMember').classList.remove('hidden')
     }
   }
 })
@@ -1492,7 +1468,7 @@ function memberHasPhoto(m) {
   return !!(m && ((m.photo_url || '').trim() || (m.photo_filename || '').trim()))
 }
 
-/** Safe value for HTML img src */
+/** Safe value for HTML img src (must work inside double-quoted attributes). */
 function memberPhotoSrcEscaped(m) {
   if (!m) return ''
   const u = (m.photo_url || '').trim()
@@ -1502,7 +1478,22 @@ function memberPhotoSrcEscaped(m) {
   return ''
 }
 
-// ── Profile photo crop modal (Cropper.js) ─────────────────
+const MEMBER_PHOTO_PLACEHOLDER_HTML = `<div class="dir-member-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
+
+/** After innerHTML injects member cards, wire photo error fallback (no brittle onerror= HTML). */
+function bindMemberPhotoErrorHandlers(root) {
+  if (!root) return
+  root.querySelectorAll('img.dir-member-photo').forEach(img => {
+    if (img.dataset.phBound === '1') return
+    img.dataset.phBound = '1'
+    img.addEventListener('error', () => {
+      const wrap = img.closest('.dir-member-photo-wrap')
+      if (!wrap || img.parentElement !== wrap) return
+      img.remove()
+      wrap.insertAdjacentHTML('afterbegin', MEMBER_PHOTO_PLACEHOLDER_HTML)
+    }, { once: true })
+  })
+}
 let _memberCropper = null
 
 function getCropperCtor() {
@@ -1661,34 +1652,29 @@ function switchTab(tab, el) {
   const dirGrid     = document.getElementById('dirGrid')
   const dirToolbar  = document.getElementById('dirToolbar')
   const membersEl   = document.getElementById('membersSection')
-  const fenrirEl    = document.getElementById('fenrirMembersSection')
   const wmSection   = document.getElementById('warmapSection')
 
   if (tab === 'directives') {
     dirGrid.style.display     = ''
     dirToolbar.style.display  = 'flex'
     if (membersEl) membersEl.style.display = 'none'
-    if (fenrirEl) fenrirEl.style.display = 'none'
     if (wmSection) wmSection.style.display = 'none'
   } else if (tab === 'members') {
     dirGrid.style.display     = 'none'
     dirToolbar.style.display  = 'none'
     if (membersEl) membersEl.style.display = 'flex'
-    if (fenrirEl) fenrirEl.style.display = 'none'
     if (wmSection) wmSection.style.display = 'none'
     loadMembers('giu')
   } else if (tab === 'fenrirMembers') {
     dirGrid.style.display     = 'none'
     dirToolbar.style.display  = 'none'
-    if (membersEl) membersEl.style.display = 'none'
-    if (fenrirEl) fenrirEl.style.display = 'flex'
+    if (membersEl) membersEl.style.display = 'flex'
     if (wmSection) wmSection.style.display = 'none'
     loadMembers('fenrir')
   } else if (tab === 'warmap') {
     dirGrid.style.display     = 'none'
     dirToolbar.style.display  = 'none'
     if (membersEl) membersEl.style.display = 'none'
-    if (fenrirEl) fenrirEl.style.display = 'none'
     if (wmSection) wmSection.style.display = ''
     if (!_wmLoaded) loadWarmap()
     setupWmPanDrag()
@@ -1697,8 +1683,7 @@ function switchTab(tab, el) {
 
 async function loadMembers(org) {
   _memberOrg = org === 'fenrir' ? 'fenrir' : 'giu'
-  const isFenrir = _memberOrg === 'fenrir'
-  const grid = document.getElementById(isFenrir ? 'fenrirMembersGrid' : 'membersGrid')
+  const grid = document.getElementById('membersGrid')
   grid.innerHTML = `
     <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
     <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line full"></div></div>`
@@ -1714,17 +1699,15 @@ async function loadMembers(org) {
 }
 
 function renderMembers() {
-  const isFenrir = _memberOrg === 'fenrir'
-  const grid     = document.getElementById(isFenrir ? 'fenrirMembersGrid' : 'membersGrid')
-  const countEl  = document.getElementById(isFenrir ? 'fenrirMembersCount' : 'membersCount')
-  const brand    = isFenrir ? 'Fenrir' : 'GIU'
+  const grid     = document.getElementById('membersGrid')
+  const countEl  = document.getElementById('membersCount')
   if (countEl) countEl.textContent = `${_allMembers.length} member${_allMembers.length !== 1 ? 's' : ''}`
 
   if (!_allMembers.length) {
     grid.innerHTML = `<div class="dir-empty" style="grid-column:1/-1;">
       <div class="dir-empty-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
       <div class="dir-empty-title">No Members on Record</div>
-      <div class="dir-empty-sub">${_isTopSecret ? `Add the first ${brand} member using the button above.` : `No ${brand} members have been registered yet.`}</div>
+      <div class="dir-empty-sub">${_isTopSecret ? 'Add the first member using the button above.' : 'No members have been registered yet.'}</div>
     </div>`
     return
   }
@@ -1746,6 +1729,7 @@ function renderMembers() {
   })
 
   grid.innerHTML = sorted.map((m, i) => buildMemberCard(m, i)).join('')
+  bindMemberPhotoErrorHandlers(grid)
 }
 
 function buildMemberCard(row, index) {
@@ -1773,8 +1757,8 @@ function buildMemberCard(row, index) {
     <div class="dir-member-card" style="animation-delay:${index * 50}ms">
       <div class="dir-member-photo-wrap">
         ${hasPhoto
-          ? `<img class="dir-member-photo" src="${photoSrc}" alt="${callsign}" crossorigin="anonymous" onerror="this.parentElement.innerHTML='<div class=\\"dir-member-photo-placeholder\\"><svg viewBox=\\"0 0 24 24\\"><path d=\\"M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\"/></svg></div>'"/>`
-          : `<div class="dir-member-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
+          ? `<img class="dir-member-photo" src="${photoSrc}" alt="" role="presentation" loading="lazy" decoding="async">`
+          : MEMBER_PHOTO_PLACEHOLDER_HTML
         }
       </div>
       <div class="dir-member-info">
@@ -1816,10 +1800,10 @@ function openMemberDetail(id) {
         <div class="dir-member-detail-val redacted">[ REDACTED — INSUFFICIENT CLEARANCE ]</div>
        </div>`
 
-  document.getElementById('memberDetailBody').innerHTML = `
+  const detailHtml = `
     <div class="dir-member-detail-photo-wrap">
       ${hasPhoto
-        ? `<img class="dir-member-detail-photo" src="${photoSrc}" alt="${escHtml(m.callsign || '')}" crossorigin="anonymous"/>`
+        ? `<img class="dir-member-detail-photo" src="${photoSrc}" alt="" role="presentation" loading="lazy" decoding="async">`
         : `<div class="dir-member-detail-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
       }
     </div>
@@ -1841,9 +1825,26 @@ function openMemberDetail(id) {
       <div class="dir-member-detail-val">${escHtml(m.added_by || '—')}</div>
     </div>`
 
+  const mb = document.getElementById('memberDetailBody')
+  mb.innerHTML = detailHtml
+
+  const dimg = mb.querySelector('img.dir-member-detail-photo')
+  if (dimg) {
+    dimg.addEventListener('error', () => {
+      const wrap = dimg.closest('.dir-member-detail-photo-wrap')
+      if (!wrap || dimg.parentElement !== wrap) return
+      dimg.remove()
+      wrap.innerHTML = `<div class="dir-member-detail-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
+    }, { once: true })
+  }
+
   document.getElementById('memberDetailModal').classList.add('open')
 }
 function closeMemberDetailModal() { document.getElementById('memberDetailModal').classList.remove('open') }
+
+function openMemberModalForCurrentTab() {
+  openMemberModal(_memberOrg)
+}
 
 function openMemberModal(org) {
   if (!_isTopSecret) return
