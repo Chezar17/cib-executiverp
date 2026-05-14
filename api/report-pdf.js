@@ -11,10 +11,10 @@ import path from 'path'
 import { launch, defaultArgs } from 'puppeteer-core'
 import { requireSession } from './_lib/session.js'
 import { getSupabase } from './_lib/supabase.js'
-import { buildPDFDocument, DEMO_REPORT } from './_lib/pdf-html.js'
+import { buildPDFDocument, DEMO_REPORT, pdfFormIdFromReport, isGrdDivisionReport } from './_lib/pdf-html.js'
 import {
-  PDF_HEADER_TEMPLATE,
   buildPdfFooterTemplate,
+  buildPdfHeaderTemplate,
   loadFooterLogoDataUrl,
 } from './_lib/pdf-layout.js'
 import { jsonApiError } from './_lib/api-error.js'
@@ -145,8 +145,12 @@ export default async function handler(req, res) {
       printBackground: true,
       margin: { top: '0', bottom: '0', left: '0', right: '0' },
       displayHeaderFooter: true,
-      headerTemplate: PDF_HEADER_TEMPLATE,
-      footerTemplate: buildPdfFooterTemplate(loadFooterLogoDataUrl()),
+      headerTemplate: buildPdfHeaderTemplate(pdfFormIdFromReport(report), {
+        grd: isGrdDivisionReport(report),
+      }),
+      footerTemplate: buildPdfFooterTemplate(loadFooterLogoDataUrl(), {
+        grd: isGrdDivisionReport(report),
+      }),
       preferCSSPageSize: true,
       scale: 1,
     })
@@ -154,7 +158,8 @@ export default async function handler(req, res) {
     const base64 = Buffer.from(pdfBuffer).toString('base64')
     const safeName = (str, max) =>
       (str || '').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').slice(0, max)
-    const filename = `CID-IR-${safeName(report.case_number, 8)}-${safeName(report.case_title, 35)}.pdf`
+    const filenamePrefix = isGrdDivisionReport(report) ? 'GRD-IR' : 'CID-IR'
+    const filename = `${filenamePrefix}-${safeName(report.case_number, 8)}-${safeName(report.case_title, 35)}.pdf`
 
     return res.status(200).json({
       base64,

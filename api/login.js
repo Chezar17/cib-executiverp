@@ -39,7 +39,7 @@ import { getSupabase } from './_lib/supabase.js'
 
 const MAX_ATTEMPTS  = 5   // max failed logins before lockout
 const LOCKOUT_MINS  = 5   // how long the lockout lasts
-const SESSION_MINS  = 30  // how long a login session lasts
+const SESSION_MINS  = 60  // how long a login session lasts (server `sessions.expires_at`)
 
 // ── Crypto helpers ────────────────────────────────────────────
 function sha256(text) {

@@ -11,9 +11,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 /** Same file as pdf-html cover logo — embedded in footer template (Chromium needs data URL). */
 const FOOTER_LOGO_PATH = path.join(__dirname, '../../public/images/cib-logo-pdf.png')
 
-/** Bottom slightly taller than default text margins — footer row carries larger CIB wordmark. */
+/** Top inset includes Chromium PDF header chrome (CID strip); bottom fits footer wordmark. */
 export const PDF_MARGIN_MM = Object.freeze({
-  top: '20mm',
+  top: '26mm',
   bottom: '28mm',
   left: '15mm',
   right: '15mm',
@@ -42,7 +42,40 @@ export function loadFooterLogoDataUrl() {
   return null
 }
 
-/** Minimal header slot for Chromium PDF (avoid layout quirks). */
+function escPdfTemplateText(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/**
+ * Repeats on every printed page (Puppeteer header margin).
+ * @param {string} formId e.g. FORM 00123 (CID/…) — digits from investigation case_number + GRD/CID tail
+ * @param {{ grd?: boolean }} [opts] — when true, strip says Gang Recon Division
+ */
+export function buildPdfHeaderTemplate(formId, opts = {}) {
+  const padL = PDF_MARGIN_MM.left
+  const padR = PDF_MARGIN_MM.right
+  const id = escPdfTemplateText(formId)
+  const strip = opts.grd
+    ? 'GANG RECON DIVISION – STATE OF SAN ANDREAS'
+    : 'CRIMINAL INVESTIGATION DIVISION – STATE OF SAN ANDREAS'
+  return `
+<div style="width:100%;box-sizing:border-box;margin:0;padding:6px ${padR} 8px ${padL};font-size:8pt;line-height:1.25;font-family:Consolas,'Courier New',monospace;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+  <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="vertical-align:bottom;padding:0 10px 4px 0;font-weight:bold;letter-spacing:0.35px;">${strip}</td>
+      <td style="vertical-align:bottom;padding:0 0 4px 10px;text-align:right;font-weight:bold;letter-spacing:0.35px;white-space:nowrap;">${id}</td>
+    </tr>
+    <tr><td colspan="2" style="border-bottom:2px solid #000;line-height:0;font-size:0;height:2px;padding:0">&nbsp;</td></tr>
+  </table>
+</div>
+`.trim()
+}
+
+/** @deprecated Prefer buildPdfHeaderTemplate(pdfFormIdFromReport(r)); placeholder kept for stray imports. */
 export const PDF_HEADER_TEMPLATE =
   '<div style="width:100%;height:1px;margin:0;padding:0;font-size:1px;line-height:1px;overflow:hidden;"></div>'
 
@@ -53,11 +86,15 @@ const FOOTER_LOGO_HEIGHT = '13mm'
 const FOOTER_LOGO_TEXT_GAP = '4px'
 
 /**
- * Footer: CIB logo + bureau line — left/right inset matches PDF_MARGIN_MM; logo sits tight to following text.
+ * Footer: CIB logo + bureau line — left/right inset matches PDF_MARGIN_MM.
+ * @param {{ grd?: boolean }} [opts] — GRD reports use Gang Recon strip instead of CIB bureau line
  */
-export function buildPdfFooterTemplate(logoDataUrl) {
+export function buildPdfFooterTemplate(logoDataUrl, opts = {}) {
   const padL = PDF_MARGIN_MM.left
   const padR = PDF_MARGIN_MM.right
+  const bureauLine = opts.grd
+    ? 'GANG RECON DIVISION — STATE OF SAN ANDREAS'
+    : 'CENTRAL INVESTIGATION BUREAU — STATE OF SAN ANDREAS'
   const logoCell = logoDataUrl
     ? `<td style="vertical-align:bottom;padding:0 ${FOOTER_LOGO_TEXT_GAP} 0 0;line-height:0;width:1%;white-space:nowrap;">
         <img src="${logoDataUrl}" alt="CIB" style="height:${FOOTER_LOGO_HEIGHT};width:auto;display:block;margin:0;padding:0;border:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;"/>
@@ -65,11 +102,11 @@ export function buildPdfFooterTemplate(logoDataUrl) {
     : ''
 
   return `
-<div style="width:100%;box-sizing:border-box;margin:0;padding:0 ${padR} 0 ${padL};font-size:8px;line-height:1.35;font-family:Arial,Helvetica,sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+<div style="width:100%;box-sizing:border-box;margin:0;padding:0 ${padR} 0 ${padL};font-size:8px;line-height:1.35;font-family:Consolas,'Courier New',monospace;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
   <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border-top:1px solid #aaa;">
     <tr>
       ${logoCell}
-      <td style="vertical-align:middle;padding:10px 12px 10px 0;text-align:left;font-weight:bold;letter-spacing:0.35px;">CENTRAL INVESTIGATION BUREAU — STATE OF SAN ANDREAS</td>
+      <td style="vertical-align:middle;padding:10px 12px 10px 0;text-align:left;font-weight:bold;letter-spacing:0.35px;">${bureauLine}</td>
       <td style="vertical-align:middle;padding:10px 0 10px 12px;text-align:right;white-space:nowrap;width:1%;">Page <span class="pageNumber"></span> / <span class="totalPages"></span></td>
     </tr>
   </table>

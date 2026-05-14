@@ -1,13 +1,16 @@
 // ============================================================
 //  CIB – Investigation Reports API
-//  GET  /api/reports       → list all reports (summary rows)
-//  POST /api/reports       → create new report + all sub-items
+//  GET  /api/reports                    → list all reports (summary rows)
+//  GET  /api/reports?nextCaseNumber=1   → preview next case number
+//  GET  /api/reports?imageProxy=1&url= → fetch allow-listed HTTPS image for Cropper (same-origin blob)
+//  POST /api/reports                     → create new report + all sub-items
 // ============================================================
-import { allowMethods }   from './_lib/http.js'
+import { allowMethods } from './_lib/http.js'
 import { requireSession } from './_lib/session.js'
-import { getSupabase }    from './_lib/supabase.js'
+import { getSupabase } from './_lib/supabase.js'
 import { getNextCaseNumber } from './_lib/ir-case-number.js'
 import { jsonApiError } from './_lib/api-error.js'
+import { handleReportImageProxy } from './_lib/image-proxy-handler.js'
 
 function actorFrom(req, session) {
   return req.headers['x-actor'] || session.badge || null
@@ -28,10 +31,27 @@ function irSubRowAudit(actor) {
 export default async function handler(req, res) {
   try {
     if (!allowMethods(req, res, ['GET', 'POST', 'OPTIONS'])) return
+
+    // Preflight for JSON POST + custom headers — no auth on OPTIONS.
+    if (req.method === 'OPTIONS') {
+      res.status(204).end()
+      return
+    }
+
     const session = await requireSession(req, res)
     if (!session) return
 
     const supabase = getSupabase()
+
+    // ── GET: image proxy for Cropper (CDN without CORS) ───────
+    const iq = req.query?.imageProxy
+    if (
+      req.method === 'GET' &&
+      (iq === '1' || iq === 'true' || String(iq || '').toLowerCase() === 'yes')
+    ) {
+      await handleReportImageProxy(req, res)
+      return
+    }
 
     // ── GET: next case number (preview for new form) ─────────
     if (req.method === 'GET' && (req.query?.nextCaseNumber === '1' || req.query?.next === '1')) {
@@ -127,6 +147,12 @@ export default async function handler(req, res) {
       detective_cleared_forensics: !!main.detective_cleared_forensics,
       detective_referred_to:    main.detective_referred_to    || null,
       detective_date_referral:  main.detective_date_referral  || null,
+      first_responder_name:       main.first_responder_name       || null,
+      first_responder_occupation: main.first_responder_occupation || null,
+      medic_involved_name:        main.medic_involved_name        || null,
+      medic_involved_role:        main.medic_involved_role        || null,
+      incident_report_optional:   main.incident_report_optional   || null,
+      incident_report_written_by: main.incident_report_written_by || null,
       is_deleted:               false,
       created_by:               actor,
       modified_at:              nowIso,
@@ -227,7 +253,7 @@ function sanitizeNormCrop(c) {
 
 function sanitizePortraitLandscape(val, fallback) {
   const s = String(val || '').toLowerCase()
-  if (s === 'landscape' || s === 'portrait') return s
+  if (s === 'landscape' || s === 'portrait' || s === 'square') return s
   return fallback
 }
 
@@ -241,6 +267,11 @@ function sanitizeVictim(v) {
     photo_url: v.photo_url || null,
     photo_orientation: sanitizePortraitLandscape(v.photo_orientation, 'portrait'),
     photo_crop: sanitizeNormCrop(v.photo_crop),
+    cause_of_death: v.cause_of_death || null,
+    cause_of_injury: v.cause_of_injury || null,
+    family_contact_name: v.family_contact_name || null,
+    family_contact_phone: v.family_contact_phone || null,
+    medical_debrief: v.medical_debrief || null,
   }
 }
 function sanitizeSuspect(s) {
@@ -254,6 +285,8 @@ function sanitizeSuspect(s) {
     mugshot_url: s.mugshot_url || null,
     mugshot_orientation: sanitizePortraitLandscape(s.mugshot_orientation, 'portrait'),
     mugshot_crop: sanitizeNormCrop(s.mugshot_crop),
+    affiliation: s.affiliation || null,
+    reason_of_suspicion: s.reason_of_suspicion || null,
   }
 }
 function sanitizeWitness(w) {
@@ -262,9 +295,13 @@ function sanitizeWitness(w) {
     status: w.status || null, welfare: w.welfare || null,
     occupation: w.welfare_occupation ?? w.occupation ?? null,
     content: w.content || null,
+    is_expert: !!w.is_expert,
+    expertise: w.expertise || null,
   }
 }
 function sanitizeEvidence(e) {
+  const aspect = String(e.image_crop_aspect || e.crop_aspect || 'free').toLowerCase()
+  const cropAspect = aspect === 'square' ? 'square' : 'free'
   return {
     id_code: e.id_code || null, name: e.name || null,
     was_status: e.was_status ?? e.evidence_was ?? null,
@@ -273,6 +310,7 @@ function sanitizeEvidence(e) {
     image_url: e.image_url || null,
     image_orientation: sanitizePortraitLandscape(e.image_orientation, 'landscape'),
     image_crop: sanitizeNormCrop(e.image_crop),
+    image_crop_aspect: cropAspect,
     summary: e.summary || null,
   }
 }

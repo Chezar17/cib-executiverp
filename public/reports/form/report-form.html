@@ -185,7 +185,7 @@
           <div class="form-grid form-grid-4">
             <div class="form-group span-2">
               <label>15. Lead Investigators</label>
-              <input type="text" id="lead_investigators" placeholder="Detective II Julian Flux"/>
+              <input type="text" id="lead_investigators" placeholder="Detective III Scott Hawkes"/>
             </div>
             <div class="form-group">
               <label>16a. Prosecutor</label>
@@ -194,6 +194,35 @@
             <div class="form-group">
               <label>16b. Prosecutor Time Start</label>
               <input type="date" id="prosecutor_time_start"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ir-card">
+        <div class="ir-card-header"><div class="ir-card-title">FIRST RESPONDER &amp; MEDIC</div></div>
+        <div class="ir-card-body">
+          <div class="form-grid form-grid-2" style="margin-bottom:12px">
+            <div class="form-group">
+              <label>First Responder &mdash; Name</label>
+              <input type="text" id="first_responder_name" placeholder=""/>
+            </div>
+            <div class="form-group">
+              <label>First Responder &mdash; Occupation</label>
+              <input type="text" id="first_responder_occupation" placeholder=""/>
+            </div>
+            <div class="form-group">
+              <label>Medic Involved &mdash; Name</label>
+              <input type="text" id="medic_involved_name" placeholder=""/>
+            </div>
+            <div class="form-group">
+              <label>Medic Involved &mdash; Role</label>
+              <select id="medic_involved_role">
+                <option value="">&mdash;</option>
+                <option value="Forensic">Forensic</option>
+                <option value="Autopsy">Autopsy</option>
+                <option value="Visum">Visum</option>
+              </select>
             </div>
           </div>
         </div>
@@ -245,6 +274,15 @@
           <button class="btn-add" style="width:auto;padding:4px 12px;font-size:9px" onclick="addDebrief()">+ ADD ENTRY</button>
         </div>
         <div class="ir-card-body">
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Incident Report <span class="hint">(Optional)</span></label>
+            <textarea id="incident_report_optional" rows="4" placeholder=""></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:18px">
+            <label>Written By</label>
+            <input type="text" id="incident_report_written_by" placeholder=""/>
+          </div>
+          <hr class="ir-divider" style="margin:14px 0"/>
           <div class="repeat-container" id="debriefContainer"></div>
           <button class="btn-add" onclick="addDebrief()">+ ADD INCIDENT ENTRY</button>
         </div>
@@ -372,7 +410,7 @@
             </div>
             <div class="form-group">
               <label>Primary Detective Name</label>
-              <input type="text" id="closure_detective_name" placeholder="e.g. Julian Flux"/>
+              <input type="text" id="closure_detective_name" placeholder="e.g. Detective III Scott Hawkes"/>
               <br/>
               <label>Detective Division</label>
               <div class="check-group" style="margin-top:6px">
@@ -449,15 +487,18 @@
   <div class="ir-photo-modal-backdrop" onclick="closePhotoModal()" aria-hidden="true"></div>
   <div class="ir-photo-modal-panel" role="dialog" aria-modal="true" aria-labelledby="irPhotoModalTitle" onclick="event.stopPropagation()">
     <div class="ir-photo-modal-title" id="irPhotoModalTitle">Image from URL</div>
-    <p class="ir-photo-modal-hint">Paste a direct image HTTPS URL (same-origin avoids CORS issues for cropping).</p>
+    <p class="ir-photo-modal-hint">Paste a direct HTTPS image URL. <code>images.executiverp.id</code> is loaded through the portal so Cropper can read pixels (no CDN CORS).</p>
     <div class="form-group ir-photo-modal-field">
       <label for="irPhotoModalUrl">Image URL</label>
       <input type="text" id="irPhotoModalUrl" autocomplete="off" spellcheck="false" placeholder="https://… or /images/local.png"/>
     </div>
     <div class="form-group ir-photo-modal-field ir-photo-modal-orient">
       <span class="label-inline">Orientation (PDF frame)</span>
-      <label class="check-item"><input type="radio" name="irPhotoModalOrient" id="irPhotoModalOrientP" value="portrait" onchange="irPhotoModalOrientChanged()"/> Portrait</label>
-      <label class="check-item"><input type="radio" name="irPhotoModalOrient" id="irPhotoModalOrientL" value="landscape" onchange="irPhotoModalOrientChanged()"/> Landscape</label>
+      <div class="ir-photo-modal-orient-row">
+        <label class="check-item"><input type="radio" name="irPhotoModalOrient" id="irPhotoModalOrientP" value="portrait" onchange="irPhotoModalOrientChanged()"/> Portrait</label>
+        <label class="check-item"><input type="radio" name="irPhotoModalOrient" id="irPhotoModalOrientL" value="landscape" onchange="irPhotoModalOrientChanged()"/> Landscape</label>
+        <label class="check-item"><input type="radio" name="irPhotoModalOrient" id="irPhotoModalOrientS" value="square" onchange="irPhotoModalOrientChanged()"/> Square (1:1)</label>
+      </div>
     </div>
     <div class="ir-photo-modal-actions ir-photo-modal-actions--top">
       <button type="button" class="btn btn-ghost" onclick="irPhotoModalLoadPreview()">Load preview</button>
