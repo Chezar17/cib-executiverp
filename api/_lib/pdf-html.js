@@ -8,6 +8,7 @@ import { readFileSync, existsSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import { pdfPageMarginCssString, PDF_MARGIN_MM } from "./pdf-layout.js";
+import { formatIrCaseNumber, parseCaseNumberString } from "./ir-case-number.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -636,11 +637,13 @@ td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: t
 `;
 
 // ── Page chrome helpers ────────────────────────────────────────────────────
-/** Form line in PDF header: DATE part is DDMMYY from date of offense — must match report-form wording. */
+/** Form line in PDF header: FORM digits = investigation case_number (same as field 2. CASE NO.); tail = DDMMYY from offense date. */
 export function pdfFormIdFromReport(r) {
   const div = isGrdDivisionReport(r) ? "GRD" : "CID";
   const tail = pdfFormTailDdMmYy(r?.date_of_offense);
-  return "FORM 0001 (" + div + "/" + tail + ")";
+  const n = parseCaseNumberString(r?.case_number);
+  const formDigits = n > 0 ? formatIrCaseNumber(n) : "00001";
+  return "FORM " + formDigits + " (" + div + "/" + tail + ")";
 }
 
 /**

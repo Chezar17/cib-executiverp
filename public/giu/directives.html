@@ -10,6 +10,7 @@
 <!-- Shared tokens + portal auth -->
 <link rel="stylesheet" href="../shared/styles/tokens.css"/>
 <link rel="stylesheet" href="directives.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css"/>
 </head>
 <body>
 
@@ -105,6 +106,10 @@
       <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
       GIU Members
     </button>
+    <button class="dir-section-tab" id="tabFenrirMembers" onclick="switchTab('fenrirMembers', this)">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      Fenrir Members
+    </button>
     <button class="dir-section-tab" id="tabWarmap" onclick="switchTab('warmap', this)">
       <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
       War Map
@@ -154,7 +159,7 @@
     <div class="dir-toolbar" id="membersToolbar">
       <span class="dir-members-count" id="membersCount">— members</span>
       <div class="dir-toolbar-sep"></div>
-      <button class="dir-new-btn hidden" id="btnNewMember" onclick="openMemberModal()">
+      <button class="dir-new-btn hidden" id="btnNewMember" onclick="openMemberModal('giu')">
         <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
         Add Member
       </button>
@@ -169,6 +174,27 @@
 
   </div>
 
+  <!-- ════════════════════
+       FENRIR MEMBERS SECTION
+  ════════════════════ -->
+  <div id="fenrirMembersSection" style="display:none;">
+
+    <div class="dir-toolbar" id="fenrirMembersToolbar">
+      <span class="dir-members-count" id="fenrirMembersCount">— members</span>
+      <div class="dir-toolbar-sep"></div>
+      <button class="dir-new-btn hidden" id="btnNewFenrirMember" onclick="openMemberModal('fenrir')">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Add Member
+      </button>
+    </div>
+
+    <div class="dir-members-grid" id="fenrirMembersGrid">
+      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
+      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
+      <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line full"></div></div>
+    </div>
+
+  </div>
 
 
   <!-- ════════════════════
@@ -446,9 +472,27 @@
       </div>
 
       <div class="dir-form-group">
-        <label class="dir-form-label" style="color:var(--gold);">Photo Filename</label>
+        <label class="dir-form-label" style="color:var(--gold);">Profile Photo</label>
+        <input type="hidden" id="mPhotoUrl" value=""/>
+        <div class="dir-member-photo-upload">
+          <div class="dir-member-photo-thumb" id="mPhotoThumbWrap">
+            <img id="mPhotoThumbImg" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:inherit;"/>
+            <div class="dir-member-photo-thumb-ph" id="mPhotoThumbPh">
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+          </div>
+          <div class="dir-member-photo-upload-actions">
+            <button type="button" class="dir-card-btn" onclick="openMemberCropModal()" style="color:var(--gold);border-color:rgba(201,168,76,0.25);">Choose &amp; crop photo…</button>
+            <button type="button" class="dir-card-btn" onclick="clearMemberUploadedPhoto()" id="btnClearMemberPhoto" style="display:none;">Remove uploaded photo</button>
+            <div class="dir-form-hint">Square crop (like investigation report mugshots). Image is uploaded to secure storage.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dir-form-group">
+        <label class="dir-form-label" style="color:var(--gold);">Photo Filename (optional fallback)</label>
         <input class="dir-form-input" type="text" id="mPhoto" placeholder="e.g. phantom.jpg"/>
-        <div class="dir-form-hint">Place the 1:1 photo in your <code style="color:var(--gold);font-size:10px;">/images/</code> folder, then enter the filename here</div>
+        <div class="dir-form-hint">If set, <code style="color:var(--gold);font-size:10px;">/images/</code> file is used when no uploaded photo URL is stored</div>
       </div>
 
     </div>
@@ -469,7 +513,7 @@
     <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
       <div class="dir-modal-topbar-left">
         <div class="dir-modal-dot" style="background:var(--gold);animation:none;"></div>
-        <span class="dir-modal-label" style="color:var(--gold);">GIU · MEMBER FILE — <span id="memberDetailCallsign">—</span></span>
+        <span class="dir-modal-label" style="color:var(--gold);"><span id="memberDetailOrgLabel">GIU</span> · MEMBER FILE — <span id="memberDetailCallsign">—</span></span>
       </div>
       <button class="dir-modal-close" onclick="closeMemberDetailModal()">✕</button>
     </div>
@@ -478,6 +522,36 @@
     </div>
     <div class="dir-modal-submit-row">
       <button class="dir-modal-cancel" onclick="closeMemberDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MEMBER PROFILE PHOTO — CROP (Cropper.js)
+════════════════════════════════════════════════ -->
+<div class="dir-modal-overlay" id="memberCropModal">
+  <div class="dir-modal" style="border-top-color:var(--gold);max-width:580px;">
+    <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
+      <div class="dir-modal-topbar-left">
+        <div class="dir-modal-dot" style="background:var(--gold);animation:none;"></div>
+        <span class="dir-modal-label" style="color:var(--gold);" id="memberCropModalLabel">PROFILE PHOTO</span>
+      </div>
+      <button class="dir-modal-close" onclick="closeMemberCropModal()">✕</button>
+    </div>
+    <div class="dir-modal-body">
+      <input type="file" id="memberCropFile" accept="image/*" style="display:none" onchange="onMemberCropFileSelected(event)"/>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <button type="button" class="dir-card-btn" onclick="document.getElementById('memberCropFile').click()" style="color:var(--gold);border-color:rgba(201,168,76,0.25);">Load image</button>
+      </div>
+      <div class="dir-member-crop-wrap" id="memberCropWrap">
+        <img id="memberCropImg" alt="" style="max-width:100%;display:block;"/>
+      </div>
+      <div class="dir-form-hint" style="margin-top:10px;">Adjust the square crop, then upload. Output is optimized for member cards (512×512 JPEG).</div>
+    </div>
+    <div class="dir-modal-error" id="memberCropModalError"></div>
+    <div class="dir-modal-submit-row">
+      <button class="dir-modal-cancel" onclick="closeMemberCropModal()">Cancel</button>
+      <button class="dir-modal-submit" id="memberCropUploadBtn" onclick="uploadCroppedMemberPhoto()" style="background:var(--gold);color:#000;">Upload cropped photo</button>
     </div>
   </div>
 </div>
@@ -655,6 +729,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="../shared/scripts/portal-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <script>
 // ════════════════════════════════════════════════════════════
@@ -708,6 +783,7 @@ PortalAuth.init({
     document.getElementById('dirSectionTabs').style.display = 'flex'
     if (_isTopSecret) {
       document.getElementById('btnNewMember').classList.remove('hidden')
+      document.getElementById('btnNewFenrirMember').classList.remove('hidden')
     }
   }
 })
@@ -1234,11 +1310,15 @@ document.getElementById('detailModal').addEventListener('click', function(e) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeCreateModal(); closeUpdateModal(); closeDetailModal()
+    closeMemberCropModal()
     closeMemberModal(); closeMemberDetailModal()
   }
 })
 document.getElementById('memberModal').addEventListener('click', function(e) {
   if (e.target === this) closeMemberModal()
+})
+document.getElementById('memberCropModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMemberCropModal()
 })
 document.getElementById('memberDetailModal').addEventListener('click', function(e) {
   if (e.target === this) closeMemberDetailModal()
@@ -1392,14 +1472,187 @@ async function apiFetch(method, path, body) {
 
 
 // ════════════════════════════════════════════════════════════
-//  GIU MEMBERS — uses /api/informants?type=member
+//  GIU / FENRIR MEMBERS — /api/informants?type=member&org=giu|fenrir
 // ════════════════════════════════════════════════════════════
 
-let _allMembers     = []
+let _allMembers      = []
 let _editingMemberId = null
-let _membersLoaded  = false
+let _memberOrg       = 'giu'   // current registry: 'giu' | 'fenrir'
 
-// ── Section tab switcher ──────────────────────────────────
+function memberOrgShort(row) {
+  return row.gang === '__fenrir_member__' ? 'fenrir' : 'giu'
+}
+
+function memberOrgUiLabel(org) {
+  return org === 'fenrir' ? 'FENRIR' : 'GIU'
+}
+
+function memberHasPhoto(m) {
+  return !!(m && ((m.photo_url || '').trim() || (m.photo_filename || '').trim()))
+}
+
+/** Safe value for HTML img src */
+function memberPhotoSrcEscaped(m) {
+  if (!m) return ''
+  const u = (m.photo_url || '').trim()
+  if (u) return escHtml(u)
+  const f = (m.photo_filename || '').trim()
+  if (f) return escHtml(`../images/${f}`)
+  return ''
+}
+
+// ── Profile photo crop modal (Cropper.js) ─────────────────
+let _memberCropper = null
+
+function getCropperCtor() {
+  const C = window.Cropper
+  if (typeof C === 'function') return C
+  if (C && typeof C.default === 'function') return C.default
+  return null
+}
+
+function destroyMemberCropper() {
+  if (_memberCropper) {
+    try { _memberCropper.destroy() } catch (_) {}
+    _memberCropper = null
+  }
+}
+
+function openMemberCropModal() {
+  if (!_isTopSecret) return
+  const L = memberOrgUiLabel(_memberOrg)
+  document.getElementById('memberCropModalLabel').textContent = `${L} · PROFILE PHOTO`
+  setModalError('memberCropModalError', '')
+  document.getElementById('memberCropFile').value = ''
+  destroyMemberCropper()
+  const wrap = document.getElementById('memberCropWrap')
+  if (wrap) {
+    wrap.innerHTML = ''
+    const img = document.createElement('img')
+    img.id = 'memberCropImg'
+    img.alt = ''
+    img.style.cssText = 'max-width:100%;display:block'
+    wrap.appendChild(img)
+  }
+  document.getElementById('memberCropModal').classList.add('open')
+}
+
+function closeMemberCropModal() {
+  document.getElementById('memberCropModal').classList.remove('open')
+  document.getElementById('memberCropFile').value = ''
+  destroyMemberCropper()
+  const wrap = document.getElementById('memberCropWrap')
+  if (wrap) {
+    wrap.innerHTML = ''
+    const img = document.createElement('img')
+    img.id = 'memberCropImg'
+    img.alt = ''
+    img.style.cssText = 'max-width:100%;display:block'
+    wrap.appendChild(img)
+  }
+}
+
+function onMemberCropFileSelected(ev) {
+  const f = ev.target.files && ev.target.files[0]
+  if (!f || !f.type.startsWith('image/')) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    destroyMemberCropper()
+    const wrap = document.getElementById('memberCropWrap')
+    wrap.innerHTML = ''
+    const img = document.createElement('img')
+    img.id = 'memberCropImg'
+    img.alt = ''
+    img.style.cssText = 'max-width:100%;display:block'
+    wrap.appendChild(img)
+    const Ctor = getCropperCtor()
+    if (!Ctor) {
+      setModalError('memberCropModalError', 'CROPPER.JS NOT LOADED — CHECK NETWORK / CDN')
+      return
+    }
+    img.onload = () => {
+      setModalError('memberCropModalError', '')
+      try {
+        _memberCropper = new Ctor(img, {
+          aspectRatio: 1,
+          viewMode: 1,
+          autoCropArea: 0.92,
+          responsive: true,
+        })
+      } catch (err) {
+        setModalError('memberCropModalError', (err?.message || 'CROPPER FAILED').toUpperCase())
+      }
+    }
+    img.src = reader.result
+  }
+  reader.readAsDataURL(f)
+}
+
+async function uploadCroppedMemberPhoto() {
+  if (!_memberCropper) {
+    setModalError('memberCropModalError', 'LOAD AN IMAGE FIRST')
+    return
+  }
+  let canvas
+  try {
+    canvas = _memberCropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' })
+  } catch (_) {
+    canvas = null
+  }
+  if (!canvas) {
+    setModalError('memberCropModalError', 'COULD NOT BUILD CROP — TRY ANOTHER IMAGE')
+    return
+  }
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.88)
+  const btn = document.getElementById('memberCropUploadBtn')
+  setBtnLoading(btn, true, 'Uploading...')
+  try {
+    const res = await apiFetch('POST', '/api/informants?type=member&upload=photo', { image_base64: dataUrl })
+    if (!res.ok) throw new Error(res.data?.error || 'Upload failed')
+    const url = res.data.url
+    if (!url) throw new Error('No URL returned')
+    document.getElementById('mPhotoUrl').value = url
+    syncMemberPhotoThumb()
+    showToast('Photo uploaded.', 'success')
+    closeMemberCropModal()
+  } catch (e) {
+    setModalError('memberCropModalError', e.message.toUpperCase())
+  } finally {
+    setBtnLoading(btn, false)
+  }
+}
+
+function syncMemberPhotoThumb() {
+  const url = (document.getElementById('mPhotoUrl').value || '').trim()
+  const img = document.getElementById('mPhotoThumbImg')
+  const ph  = document.getElementById('mPhotoThumbPh')
+  const clr = document.getElementById('btnClearMemberPhoto')
+  if (!img || !ph) return
+  if (url) {
+    img.src = url
+    img.style.display = ''
+    ph.style.display = 'none'
+    if (clr) clr.style.display = ''
+  } else {
+    img.removeAttribute('src')
+    img.style.display = 'none'
+    ph.style.display = ''
+    if (clr) clr.style.display = 'none'
+  }
+}
+
+function clearMemberUploadedPhoto() {
+  document.getElementById('mPhotoUrl').value = ''
+  syncMemberPhotoThumb()
+}
+
+function resetMemberPhotoFields() {
+  document.getElementById('mPhotoUrl').value = ''
+  document.getElementById('mPhoto').value = ''
+  syncMemberPhotoThumb()
+}
+
+// ── Section tab switcher (directives / GIU members / Fenrir / warmap) ──
 function switchTab(tab, el) {
   document.querySelectorAll('.dir-section-tab').forEach(b => b.classList.remove('active'))
   if (el) el.classList.add('active')
@@ -1407,29 +1660,50 @@ function switchTab(tab, el) {
   const dirGrid     = document.getElementById('dirGrid')
   const dirToolbar  = document.getElementById('dirToolbar')
   const membersEl   = document.getElementById('membersSection')
+  const fenrirEl    = document.getElementById('fenrirMembersSection')
+  const wmSection   = document.getElementById('warmapSection')
 
   if (tab === 'directives') {
-    dirGrid.style.display    = ''
-    dirToolbar.style.display = 'flex'
-    membersEl.style.display  = 'none'
-  } else {
-    dirGrid.style.display    = 'none'
-    dirToolbar.style.display = 'none'
-    membersEl.style.display  = ''
-    if (!_membersLoaded) loadMembers()
+    dirGrid.style.display     = ''
+    dirToolbar.style.display  = 'flex'
+    if (membersEl) membersEl.style.display = 'none'
+    if (fenrirEl) fenrirEl.style.display = 'none'
+    if (wmSection) wmSection.style.display = 'none'
+  } else if (tab === 'members') {
+    dirGrid.style.display     = 'none'
+    dirToolbar.style.display  = 'none'
+    if (membersEl) membersEl.style.display = ''
+    if (fenrirEl) fenrirEl.style.display = 'none'
+    if (wmSection) wmSection.style.display = 'none'
+    loadMembers('giu')
+  } else if (tab === 'fenrirMembers') {
+    dirGrid.style.display     = 'none'
+    dirToolbar.style.display  = 'none'
+    if (membersEl) membersEl.style.display = 'none'
+    if (fenrirEl) fenrirEl.style.display = ''
+    if (wmSection) wmSection.style.display = 'none'
+    loadMembers('fenrir')
+  } else if (tab === 'warmap') {
+    dirGrid.style.display     = 'none'
+    dirToolbar.style.display  = 'none'
+    if (membersEl) membersEl.style.display = 'none'
+    if (fenrirEl) fenrirEl.style.display = 'none'
+    if (wmSection) wmSection.style.display = ''
+    if (!_wmLoaded) loadWarmap()
+    setupWmPanDrag()
   }
 }
 
-// ── API ───────────────────────────────────────────────────
-async function loadMembers() {
-  _membersLoaded = true
-  const grid = document.getElementById('membersGrid')
+async function loadMembers(org) {
+  _memberOrg = org === 'fenrir' ? 'fenrir' : 'giu'
+  const isFenrir = _memberOrg === 'fenrir'
+  const grid = document.getElementById(isFenrir ? 'fenrirMembersGrid' : 'membersGrid')
   grid.innerHTML = `
     <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
     <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line full"></div></div>`
 
   try {
-    const res  = await apiFetch('GET', '/api/informants?type=member')
+    const res = await apiFetch('GET', `/api/informants?type=member&org=${_memberOrg}`)
     if (!res.ok) throw new Error(res.data?.error || 'Fetch failed')
     _allMembers = res.data.data || []
     renderMembers()
@@ -1438,36 +1712,34 @@ async function loadMembers() {
   }
 }
 
-// ── Render member cards ───────────────────────────────────
 function renderMembers() {
-  const grid     = document.getElementById('membersGrid')
-  const countEl  = document.getElementById('membersCount')
+  const isFenrir = _memberOrg === 'fenrir'
+  const grid     = document.getElementById(isFenrir ? 'fenrirMembersGrid' : 'membersGrid')
+  const countEl  = document.getElementById(isFenrir ? 'fenrirMembersCount' : 'membersCount')
+  const brand    = isFenrir ? 'Fenrir' : 'GIU'
   if (countEl) countEl.textContent = `${_allMembers.length} member${_allMembers.length !== 1 ? 's' : ''}`
 
   if (!_allMembers.length) {
     grid.innerHTML = `<div class="dir-empty" style="grid-column:1/-1;">
       <div class="dir-empty-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
       <div class="dir-empty-title">No Members on Record</div>
-      <div class="dir-empty-sub">${_isTopSecret ? 'Add the first GIU member using the button above.' : 'No GIU members have been registered yet.'}</div>
+      <div class="dir-empty-sub">${_isTopSecret ? `Add the first ${brand} member using the button above.` : `No ${brand} members have been registered yet.`}</div>
     </div>`
     return
   }
 
-  // Sort: entries starting with a number come first (numeric ascending),
-  // then alphabetical callsigns (case-insensitive). Handles mixed e.g. "1-GHOST", "ALPHA", "2-REAPER"
   const sorted = [..._allMembers].sort((a, b) => {
     const ca = (a._member?.callsign || a.name || '').trim()
     const cb = (b._member?.callsign || b.name || '').trim()
     const aIsNum = /^\d/.test(ca)
     const bIsNum = /^\d/.test(cb)
     if (aIsNum && bIsNum) {
-      // both numeric-prefixed: sort by leading number then rest
       const numA = parseFloat(ca) || 0
       const numB = parseFloat(cb) || 0
       if (numA !== numB) return numA - numB
       return ca.localeCompare(cb, undefined, { numeric: true })
     }
-    if (aIsNum) return -1   // numbers before letters
+    if (aIsNum) return -1
     if (bIsNum) return  1
     return ca.localeCompare(cb, undefined, { sensitivity: 'base' })
   })
@@ -1478,16 +1750,15 @@ function renderMembers() {
 function buildMemberCard(row, index) {
   const m         = row._member || {}
   const callsign  = escHtml(m.callsign || row.name || '—')
-  const hasPhoto  = !!m.photo_filename
-  const photoSrc  = hasPhoto ? `../images/${escHtml(m.photo_filename)}` : null
+  const hasPhoto  = memberHasPhoto(m)
+  const photoSrc  = memberPhotoSrcEscaped(m)
   const tags      = (m.expertise || '').split(',').map(e => e.trim()).filter(Boolean)
   const tagHTML   = tags.map(t => `<span class="dir-member-tag">${escHtml(t)}</span>`).join('')
 
-  // full_name: top_secret sees it, secret sees [REDACTED]
   const nameLine = _isTopSecret && m.full_name
     ? `<div class="dir-member-fullname">${escHtml(m.full_name)}</div>`
     : _isTopSecret
-      ? '' // TS but no name set
+      ? ''
       : `<div class="dir-member-fullname redacted">[ FULL NAME REDACTED ]</div>`
 
   const tsBadge  = !_isTopSecret ? '' : `<span class="dir-member-ts-label">TS EYES ONLY</span>`
@@ -1501,7 +1772,7 @@ function buildMemberCard(row, index) {
     <div class="dir-member-card" style="animation-delay:${index * 50}ms">
       <div class="dir-member-photo-wrap">
         ${hasPhoto
-          ? `<img class="dir-member-photo" src="${photoSrc}" alt="${callsign}" onerror="this.parentElement.innerHTML='<div class=\"dir-member-photo-placeholder\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\"/></svg></div>'"/>`
+          ? `<img class="dir-member-photo" src="${photoSrc}" alt="${callsign}" crossorigin="anonymous" onerror="this.parentElement.innerHTML='<div class=\\"dir-member-photo-placeholder\\"><svg viewBox=\\"0 0 24 24\\"><path d=\\"M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\"/></svg></div>'"/>`
           : `<div class="dir-member-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
         }
       </div>
@@ -1519,16 +1790,17 @@ function buildMemberCard(row, index) {
     </div>`
 }
 
-// ── Member detail modal ───────────────────────────────────
 function openMemberDetail(id) {
   const row = _allMembers.find(x => x.id === id)
   if (!row) return
   const m = row._member || {}
+  const org = memberOrgShort(row)
 
+  document.getElementById('memberDetailOrgLabel').textContent = memberOrgUiLabel(org)
   document.getElementById('memberDetailCallsign').textContent = m.callsign || '—'
 
-  const hasPhoto = !!m.photo_filename
-  const photoSrc = hasPhoto ? `../images/${escHtml(m.photo_filename)}` : null
+  const hasPhoto = memberHasPhoto(m)
+  const photoSrc = memberPhotoSrcEscaped(m)
 
   const tags    = (m.expertise || '').split(',').map(e => e.trim()).filter(Boolean)
   const tagHTML = tags.map(t => `<span class="dir-member-tag">${escHtml(t)}</span>`).join('')
@@ -1546,7 +1818,7 @@ function openMemberDetail(id) {
   document.getElementById('memberDetailBody').innerHTML = `
     <div class="dir-member-detail-photo-wrap">
       ${hasPhoto
-        ? `<img class="dir-member-detail-photo" src="${photoSrc}" alt="${escHtml(m.callsign || '')}"/>`
+        ? `<img class="dir-member-detail-photo" src="${photoSrc}" alt="${escHtml(m.callsign || '')}" crossorigin="anonymous"/>`
         : `<div class="dir-member-detail-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`
       }
     </div>
@@ -1572,16 +1844,17 @@ function openMemberDetail(id) {
 }
 function closeMemberDetailModal() { document.getElementById('memberDetailModal').classList.remove('open') }
 
-// ── Create / Edit modal ───────────────────────────────────
-function openMemberModal() {
+function openMemberModal(org) {
   if (!_isTopSecret) return
+  _memberOrg = org === 'fenrir' ? 'fenrir' : 'giu'
   _editingMemberId = null
   document.getElementById('mCallsign').value  = ''
   document.getElementById('mFullName').value  = ''
   document.getElementById('mBio').value       = ''
   document.getElementById('mExpertise').value = ''
-  document.getElementById('mPhoto').value     = ''
-  document.getElementById('memberModalLabel').textContent  = 'GIU · ADD MEMBER'
+  resetMemberPhotoFields()
+  const L = memberOrgUiLabel(_memberOrg)
+  document.getElementById('memberModalLabel').textContent = `${L} · ADD MEMBER`
   document.getElementById('memberModalSubmit').textContent = 'Add Member'
   document.getElementById('memberModalSubmit').onclick     = submitMember
   document.getElementById('memberModalSubmit').disabled    = false
@@ -1595,6 +1868,7 @@ function openEditMember(id) {
   const row = _allMembers.find(x => x.id === id)
   if (!row) return
   const m = row._member || {}
+  _memberOrg = memberOrgShort(row)
 
   _editingMemberId = id
   document.getElementById('mCallsign').value  = m.callsign       || ''
@@ -1602,7 +1876,10 @@ function openEditMember(id) {
   document.getElementById('mBio').value       = m.biography      || ''
   document.getElementById('mExpertise').value = m.expertise      || ''
   document.getElementById('mPhoto').value     = m.photo_filename || ''
-  document.getElementById('memberModalLabel').textContent  = 'GIU · EDIT MEMBER — ' + (m.callsign || '')
+  document.getElementById('mPhotoUrl').value  = (m.photo_url || '').trim()
+  syncMemberPhotoThumb()
+  const L = memberOrgUiLabel(_memberOrg)
+  document.getElementById('memberModalLabel').textContent  = `${L} · EDIT MEMBER — ${m.callsign || ''}`
   document.getElementById('memberModalSubmit').textContent = 'Save Changes'
   document.getElementById('memberModalSubmit').onclick     = submitMember
   document.getElementById('memberModalSubmit').disabled    = false
@@ -1612,6 +1889,7 @@ function openEditMember(id) {
 
 function closeMemberModal() {
   document.getElementById('memberModal').classList.remove('open')
+  closeMemberCropModal()
   _editingMemberId = null
 }
 
@@ -1621,19 +1899,21 @@ async function submitMember() {
   const biography = document.getElementById('mBio').value.trim()
   const expertise = document.getElementById('mExpertise').value.trim()
   const photo     = document.getElementById('mPhoto').value.trim()
+  const photo_url = document.getElementById('mPhotoUrl').value.trim()
 
   if (!callsign) return setModalError('memberModalError', 'CALLSIGN IS REQUIRED')
 
   const btn = document.getElementById('memberModalSubmit')
   setBtnLoading(btn, true, _editingMemberId ? 'Saving...' : 'Adding...')
 
-  const body = { callsign, full_name, biography, expertise, photo_filename: photo }
+  const body = { callsign, full_name, biography, expertise, photo_filename: photo, photo_url: photo_url || null }
   if (_editingMemberId) body.id = _editingMemberId
 
   const method = _editingMemberId ? 'PUT' : 'POST'
+  const orgQ   = _memberOrg === 'fenrir' ? 'fenrir' : 'giu'
 
   try {
-    const res = await apiFetch(method, '/api/informants?type=member', body)
+    const res = await apiFetch(method, `/api/informants?type=member&org=${orgQ}`, body)
     if (!res.ok) throw new Error(res.data?.error || 'Request failed')
 
     if (_editingMemberId) {
@@ -1649,24 +1929,24 @@ async function submitMember() {
   } catch (e) {
     setModalError('memberModalError', e.message.toUpperCase())
   } finally {
-    // Always re-enable — button stays visible on error, must work fresh on next open
     setBtnLoading(btn, false)
   }
 }
 
-// ── Delete member ─────────────────────────────────────────
 function confirmDeleteMember(id) {
   if (!_isTopSecret) return
   const row = _allMembers.find(x => x.id === id)
   if (!row) return
   const m = row._member || {}
-  if (!confirm(`Remove GIU member "${m.callsign || id}" from the registry?\n\nThis cannot be undone.`)) return
-  doDeleteMember(id)
+  const L = memberOrgUiLabel(memberOrgShort(row))
+  if (!confirm(`Remove ${L} member "${m.callsign || id}" from the registry?\n\nThis cannot be undone.`)) return
+  doDeleteMember(id, memberOrgShort(row))
 }
 
-async function doDeleteMember(id) {
+async function doDeleteMember(id, org) {
+  const orgQ = org === 'fenrir' ? 'fenrir' : 'giu'
   try {
-    const res = await apiFetch('DELETE', `/api/informants?type=member&id=${id}`)
+    const res = await apiFetch('DELETE', `/api/informants?type=member&id=${id}&org=${orgQ}`)
     if (!res.ok) throw new Error(res.data?.error || 'Delete failed')
     _allMembers = _allMembers.filter(x => x.id !== id)
     renderMembers()
@@ -1675,7 +1955,6 @@ async function doDeleteMember(id) {
     showToast('Delete failed: ' + e.message, 'error')
   }
 }
-
 // Patch openDetailModal to load chat whenever the modal opens
 const _origOpenDetail = openDetailModal
 window.openDetailModal = function(id) {
@@ -1735,28 +2014,6 @@ const WM_TYPE_LABELS = {
   staging:    'Staging Area',
   extraction: 'Extraction',
   contact:    'Contact',
-}
-
-// ── Section tab integration ───────────────────────────────
-// Patch switchTab to also handle warmap
-const _origSwitchTab = window.switchTab
-window.switchTab = function(tab, el) {
-  // Hide warmap section unless we're switching to it
-  const wmSection = document.getElementById('warmapSection')
-
-  if (tab === 'warmap') {
-    document.querySelectorAll('.dir-section-tab').forEach(b => b.classList.remove('active'))
-    if (el) el.classList.add('active')
-    document.getElementById('dirGrid').style.display    = 'none'
-    document.getElementById('dirToolbar').style.display = 'none'
-    document.getElementById('membersSection').style.display = 'none'
-    if (wmSection) wmSection.style.display = ''
-    if (!_wmLoaded) loadWarmap()
-    setupWmPanDrag()
-  } else {
-    if (wmSection) wmSection.style.display = 'none'
-    _origSwitchTab(tab, el)
-  }
 }
 
 // ── API helpers ───────────────────────────────────────────

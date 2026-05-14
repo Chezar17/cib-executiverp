@@ -52,7 +52,7 @@ function escPdfTemplateText(s) {
 
 /**
  * Repeats on every printed page (Puppeteer header margin).
- * @param {string} formId e.g. FORM 0001 (CID/…) or (GRD/…)
+ * @param {string} formId e.g. FORM 00123 (CID/…) — digits from investigation case_number + GRD/CID tail
  * @param {{ grd?: boolean }} [opts] — when true, strip says Gang Recon Division
  */
 export function buildPdfHeaderTemplate(formId, opts = {}) {

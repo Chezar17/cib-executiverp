@@ -13,10 +13,11 @@
 //  PUT    /api/informants?type=directive           → update directive  [top_secret only]
 //  DELETE /api/informants?type=directive&id=xxx   → delete directive  [top_secret only]
 //
-//  GET    /api/informants?type=member             → fetch all members (full_name redacted for secret)
-//  POST   /api/informants?type=member             → create member     [top_secret only]
-//  PUT    /api/informants?type=member             → update member     [top_secret only]
-//  DELETE /api/informants?type=member&id=xxx      → delete member     [top_secret only]
+//  GET    /api/informants?type=member&org=giu|fenrir  → members for org (default org=giu)
+//  POST   /api/informants?type=member&org=...         → create member     [top_secret only]
+//  POST   /api/informants?type=member&upload=photo     → upload cropped image → { url } [top_secret]
+//  PUT    /api/informants?type=member&org=...          → update member     [top_secret only]
+//  DELETE /api/informants?type=member&id=xxx&org=... → delete member     [top_secret only]
 //
 //  GET    /api/informants?type=warmap             → fetch all map markers (secret + top_secret)
 //  POST   /api/informants?type=warmap             → create marker    [secret + top_secret]
@@ -121,6 +122,7 @@ export default async function handler(req, res) {
         .eq('is_deleted', false)
         .neq('gang', '__directive__')
         .neq('gang', '__member__')
+        .neq('gang', '__fenrir_member__')
         .neq('gang', '__warmap__')
         .not('gang', 'like', '__chat__%')
         .order('created_at', { ascending: true })
@@ -360,21 +362,76 @@ async function handleDirective(req, res, supabase, session) {
 }
 
 
+// ── Member org / storage (informants reuse: __member__ = GIU, __fenrir_member__ = Fenrir) ─────
+const MEMBER_GANG_GIU    = '__member__'
+const MEMBER_GANG_FENRIR = '__fenrir_member__'
+const MEMBER_PHOTO_BUCKET = 'member-photos'
+
+function memberGangFromOrg(req) {
+  const o = String(req.query.org || 'giu').toLowerCase()
+  return o === 'fenrir' ? MEMBER_GANG_FENRIR : MEMBER_GANG_GIU
+}
+
+/** Prefer DB columns, fall back to task JSON when loading members. */
+function mergeMemberPhotosFromColumns(row, m) {
+  const colUrl = (row.profile_photo_url || '').trim()
+  const colFn  = (row.profile_photo_filename || '').trim()
+  const taskUrl = (m.photo_url || '').trim()
+  const taskFn  = (m.photo_filename || '').trim()
+  m.photo_url = colUrl || taskUrl || null
+  m.photo_filename = colFn || taskFn || null
+}
+
+async function uploadMemberPhotoToStorage(supabase, base64Data) {
+  if (!base64Data || typeof base64Data !== 'string') return null
+  try {
+    const matches = base64Data.match(/^data:(.+);base64,(.+)$/)
+    if (!matches) return null
+    const mimeType = matches[1]
+    if (!/^image\/(jpeg|jpg|png|webp)$/i.test(mimeType)) return null
+
+    let ext = (mimeType.split('/')[1] || 'jpeg').toLowerCase()
+    if (ext === 'jpeg') ext = 'jpg'
+
+    const buffer = Buffer.from(matches[2], 'base64')
+    if (buffer.length > 6_500_000) return null
+
+    const fileName = `member/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`
+    const { data, error } = await supabase.storage
+      .from(MEMBER_PHOTO_BUCKET)
+      .upload(fileName, buffer, { contentType: mimeType, upsert: false })
+
+    if (error) {
+      console.error('Member photo upload:', error)
+      return null
+    }
+
+    const { data: urlData } = supabase.storage.from(MEMBER_PHOTO_BUCKET).getPublicUrl(data.path)
+    return urlData.publicUrl
+  } catch (err) {
+    console.error('Member photo processing:', err)
+    return null
+  }
+}
+
 // ═══════════════════════════════════════════════════════════
-//  GIU MEMBER CRUD
-//  Reuses the informants table with gang = '__member__'
-//  Data stored in task (JSON):
+//  GIU / FENRIR MEMBER CRUD
+//  Reuses the informants table with gang = '__member__' | '__fenrir_member__'
+//  Photo fields mirrored on table columns (preferred):
+//    profile_photo_url, profile_photo_filename
+//  Data stored in task (JSON) — same keys kept in sync for backward compatibility:
 //  {
-//    callsign,               ← display name / operative handle
-//    full_name,              ← real name — REDACTED for secret cls
-//    biography,              ← background text
-//    expertise,              ← comma-separated tags
-//    photo_filename,         ← e.g. "phantom.jpg" → served from /images/
-//    added_by,               ← callsign of creator
+//    callsign,
+//    full_name,              ← redacted for secret cls
+//    biography,
+//    expertise,
+//    photo_filename,
+//    photo_url,
+//    added_by,
 //  }
 //
 //  Classification gate:
-//    top_secret  → full CRUD + sees full_name
+//    top_secret  → full CRUD + sees full_name + photo upload
 //    secret      → GET only, full_name is redacted
 //    anything else → 403
 // ═══════════════════════════════════════════════════════════
@@ -384,15 +441,17 @@ async function handleMember(req, res, supabase, session) {
   const isTS     = cls === TOP_SECRET
 
   if (cls !== TOP_SECRET && cls !== SECRET) {
-    return res.status(403).json({ error: 'Insufficient clearance to access GIU member registry.' })
+    return res.status(403).json({ error: 'Insufficient clearance to access the member registry.' })
   }
 
-  // ── GET: Fetch all members ────────────────────────────────
+  const memberGang = memberGangFromOrg(req)
+
+  // ── GET: Fetch members for org ────────────────────────────
   if (req.method === 'GET') {
     const { data, error } = await supabase
       .from('informants')
       .select('*')
-      .eq('gang', '__member__')
+      .eq('gang', memberGang)
       .eq('is_deleted', false)
       .order('created_at', { ascending: true })
 
@@ -400,22 +459,43 @@ async function handleMember(req, res, supabase, session) {
 
     const parsed = (data || []).map(row => {
       const m = safeParseJson(row.task)
-      // Redact full_name for non-top-secret users
       if (!isTS) m.full_name = null
+      mergeMemberPhotosFromColumns(row, m)
       return { ...row, _member: m }
     })
 
     return res.status(200).json({ success: true, data: parsed })
   }
 
+  // ── POST: Upload cropped profile photo (storage) ─────────
+  if (req.method === 'POST' && req.query.upload === 'photo') {
+    if (!isTS) {
+      return res.status(403).json({ error: 'Only TOP SECRET personnel can upload member photos.' })
+    }
+    const { image_base64 } = req.body || {}
+    if (!image_base64 || typeof image_base64 !== 'string') {
+      return res.status(400).json({ error: 'image_base64 is required.' })
+    }
+    if (image_base64.length > 7_200_000) {
+      return res.status(400).json({ error: 'Image payload is too large.' })
+    }
+    const url = await uploadMemberPhotoToStorage(supabase, image_base64)
+    if (!url) {
+      return res.status(500).json({
+        error: 'Photo upload failed. Create the public bucket "member-photos" in Supabase Storage (see docs/sql/member-photos-bucket.sql).',
+      })
+    }
+    return res.status(200).json({ success: true, url })
+  }
+
   // Write operations: top_secret only
   if (!isTS) {
-    return res.status(403).json({ error: 'Only TOP SECRET personnel can modify GIU member records.' })
+    return res.status(403).json({ error: 'Only TOP SECRET personnel can modify member records.' })
   }
 
   // ── POST: Create new member ───────────────────────────────
   if (req.method === 'POST') {
-    const { callsign, full_name, biography, expertise, photo_filename } = req.body
+    const { callsign, full_name, biography, expertise, photo_filename, photo_url } = req.body
 
     if (!callsign || !callsign.trim()) {
       return res.status(400).json({ error: 'Callsign is required.' })
@@ -429,20 +509,26 @@ async function handleMember(req, res, supabase, session) {
       biography:      biography      || null,
       expertise:      expertise      || null,
       photo_filename: photo_filename || null,
+      photo_url:      photo_url      || null,
       added_by:       creatorCallsign,
     }
+
+    const photoUrlEsc = payload.photo_url ? String(payload.photo_url).trim() : ''
+    const photoFnEsc = payload.photo_filename ? String(payload.photo_filename).trim() : ''
 
     const { data, error } = await supabase
       .from('informants')
       .insert([{
-        code:       `MBR-${Date.now()}`,   // unique code
+        code:       `MBR-${Date.now()}`,
         name:       callsign.trim().toUpperCase(),
-        gang:       '__member__',
+        gang:       memberGang,
         handler:    session.badge,
         notes:      creatorCallsign,
         status:     'active',
         task:       JSON.stringify(payload),
         is_deleted: false,
+        profile_photo_url: photoUrlEsc || null,
+        profile_photo_filename: photoFnEsc || null,
       }])
       .select()
       .single()
@@ -453,22 +539,25 @@ async function handleMember(req, res, supabase, session) {
 
   // ── PUT: Update member ────────────────────────────────────
   if (req.method === 'PUT') {
-    const { id, callsign, full_name, biography, expertise, photo_filename } = req.body
+    const { id, callsign, full_name, biography, expertise, photo_filename, photo_url } = req.body
     if (!id) return res.status(400).json({ error: 'ID is required.' })
 
     if (!callsign || !callsign.trim()) {
       return res.status(400).json({ error: 'Callsign is required.' })
     }
 
-    // Fetch current row to merge
-    const { data: existing } = await supabase
+    const { data: existingRow } = await supabase
       .from('informants')
-      .select('task')
+      .select('task, gang, profile_photo_url, profile_photo_filename')
       .eq('id', id)
-      .eq('gang', '__member__')
       .single()
 
-    const current = safeParseJson(existing?.task) || {}
+    if (!existingRow || existingRow.gang !== memberGang) {
+      return res.status(400).json({ error: 'Member not found for this organization.' })
+    }
+
+    const current = safeParseJson(existingRow.task) || {}
+    mergeMemberPhotosFromColumns(existingRow, current)
 
     const updatedPayload = {
       ...current,
@@ -476,16 +565,25 @@ async function handleMember(req, res, supabase, session) {
       full_name:      full_name      !== undefined ? full_name      : current.full_name,
       biography:      biography      !== undefined ? biography      : current.biography,
       expertise:      expertise      !== undefined ? expertise      : current.expertise,
-      photo_filename: photo_filename !== undefined ? photo_filename : current.photo_filename,
+      photo_filename:
+        photo_filename !== undefined ? photo_filename : current.photo_filename,
+      photo_url:
+        photo_url !== undefined ? photo_url : current.photo_url,
     }
+
+    const pu = updatedPayload.photo_url != null ? String(updatedPayload.photo_url).trim() : ''
+    const pf = updatedPayload.photo_filename != null ? String(updatedPayload.photo_filename).trim() : ''
 
     const { data, error } = await supabase
       .from('informants')
       .update({
         name: callsign.trim().toUpperCase(),
         task: JSON.stringify(updatedPayload),
+        profile_photo_url: pu || null,
+        profile_photo_filename: pf || null,
       })
       .eq('id', id)
+      .eq('gang', memberGang)
       .select()
       .single()
 
@@ -506,7 +604,7 @@ async function handleMember(req, res, supabase, session) {
         deleted_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('gang', '__member__')
+      .eq('gang', memberGang)
 
     if (error) throw error
     return res.status(200).json({ success: true })
