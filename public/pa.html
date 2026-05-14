@@ -585,6 +585,10 @@ body { display:flex; flex-direction:column; background:#060A14; }
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
         Most Wanted
       </button>
+      <button class="pa-module-tab" id="tabNotifBtn" onclick="switchModule('notif')">
+        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        Notifications
+      </button>
     </div>
 
     <div class="pa-list-header" id="listHeaderPress">
@@ -595,6 +599,10 @@ body { display:flex; flex-direction:column; background:#060A14; }
       <div class="pa-list-title" style="color:var(--red-alert);">Most Wanted</div>
       <div class="pa-list-sub">Active wanted individuals</div>
     </div>
+    <div class="pa-list-header" id="listHeaderNotif" style="display:none;">
+      <div class="pa-list-title" style="color:#f39c12;">Notifications</div>
+      <div class="pa-list-sub">Active portal notifications</div>
+    </div>
 
     <button class="pa-new-btn" id="paNewPressBtn" onclick="openNewForm()">
       <div class="pa-new-btn-icon">+</div>
@@ -604,12 +612,19 @@ body { display:flex; flex-direction:column; background:#060A14; }
       <div class="pa-new-btn-icon" style="border-color:rgba(192,57,43,0.5);background:rgba(192,57,43,0.1);color:var(--red-alert);">+</div>
       <span class="pa-new-btn-text" style="color:var(--red-alert);">Add Wanted Individual</span>
     </button>
+    <button class="pa-new-btn" id="paNewNotifBtn" onclick="openNewNotifForm()" style="display:none;">
+      <div class="pa-new-btn-icon" style="border-color:rgba(243,156,18,0.5);background:rgba(243,156,18,0.1);color:#f39c12;">+</div>
+      <span class="pa-new-btn-text" style="color:#f39c12;">New Notification</span>
+    </button>
 
     <div class="pa-list-scroll" id="paReleaseList">
       <div class="pa-list-empty">Loading releases...</div>
     </div>
     <div class="pa-list-scroll" id="paWantedList" style="display:none;">
       <div class="pa-list-empty">Loading wanted list...</div>
+    </div>
+    <div class="pa-list-scroll" id="paNotifList" style="display:none;">
+      <div class="pa-list-empty">Loading notifications...</div>
     </div>
 
   </div>
@@ -1028,6 +1043,82 @@ body { display:flex; flex-direction:column; background:#060A14; }
 
     </div><!-- /paWantedFormInner -->
 
+    <!-- ══════════════════════════════════════════
+         NOTIFICATION FORM
+         ══════════════════════════════════════════ -->
+    <div id="paNotifFormInner" style="display:none;" class="pa-form-inner">
+
+      <div class="pa-form-header">
+        <div>
+          <div class="pa-form-eyebrow" id="paNotifFormEyebrow">New Notification</div>
+          <div class="pa-form-title" id="paNotifFormTitle">Create Notification</div>
+        </div>
+        <div class="pa-form-actions">
+          <button class="pa-btn pa-btn-danger" id="paNotifDeleteBtn" onclick="confirmNotifDelete()" style="display:none;">Deactivate</button>
+          <button class="pa-btn pa-btn-secondary" onclick="cancelNotifForm()">Cancel</button>
+          <button class="pa-btn" id="paNotifSaveBtn" onclick="saveNotif()" style="background:rgba(243,156,18,0.15);color:#f39c12;border:1px solid rgba(243,156,18,0.4);">Publish Notification</button>
+        </div>
+      </div>
+
+      <!-- Type selector -->
+      <div class="pa-section-label" style="color:#f39c12;">Notification Type</div>
+      <div class="pa-field-row cols-1" style="margin-bottom:18px;">
+        <div class="pa-field">
+          <label class="pa-label">Type <span class="req">*</span> — controls how it appears in NEXUS</label>
+          <div style="display:flex;gap:0;">
+            <div class="pa-notif-type-opt" id="ntypeAnnouncement" data-type="announcement" onclick="selectNotifType('announcement')" style="flex:1;padding:10px 8px;border:1px solid var(--navy-border);background:#0D1526;cursor:pointer;transition:all 0.15s;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;text-align:center;border-right:none;">
+              📢 Announcement
+            </div>
+            <div class="pa-notif-type-opt" id="ntypeReminder"     data-type="reminder"     onclick="selectNotifType('reminder')"     style="flex:1;padding:10px 8px;border:1px solid var(--navy-border);background:#0D1526;cursor:pointer;transition:all 0.15s;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;text-align:center;border-right:none;">
+              🔔 Reminder
+            </div>
+            <div class="pa-notif-type-opt" id="ntypeAlert"        data-type="alert"        onclick="selectNotifType('alert')"        style="flex:1;padding:10px 8px;border:1px solid var(--navy-border);background:#0D1526;cursor:pointer;transition:all 0.15s;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;text-align:center;border-right:none;">
+              ⚡ Alert
+            </div>
+            <div class="pa-notif-type-opt" id="ntypeWarning"      data-type="warning"      onclick="selectNotifType('warning')"      style="flex:1;padding:10px 8px;border:1px solid var(--navy-border);background:#0D1526;cursor:pointer;transition:all 0.15s;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;text-align:center;">
+              ⚠️ Warning
+            </div>
+          </div>
+          <input type="hidden" id="notifType" value="announcement"/>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="pa-section-label" style="color:#f39c12;">Content</div>
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label" for="notifTitle">Notification Title <span class="req">*</span></label>
+          <input class="pa-input" id="notifTitle" placeholder="Mandatory Training This Friday"/>
+        </div>
+      </div>
+      <div class="pa-field-row cols-1">
+        <div class="pa-field">
+          <label class="pa-label" for="notifMessage">Message <span class="req">*</span></label>
+          <textarea class="pa-textarea" id="notifMessage" rows="4" placeholder="All personnel are required to attend..."></textarea>
+        </div>
+      </div>
+
+      <!-- Expiry -->
+      <div class="pa-section-label" style="color:#f39c12;">Expiry (Optional)</div>
+      <div class="pa-field-row cols-2">
+        <div class="pa-field">
+          <label class="pa-label" for="notifExpiry">Auto-expire at (leave blank = never)</label>
+          <input class="pa-input" id="notifExpiry" type="datetime-local"/>
+        </div>
+        <div class="pa-field">
+          <label class="pa-label">Created By</label>
+          <input class="pa-input" id="notifCreatedBy" disabled placeholder="—" style="opacity:0.5;"/>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--navy-border);">
+        <button class="pa-btn pa-btn-danger" id="paNotifDeleteBtn2" onclick="confirmNotifDelete()" style="display:none;">Deactivate</button>
+        <button class="pa-btn pa-btn-secondary" onclick="cancelNotifForm()">Cancel</button>
+        <button class="pa-btn" onclick="saveNotif()" style="background:rgba(243,156,18,0.15);color:#f39c12;border:1px solid rgba(243,156,18,0.4);">Publish Notification</button>
+      </div>
+
+    </div><!-- /paNotifFormInner -->
+
   </div><!-- /pa-form-pane -->
 
 </div><!-- /pa-shell -->
@@ -1040,6 +1131,18 @@ body { display:flex; flex-direction:column; background:#060A14; }
     <div class="pa-modal-btns">
       <button class="pa-btn pa-btn-secondary" onclick="closeWantedDeleteModal()">Cancel</button>
       <button class="pa-btn pa-btn-danger" onclick="executeWantedDelete()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification deactivate confirmation modal -->
+<div class="pa-modal-backdrop" id="paNotifDeleteModal">
+  <div class="pa-modal">
+    <div class="pa-modal-title">Deactivate Notification</div>
+    <div class="pa-modal-text">Are you sure you want to deactivate this notification? It will no longer appear in NEXUS for any user.</div>
+    <div class="pa-modal-btns">
+      <button class="pa-btn pa-btn-secondary" onclick="closeNotifDeleteModal()">Cancel</button>
+      <button class="pa-btn pa-btn-danger" onclick="executeNotifDelete()">Deactivate</button>
     </div>
   </div>
 </div>
@@ -1425,10 +1528,10 @@ function formatDisplayDate(d) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  MODULE SWITCHING — Press Releases vs Wanted List
+//  MODULE SWITCHING — Press Releases | Wanted List | Notifications
 // ══════════════════════════════════════════════════════════════
 
-let _currentModule = 'press'  // 'press' | 'wanted'
+let _currentModule = 'press'  // 'press' | 'wanted' | 'notif'
 let _wanteds       = []
 let _editingWantedId = null
 let _wantedPhotoBase64 = null
@@ -1436,40 +1539,51 @@ let _wantedPhotoBase64 = null
 function switchModule(mod) {
   _currentModule = mod
   const isWanted = mod === 'wanted'
+  const isNotif  = mod === 'notif'
+  const isPress  = mod === 'press'
 
   // Tab states
-  document.getElementById('tabPressBtn').classList.toggle('active', !isWanted)
+  document.getElementById('tabPressBtn').classList.toggle('active', isPress)
   document.getElementById('tabWantedBtn').classList.toggle('active', isWanted)
   document.getElementById('tabWantedBtn').classList.toggle('wanted-tab', isWanted)
+  document.getElementById('tabNotifBtn').classList.toggle('active', isNotif)
 
   // Topbar subtitle
   document.getElementById('paTopbarSub').textContent = isWanted
     ? 'Public Affairs · Most Wanted Manager'
+    : isNotif ? 'Public Affairs · Notification Manager'
     : 'Public Affairs · Press Release Manager'
 
   // List pane switching
-  document.getElementById('listHeaderPress').style.display  = isWanted ? 'none' : 'block'
+  document.getElementById('listHeaderPress').style.display  = isPress  ? 'block' : 'none'
   document.getElementById('listHeaderWanted').style.display = isWanted ? 'block' : 'none'
-  document.getElementById('paNewPressBtn').style.display    = isWanted ? 'none' : 'flex'
-  document.getElementById('paNewWantedBtn').style.display   = isWanted ? 'flex' : 'none'
-  document.getElementById('paReleaseList').style.display    = isWanted ? 'none' : 'block'
+  document.getElementById('listHeaderNotif').style.display  = isNotif  ? 'block' : 'none'
+  document.getElementById('paNewPressBtn').style.display    = isPress  ? 'flex'  : 'none'
+  document.getElementById('paNewWantedBtn').style.display   = isWanted ? 'flex'  : 'none'
+  document.getElementById('paNewNotifBtn').style.display    = isNotif  ? 'flex'  : 'none'
+  document.getElementById('paReleaseList').style.display    = isPress  ? 'block' : 'none'
   document.getElementById('paWantedList').style.display     = isWanted ? 'block' : 'none'
+  document.getElementById('paNotifList').style.display      = isNotif  ? 'block' : 'none'
 
-  // Right pane: hide everything press-related, show wanted welcome
+  // Hide ALL right pane panels first
+  document.getElementById('paFormInner').style.display       = 'none'
+  document.getElementById('paWelcome').style.display         = 'none'
+  document.getElementById('paDenied').style.display          = 'none'
+  document.getElementById('paWantedFormInner').style.display = 'none'
+  document.getElementById('paWantedWelcome').style.display   = 'none'
+  document.getElementById('paNotifFormInner').style.display  = 'none'
+
   if (isWanted) {
-    document.getElementById('paFormInner').style.display       = 'none'
-    document.getElementById('paWelcome').style.display         = 'none'
-    document.getElementById('paDenied').style.display          = 'none'
-    document.getElementById('paWantedFormInner').style.display = 'none'
-    document.getElementById('paWantedWelcome').style.display   = _canWrite ? 'flex' : 'none'
+    document.getElementById('paWantedWelcome').style.display = _canWrite ? 'flex' : 'none'
     if (!_wanteds.length) loadWanted()
     else renderWantedList()
+  } else if (isNotif) {
+    showNotifWelcome()
+    if (!_notifs.length) loadNotifs()
+    else renderNotifList()
   } else {
-    document.getElementById('paWantedFormInner').style.display = 'none'
-    document.getElementById('paWantedWelcome').style.display   = 'none'
-    document.getElementById('paFormInner').style.display       = 'none'
-    document.getElementById('paWelcome').style.display         = _canWrite ? 'flex' : 'none'
-    document.getElementById('paDenied').style.display          = _canWrite ? 'none' : 'flex'
+    document.getElementById('paWelcome').style.display  = _canWrite ? 'flex' : 'none'
+    document.getElementById('paDenied').style.display   = _canWrite ? 'none' : 'flex'
   }
 }
 
@@ -1849,6 +1963,213 @@ function rteClear() {
   const editor = _rteEditor()
   if (editor) editor.innerHTML = ''
   _rteSync()
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NOTIFICATIONS — CRUD
+// ══════════════════════════════════════════════════════════════
+
+const NT_API = '/api/press-releases?type=notification'
+
+let _notifs         = []
+let _editingNotifId = null
+let _currentBadge   = null
+
+// Store badge for dismiss operations after auth
+PortalAuth._origOnReady = PortalAuth._origOnReady || null
+// Intercept badge after init (badge comes from onReady)
+const _ntOnReadyOrig = window.__ntOnReadyHook
+;(function patchBadge() {
+  // We'll get badge from sessionStorage after auth
+  const tryGetBadge = () => {
+    const raw = sessionStorage.getItem('cib_session')
+    if (raw) {
+      try { _currentBadge = JSON.parse(raw)?.badge || null } catch(e){}
+    }
+    if (!_currentBadge) setTimeout(tryGetBadge, 500)
+  }
+  tryGetBadge()
+})()
+
+async function loadNotifs() {
+  try {
+    const res  = await fetch(NT_API)
+    const json = await res.json()
+    if (json.success) {
+      _notifs = json.data || []
+      renderNotifList()
+    } else {
+      showToast('Failed to load notifications', 'error')
+    }
+  } catch (e) {
+    showToast('Network error loading notifications', 'error')
+  }
+}
+
+const NOTIF_TYPE_META = {
+  announcement: { label: '📢 Announcement', color: '#4fc3f7',  bg: 'rgba(79,195,247,0.12)',  border: 'rgba(79,195,247,0.3)'  },
+  reminder:     { label: '🔔 Reminder',     color: '#a29bfe',  bg: 'rgba(162,155,254,0.12)', border: 'rgba(162,155,254,0.3)' },
+  alert:        { label: '⚡ Alert',         color: '#f39c12',  bg: 'rgba(243,156,18,0.12)',  border: 'rgba(243,156,18,0.3)'  },
+  warning:      { label: '⚠️ Warning',       color: '#e74c3c',  bg: 'rgba(231,76,60,0.12)',   border: 'rgba(231,76,60,0.3)'   },
+}
+
+function renderNotifList() {
+  const el = document.getElementById('paNotifList')
+  if (!_notifs.length) {
+    el.innerHTML = '<div class="pa-list-empty">No active notifications.<br>Create the first one.</div>'
+    return
+  }
+  el.innerHTML = _notifs.map(n => {
+    const m = NOTIF_TYPE_META[n.type] || NOTIF_TYPE_META.announcement
+    return `<div class="pa-list-item${_editingNotifId === n.id ? ' active' : ''}" onclick="openEditNotifForm('${n.id}')">
+      <div class="pa-item-type-row">
+        <span class="pa-item-badge" style="color:${m.color};background:${m.bg};border:1px solid ${m.border};">${m.label}</span>
+      </div>
+      <div class="pa-item-title">${escHtml(n.title || '')}</div>
+      <div class="pa-item-meta">${n.expires_at ? 'Expires ' + formatDisplayDate(n.expires_at.split('T')[0]) : 'No expiry'} · by ${escHtml(n.created_by || '—')}</div>
+    </div>`
+  }).join('')
+}
+
+function showNotifWelcome() {
+  // Show a welcome/intro state in right pane (reuse paWelcome style inline)
+  document.getElementById('paNotifFormInner').style.display = 'none'
+  // We show a mini welcome using existing logic — paWelcome is for press, so just leave right pane empty
+  // (already hidden in switchModule; the list alone is sufficient)
+}
+
+function openNewNotifForm() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  _editingNotifId = null
+  // Clear fields
+  document.getElementById('notifTitle').value   = ''
+  document.getElementById('notifMessage').value = ''
+  document.getElementById('notifExpiry').value  = ''
+  document.getElementById('notifCreatedBy').value = _currentBadge || '—'
+  selectNotifType('announcement')
+  document.getElementById('paNotifFormEyebrow').textContent  = 'New Notification'
+  document.getElementById('paNotifFormTitle').textContent    = 'Create Notification'
+  document.getElementById('paNotifDeleteBtn').style.display  = 'none'
+  document.getElementById('paNotifDeleteBtn2').style.display = 'none'
+  document.getElementById('paNotifFormInner').style.display  = 'block'
+  renderNotifList()
+}
+
+function openEditNotifForm(id) {
+  const n = _notifs.find(x => x.id === id)
+  if (!n) return
+  _editingNotifId = id
+  document.getElementById('notifTitle').value   = n.title   || ''
+  document.getElementById('notifMessage').value = n.message || ''
+  document.getElementById('notifExpiry').value  = n.expires_at ? n.expires_at.slice(0,16) : ''
+  document.getElementById('notifCreatedBy').value = n.created_by || '—'
+  selectNotifType(n.type || 'announcement')
+  document.getElementById('paNotifFormEyebrow').textContent  = 'Editing Notification'
+  document.getElementById('paNotifFormTitle').textContent    = n.title || 'Edit'
+  document.getElementById('paNotifDeleteBtn').style.display  = _canWrite ? 'inline-flex' : 'none'
+  document.getElementById('paNotifDeleteBtn2').style.display = _canWrite ? 'inline-flex' : 'none'
+  document.getElementById('paNotifFormInner').style.display  = 'block'
+  renderNotifList()
+}
+
+function cancelNotifForm() {
+  _editingNotifId = null
+  document.getElementById('paNotifFormInner').style.display = 'none'
+  renderNotifList()
+}
+
+function selectNotifType(type) {
+  document.getElementById('notifType').value = type
+  const types = ['announcement','reminder','alert','warning']
+  const typeColors = {
+    announcement: { bg:'rgba(79,195,247,0.18)', color:'#4fc3f7',  border:'rgba(79,195,247,0.5)'  },
+    reminder:     { bg:'rgba(162,155,254,0.18)', color:'#a29bfe',  border:'rgba(162,155,254,0.5)' },
+    alert:        { bg:'rgba(243,156,18,0.18)',  color:'#f39c12',  border:'rgba(243,156,18,0.5)'  },
+    warning:      { bg:'rgba(231,76,60,0.18)',   color:'#e74c3c',  border:'rgba(231,76,60,0.5)'   },
+  }
+  types.forEach(t => {
+    const el = document.getElementById('ntype' + t.charAt(0).toUpperCase() + t.slice(1))
+    if (!el) return
+    if (t === type) {
+      const c = typeColors[t]
+      el.style.background = c.bg
+      el.style.color      = c.color
+      el.style.borderColor = c.border
+    } else {
+      el.style.background  = '#0D1526'
+      el.style.color       = 'var(--muted)'
+      el.style.borderColor = 'var(--navy-border)'
+    }
+  })
+}
+
+async function saveNotif() {
+  if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  const title   = document.getElementById('notifTitle').value.trim()
+  const message = document.getElementById('notifMessage').value.trim()
+  const type    = document.getElementById('notifType').value
+  const expiry  = document.getElementById('notifExpiry').value
+  if (!title)   { showToast('Title is required', 'error'); return }
+  if (!message) { showToast('Message is required', 'error'); return }
+
+  const token   = sessionStorage.getItem('cib_token')
+  const payload = { type, title, message, expires_at: expiry ? new Date(expiry).toISOString() : null }
+  if (_editingNotifId) payload.id = _editingNotifId
+
+  const method = _editingNotifId ? 'PUT' : 'POST'
+  const btn = document.getElementById('paNotifSaveBtn')
+  btn.disabled = true; btn.textContent = 'Saving...'
+
+  try {
+    const res  = await fetch(NT_API, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token || '' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+    if (json.success) {
+      showToast(_editingNotifId ? 'Notification updated' : 'Notification published', 'success')
+      _editingNotifId = json.data?.id || _editingNotifId
+      await loadNotifs()
+      openEditNotifForm(_editingNotifId)
+    } else {
+      showToast(json.error || 'Save failed', 'error')
+    }
+  } catch (e) {
+    showToast('Network error', 'error')
+  } finally {
+    btn.disabled = false; btn.textContent = 'Publish Notification'
+  }
+}
+
+function confirmNotifDelete() {
+  if (!_editingNotifId || !_canWrite) return
+  document.getElementById('paNotifDeleteModal').classList.add('visible')
+}
+function closeNotifDeleteModal() {
+  document.getElementById('paNotifDeleteModal').classList.remove('visible')
+}
+async function executeNotifDelete() {
+  closeNotifDeleteModal()
+  if (!_editingNotifId) return
+  const token = sessionStorage.getItem('cib_token')
+  try {
+    const res  = await fetch(`${NT_API}&id=${_editingNotifId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token || '' },
+    })
+    const json = await res.json()
+    if (json.success) {
+      showToast('Notification deactivated', 'success')
+      _editingNotifId = null
+      await loadNotifs()
+      cancelNotifForm()
+    } else {
+      showToast(json.error || 'Failed', 'error')
+    }
+  } catch (e) {
+    showToast('Network error', 'error')
+  }
 }
 
 </script>

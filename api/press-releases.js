@@ -130,6 +130,24 @@ const PR_TABLE      = 'press_releases'
 const PR_AUDIT      = 'press_audit_log'
 const MW_TABLE      = 'wanted_list'
 const MW_AUDIT      = 'wanted_audit_log'
+const NT_TABLE      = 'nexus_notifications'
+
+//  -- NEXUS NOTIFICATIONS (run once in Supabase SQL editor)
+//  CREATE TABLE nexus_notifications (
+//    id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+//    type          TEXT NOT NULL DEFAULT 'announcement', -- announcement|reminder|alert|warning
+//    title         TEXT NOT NULL,
+//    message       TEXT NOT NULL,
+//    expires_at    TIMESTAMPTZ,
+//    dismissed_by  TEXT[] NOT NULL DEFAULT '{}',         -- array of badge IDs
+//    is_active     BOOLEAN NOT NULL DEFAULT true,
+//    created_by    TEXT,
+//    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+//    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+//  );
+//  CREATE TRIGGER trg_nt_updated_at
+//    BEFORE UPDATE ON nexus_notifications
+//    FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 const WRITE_CLEARANCES = ['top_secret', 'secret']
 
@@ -225,6 +243,8 @@ export default async function handler(req, res) {
   try {
     if (resourceType === 'wanted') {
       return await handleWanted(req, res, supabase)
+    } else if (resourceType === 'notification') {
+      return await handleNotifications(req, res, supabase)
     } else {
       return await handlePressReleases(req, res, supabase)
     }
@@ -445,6 +465,98 @@ async function handleWanted(req, res, supabase) {
     }).eq('id', id)
     if (error) throw error
     await writeMwAudit(supabase, { wanted_id: entry?.id, case_number: entry?.case_number, action: 'DELETE', performed_by: actor, reason: reason || null })
+    return res.status(200).json({ success: true })
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' })
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NEXUS NOTIFICATIONS handler
+//  ?type=notification
+//
+//  GET    /api/press-releases?type=notification            → active notifications (public)
+//  POST   /api/press-releases?type=notification            → create notification  (write-clearance)
+//  PUT    /api/press-releases?type=notification            → update notification  (write-clearance)
+//  PUT    /api/press-releases?type=notification&action=dismiss → mark dismissed for current user (any logged-in)
+//  DELETE /api/press-releases?type=notification&id=xxx     → soft-deactivate     (write-clearance)
+// ══════════════════════════════════════════════════════════════
+async function handleNotifications(req, res, supabase) {
+
+  // GET — fetch active notifications
+  if (req.method === 'GET') {
+    const { data, error } = await supabase
+      .from(NT_TABLE)
+      .select('id,type,title,message,expires_at,dismissed_by,created_by,created_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    const now = new Date()
+    const active = (data || []).filter(n => !n.expires_at || new Date(n.expires_at) > now)
+    return res.status(200).json({ success: true, data: active })
+  }
+
+  // All write methods require a session
+  const session = await requireSession(req, res)
+  if (!session) return
+  const actor = session?.badge || 'Unknown'
+
+  // PUT ?action=dismiss — append badge to dismissed_by (any logged-in user)
+  if (req.method === 'PUT' && req.query.action === 'dismiss') {
+    const { id } = req.body
+    if (!id) return res.status(400).json({ error: 'Notification ID required' })
+    const { data: existing } = await supabase.from(NT_TABLE).select('dismissed_by').eq('id', id).single()
+    const arr = existing?.dismissed_by || []
+    if (!arr.includes(actor)) arr.push(actor)
+    const { error } = await supabase.from(NT_TABLE).update({ dismissed_by: arr }).eq('id', id)
+    if (error) throw error
+    return res.status(200).json({ success: true })
+  }
+
+  // Write clearance required for create / update / delete
+  const cls = (session.classification || '').toLowerCase()
+  if (!WRITE_CLEARANCES.includes(cls)) {
+    return res.status(403).json({ error: 'Insufficient clearance. Secret or Top Secret required.' })
+  }
+
+  // POST — create
+  if (req.method === 'POST') {
+    const { type, title, message, expires_at } = req.body
+    if (!title)   return res.status(400).json({ error: 'Title is required' })
+    if (!message) return res.status(400).json({ error: 'Message is required' })
+    const validTypes = ['announcement','reminder','alert','warning']
+    const ntType = validTypes.includes(type) ? type : 'announcement'
+    const { data, error } = await supabase.from(NT_TABLE).insert([{
+      type: ntType, title, message,
+      expires_at: expires_at || null,
+      created_by: actor
+    }]).select().single()
+    if (error) throw error
+    return res.status(201).json({ success: true, data })
+  }
+
+  // PUT — update content / toggle active
+  if (req.method === 'PUT') {
+    const { id, type, title, message, expires_at, is_active } = req.body
+    if (!id) return res.status(400).json({ error: 'ID is required for update' })
+    const validTypes = ['announcement','reminder','alert','warning']
+    const patch = {}
+    if (title     !== undefined) patch.title     = title
+    if (message   !== undefined) patch.message   = message
+    if (expires_at !== undefined) patch.expires_at = expires_at || null
+    if (is_active !== undefined) patch.is_active = is_active
+    if (type && validTypes.includes(type)) patch.type = type
+    const { data, error } = await supabase.from(NT_TABLE).update(patch).eq('id', id).select().single()
+    if (error) throw error
+    return res.status(200).json({ success: true, data })
+  }
+
+  // DELETE — soft deactivate
+  if (req.method === 'DELETE') {
+    const { id } = req.query
+    if (!id) return res.status(400).json({ error: 'ID required' })
+    const { error } = await supabase.from(NT_TABLE).update({ is_active: false }).eq('id', id)
+    if (error) throw error
     return res.status(200).json({ success: true })
   }
 
