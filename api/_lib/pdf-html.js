@@ -10,6 +10,13 @@ import path from "path";
 import { pdfPageMarginCssString, PDF_MARGIN_MM } from "./pdf-layout.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Gang Recon — matches form bureau/agency when detective division is GRD */
+export function isGrdDivisionReport(r) {
+  const u = (v) => String(v ?? "").trim().toUpperCase();
+  return u(r?.agency_code) === "GRD" || u(r?.bureau_name) === "GRD";
+}
+
 const LOGO_PATH = path.join(__dirname, "../../public/images/cib-logo-pdf.png");
 function loadLogoBase64() {
   try {
@@ -25,14 +32,13 @@ function loadLogoBase64() {
 
 /**
  * Seal image for PDF watermark — try api/_lib/assets first (bundled with serverless),
- * then public/ (local / monorepo).
- * Chromium PDF: use one position:fixed <img> (repeats every page); ::before/background often missing.
+ * then public/. CID vs GRD file picked per report bureau/agency (see watermarkSrcForReport).
  */
-function loadWatermarkDataUrl() {
+function sealDataUrl(basename) {
   const candidates = [
-    path.join(__dirname, "assets", "cid-seal-watermark.png"),
-    path.join(__dirname, "../../public/images/cid-seal-watermark.png"),
-    path.join(process.cwd(), "public", "images", "cid-seal-watermark.png"),
+    path.join(__dirname, "assets", basename),
+    path.join(__dirname, "../../public/images", basename),
+    path.join(process.cwd(), "public", "images", basename),
   ];
   for (const p of candidates) {
     try {
@@ -48,14 +54,20 @@ function loadWatermarkDataUrl() {
 }
 
 const LOGO_SRC = loadLogoBase64();
-const WM_SRC = loadWatermarkDataUrl();
+const WM_CID = sealDataUrl("cid-seal-watermark.png");
+const WM_GRD = sealDataUrl("grd-seal-watermark.png");
+
+function watermarkSrcForReport(r) {
+  if (isGrdDivisionReport(r)) return WM_GRD || WM_CID;
+  return WM_CID || WM_GRD;
+}
 
 /**
  * div + background-image prints more reliably in Chromium PDF than <img> position:fixed alone.
  * Single embed; fixed inset 0 = repeat on every physical sheet.
  */
-function watermarkBodyHtml() {
-  if (!WM_SRC) return "";
+function watermarkBodyHtml(wmSrc) {
+  if (!wmSrc) return "";
   const m = PDF_MARGIN_MM;
   // Match @page inset (pdf-layout PDF_MARGIN_MM) so the seal stays in the printable content box on every sheet.
   // Chromium repeats position:fixed backgrounds across PDF pages when printBackground is true.
@@ -71,7 +83,7 @@ function watermarkBodyHtml() {
     ";z-index:0;" +
     "pointer-events:none;opacity:0.44;" +
     "background-image:url('" +
-    WM_SRC +
+    wmSrc +
     "');background-size:62% auto;background-position:center center;background-repeat:no-repeat;" +
     '-webkit-print-color-adjust:exact;print-color-adjust:exact" aria-hidden="true"></div>'
   );
@@ -281,7 +293,7 @@ body {
   position: relative;
 }
 a { color: #000; }
-/* CID seal (api/_lib/assets/cid-seal-watermark.png) — fixed layer repeats on each PDF page */
+/* CID / GRD seal — fixed layer repeats on each PDF page (see watermarkSrcForReport) */
 .wm-layer {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
@@ -624,15 +636,26 @@ td { border: 1px solid #000; padding: 5px 8px; font-size: 9pt; vertical-align: t
 `;
 
 // ── Page chrome helpers ────────────────────────────────────────────────────
-/** FORM 0001 (CID/DDMMYY) — must match Puppeteer header (`buildPdfHeaderTemplate`). */
+/** Form line in PDF header: DATE part is DDMMYY from date of offense — must match report-form wording. */
 export function pdfFormIdFromReport(r) {
-  const d = r?.date_of_offense;
-  const tail = d
-    ? String(d).replace(/-/g, '').slice(6) +
-      String(d).replace(/-/g, '').slice(4, 6) +
-      String(d).slice(2, 4)
-    : 'DDMMYY';
-  return 'FORM 0001 (CID/' + tail + ')';
+  const div = isGrdDivisionReport(r) ? "GRD" : "CID";
+  const tail = pdfFormTailDdMmYy(r?.date_of_offense);
+  return "FORM 0001 (" + div + "/" + tail + ")";
+}
+
+/**
+ * Parses leading YYYY-MM-DD from ISO date or Postgres timestamp strings.
+ * Returns 6-digit DDMMYY; placeholder when missing/invalid.
+ */
+export function pdfFormTailDdMmYy(dateVal) {
+  if (dateVal == null || dateVal === "") return "DDMMYY";
+  const m = String(dateVal).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return "DDMMYY";
+  const y = m[1];
+  const mo = m[2];
+  const day = m[3];
+  const yy = y.slice(-2);
+  return day + mo + yy;
 }
 
 function sectionBanner(label) {
@@ -1062,12 +1085,14 @@ export function buildPDFDocument(r) {
   body += `</div>`;
   body += `</div>`;
 
+  const grd = isGrdDivisionReport(r);
+  const docTitle = (grd ? "GRD" : "CID") + " Investigation Report — " + (r.case_title || "Draft");
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CID Investigation Report &mdash; ${esc(r.case_title || "Draft")}</title>
+<title>${esc(docTitle)}</title>
 <style>${CSS}</style>
-</head><body>${watermarkBodyHtml()}<div class="pdf-root">${body}</div></body></html>`;
+</head><body>${watermarkBodyHtml(watermarkSrcForReport(r))}<div class="pdf-root">${body}</div></body></html>`;
 }
 
 /** Smoke-test payload for ?id=demo — empty fields; keys align with form/API (no sample narrative). */

@@ -23,7 +23,7 @@
 
   /** Default redirect target — root-relative so it works from /portal/… and subfolders. */
   const LOGIN_HREF   = '/Page_Login.html'
-  const IDLE_MS      = 30 * 60 * 1000
+  const IDLE_MS      = 60 * 60 * 1000  // align with server session (1 h); override via init({ idleMs })
   const GATE_DELAY   = 900
 
   // ── Session keys ─────────────────────────────────────────────
