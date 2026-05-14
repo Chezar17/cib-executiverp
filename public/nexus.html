@@ -2262,26 +2262,6 @@ document.addEventListener('DOMContentLoaded', () => {
   font-family:'Roboto',sans-serif; font-size:13px; line-height:1.7;
   color:var(--muted); border-bottom:1px solid rgba(255,255,255,0.06);
 }
-/* Rich text styles inside the popup body */
-.nx-notif-popup-body b,
-.nx-notif-popup-body strong { color:var(--white); font-weight:700; }
-.nx-notif-popup-body i,
-.nx-notif-popup-body em { font-style:italic; color:rgba(240,237,228,0.85); }
-.nx-notif-popup-body u { text-decoration:underline; text-decoration-color:rgba(201,168,76,0.6); }
-.nx-notif-popup-body s,
-.nx-notif-popup-body strike { text-decoration:line-through; }
-.nx-notif-popup-body blockquote {
-  margin:10px 0; padding:8px 14px;
-  border-left:3px solid var(--nx-notif-accent, #f39c12);
-  background:rgba(243,156,18,0.06);
-  color:rgba(240,237,228,0.75); font-style:italic;
-}
-.nx-notif-popup-body ul { padding-left:20px; margin:6px 0; }
-.nx-notif-popup-body ol { padding-left:20px; margin:6px 0; }
-.nx-notif-popup-body li { margin-bottom:3px; }
-.nx-notif-popup-body hr { border:none; border-top:1px solid rgba(255,255,255,0.1); margin:12px 0; }
-.nx-notif-popup-body p  { margin:0 0 0.6em; }
-.nx-notif-popup-body mark { background:rgba(201,168,76,0.25); color:#C9A84C; padding:0 2px; }
 .nx-notif-popup-footer {
   display:flex; align-items:center; justify-content:space-between;
   padding:10px 18px; gap:10px;
@@ -2710,7 +2690,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nxPopupIcon').textContent      = m.icon
     document.getElementById('nxPopupTypeLabel').textContent = m.label
     document.getElementById('nxPopupTitle').textContent     = notif.title || '—'
-    document.getElementById('nxPopupBody').innerHTML        = notif.message || ''
+    document.getElementById('nxPopupBody').textContent      = notif.message || ''
     document.getElementById('nxPopupMeta').textContent      = 'Posted ' + timeAgo(notif.created_at) + (notif.created_by ? ' · ' + notif.created_by : '')
 
     // Counter pill
@@ -2821,7 +2801,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${!seen ? '<span style="width:6px;height:6px;border-radius:50%;background:#f39c12;display:inline-block;flex-shrink:0;" title="Unread"></span>' : ''}
         </div>
         <div class="nx-notif-tray-item-title">${escNx(n.title)}</div>
-        <div class="nx-notif-tray-item-msg">${escNx(stripHtml(n.message))}</div>
+        <div class="nx-notif-tray-item-msg">${escNx(n.message)}</div>
         <div class="nx-notif-tray-item-meta">${timeAgo(n.created_at)}${n.created_by ? ' · ' + escNx(n.created_by) : ''}</div>
       </div>`
     }).join('')
@@ -2855,7 +2835,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('nxPopupIcon').textContent      = m.icon
       document.getElementById('nxPopupTypeLabel').textContent = m.label
       document.getElementById('nxPopupTitle').textContent     = n.title || '—'
-      document.getElementById('nxPopupBody').innerHTML        = n.message || ''
+      document.getElementById('nxPopupBody').textContent      = n.message || ''
       document.getElementById('nxPopupMeta').textContent      = 'Posted ' + timeAgo(n.created_at) + (n.created_by ? ' · ' + n.created_by : '')
       document.getElementById('nxPopupCounter').textContent   = ''
       const nextBtn = popup.querySelector('.nx-notif-popup-btn:not(.primary)')
@@ -2875,13 +2855,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function escNx(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-  }
-
-  // Strip HTML tags for tray preview (plain text preview of rich content)
-  function stripHtml(html) {
-    const tmp = document.createElement('div')
-    tmp.innerHTML = html || ''
-    return tmp.textContent || tmp.innerText || ''
   }
 
   // ── Init: hook into ObSystem.init which PortalAuth calls after auth resolves ──
