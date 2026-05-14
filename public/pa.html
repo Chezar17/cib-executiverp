@@ -539,6 +539,15 @@ body { display:flex; flex-direction:column; background:#060A14; }
   margin: 16px 0;
 }
 
+/* Notification message RTE — inherits all pa-rte-* styles above */
+/* Colored text marks */
+.pa-rte-editor mark {
+  background: rgba(201,168,76,0.25);
+  color: var(--gold);
+  padding: 0 2px;
+  border-radius: 1px;
+}
+
 </style>
 <body>
 
@@ -1093,8 +1102,59 @@ body { display:flex; flex-direction:column; background:#060A14; }
       </div>
       <div class="pa-field-row cols-1">
         <div class="pa-field">
-          <label class="pa-label" for="notifMessage">Message <span class="req">*</span></label>
-          <textarea class="pa-textarea" id="notifMessage" rows="4" placeholder="All personnel are required to attend..."></textarea>
+          <label class="pa-label">Message <span class="req">*</span></label>
+          <!-- Rich text editor for notification message -->
+          <div class="pa-rte-wrap" id="notifRteWrap">
+            <div class="pa-rte-toolbar" id="notifRteToolbar">
+              <!-- Text alignment -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn" title="Align Left"    onclick="notifRteCmd('justifyLeft')"   data-ncmd="justifyLeft">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 4h12v2H3zm0 4h18v2H3zm0 4h12v2H3zm0 4h18v2H3z"/></svg>
+                </button>
+                <button class="pa-rte-btn" title="Align Center"  onclick="notifRteCmd('justifyCenter')" data-ncmd="justifyCenter">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm3 4h12v2H6zm-3 4h18v2H3zm3 4h12v2H6zm-3 4h18v2H3z"/></svg>
+                </button>
+                <button class="pa-rte-btn" title="Align Right"   onclick="notifRteCmd('justifyRight')"  data-ncmd="justifyRight">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm6 4h12v2H9zm-6 4h18v2H3zm6 4h12v2H9zm-6 4h18v2H3z"/></svg>
+                </button>
+                <button class="pa-rte-btn" title="Justify"       onclick="notifRteCmd('justifyFull')"   data-ncmd="justifyFull">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3z"/></svg>
+                </button>
+              </div>
+              <div class="pa-rte-sep"></div>
+              <!-- Inline formatting -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn pa-rte-btn-text" title="Bold"      onclick="notifRteCmd('bold')"      data-ncmd="bold"><b>B</b></button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Italic"    onclick="notifRteCmd('italic')"    data-ncmd="italic"><i>I</i></button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Underline" onclick="notifRteCmd('underline')" data-ncmd="underline"><u>U</u></button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Strikethrough" onclick="notifRteCmd('strikeThrough')" data-ncmd="strikeThrough" style="text-decoration:line-through;">S</button>
+              </div>
+              <div class="pa-rte-sep"></div>
+              <!-- Highlight / color -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn pa-rte-btn-text" title="Highlight (gold)" onclick="notifRteHighlight()" style="color:#C9A84C;font-size:13px;">▐</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Alert color (red)" onclick="notifRteColor('#e74c3c')" style="color:#e74c3c;font-size:13px;">▐</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Info color (blue)" onclick="notifRteColor('#4fc3f7')" style="color:#4fc3f7;font-size:13px;">▐</button>
+              </div>
+              <div class="pa-rte-sep"></div>
+              <!-- Block elements -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn pa-rte-btn-text" title="Blockquote"    onclick="notifRteToggleBlockquote()" data-ncmd="blockquote" style="font-size:14px;">"</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Bullet List"   onclick="notifRteCmd('insertUnorderedList')" data-ncmd="insertUnorderedList">• ≡</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Numbered List" onclick="notifRteCmd('insertOrderedList')"   data-ncmd="insertOrderedList">1. ≡</button>
+                <button class="pa-rte-btn pa-rte-btn-text" title="Horizontal Divider" onclick="notifRteInsertHr()" style="letter-spacing:1px;">—</button>
+              </div>
+              <div class="pa-rte-sep"></div>
+              <!-- Clear -->
+              <div class="pa-rte-group">
+                <button class="pa-rte-btn pa-rte-btn-text pa-rte-btn-danger" title="Clear Formatting" onclick="notifRteCmd('removeFormat')">✕ fmt</button>
+              </div>
+            </div>
+            <div class="pa-rte-editor" id="notifMessageEditor" contenteditable="true"
+                 data-placeholder="All personnel are required to attend..."></div>
+            <!-- Hidden field synced to editor HTML — this is what gets saved -->
+            <input type="hidden" id="notifMessage"/>
+          </div>
         </div>
       </div>
 
@@ -2044,6 +2104,7 @@ function openNewNotifForm() {
   // Clear fields
   document.getElementById('notifTitle').value   = ''
   document.getElementById('notifMessage').value = ''
+  notifRteSetContent('')
   document.getElementById('notifExpiry').value  = ''
   document.getElementById('notifCreatedBy').value = _currentBadge || '—'
   selectNotifType('announcement')
@@ -2061,6 +2122,7 @@ function openEditNotifForm(id) {
   _editingNotifId = id
   document.getElementById('notifTitle').value   = n.title   || ''
   document.getElementById('notifMessage').value = n.message || ''
+  notifRteSetContent(n.message || '')
   document.getElementById('notifExpiry').value  = n.expires_at ? n.expires_at.slice(0,16) : ''
   document.getElementById('notifCreatedBy').value = n.created_by || '—'
   selectNotifType(n.type || 'announcement')
@@ -2105,6 +2167,7 @@ function selectNotifType(type) {
 
 async function saveNotif() {
   if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
+  notifRteSyncHidden() // ensure hidden field is up to date
   const title   = document.getElementById('notifTitle').value.trim()
   const message = document.getElementById('notifMessage').value.trim()
   const type    = document.getElementById('notifType').value
@@ -2172,6 +2235,98 @@ async function executeNotifDelete() {
   }
 }
 
-</script>
-</body>
-</html>
+// ══════════════════════════════════════════════════════════
+//  NOTIFICATION RICH TEXT EDITOR
+// ══════════════════════════════════════════════════════════
+
+function notifRteCmd(cmd, val) {
+  const ed = document.getElementById('notifMessageEditor')
+  if (!ed) return
+  ed.focus()
+  document.execCommand(cmd, false, val || null)
+  notifRteSyncHidden()
+  notifRteUpdateToolbar()
+}
+
+function notifRteSetContent(html) {
+  const ed = document.getElementById('notifMessageEditor')
+  if (ed) ed.innerHTML = html || ''
+  document.getElementById('notifMessage').value = html || ''
+}
+
+function notifRteSyncHidden() {
+  const ed = document.getElementById('notifMessageEditor')
+  if (ed) document.getElementById('notifMessage').value = ed.innerHTML
+}
+
+function notifRteUpdateToolbar() {
+  document.querySelectorAll('[data-ncmd]').forEach(btn => {
+    const cmd = btn.getAttribute('data-ncmd')
+    if (!cmd || cmd === 'blockquote') return
+    try {
+      btn.classList.toggle('active', document.queryCommandState(cmd))
+    } catch(e) {}
+  })
+}
+
+function notifRteToggleBlockquote() {
+  const ed = document.getElementById('notifMessageEditor')
+  if (!ed) return
+  ed.focus()
+  const sel = window.getSelection()
+  if (!sel.rangeCount) return
+  const range = sel.getRangeAt(0)
+  // Walk up to check if already inside a blockquote
+  let node = range.commonAncestorContainer
+  while (node && node !== ed) {
+    if (node.nodeName === 'BLOCKQUOTE') {
+      // Unwrap
+      const parent = node.parentNode
+      while (node.firstChild) parent.insertBefore(node.firstChild, node)
+      parent.removeChild(node)
+      notifRteSyncHidden()
+      return
+    }
+    node = node.parentNode
+  }
+  // Wrap selected in blockquote
+  const bq = document.createElement('blockquote')
+  try { range.surroundContents(bq) } catch(e) { document.execCommand('formatBlock', false, 'BLOCKQUOTE') }
+  notifRteSyncHidden()
+}
+
+function notifRteInsertHr() {
+  const ed = document.getElementById('notifMessageEditor')
+  if (!ed) return
+  ed.focus()
+  document.execCommand('insertHTML', false, '<hr/>')
+  notifRteSyncHidden()
+}
+
+function notifRteHighlight() {
+  const ed = document.getElementById('notifMessageEditor')
+  if (!ed) return
+  ed.focus()
+  document.execCommand('hiliteColor', false, 'rgba(201,168,76,0.25)')
+  notifRteSyncHidden()
+}
+
+function notifRteColor(color) {
+  const ed = document.getElementById('notifMessageEditor')
+  if (!ed) return
+  ed.focus()
+  document.execCommand('foreColor', false, color)
+  notifRteSyncHidden()
+}
+
+// Wire up editor events
+document.addEventListener('DOMContentLoaded', function () {
+  const ed = document.getElementById('notifMessageEditor')
+  if (!ed) return
+  ed.addEventListener('input',     notifRteSyncHidden)
+  ed.addEventListener('keyup',     notifRteUpdateToolbar)
+  ed.addEventListener('mouseup',   notifRteUpdateToolbar)
+  ed.addEventListener('selectionchange', notifRteUpdateToolbar)
+})
+
+
