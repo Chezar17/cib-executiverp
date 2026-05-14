@@ -34,6 +34,11 @@
   </div>
   <div class="topbar-right">
     <span class="topbar-clock" id="liveClock">—</span>
+    <!-- Notification Bell -->
+    <button class="nx-notif-bell" id="nxNotifBell" onclick="toggleNotifTray()" title="Notifications" aria-label="Notifications">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="nx-notif-badge" id="nxNotifCount" style="display:none;">0</span>
+    </button>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 </div>
@@ -2171,6 +2176,520 @@ document.addEventListener('DOMContentLoaded', () => {
     positionSpotlight(step.target)
     positionCard(step.target, step.pos)
   })
+
+})()
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NEXUS NOTIFICATION SYSTEM
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+/* ── Bell button ── */
+.nx-notif-bell {
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px;
+  background:transparent; border:1px solid var(--navy-border);
+  color:var(--muted); cursor:pointer; transition:all 0.15s;
+  flex-shrink:0;
+}
+.nx-notif-bell:hover { color:var(--white); border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.04); }
+.nx-notif-bell.has-new { color:#f39c12; border-color:rgba(243,156,18,0.4); animation:nxBellPulse 2s ease-in-out infinite; }
+@keyframes nxBellPulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(243,156,18,0); }
+  50%      { box-shadow:0 0 0 4px rgba(243,156,18,0.15); }
+}
+.nx-notif-badge {
+  position:absolute; top:-4px; right:-4px;
+  min-width:16px; height:16px; padding:0 4px;
+  border-radius:8px; background:#e74c3c;
+  font-family:'Roboto Mono',monospace; font-size:9px; font-weight:700;
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  line-height:1; border:1px solid #060A14;
+}
+
+/* ── Notification popup ── */
+.nx-notif-popup {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  z-index:5000; display:flex; align-items:center; justify-content:center;
+  pointer-events:none; opacity:0; transition:opacity 0.25s;
+}
+.nx-notif-popup.active { opacity:1; pointer-events:all; }
+.nx-notif-popup-backdrop {
+  position:absolute; inset:0; background:rgba(0,0,0,0.6);
+}
+.nx-notif-popup-card {
+  position:relative; z-index:1;
+  width:100%; max-width:480px; margin:0 16px;
+  border-top:3px solid var(--nx-notif-accent, #f39c12);
+  background:#0D1526; border-left:1px solid var(--navy-border);
+  border-right:1px solid var(--navy-border); border-bottom:1px solid var(--navy-border);
+  box-shadow:0 24px 60px rgba(0,0,0,0.7);
+  transform:translateY(-20px); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nx-notif-popup.active .nx-notif-popup-card { transform:translateY(0); }
+
+.nx-notif-popup-head {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 18px 10px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.nx-notif-popup-icon {
+  width:32px; height:32px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px;
+  background:var(--nx-notif-icon-bg, rgba(243,156,18,0.15));
+  border:1px solid var(--nx-notif-icon-border, rgba(243,156,18,0.3));
+}
+.nx-notif-popup-typelabel {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:3px;
+  text-transform:uppercase; color:var(--nx-notif-accent, #f39c12);
+  margin-bottom:2px; opacity:0.85;
+}
+.nx-notif-popup-title {
+  font-family:'Oswald',sans-serif; font-size:16px; letter-spacing:2px;
+  color:var(--white); text-transform:uppercase; line-height:1.2;
+}
+.nx-notif-popup-close {
+  margin-left:auto; background:transparent; border:none;
+  color:var(--muted); cursor:pointer; font-size:18px; line-height:1;
+  padding:4px; transition:color 0.15s; flex-shrink:0;
+}
+.nx-notif-popup-close:hover { color:var(--white); }
+
+.nx-notif-popup-body {
+  padding:14px 18px;
+  font-family:'Roboto',sans-serif; font-size:13px; line-height:1.7;
+  color:var(--muted); border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.nx-notif-popup-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 18px; gap:10px;
+}
+.nx-notif-popup-meta {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.5;
+}
+.nx-notif-popup-btns { display:flex; gap:8px; }
+.nx-notif-popup-btn {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; padding:6px 14px; cursor:pointer;
+  border:1px solid var(--navy-border); background:transparent; color:var(--muted);
+  transition:all 0.15s;
+}
+.nx-notif-popup-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
+.nx-notif-popup-btn.primary {
+  background:var(--nx-notif-accent, #f39c12);
+  color:#fff; border-color:transparent;
+  opacity:0.9;
+}
+.nx-notif-popup-btn.primary:hover { opacity:1; }
+
+/* ── Page counter pill (if multiple) ── */
+.nx-notif-counter {
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1px;
+  color:var(--muted); opacity:0.6;
+}
+
+/* ── Notification Tray (slide-in from right) ── */
+.nx-notif-tray {
+  position:fixed; top:0; right:0; bottom:0; width:340px;
+  background:#070C18; border-left:1px solid var(--navy-border);
+  z-index:4500; display:flex; flex-direction:column;
+  transform:translateX(100%); transition:transform 0.3s ease;
+  box-shadow:-8px 0 32px rgba(0,0,0,0.5);
+}
+.nx-notif-tray.open { transform:translateX(0); }
+.nx-notif-tray-backdrop {
+  position:fixed; inset:0; z-index:4490;
+  background:rgba(0,0,0,0.4);
+  display:none;
+}
+.nx-notif-tray-backdrop.open { display:block; }
+
+.nx-notif-tray-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px; border-bottom:1px solid var(--navy-border);
+  flex-shrink:0;
+  background:rgba(201,168,76,0.03);
+}
+.nx-notif-tray-title {
+  font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:3px;
+  color:var(--gold); text-transform:uppercase;
+}
+.nx-notif-tray-close {
+  background:transparent; border:none; color:var(--muted);
+  cursor:pointer; font-size:16px; line-height:1; padding:4px;
+  transition:color 0.15s;
+}
+.nx-notif-tray-close:hover { color:var(--white); }
+
+.nx-notif-tray-scroll {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+}
+.nx-notif-tray-empty {
+  padding:32px 18px; text-align:center;
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:2px;
+  color:var(--muted); opacity:0.4; text-transform:uppercase;
+}
+.nx-notif-tray-item {
+  padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.05);
+  cursor:pointer; transition:background 0.12s;
+  border-left:3px solid transparent;
+}
+.nx-notif-tray-item:hover { background:rgba(255,255,255,0.02); }
+.nx-notif-tray-item.seen { opacity:0.55; }
+.nx-notif-tray-item-row {
+  display:flex; align-items:center; gap:8px; margin-bottom:5px;
+}
+.nx-notif-tray-badge {
+  font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:2px;
+  padding:2px 7px; text-transform:uppercase; flex-shrink:0;
+}
+.nx-notif-tray-item-title {
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1.5px;
+  color:var(--white); text-transform:uppercase; line-height:1.3; margin-bottom:4px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.nx-notif-tray-item-msg {
+  font-family:'Roboto',sans-serif; font-size:11px; color:var(--muted); opacity:0.7;
+  line-height:1.5;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.nx-notif-tray-item-meta {
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px;
+  color:var(--muted); opacity:0.4; margin-top:6px;
+}
+
+/* scrollbar */
+.nx-notif-tray-scroll::-webkit-scrollbar { width:4px; }
+.nx-notif-tray-scroll::-webkit-scrollbar-track { background:transparent; }
+.nx-notif-tray-scroll::-webkit-scrollbar-thumb { background:var(--navy-border); border-radius:2px; }
+</style>
+
+<!-- Notification Popup -->
+<div class="nx-notif-popup" id="nxNotifPopup" aria-modal="true">
+  <div class="nx-notif-popup-backdrop" onclick="dismissCurrentNotif()"></div>
+  <div class="nx-notif-popup-card">
+    <div class="nx-notif-popup-head">
+      <div class="nx-notif-popup-icon" id="nxPopupIcon">📢</div>
+      <div>
+        <div class="nx-notif-popup-typelabel" id="nxPopupTypeLabel">Announcement</div>
+        <div class="nx-notif-popup-title" id="nxPopupTitle">—</div>
+      </div>
+      <button class="nx-notif-popup-close" onclick="dismissCurrentNotif()" title="Dismiss">✕</button>
+    </div>
+    <div class="nx-notif-popup-body" id="nxPopupBody">—</div>
+    <div class="nx-notif-popup-footer">
+      <div>
+        <div class="nx-notif-counter" id="nxPopupCounter"></div>
+        <div class="nx-notif-popup-meta" id="nxPopupMeta"></div>
+      </div>
+      <div class="nx-notif-popup-btns">
+        <button class="nx-notif-popup-btn" onclick="skipToNextNotif()">Next</button>
+        <button class="nx-notif-popup-btn primary" onclick="dismissCurrentNotif()">Dismiss</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Tray -->
+<div class="nx-notif-tray-backdrop" id="nxNotifTrayBackdrop" onclick="closeNotifTray()"></div>
+<div class="nx-notif-tray" id="nxNotifTray" aria-label="Notifications">
+  <div class="nx-notif-tray-head">
+    <span class="nx-notif-tray-title">Notifications</span>
+    <button class="nx-notif-tray-close" onclick="closeNotifTray()">✕</button>
+  </div>
+  <div class="nx-notif-tray-scroll" id="nxNotifTrayScroll">
+    <div class="nx-notif-tray-empty">Loading...</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  NEXUS NOTIFICATION SYSTEM
+//  Polls /api/press-releases?type=notification on load
+//  Shows popup for unread; bell opens tray for all
+// ═══════════════════════════════════════════════════════════
+;(function () {
+
+  const NT_API = '/api/press-releases?type=notification'
+
+  // Per-type display config
+  const NT_META = {
+    announcement: { label:'ANNOUNCEMENT', icon:'📢', accent:'#4fc3f7',  iconBg:'rgba(79,195,247,0.15)',  iconBorder:'rgba(79,195,247,0.3)',  trayBorderColor:'#4fc3f7'  },
+    reminder:     { label:'REMINDER',     icon:'🔔', accent:'#a29bfe',  iconBg:'rgba(162,155,254,0.15)', iconBorder:'rgba(162,155,254,0.3)', trayBorderColor:'#a29bfe' },
+    alert:        { label:'ALERT',        icon:'⚡', accent:'#f39c12',  iconBg:'rgba(243,156,18,0.15)',  iconBorder:'rgba(243,156,18,0.3)',  trayBorderColor:'#f39c12'  },
+    warning:      { label:'WARNING',      icon:'⚠️', accent:'#e74c3c',  iconBg:'rgba(231,76,60,0.15)',   iconBorder:'rgba(231,76,60,0.3)',   trayBorderColor:'#e74c3c'  },
+  }
+
+  let _allNotifs     = []    // all fetched notifications
+  let _pendingQueue  = []    // notifications not yet dismissed by this user
+  let _currentIdx    = 0     // index into _pendingQueue for popup
+  let _badge         = null  // current user badge (for per-user dismiss tracking)
+  let _trayOpen      = false
+
+  // ── Helpers ───────────────────────────────────────────────
+
+  function getBadge() {
+    if (_badge) return _badge
+    try {
+      const raw = sessionStorage.getItem('cib_session')
+      if (raw) _badge = JSON.parse(raw)?.badge || null
+    } catch(e) {}
+    return _badge
+  }
+
+  function getToken() {
+    return sessionStorage.getItem('cib_token') || ''
+  }
+
+  function isDismissed(notif) {
+    const b = getBadge()
+    if (!b) return false
+    return Array.isArray(notif.dismissed_by) && notif.dismissed_by.includes(b)
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return ''
+    const diff = Date.now() - new Date(iso).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1)  return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    return `${Math.floor(hrs/24)}d ago`
+  }
+
+  // ── Fetch notifications ───────────────────────────────────
+
+  async function fetchNotifications() {
+    try {
+      const res  = await fetch(NT_API)
+      const json = await res.json()
+      if (!json.success) return
+      _allNotifs = json.data || []
+      _pendingQueue = _allNotifs.filter(n => !isDismissed(n))
+      updateBell()
+      renderTray()
+      // Show popup for first unread notification
+      if (_pendingQueue.length > 0) {
+        _currentIdx = 0
+        showPopup(_pendingQueue[0])
+      }
+    } catch(e) {
+      // Silently fail — portal stays functional
+    }
+  }
+
+  // ── Bell state ────────────────────────────────────────────
+
+  function updateBell() {
+    const bell  = document.getElementById('nxNotifBell')
+    const badge = document.getElementById('nxNotifCount')
+    if (!bell || !badge) return
+    const count = _pendingQueue.length
+    if (count > 0) {
+      bell.classList.add('has-new')
+      badge.style.display  = 'flex'
+      badge.textContent    = count > 9 ? '9+' : String(count)
+    } else {
+      bell.classList.remove('has-new')
+      badge.style.display  = 'none'
+    }
+  }
+
+  // ── Popup ─────────────────────────────────────────────────
+
+  function showPopup(notif) {
+    if (!notif) return
+    const m = NT_META[notif.type] || NT_META.announcement
+    const popup = document.getElementById('nxNotifPopup')
+    const card  = popup?.querySelector('.nx-notif-popup-card')
+    if (!popup) return
+
+    // Apply type theming via CSS variables on the card
+    card.style.setProperty('--nx-notif-accent',       m.accent)
+    card.style.setProperty('--nx-notif-icon-bg',      m.iconBg)
+    card.style.setProperty('--nx-notif-icon-border',  m.iconBorder)
+    card.style.borderTopColor = m.accent
+
+    document.getElementById('nxPopupIcon').textContent      = m.icon
+    document.getElementById('nxPopupTypeLabel').textContent = m.label
+    document.getElementById('nxPopupTitle').textContent     = notif.title || '—'
+    document.getElementById('nxPopupBody').textContent      = notif.message || ''
+    document.getElementById('nxPopupMeta').textContent      = 'Posted ' + timeAgo(notif.created_at) + (notif.created_by ? ' · ' + notif.created_by : '')
+
+    // Counter pill
+    const counter = document.getElementById('nxPopupCounter')
+    if (_pendingQueue.length > 1) {
+      counter.textContent = `${_currentIdx + 1} of ${_pendingQueue.length} unread`
+    } else {
+      counter.textContent = ''
+    }
+
+    // Show/hide Next button
+    const nextBtn = popup.querySelector('.nx-notif-popup-btn:not(.primary)')
+    if (nextBtn) nextBtn.style.display = _pendingQueue.length > 1 ? 'inline-block' : 'none'
+
+    popup.classList.add('active')
+  }
+
+  function hidePopup() {
+    const popup = document.getElementById('nxNotifPopup')
+    if (popup) popup.classList.remove('active')
+  }
+
+  // ── Dismiss (marks per-user on backend) ──────────────────
+
+  async function dismissNotif(notif) {
+    if (!notif) return
+    // Optimistically mark locally
+    if (!Array.isArray(notif.dismissed_by)) notif.dismissed_by = []
+    const b = getBadge()
+    if (b && !notif.dismissed_by.includes(b)) notif.dismissed_by.push(b)
+
+    // Update pending queue
+    _pendingQueue = _allNotifs.filter(n => !isDismissed(n))
+    updateBell()
+    renderTray()
+
+    // Persist to backend
+    try {
+      await fetch(NT_API + '&action=dismiss', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-session-token': getToken() },
+        body: JSON.stringify({ id: notif.id }),
+      })
+    } catch(e) { /* silent */ }
+  }
+
+  // ── Public handlers (called from onclick) ─────────────────
+
+  window.dismissCurrentNotif = async function () {
+    const notif = _pendingQueue[_currentIdx]
+    hidePopup()
+    if (notif) await dismissNotif(notif)
+    // Advance to next if any
+    _currentIdx = 0
+    const next = _pendingQueue[0]
+    if (next) {
+      setTimeout(() => showPopup(next), 300)
+    }
+  }
+
+  window.skipToNextNotif = function () {
+    _currentIdx = (_currentIdx + 1) % _pendingQueue.length
+    const notif = _pendingQueue[_currentIdx]
+    if (notif) showPopup(notif)
+    else hidePopup()
+  }
+
+  window.toggleNotifTray = function () {
+    _trayOpen ? closeNotifTray() : openNotifTray()
+  }
+
+  function openNotifTray() {
+    _trayOpen = true
+    document.getElementById('nxNotifTray').classList.add('open')
+    document.getElementById('nxNotifTrayBackdrop').classList.add('open')
+    renderTray()
+  }
+
+  window.closeNotifTray = function () {
+    _trayOpen = false
+    document.getElementById('nxNotifTray').classList.remove('open')
+    document.getElementById('nxNotifTrayBackdrop').classList.remove('open')
+  }
+
+  // ── Tray render ───────────────────────────────────────────
+
+  function renderTray() {
+    const el = document.getElementById('nxNotifTrayScroll')
+    if (!el) return
+    if (!_allNotifs.length) {
+      el.innerHTML = '<div class="nx-notif-tray-empty">No active notifications.</div>'
+      return
+    }
+    el.innerHTML = _allNotifs.map(n => {
+      const m      = NT_META[n.type] || NT_META.announcement
+      const seen   = isDismissed(n)
+      const bStyle = `color:${m.accent};background:${m.iconBg};border:1px solid ${m.iconBorder};`
+      return `<div class="nx-notif-tray-item${seen ? ' seen' : ''}" style="border-left-color:${m.trayBorderColor};" onclick="nxTrayItemClick('${n.id}')">
+        <div class="nx-notif-tray-item-row">
+          <span class="nx-notif-tray-badge" style="${bStyle}">${m.icon} ${m.label}</span>
+          ${!seen ? '<span style="width:6px;height:6px;border-radius:50%;background:#f39c12;display:inline-block;flex-shrink:0;" title="Unread"></span>' : ''}
+        </div>
+        <div class="nx-notif-tray-item-title">${escNx(n.title)}</div>
+        <div class="nx-notif-tray-item-msg">${escNx(n.message)}</div>
+        <div class="nx-notif-tray-item-meta">${timeAgo(n.created_at)}${n.created_by ? ' · ' + escNx(n.created_by) : ''}</div>
+      </div>`
+    }).join('')
+  }
+
+  window.nxTrayItemClick = async function (id) {
+    const n = _allNotifs.find(x => x.id === id)
+    if (!n) return
+    closeNotifTray()
+    // Show popup for this notification
+    const queueIdx = _pendingQueue.findIndex(x => x.id === id)
+    if (queueIdx >= 0) {
+      _currentIdx = queueIdx
+      showPopup(_pendingQueue[_currentIdx])
+    } else {
+      // Already dismissed — just show it as a re-read popup
+      _currentIdx = 0
+      const tempQueue = [n]
+      const m = NT_META[n.type] || NT_META.announcement
+      const popup = document.getElementById('nxNotifPopup')
+      const card  = popup?.querySelector('.nx-notif-popup-card')
+      if (!popup) return
+      card.style.setProperty('--nx-notif-accent', m.accent)
+      card.style.setProperty('--nx-notif-icon-bg', m.iconBg)
+      card.style.setProperty('--nx-notif-icon-border', m.iconBorder)
+      card.style.borderTopColor = m.accent
+      document.getElementById('nxPopupIcon').textContent      = m.icon
+      document.getElementById('nxPopupTypeLabel').textContent = m.label
+      document.getElementById('nxPopupTitle').textContent     = n.title || '—'
+      document.getElementById('nxPopupBody').textContent      = n.message || ''
+      document.getElementById('nxPopupMeta').textContent      = 'Posted ' + timeAgo(n.created_at) + (n.created_by ? ' · ' + n.created_by : '')
+      document.getElementById('nxPopupCounter').textContent   = ''
+      const nextBtn = popup.querySelector('.nx-notif-popup-btn:not(.primary)')
+      if (nextBtn) nextBtn.style.display = 'none'
+      // Override dismiss to just close
+      window._nxOverrideDismiss = () => { hidePopup(); window._nxOverrideDismiss = null }
+      popup.classList.add('active')
+    }
+  }
+
+  // Patch dismissCurrentNotif to support override
+  const _origDismiss = window.dismissCurrentNotif
+  window.dismissCurrentNotif = async function () {
+    if (window._nxOverrideDismiss) { window._nxOverrideDismiss(); return }
+    return _origDismiss()
+  }
+
+  function escNx(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  }
+
+  // ── Init: wait for PortalAuth to complete, then fetch ─────
+
+  function init() {
+    // Try to get badge — it may be set after PortalAuth resolves
+    const tryInit = () => {
+      getBadge()  // populate _badge if available
+      fetchNotifications()
+    }
+    // Hook: wait a beat for PortalAuth to store session
+    setTimeout(tryInit, 1200)
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init)
+  } else {
+    init()
+  }
 
 })()
 </script>
