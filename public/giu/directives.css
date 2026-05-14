@@ -814,18 +814,35 @@ body.page-visible > :not(#access-gate) {
   color: var(--muted); text-transform: uppercase;
 }
 
+/*
+ * GIU Members + Fenrir Members — wrappers share one layout profile so both tabs
+ * always match: vertical stacking toolbar → responsive card grid → column cards
+ * (photo on top, then callsign/meta, actions row at bottom — same as .dir-grid rhythm).
+ */
+.dir-members-page {
+  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Members grid ─────────────────────────────────────────── */
 .dir-members-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1px; background: var(--line-dim);
-  padding: 0;
+  gap: 1px;
+  background: var(--line-dim);
+  padding: 28px 40px 60px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* ── Member card ──────────────────────────────────────────── */
 .dir-member-card {
   background: var(--surface);
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   animation: cardIn 0.35s ease both;
   position: relative; overflow: hidden;
 }
@@ -962,7 +979,7 @@ body.page-visible > :not(#access-gate) {
 
 @media (max-width: 700px) {
   .dir-section-tabs { padding: 0 20px; }
-  .dir-members-grid { grid-template-columns: 1fr; }
+  .dir-members-grid { grid-template-columns: 1fr; padding: 16px 20px 48px; }
 }
 
 

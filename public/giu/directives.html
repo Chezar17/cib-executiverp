@@ -153,7 +153,7 @@
   <!-- ════════════════════
        GIU MEMBERS SECTION
   ════════════════════ -->
-  <div id="membersSection" style="display:none;">
+  <div id="membersSection" class="dir-members-page" style="display:none;">
 
     <!-- Members toolbar -->
     <div class="dir-toolbar" id="membersToolbar">
@@ -177,8 +177,9 @@
   <!-- ════════════════════
        FENRIR MEMBERS SECTION
   ════════════════════ -->
-  <div id="fenrirMembersSection" style="display:none;">
+  <div id="fenrirMembersSection" class="dir-members-page" style="display:none;">
 
+    <!-- Members toolbar -->
     <div class="dir-toolbar" id="fenrirMembersToolbar">
       <span class="dir-members-count" id="fenrirMembersCount">— members</span>
       <div class="dir-toolbar-sep"></div>
@@ -1672,7 +1673,7 @@ function switchTab(tab, el) {
   } else if (tab === 'members') {
     dirGrid.style.display     = 'none'
     dirToolbar.style.display  = 'none'
-    if (membersEl) membersEl.style.display = ''
+    if (membersEl) membersEl.style.display = 'flex'
     if (fenrirEl) fenrirEl.style.display = 'none'
     if (wmSection) wmSection.style.display = 'none'
     loadMembers('giu')
@@ -1680,7 +1681,7 @@ function switchTab(tab, el) {
     dirGrid.style.display     = 'none'
     dirToolbar.style.display  = 'none'
     if (membersEl) membersEl.style.display = 'none'
-    if (fenrirEl) fenrirEl.style.display = ''
+    if (fenrirEl) fenrirEl.style.display = 'flex'
     if (wmSection) wmSection.style.display = 'none'
     loadMembers('fenrir')
   } else if (tab === 'warmap') {
