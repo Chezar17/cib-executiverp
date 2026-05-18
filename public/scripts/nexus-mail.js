@@ -223,7 +223,7 @@
   function fmtClockId(iso) {
     if (!iso) return ''
     try {
-      return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
     } catch (_) {
       return ''
     }
@@ -235,12 +235,12 @@
       var d = new Date(iso).getTime()
       var diff = Math.max(0, Date.now() - d)
       var mins = Math.floor(diff / 60000)
-      if (mins < 1) return 'baru saja'
-      if (mins < 60) return mins + ' mnt yang lalu'
+      if (mins < 1) return 'just now'
+      if (mins < 60) return mins + ' min ago'
       var hrs = Math.floor(mins / 60)
-      if (hrs < 24) return hrs + ' jam yang lalu'
+      if (hrs < 24) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago')
       var days = Math.floor(hrs / 24)
-      return days + ' hari yang lalu'
+      return days + (days === 1 ? ' day ago' : ' days ago')
     } catch (_) {
       return ''
     }
@@ -252,18 +252,18 @@
     return fmtRelativeId(iso) || fmtClockId(iso)
   }
 
-  function fmtPadaMenulis(iso) {
+  function fmtOnDateEn(iso) {
     if (!iso) return ''
     try {
       var d = new Date(iso)
-      var datePart = d.toLocaleDateString('id-ID', {
+      return d.toLocaleString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
       })
-      var hm = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-      return `${datePart} pukul ${hm}`
     } catch (_) {
       return ''
     }
@@ -592,7 +592,7 @@
     const tb = el('nxMailThreadList')
     if (!tb) return
     if (!threads.length) {
-      tb.innerHTML = '<div class="nx-mail-thread-empty nx-gmail-thread-empty">Belum ada percakapan.<br/><span>Gunakan <strong>Tulis</strong> untuk mengirim ke petugas lain.</span></div>'
+      tb.innerHTML = '<div class="nx-mail-thread-empty nx-gmail-thread-empty">No conversations yet.<br/><span>Use <strong>Compose</strong> to send to another officer.</span></div>'
       return
     }
     const sorted = threads.slice().sort(function (a, b) {
@@ -637,15 +637,15 @@
     if (!h) return
     if (!meta || !meta.peer_badge) {
       h.innerHTML =
-        `<div class="nx-gmail-subject-slot-inner nx-gmail-subject-slot-empty"><p class="nx-gmail-thread-title-muted">Percakapan</p><span class="nx-gmail-slot-hint">Pilih nama di kotak masuk atau mulai tulis surat baru</span></div>`
+        `<div class="nx-gmail-subject-slot-inner nx-gmail-subject-slot-empty"><p class="nx-gmail-thread-title-muted">Conversation</p><span class="nx-gmail-slot-hint">Pick a thread in the list or tap Compose</span></div>`
       return
     }
-    const sub = escapeHtml(meta.subject || '(Tanpa judul)')
+    const sub = escapeHtml(meta.subject || '(No subject)')
     h.innerHTML =
       `<div class="nx-gmail-subject-slot-inner">
           <div class="nx-gmail-thread-head-gmail">
             <h1 class="nx-gmail-thread-title">${sub}</h1>
-            <span class="nx-gmail-inbox-folder-chip">Kotak Masuk</span>
+            <span class="nx-gmail-inbox-folder-chip">Inbox</span>
           </div>
        </div>`
   }
@@ -655,7 +655,7 @@
     if (!host) return
     if (!msgs || !msgs.length) {
       host.innerHTML =
-        `<div class="nx-mail-msg-cells nx-msg-cells"><div class="nx-mail-msg-email nx-mail-msg-system nx-gmail-reading-empty">${escapeHtml('Belum ada pesan.')}</div></div>`
+        `<div class="nx-mail-msg-cells nx-msg-cells"><div class="nx-mail-msg-email nx-mail-msg-system nx-gmail-reading-empty">${escapeHtml('No messages yet.')}</div></div>`
       host.classList.remove('nx-mail-msgs-has-shell')
       nxMailScrollConvToEnd()
       return
@@ -667,20 +667,63 @@
     const peerLabel = escapeHtml(meta.peer_name || peer || '')
     var lastIx = msgs.length - 1
 
+    function labelAddr(badgeRaw) {
+      return escapeHtml(badgeMailboxLabel(badgeRaw || '') || String(badgeRaw || '').trim() || '—')
+    }
+
+    function buildRecipientHtml(m, mine) {
+      var recs = m.recipients || []
+      if (!recs.length) {
+        if (mine)
+          return (
+            '<div class="nx-gmail-rcpt-block"><div class="nx-gmail-rcpt-row"><span class="nx-gmail-rcpt-k">To</span><span class="nx-gmail-rcpt-v">' +
+            (peerLabel || peerAddr) +
+            '</span></div></div>'
+          )
+        return (
+          '<div class="nx-gmail-rcpt-block"><div class="nx-gmail-rcpt-row"><span class="nx-gmail-rcpt-k">To</span><span class="nx-gmail-rcpt-v nx-gmail-kepada-me">me</span></div></div>'
+        )
+      }
+      var showBcc = mine
+      var toL = []
+      var ccL = []
+      var bccL = []
+      recs.forEach(function (r) {
+        var lab = labelAddr(r.recipient_badge)
+        if (r.kind === 'to') toL.push(lab)
+        else if (r.kind === 'cc') ccL.push(lab)
+        else if (r.kind === 'bcc') bccL.push(lab)
+      })
+      var parts = ''
+      if (toL.length)
+        parts +=
+          '<div class="nx-gmail-rcpt-row"><span class="nx-gmail-rcpt-k">To</span><span class="nx-gmail-rcpt-v">' +
+          toL.join(', ') +
+          '</span></div>'
+      if (ccL.length)
+        parts +=
+          '<div class="nx-gmail-rcpt-row"><span class="nx-gmail-rcpt-k">Cc</span><span class="nx-gmail-rcpt-v">' +
+          ccL.join(', ') +
+          '</span></div>'
+      if (showBcc && bccL.length)
+        parts +=
+          '<div class="nx-gmail-rcpt-row"><span class="nx-gmail-rcpt-k">Bcc</span><span class="nx-gmail-rcpt-v">' +
+          bccL.join(', ') +
+          '</span></div>'
+      return '<div class="nx-gmail-rcpt-block">' + parts + '</div>'
+    }
+
     function pieceForSender(m, prevRowForQuote) {
       const mine = meBadge && badgesEquivalent(m.sender_badge, meBadge)
       const fromName = mine
-        ? 'Anda'
+        ? 'You'
         : escapeHtml(m.sender_badge === peer ? (meta.peer_name || m.sender_badge) : m.sender_badge)
       const fromAddr = mine
         ? selfAddr
         : escapeHtml(badgeMailboxLabel(m.sender_badge || '') || String(m.sender_badge || '').trim() || '')
-      var kepadaLine =
-        mine
-          ? `kepada <span class="nx-gmail-kepada-target">${peerLabel || peerAddr}</span>`
-          : `kepada <span class="nx-gmail-kepada-me">saya</span>`
+      var recipientHtml = buildRecipientHtml(m, mine)
       const avatarSeed = mine
-        ? String(meBadge || 'Anda').trim()
+        ? String(meBadge || 'You').trim()
         : m.sender_badge === peer
           ? meta.peer_name || peer || ''
           : String(m.sender_badge || '')
@@ -699,7 +742,7 @@
           '<div class="nx-mail-msg-attachments">' +
           attUrls
             .map(function (u) {
-              return `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer" class="nx-mail-msg-img-thumb-link"><img class="nx-mail-msg-img-thumb" src="${escapeHtml(u)}" alt="lampiran" loading="lazy" referrerpolicy="no-referrer"/></a>`
+              return `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer" class="nx-mail-msg-img-thumb-link"><img class="nx-mail-msg-img-thumb" src="${escapeHtml(u)}" alt="attachment" loading="lazy" referrerpolicy="no-referrer"/></a>`
             })
             .join('') +
           '</div>'
@@ -712,24 +755,24 @@
         var pm = prevRowForQuote
         var pmMine = meBadge && badgesEquivalent(pm.sender_badge, meBadge)
         var qName = pmMine
-          ? 'Anda'
+          ? 'You'
           : escapeHtml(pm.sender_badge === peer ? (meta.peer_name || pm.sender_badge) : pm.sender_badge)
         var qAddr = escapeHtml(
           badgeMailboxLabel(pm.sender_badge || '') || String(pm.sender_badge || '').trim() || '',
         )
-        var cuando = escapeHtml(fmtPadaMenulis(pm.created_at))
+        var cuando = escapeHtml(fmtOnDateEn(pm.created_at))
         var qp = nxMailSnippetPlain(pm.body, 600)
         var qBody = qp ? escapeHtml(qp).replace(/\n/g, '<br/>') : ''
         quoteTail =
           '<div class="nx-gmail-thread-quote">' +
           '<span class="nx-gmail-quote-line">' +
-          'Pada ' +
+          'On ' +
           cuando +
           ', <strong>' +
           qName +
           '</strong> &lt;' +
           qAddr +
-          '&gt; menulis:</span>' +
+          '&gt; wrote:</span>' +
           (qBody ? '<blockquote class="nx-gmail-quote-block">' + qBody + '</blockquote>' : '') +
           '</div>'
       }
@@ -738,7 +781,7 @@
         fromName,
         letters,
         fromEmailSpan,
-        kepadaLine,
+        recipientHtml,
         when,
         clockRel,
         roleCls,
@@ -779,7 +822,7 @@
               `</div><div class="nx-gmail-msg-ident"><div class="nx-gmail-msg-ident-top">` +
               `<span class="nx-gmail-msg-from-name">${p.fromName}</span>` +
               `${fromEmailSpan}<time class="nx-gmail-msg-open-time" datetime="${p.isoAttr}">${p.when}</time></div>` +
-              `<div class="nx-gmail-msg-kepada">${p.kepadaLine}</div></div></header>` +
+              `<div class="nx-gmail-msg-rcpt-wrap">${p.recipientHtml}</div></div></header>` +
               `<div class="nx-mail-msg-body nx-mail-msg-email-body nx-gmail-read-msg-body${p.htmlClass}">` +
               `${p.bodyHtml}${p.attHtml}</div>` +
               `</article>` +
@@ -796,7 +839,7 @@
             `<div class="nx-gmail-msg-ident-top">` +
             `<span class="nx-gmail-msg-from-name">${p.fromName}</span>` +
             `${fromEmailSpan}<time class="nx-gmail-msg-open-time" datetime="${p.isoAttr}">${p.when}</time></div>` +
-            `<div class="nx-gmail-msg-kepada">${p.kepadaLine}</div>` +
+            `<div class="nx-gmail-msg-rcpt-wrap">${p.recipientHtml}</div>` +
             `</div>` +
             `</header>` +
             `<div class="nx-mail-msg-body nx-mail-msg-email-body nx-gmail-read-msg-body${p.htmlClass}">` +
@@ -805,11 +848,11 @@
           )
         })
         .join('') +
-      '<div class="nx-gmail-msg-quick-bar" role="toolbar" aria-label="Tindakan cepat">' +
+      '<div class="nx-gmail-msg-quick-bar" role="toolbar" aria-label="Quick actions">' +
       '<button type="button" class="nx-gmail-pill-btn nx-gmail-pill-reply" id="nxMailQuickReply">' +
-      '<span class="nx-gmail-pill-glyph" aria-hidden="true">↩</span> Balas</button>' +
-      '<button type="button" class="nx-gmail-pill-btn nx-gmail-pill-fwd" disabled title="Belum diaktifkan">' +
-      '<span class="nx-gmail-pill-glyph" aria-hidden="true">↪</span> Teruskan</button>' +
+      '<span class="nx-gmail-pill-glyph" aria-hidden="true">↩</span> Reply</button>' +
+      '<button type="button" class="nx-gmail-pill-btn nx-gmail-pill-fwd" disabled title="Not available">' +
+      '<span class="nx-gmail-pill-glyph" aria-hidden="true">↪</span> Forward</button>' +
       '</div>' +
       '</div></div>'
     host.classList.add('nx-mail-msgs-has-shell')
@@ -830,11 +873,25 @@
         String(openThread.meta.viewer_badge || '').trim() || myBadgeFromStorage(),
       )
       const replyHdr = el('nxMailReplyMeta')
-      if (replyHdr)
+      if (replyHdr) {
+        var vb = String(openThread.meta.viewer_badge || '').trim() || myBadgeFromStorage()
+        var plist = openThread.meta.participants
+        var line = ''
+        if (plist && plist.length) {
+          var others = plist.filter(function (p) {
+            return !badgesEquivalent(p.badge, vb)
+          })
+          line = others
+            .map(function (p) {
+              return badgeMailboxLabel(p.badge || '') || p.badge || ''
+            })
+            .filter(Boolean)
+            .join(', ')
+        }
+        if (!line) line = badgeMailboxLabel(meta.peer_badge || '') || meta.peer_badge || ''
         replyHdr.innerHTML =
-          '<strong class="nx-gmail-reply-to-name">' +
-          escapeHtml(badgeMailboxLabel(meta.peer_badge || '') || meta.peer_badge || '') +
-          '</strong>'
+          '<strong class="nx-gmail-reply-to-name">' + escapeHtml(line || '—') + '</strong>'
+      }
       try {
         await fetchJson('PATCH', '/api/nexus-mail', { thread_id: id })
         markThreadUnreadClearedLocally(id)
@@ -860,15 +917,13 @@
     if (!openThread || !openThread.meta) return
     const body = ((el('nxMailReplyBody') && el('nxMailReplyBody').value) || '').trim()
     const attachmentUrls = nxReplyAttachUrls.slice()
-    const peer = openThread.meta.peer_badge || ''
-    if (!peer || (!body && !attachmentUrls.length)) {
-      nxMailToast('Tulis pesan atau tambahkan minimal satu URL gambar (http/https) lewat Tambah.', 'error')
+    if (!body && !attachmentUrls.length) {
+      nxMailToast('Type a message or add at least one image URL (http/https) via Add.', 'error')
       return
     }
     try {
       await fetchJson('POST', '/api/nexus-mail', {
         thread_id: openThread.meta.id,
-        recipient_badge: peer,
         body,
         image_urls: attachmentUrls,
       })
@@ -983,27 +1038,35 @@
 
   async function submitComposeNew() {
     var toEl = el('nxMailComposeTo')
-    var recipient_badge = parseRecipientBadge((toEl && toEl.value) || '')
-    var subject =
-      ((el('nxMailComposeSub') && el('nxMailComposeSub').value) || '').trim()
+    var ccEl = el('nxMailComposeCc')
+    var bccEl = el('nxMailComposeBcc')
+    var toStr = ((toEl && toEl.value) || '').trim()
+    var ccStr = ((ccEl && ccEl.value) || '').trim()
+    var bccStr = ((bccEl && bccEl.value) || '').trim()
+    var subject = ((el('nxMailComposeSub') && el('nxMailComposeSub').value) || '').trim()
     var bodyEl = el('nxMailComposeBody')
     var body = composeBodyFromEditor(bodyEl)
     var attachmentUrls = nxComposeAttachUrls.slice()
 
-    if (!recipient_badge || (!body && !attachmentUrls.length)) {
+    if (!toStr && !ccStr && !bccStr) {
       var errTo =
-        'Kepada tidak valid. Perbaiki bentuk badge@instansi.gov (hindari @ganda, contoh salah: user@cib.gov@cib.gov).'
-      var errBody = 'Tulis pesan atau tambahkan minimal satu URL gambar (http/https) lewat Tambah.'
-      if (!recipient_badge) setNxComposeErr(errTo)
-      else setNxComposeErr(errBody)
-      if (!recipient_badge) nxMailToast(errTo, 'error')
-      else nxMailToast(errBody, 'error')
+        'Add at least one recipient in To, Cc, or Bcc (comma-separated badges, e.g. user@agency.gov).'
+      setNxComposeErr(errTo)
+      nxMailToast(errTo, 'error')
+      return
+    }
+    if (!body && !attachmentUrls.length) {
+      var errBody = 'Type a message or add at least one image URL (http/https) via Add.'
+      setNxComposeErr(errBody)
+      nxMailToast(errBody, 'error')
       return
     }
     setNxComposeErr('')
     try {
       var payload = {
-        recipient_badge,
+        to: toStr,
+        cc: ccStr,
+        bcc: bccStr,
         subject,
         body,
         image_urls: attachmentUrls,
@@ -1229,7 +1292,7 @@
       el('nxMailOverlay').setAttribute('aria-hidden', 'false')
       openThread = null
       renderHeader({ peer_name: '', peer_badge: '', subject: '', id: '', updated_at: '' })
-      renderEmptyState('Pilih percakapan di kiri atau ketuk Tulis.')
+      renderEmptyState('Select a conversation on the left or tap Compose.')
       nxMailComposerSetOpen(false)
       loadInbox().then(updateUnreadBell)
     },

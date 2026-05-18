@@ -1050,6 +1050,11 @@ details.nx-gmail-msg-fold[open]>.nx-gmail-msg-fold-sum{border-bottom:1px solid r
 .nx-gmail-msg-kepada{margin-top:5px;font-size:13px;color:rgba(214,219,229,.92);font-family:inherit;line-height:1.4;}
 .nx-gmail-kepada-me{font-weight:600;color:var(--gold);}
 .nx-gmail-kepada-target{font-weight:600;color:rgba(239,229,207,.94);}
+.nx-gmail-msg-rcpt-wrap{margin-top:6px;}
+.nx-gmail-rcpt-block{display:flex;flex-direction:column;gap:4px;margin-top:2px;}
+.nx-gmail-rcpt-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:13px;line-height:1.45;color:rgba(214,219,229,.92);}
+.nx-gmail-rcpt-k{flex:0 0 36px;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1.2px;color:rgba(201,168,76,.85);text-transform:uppercase;font-weight:600;}
+.nx-gmail-rcpt-v{flex:1;min-width:0;word-break:break-word;color:rgba(239,229,207,.94);font-family:inherit;}
 .nx-gmail-read-msg-body{
   padding:10px 16px 24px;background:transparent;border:none;font-size:14px;line-height:1.7;color:rgba(243,239,229,.93);}
 
@@ -1107,7 +1112,7 @@ details.nx-gmail-msg-fold[open]>.nx-gmail-msg-fold-sum{border-bottom:1px solid r
 .nx-mail-msg-img-thumb-link{display:inline-block;line-height:0;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#070d18;overflow:visible;}
 .nx-mail-msg-img-thumb{display:block;max-width:100%;width:auto;height:auto;max-height:min(560px,70vh);object-fit:contain;vertical-align:middle;background:#03060c;}
 
-/* Reply — satu kartu dalam untaian Gmail (light card + emas Nexus) */
+/* Reply — single card in Gmail-style thread (light card + Nexus gold accents) */
 .nx-gmail-reply-sheet{
   display:none;flex-direction:column;flex-shrink:0;
   width:100%;margin:0;padding:0;border:none;background:transparent;
