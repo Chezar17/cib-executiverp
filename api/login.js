@@ -1,9 +1,12 @@
 // ============================================================
-//  CIB — Hardened Login + Change-Password Function  (api/login.js)
+//  CIB — Login, Logout & Change-password  (api/login.js)
 //
-//  ROUTES (distinguished by ?action= query param):
-//  POST /api/login              → standard login
-//  POST /api/login?action=change-password → change password (requires valid token)
+//  ROUTES:
+//    POST /api/login                        → login
+//    POST /api/login?action=change-password → change password (Bearer token)
+//    POST /api/logout                       → logout (invalidate session token)
+//
+//  On Vercel, /api/logout rewrites to this file (?__op=logout).
 //
 //  DATABASE — users table must have a `must_change_password` boolean column:
 //    ALTER TABLE users ADD COLUMN must_change_password BOOLEAN DEFAULT FALSE;
@@ -65,17 +68,41 @@ async function validateToken(supabase, token) {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  LOGOUT — POST /api/logout mapped here with ?__op=logout
+// ─────────────────────────────────────────────────────────────
+async function handleLogout(req, res) {
+  const token = req.headers['x-session-token']
+
+  if (token) {
+    try {
+      const supabase = getSupabase()
+      await supabase.from('sessions').delete().eq('token', token)
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
+  }
+
+  return res.status(200).json({ success: true })
+}
+
+// ─────────────────────────────────────────────────────────────
 //  HANDLER
 // ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
 
-  // ── CORS ─────────────────────────────────────────────────────
-  applyCors(res, { methods: 'POST, OPTIONS', headers: 'Content-Type, Authorization' })
+  applyCors(res, {
+    methods: 'POST, OPTIONS',
+    headers: 'Content-Type, Authorization, x-session-token',
+  })
   if (handlePreflight(req, res)) return
   if (rejectForeignOrigin(req, res)) return
   if (!allowMethods(req, res, ['POST'])) return
 
-  const action = req.query?.action   // undefined  → login  |  'change-password' → change pw
+  if (req.query?.__op === 'logout') {
+    return handleLogout(req, res)
+  }
+
+  const action = req.query?.action // undefined → login | 'change-password'
   const supabase = getSupabase()
 
   // ════════════════════════════════════════════════════════════
