@@ -19,13 +19,15 @@ export function shapeSupabaseError(err) {
  * @param {import('http').ServerResponse} res
  * @param {number} status
  * @param {string} message Short user-facing summary
- * @param {{ cause?: unknown, context?: string, supabase?: object }} [extra]
+ * @param {{ cause?: unknown, context?: string, supabase?: object, hint?: string }} [extra]
  */
 export function jsonApiError(res, status, message, extra = {}) {
-  const { cause, context, supabase } = extra
+  const { cause, context, supabase, hint } = extra
   const payload = { error: message }
 
   if (context) payload.context = context
+
+  if (hint) payload.hint = hint
 
   const shaped = supabase ? shapeSupabaseError(supabase) : null
   if (shaped && Object.keys(shaped).length) payload.details = shaped

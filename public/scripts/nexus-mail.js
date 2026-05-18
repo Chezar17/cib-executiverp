@@ -221,6 +221,25 @@
     return document.getElementById(id)
   }
 
+  function nxMailConvScrollEl() {
+    return el('nxMailConvScroll')
+  }
+
+  function nxMailComposerSetOpen(show) {
+    var c = el('nxMailComposer')
+    var rail = nxMailConvScrollEl()
+    if (c) Object.assign(c.style, { display: show ? 'flex' : 'none' })
+    if (rail) rail.classList.toggle('nx-gmail-conv--reply-open', !!show)
+  }
+
+  function nxMailScrollConvToEnd() {
+    var rail = nxMailConvScrollEl()
+    if (!rail) return
+    requestAnimationFrame(function () {
+      rail.scrollTop = rail.scrollHeight
+    })
+  }
+
   /** In-modal alert; toast sits under #nxMailOverlay without a high enough z-index. */
   function setNxComposeErr(message) {
     var n = el('nxMailComposeErr')
@@ -390,12 +409,23 @@
   function updateUnreadBell() {
     const n = threads.reduce((a, t) => a + (t.unread_count || 0), 0)
     const b = el('nxMailUnreadBadge')
-    if (!b) return
-    if (n > 0) {
-      b.style.display = 'flex'
-      b.textContent = n > 99 ? '99+' : String(n)
-    } else {
-      b.style.display = 'none'
+    const navB = el('nxMailNavUnreadBadge')
+    if (b) {
+      if (n > 0) {
+        b.style.display = 'flex'
+        b.textContent = n > 99 ? '99+' : String(n)
+      } else {
+        b.style.display = 'none'
+      }
+    }
+    if (navB) {
+      if (n > 0) {
+        navB.textContent = n > 99 ? '99+' : String(n)
+        navB.classList.remove('is-empty')
+      } else {
+        navB.textContent = ''
+        navB.classList.add('is-empty')
+      }
     }
   }
 
@@ -410,17 +440,36 @@
     }
   }
 
+  /** After PATCH mark-read succeeds: sidebar unread without a full inbox GET */
+  function markThreadUnreadClearedLocally(threadId) {
+    var id = String(threadId || '')
+    var changed = false
+    threads = threads.map(function (t) {
+      if (t.id !== id) return t
+      var uc = Number(t.unread_count) || 0
+      if (!uc) return t
+      changed = true
+      return Object.assign({}, t, { unread_count: 0 })
+    })
+    if (changed) renderThreadRows()
+    updateUnreadBell()
+    document.querySelectorAll('.nx-mail-thread-row').forEach(function (btn) {
+      btn.classList.toggle('is-selected', btn.getAttribute('data-tid') === id)
+    })
+  }
+
   function renderEmptyState(txt) {
     var right = el('nxMailMsgs')
     if (!right) return
-    right.innerHTML = `<div class="nx-mail-empty">${escapeHtml(txt)}</div>`
+    right.classList.remove('nx-mail-msgs-has-shell')
+    right.innerHTML = `<div class="nx-mail-empty nx-gmail-reading-empty">${escapeHtml(txt)}</div>`
   }
 
   function renderThreadRows() {
     const tb = el('nxMailThreadList')
     if (!tb) return
     if (!threads.length) {
-      tb.innerHTML = '<div class="nx-mail-thread-empty">No conversations yet.<br/><span>Use Compose to reach another officer.</span></div>'
+      tb.innerHTML = '<div class="nx-mail-thread-empty nx-gmail-thread-empty">Belum ada percakapan.<br/><span>Gunakan <strong>Tulis</strong> untuk mengirim ke petugas lain.</span></div>'
       return
     }
     tb.innerHTML = threads
@@ -432,11 +481,16 @@
           escapeHtml(String(t.last_snippet || '').slice(0, 90)) ||
           '&nbsp;' /* keep row height stable */
         return (
-          `<button type="button" data-tid="${escapeHtml(t.id)}" class="nx-mail-thread-row ${un ? 'is-unread' : ''}">
-            <span class="nx-mail-row-from">${who}</span>
-            <span class="nx-mail-row-sub">${sub}</span>
-            <span class="nx-mail-row-sn">${sn}</span>
-            <span class="nx-mail-row-time">${escapeHtml(fmtTime(t.updated_at))}</span>
+          `<button type="button" data-tid="${escapeHtml(t.id)}" class="nx-mail-thread-row nx-gmail-thread-row ${un ? 'is-unread' : ''}">
+            <span class="nx-gmail-row-pad" aria-hidden="true"></span>
+            <div class="nx-gmail-thread-row-inner">
+              <div class="nx-gmail-thread-line1">
+                <span class="nx-mail-row-from">${who}</span>
+                <span class="nx-mail-row-sub">${sub}</span>
+                <span class="nx-mail-row-time">${escapeHtml(fmtTime(t.updated_at))}</span>
+              </div>
+              <div class="nx-mail-row-sn nx-gmail-thread-sn">${sn}</div>
+            </div>
           </button>`
         )
       })
@@ -454,20 +508,16 @@
     if (!h) return
     if (!meta || !meta.peer_badge) {
       h.innerHTML =
-        `<div class="nx-mail-h-left"><span class="nx-mail-h-peer">Conversation</span><span class="nx-mail-h-tip">Tap a sender on the left or compose new mail</span></div>`
+        `<div class="nx-gmail-subject-slot-inner nx-gmail-subject-slot-empty"><p class="nx-gmail-thread-title-muted">Percakapan</p><span class="nx-gmail-slot-hint">Pilih nama di kotak masuk atau mulai tulis surat baru</span></div>`
       return
     }
     const nm = escapeHtml(meta.peer_name || meta.peer_badge || '')
     const bd = escapeHtml(badgeMailboxLabel(meta.peer_badge || ''))
-    const sub = escapeHtml(meta.subject || '')
+    const sub = escapeHtml(meta.subject || '(Tanpa judul)')
     h.innerHTML =
-      `<div class="nx-mail-h-left">
-          <span class="nx-mail-h-peer">${nm}</span>
-          <span class="nx-mail-h-badge">${bd}</span>
-          <span class="nx-mail-h-sub">${sub}</span>
-       </div>
-       <div class="nx-mail-h-right">
-          <span class="nx-mail-h-tip">HTTPS image URL attaches like CID reports · Top Secret compartment</span>
+      `<div class="nx-gmail-subject-slot-inner">
+          <div class="nx-gmail-thread-title-row"><h1 class="nx-gmail-thread-title">${sub}</h1></div>
+          <div class="nx-gmail-meta-chips"><span class="nx-gmail-meta-name">${nm}</span><span class="nx-gmail-meta-addr">${bd}</span></div>
        </div>`
   }
 
@@ -476,18 +526,28 @@
     if (!host) return
     if (!msgs || !msgs.length) {
       host.innerHTML =
-        `<div class="nx-mail-msg-cells"><div class="nx-mail-msg-cell nx-mail-msg-system">${escapeHtml('No messages.')}</div></div>`
+        `<div class="nx-mail-msg-cells nx-msg-cells"><div class="nx-mail-msg-email nx-mail-msg-system nx-gmail-reading-empty">${escapeHtml('Belum ada pesan.')}</div></div>`
+      host.classList.remove('nx-mail-msgs-has-shell')
+      nxMailScrollConvToEnd()
       return
     }
     const peer = meta && meta.peer_badge ? meta.peer_badge : ''
+    const peerAddr = escapeHtml(badgeMailboxLabel(peer) || peer || '—')
+    const selfAddr = escapeHtml(badgeMailboxLabel(meBadge) || String(meBadge || '').trim() || '—')
 
     host.innerHTML =
-      '<div class="nx-mail-msg-cells">' +
+      '<div class="nx-msgs-conv-shell" role="presentation">' +
+      '<div class="nx-mail-msg-cells nx-msg-cells nx-msg-cells--conv">' +
       msgs
         .map(function (m) {
           const mine = meBadge && badgesEquivalent(m.sender_badge, meBadge)
-          const side = mine ? 'is-mine' : 'is-theirs'
-          const who = escapeHtml(mine ? 'You' : m.sender_badge === peer ? (meta.peer_name || m.sender_badge) : m.sender_badge)
+          const fromName = mine
+            ? 'Anda'
+            : escapeHtml(m.sender_badge === peer ? (meta.peer_name || m.sender_badge) : m.sender_badge)
+          const fromAddr = mine
+            ? selfAddr
+            : escapeHtml(badgeMailboxLabel(m.sender_badge || '') || String(m.sender_badge || '').trim() || '')
+          const toAddr = mine ? peerAddr : selfAddr
           const when = escapeHtml(fmtTime(m.created_at))
           const bodyHtml = renderMsgBodyMarkup(m.body)
           const htmlClass = /<[a-z]/i.test(String(m.body || '')) ? ' nx-mail-msg-body-html' : ''
@@ -503,16 +563,25 @@
                 .join('') +
               '</div>'
           }
+          var roleCls = mine ? ' is-sent' : ' is-received'
           return (
-            `<article class="nx-mail-msg-cell ${side}">
-               <header class="nx-mail-msg-meta"><span>${who}</span><time>${when}</time></header>
-               <div class="nx-mail-msg-body${htmlClass}">${bodyHtml}${attHtml}</div>
+            `<article class="nx-mail-msg-email nx-gmail-msg ${roleCls}">
+               <header class="nx-mail-msg-email-hdr nx-gmail-msg-strip">
+                 <div class="nx-mail-msg-email-row"><span class="nx-mail-msg-email-k">Dari</span>
+                   <div class="nx-mail-msg-email-v"><strong>${fromName}</strong>${fromAddr ? `<span class="nx-mail-msg-email-addr">${fromAddr}</span>` : ''}</div></div>
+                 <div class="nx-mail-msg-email-row"><span class="nx-mail-msg-email-k">Kepada</span>
+                   <div class="nx-mail-msg-email-v"><span class="nx-mail-msg-email-addr">${toAddr}</span></div></div>
+                 <div class="nx-mail-msg-email-row nx-mail-msg-email-row-date"><span class="nx-mail-msg-email-k">Tanggal</span>
+                   <time datetime="${escapeHtml(String(m.created_at || ''))}">${when}</time></div>
+               </header>
+               <div class="nx-mail-msg-body nx-mail-msg-email-body${htmlClass}">${bodyHtml}${attHtml}</div>
              </article>`
           )
         })
         .join('') +
-      '</div>'
-    host.scrollTop = host.scrollHeight
+      '</div></div>'
+    host.classList.add('nx-mail-msgs-has-shell')
+    nxMailScrollConvToEnd()
   }
 
   async function openThreadFn(id) {
@@ -527,24 +596,25 @@
       const replyHdr = el('nxMailReplyMeta')
       if (replyHdr)
         replyHdr.innerHTML =
-          'Reply to <strong>' +
+          '<strong class="nx-gmail-reply-to-name">' +
           escapeHtml(badgeMailboxLabel(meta.peer_badge || '') || meta.peer_badge || '') +
           '</strong>'
       try {
         await fetchJson('PATCH', '/api/nexus-mail', { thread_id: id })
+        markThreadUnreadClearedLocally(id)
       } catch (_) {
-        /* allow read failures */
+        /* allow read failures — still refresh list from server */
+        await loadInbox()
       }
-      await loadInbox()
       el('nxMailReplyBody') && (el('nxMailReplyBody').value = '')
       nxReplyAttachUrls = []
       el('nxMailReplyImgDraft') && (el('nxMailReplyImgDraft').value = '')
       renderNxReplyAttachments()
-      el('nxMailComposer') &&
-        Object.assign(el('nxMailComposer').style, { display: 'flex' }) /* composer visible */
+      nxMailComposerSetOpen(true)
       document.querySelectorAll('.nx-mail-thread-row').forEach(function (btn) {
         btn.classList.toggle('is-selected', btn.getAttribute('data-tid') === id)
       })
+      nxMailScrollConvToEnd()
     } catch (e) {
         nxMailToast(e.message || String(e), 'error')
     }
@@ -906,6 +976,13 @@
           if (ev.target === cob) hideCompose()
         }
       }
+      var rf = el('nxMailRefreshList')
+      if (rf && !rf._nxBound) {
+        rf._nxBound = true
+        rf.addEventListener('click', function () {
+          loadInbox().catch(function () {})
+        })
+      }
       bindGmailCompose()
       nxWireMailAttachmentsOnce()
     },
@@ -915,9 +992,8 @@
       el('nxMailOverlay').setAttribute('aria-hidden', 'false')
       openThread = null
       renderHeader({ peer_name: '', peer_badge: '', subject: '', id: '', updated_at: '' })
-      renderEmptyState('Select a thread or Compose a new encrypted notice.')
-      const comp = el('nxMailComposer')
-      if (comp) comp.style.display = 'none'
+      renderEmptyState('Pilih percakapan di kiri atau ketuk Tulis.')
+      nxMailComposerSetOpen(false)
       loadInbox().then(updateUnreadBell)
     },
 

@@ -9,7 +9,8 @@
 
 import { allowMethods } from './_lib/http.js'
 import { requireSession } from './_lib/session.js'
-import { getSupabase } from './_lib/supabase.js'
+import { SUPABASE_SERVICE_ROLE_KEY } from './_lib/config.js'
+import { getSupabaseService } from './_lib/supabase.js'
 import { jsonApiError } from './_lib/api-error.js'
 
 function trimBadge(b) {
@@ -232,7 +233,16 @@ export default async function handler(req, res) {
     const session = await requireSession(req, res)
     if (!session) return
 
-    const supabase = getSupabase()
+    const supabase = getSupabaseService()
+
+    const serviceKeyUnset = !String(SUPABASE_SERVICE_ROLE_KEY || '').trim()
+
+    const sendRlsHint = (insError) => {
+      if (!insError || !serviceKeyUnset) return null
+      const msg = String(insError.message || '')
+      if (!/row-level security|42501/i.test(msg)) return null
+      return 'Set env SUPABASE_SERVICE_ROLE_KEY (server only) for Nexus Mail, or relax RLS on nx_mail_* tables.'
+    }
 
     const meResolved = await resolveUserBadge(supabase, session.badge)
     const me = meResolved ?? trimBadge(session.badge)
@@ -473,6 +483,7 @@ export default async function handler(req, res) {
             return jsonApiError(res, 500, 'Failed to create thread', {
               supabase: ins.error,
               context: 'nexus-mail insert thread',
+              hint: sendRlsHint(ins.error) ?? undefined,
             })
           thr = ins.data
         } else if (subject && !(thr.subject && thr.subject.trim() && thr.subject !== '(No subject)')) {
@@ -495,6 +506,7 @@ export default async function handler(req, res) {
         return jsonApiError(res, 500, 'Failed to send message', {
           supabase: insMsg.error,
           context: 'nexus-mail insert message',
+          hint: sendRlsHint(insMsg.error) ?? undefined,
         })
 
       await supabase.from('nx_mail_threads').update({ updated_at: nowIso }).eq('id', threadId)
