@@ -139,33 +139,20 @@
     return sanitizeMailBodyHtml(s)
   }
 
-  /** Max 15 matches API; parses lines and comma-separated HTTPS/HTTP URLs. */
-  function parseHttpsUrlLines(raw) {
-    /** @type {string[]} */
-    var out = []
-    var rawStr = String(raw == null ? '' : raw)
-    var lines = rawStr.split(/\r?\n/)
-    for (var li = 0; li < lines.length; li++) {
-      var parts = lines[li].split(','),
-        pi,
-        cand
-      for (pi = 0; pi < parts.length; pi++) {
-        cand = parts[pi].trim()
-        if (!cand) continue
-        try {
-          var url = new URL(cand)
-          if (url.protocol !== 'http:' && url.protocol !== 'https:') continue
-          var s = url.toString()
-          if (out.indexOf(s) < 0) {
-            out.push(s)
-            if (out.length >= 15) return out
-          }
-        } catch (_) {
-          /* skip invalid */
-        }
-      }
+  /** Max matches API (`image_urls` cap). */
+  const NX_MAX_MAIL_ATTACH = 15
+
+  /** @param {unknown} raw */
+  function parseOneAttachUrl(raw) {
+    var cand = String(raw == null ? '' : raw).trim()
+    if (!cand) return ''
+    try {
+      var url = new URL(cand)
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
+      return url.toString()
+    } catch (_) {
+      return ''
     }
-    return out
   }
 
   function messageAttachmentUrls(m) {
@@ -180,41 +167,14 @@
     return []
   }
 
-  function renderAttachmentPreviewChunks(urls, wrapCls, imgCls) {
-    if (!urls || !urls.length) return ''
-    return urls
-      .map(function (u) {
-        return (
-          `<div class="${wrapCls}"><img class="${imgCls}" src="${escapeHtml(u)}" alt="" loading="lazy" referrerpolicy="no-referrer"/></div>`
-        )
-      })
-      .join('')
-  }
-
-  function syncComposeAttachmentPreview() {
-    var ta = el('nxMailComposeImg'),
-      box = el('nxMailComposeImgPreview')
-    if (!box) return
-    var urls = parseHttpsUrlLines(ta ? ta.value : '')
-    box.innerHTML = renderAttachmentPreviewChunks(urls, 'nx-mail-compose-thumb-wrap', 'nx-mail-compose-thumb')
-    box.style.display = urls.length ? 'flex' : 'none'
-    box.setAttribute('aria-hidden', urls.length ? 'false' : 'true')
-  }
-
-  function syncReplyAttachmentPreview() {
-    var ta = el('nxMailReplyImg'),
-      box = el('nxMailReplyImgPreview')
-    if (!box) return
-    var urls = parseHttpsUrlLines(ta ? ta.value : '')
-    box.innerHTML = renderAttachmentPreviewChunks(urls, 'nx-mail-reply-thumb-wrap', 'nx-mail-reply-thumb')
-    box.style.display = urls.length ? 'flex' : 'none'
-    box.setAttribute('aria-hidden', urls.length ? 'false' : 'true')
-  }
-
   function nxMailToast(message, typ) {
     var t = typ || 'error'
-    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast)
-      PortalAuth.showToast(message, t, 'inf-toast')
+    var msg = String(message == null ? '' : message)
+    if (typeof PortalAuth !== 'undefined' && PortalAuth.showToast) {
+      PortalAuth.showToast(msg, t, 'inf-toast')
+      return
+    }
+    if (t === 'error' && typeof console !== 'undefined' && console.warn) console.warn('[Nexus Mail]', msg)
   }
 
   function fmtTime(iso) {
@@ -232,6 +192,11 @@
   /** @type {NxThread[]} */
   let dirCache = []
 
+  /** @type {string[]} */
+  let nxComposeAttachUrls = []
+  /** @type {string[]} */
+  let nxReplyAttachUrls = []
+
   /** @type {{ meta: Partial<NxThread> & { peer_badge?: string, peer_name?: string, subject?: string } | null, msgs: NxMessage[] }} */
   let openThread = null
   /** @type {ReturnType<typeof setInterval>|null} */
@@ -241,6 +206,149 @@
 
   function el(id) {
     return document.getElementById(id)
+  }
+
+  function renderNxComposeAttachments() {
+    var listEl = el('nxMailComposeImgList')
+    if (!listEl) return
+    listEl.innerHTML = nxComposeAttachUrls
+      .map(function (u, idx) {
+        return (
+          '<div class="gmail-compose-att-item">' +
+          '<button type="button" class="gmail-compose-att-remove" data-i="' +
+          idx +
+          '" aria-label="Hapus lampiran">&times;</button>' +
+          '<div class="gmail-compose-att-thumb-wrap"><img class="gmail-compose-att-thumb" src="' +
+          escapeHtml(u) +
+          '" alt="" loading="lazy" referrerpolicy="no-referrer"/></div>' +
+          '</div>'
+        )
+      })
+      .join('')
+  }
+
+  function renderNxReplyAttachments() {
+    var listEl = el('nxMailReplyImgList')
+    if (!listEl) return
+    listEl.innerHTML = nxReplyAttachUrls
+      .map(function (u, idx) {
+        return (
+          '<div class="nx-mail-reply-att-item">' +
+          '<button type="button" class="nx-mail-reply-att-remove" data-i="' +
+          idx +
+          '" aria-label="Hapus lampiran">&times;</button>' +
+          '<div class="nx-mail-reply-att-thumb-wrap"><img class="nx-mail-reply-att-thumb" src="' +
+          escapeHtml(u) +
+          '" alt="" loading="lazy" referrerpolicy="no-referrer"/></div>' +
+          '</div>'
+        )
+      })
+      .join('')
+  }
+
+  function tryAddNxComposeAttachment() {
+    var draft = el('nxMailComposeImgDraft')
+    var v = draft ? draft.value.trim() : ''
+    var canon = parseOneAttachUrl(v)
+    if (!canon) {
+      nxMailToast('URL tidak valid. Gunakan alamat yang diawali http:// atau https://', 'error')
+      return
+    }
+    if (nxComposeAttachUrls.indexOf(canon) >= 0) {
+      nxMailToast('URL lampiran ini sudah ditambahkan.', 'error')
+      return
+    }
+    if (nxComposeAttachUrls.length >= NX_MAX_MAIL_ATTACH) {
+      nxMailToast('Maksimal ' + NX_MAX_MAIL_ATTACH + ' lampiran gambar.', 'error')
+      return
+    }
+    nxComposeAttachUrls.push(canon)
+    if (draft) draft.value = ''
+    renderNxComposeAttachments()
+  }
+
+  function tryAddNxReplyAttachment() {
+    var draft = el('nxMailReplyImgDraft')
+    var v = draft ? draft.value.trim() : ''
+    var canon = parseOneAttachUrl(v)
+    if (!canon) {
+      nxMailToast('URL tidak valid. Gunakan alamat yang diawali http:// atau https://', 'error')
+      return
+    }
+    if (nxReplyAttachUrls.indexOf(canon) >= 0) {
+      nxMailToast('URL lampiran ini sudah ditambahkan.', 'error')
+      return
+    }
+    if (nxReplyAttachUrls.length >= NX_MAX_MAIL_ATTACH) {
+      nxMailToast('Maksimal ' + NX_MAX_MAIL_ATTACH + ' lampiran gambar.', 'error')
+      return
+    }
+    nxReplyAttachUrls.push(canon)
+    if (draft) draft.value = ''
+    renderNxReplyAttachments()
+  }
+
+  /** One-time delegated handlers for compose/reply attachment UI. */
+  var nxMailAttachmentsWired = false
+  function nxWireMailAttachmentsOnce() {
+    if (nxMailAttachmentsWired) return
+    nxMailAttachmentsWired = true
+    var cList = el('nxMailComposeImgList')
+    if (cList) {
+      cList.addEventListener('click', function (ev) {
+        var rm = typeof ev.target.closest === 'function' ? ev.target.closest('.gmail-compose-att-remove') : null
+        if (!rm || !cList.contains(rm)) return
+        ev.preventDefault()
+        var i = parseInt(rm.getAttribute('data-i') || '-1', 10)
+        if (i >= 0 && i < nxComposeAttachUrls.length) {
+          nxComposeAttachUrls.splice(i, 1)
+          renderNxComposeAttachments()
+        }
+      })
+    }
+    var rList = el('nxMailReplyImgList')
+    if (rList) {
+      rList.addEventListener('click', function (ev) {
+        var rm = typeof ev.target.closest === 'function' ? ev.target.closest('.nx-mail-reply-att-remove') : null
+        if (!rm || !rList.contains(rm)) return
+        ev.preventDefault()
+        var i = parseInt(rm.getAttribute('data-i') || '-1', 10)
+        if (i >= 0 && i < nxReplyAttachUrls.length) {
+          nxReplyAttachUrls.splice(i, 1)
+          renderNxReplyAttachments()
+        }
+      })
+    }
+    var cAdd = el('nxMailComposeImgAddBtn')
+    if (cAdd) {
+      cAdd.addEventListener('click', function (ev) {
+        ev.preventDefault()
+        tryAddNxComposeAttachment()
+      })
+    }
+    var cDraft = el('nxMailComposeImgDraft')
+    if (cDraft) {
+      cDraft.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter') return
+        ev.preventDefault()
+        tryAddNxComposeAttachment()
+      })
+    }
+    var rAdd = el('nxMailReplyImgAddBtn')
+    if (rAdd) {
+      rAdd.addEventListener('click', function (ev) {
+        ev.preventDefault()
+        tryAddNxReplyAttachment()
+      })
+    }
+    var rDraft = el('nxMailReplyImgDraft')
+    if (rDraft) {
+      rDraft.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter') return
+        ev.preventDefault()
+        tryAddNxReplyAttachment()
+      })
+    }
   }
 
   function updateUnreadBell() {
@@ -393,8 +501,9 @@
       }
       await loadInbox()
       el('nxMailReplyBody') && (el('nxMailReplyBody').value = '')
-      el('nxMailReplyImg') && (el('nxMailReplyImg').value = '')
-      syncReplyAttachmentPreview()
+      nxReplyAttachUrls = []
+      el('nxMailReplyImgDraft') && (el('nxMailReplyImgDraft').value = '')
+      renderNxReplyAttachments()
       el('nxMailComposer') &&
         Object.assign(el('nxMailComposer').style, { display: 'flex' }) /* composer visible */
       document.querySelectorAll('.nx-mail-thread-row').forEach(function (btn) {
@@ -408,10 +517,10 @@
   async function submitReply() {
     if (!openThread || !openThread.meta) return
     const body = ((el('nxMailReplyBody') && el('nxMailReplyBody').value) || '').trim()
-    const attachmentUrls = parseHttpsUrlLines((el('nxMailReplyImg') && el('nxMailReplyImg').value) || '')
+    const attachmentUrls = nxReplyAttachUrls.slice()
     const peer = openThread.meta.peer_badge || ''
     if (!peer || (!body && !attachmentUrls.length)) {
-      nxMailToast('Tulis pesan atau tambahkan minimal satu URL gambar HTTPS', 'error')
+      nxMailToast('Tulis pesan atau tambahkan minimal satu URL gambar (http/https) lewat Tambah.', 'error')
       return
     }
     try {
@@ -422,8 +531,9 @@
         image_urls: attachmentUrls,
       })
       el('nxMailReplyBody').value = ''
-      el('nxMailReplyImg').value = ''
-      syncReplyAttachmentPreview()
+      nxReplyAttachUrls = []
+      el('nxMailReplyImgDraft') && (el('nxMailReplyImgDraft').value = '')
+      renderNxReplyAttachments()
       await openThreadFn(openThread.meta.id)
       await loadInbox()
     } catch (e) {
@@ -458,17 +568,18 @@
     var toIn = el('nxMailComposeTo')
     var subIn = el('nxMailComposeSub')
     var bd = el('nxMailComposeBody')
-    var imgIn = el('nxMailComposeImg')
+    var imgDraft = el('nxMailComposeImgDraft')
     var imgRow = el('nxMailComposeImgRow')
     if (toIn) toIn.value = ''
     if (subIn) subIn.value = ''
     if (bd) bd.innerHTML = ''
-    if (imgIn) imgIn.value = ''
+    nxComposeAttachUrls = []
+    if (imgDraft) imgDraft.value = ''
     if (imgRow) imgRow.classList.add('is-hidden')
     var sug = el('nxMailDirSuggest')
     if (sug) sug.innerHTML = ''
     resetComposeCcBccUi()
-    syncComposeAttachmentPreview()
+    renderNxComposeAttachments()
 
     if (bd) bd.focus()
     else if (toIn) toIn.focus()
@@ -533,13 +644,15 @@
       ((el('nxMailComposeSub') && el('nxMailComposeSub').value) || '').trim()
     var bodyEl = el('nxMailComposeBody')
     var body = composeBodyFromEditor(bodyEl)
-    var attachmentUrls = parseHttpsUrlLines((el('nxMailComposeImg') && el('nxMailComposeImg').value) || '')
+    var attachmentUrls = nxComposeAttachUrls.slice()
 
     if (!recipient_badge || (!body && !attachmentUrls.length)) {
-      nxMailToast(
-        'Kepada (badge atau *.gov) dan isi pesan atau minimal satu URL gambar HTTPS wajib ada',
-        'error',
-      )
+      if (!recipient_badge)
+        nxMailToast(
+          'Isi kolom Kepada: badge atau email *.gov yang valid (contoh CID-7429@lscs.gov).',
+          'error',
+        )
+      else nxMailToast('Tulis pesan atau tambahkan minimal satu URL gambar (http/https) lewat Tambah.', 'error')
       return
     }
     try {
@@ -621,10 +734,10 @@
       var row = el('nxMailComposeImgRow')
       if (row) {
         row.classList.toggle('is-hidden')
-        var i = el('nxMailComposeImg')
+        var i = el('nxMailComposeImgDraft')
         if (i && !row.classList.contains('is-hidden')) {
           i.focus()
-          syncComposeAttachmentPreview()
+          renderNxComposeAttachments()
         }
       }
     }
@@ -685,7 +798,11 @@
     var sd = el('nxMailComposeSendMenuBtn')
     if (sd && !sd._nxBound) {
       sd._nxBound = true
-      sd.onclick = submitComposeNew
+      sd.addEventListener('click', function (ev) {
+        ev.preventDefault()
+        ev.stopPropagation()
+        submitComposeNew()
+      })
     }
   }
 
@@ -703,7 +820,11 @@
       var sb = el('nxMailSendReplyBtn')
       if (sb && !sb._nxBound) {
         sb._nxBound = true
-        sb.onclick = submitReply
+        sb.addEventListener('click', function (ev) {
+          ev.preventDefault()
+          ev.stopPropagation()
+          submitReply()
+        })
       }
       var comp = el('nxMailComposeFab')
       if (comp && !comp._nxBound) {
@@ -713,7 +834,11 @@
       var compSend = el('nxMailComposeSendBtn')
       if (compSend && !compSend._nxBound) {
         compSend._nxBound = true
-        compSend.onclick = submitComposeNew
+        compSend.addEventListener('click', function (ev) {
+          ev.preventDefault()
+          ev.stopPropagation()
+          submitComposeNew()
+        })
       }
       var compClose = el('nxMailComposeCloseBtn')
       if (compClose && !compClose._nxBound) {
@@ -738,18 +863,7 @@
         }
       }
       bindGmailCompose()
-      ;(function bindNxAttachmentPreviewInputs() {
-        var composeTa = el('nxMailComposeImg'),
-          replyTa = el('nxMailReplyImg')
-        if (composeTa && !composeTa._nxPrevBound) {
-          composeTa._nxPrevBound = true
-          composeTa.addEventListener('input', syncComposeAttachmentPreview)
-        }
-        if (replyTa && !replyTa._nxPrevBound) {
-          replyTa._nxPrevBound = true
-          replyTa.addEventListener('input', syncReplyAttachmentPreview)
-        }
-      })()
+      nxWireMailAttachmentsOnce()
     },
 
     open: function () {

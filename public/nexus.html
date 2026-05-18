@@ -784,9 +784,12 @@
         <footer id="nxMailComposer" class="nx-mail-composer">
           <div id="nxMailReplyMeta" class="nx-mail-reply-line">Reply</div>
           <textarea id="nxMailReplyBody" class="nx-mail-inp-msg" placeholder="Write your reply…"></textarea>
-          <label class="nx-mail-reply-attach-label" for="nxMailReplyImg">Gambar HTTPS (beberapa URL, baris baru atau koma)</label>
-          <textarea id="nxMailReplyImg" class="nx-mail-reply-img-ta" rows="3" spellcheck="false" placeholder="https://…&#10;https://…"></textarea>
-          <div id="nxMailReplyImgPreview" class="nx-mail-reply-attach-preview" aria-hidden="true"></div>
+          <label class="nx-mail-reply-attach-label" for="nxMailReplyImgDraft">Lampiran gambar (HTTPS) — tambah satu per satu</label>
+          <div class="nx-mail-reply-attach-add-row">
+            <input type="text" id="nxMailReplyImgDraft" class="nx-mail-reply-draft-inp" autocomplete="off" spellcheck="false" placeholder="Tempel URL gambar, lalu Tambah" />
+            <button type="button" id="nxMailReplyImgAddBtn" class="nx-mail-reply-add-btn">Tambah</button>
+          </div>
+          <div id="nxMailReplyImgList" class="nx-mail-reply-attach-list" aria-live="polite"></div>
           <div class="nx-mail-field-row">
             <button type="button" id="nxMailSendReplyBtn" class="nx-mail-send-btn">Send</button>
           </div>
@@ -828,6 +831,16 @@
             </div>
             <div class="gmail-cm-body-wrap">
               <div id="nxMailComposeBody" class="gmail-cm-body" contenteditable="true" tabindex="0" data-placeholder="Tulis pesan…"></div>
+            </div>
+            <div class="gmail-cm-img-row is-hidden" id="nxMailComposeImgRow">
+              <div class="gmail-cm-attach-stack">
+                <span class="gmail-cm-attach-hint">Lampiran gambar HTTPS — satu per satu: tempel URL, klik Tambah, lalu ulangi jika perlu.</span>
+                <div class="gmail-cm-attach-add-row">
+                  <input type="text" id="nxMailComposeImgDraft" class="gmail-cm-img-draft-inp" autocomplete="off" spellcheck="false" placeholder="https://…" />
+                  <button type="button" class="gmail-cm-img-add-btn" id="nxMailComposeImgAddBtn">Tambah</button>
+                </div>
+                <div id="nxMailComposeImgList" class="gmail-compose-attach-list" aria-live="polite"></div>
+              </div>
             </div>
             <div class="gmail-cm-toolbar-wrap" id="nxMailComposeToolbarWrap">
               <div class="gmail-cm-toolbar" id="nxMailComposeToolbar">
@@ -874,13 +887,6 @@
                 <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">⋮</button>
               </div>
               <button type="button" class="gmail-cm-trash" id="nxMailComposeDiscard" title="Buang draf">🗑</button>
-            </div>
-            <div class="gmail-cm-img-row is-hidden" id="nxMailComposeImgRow">
-              <div class="gmail-cm-attach-stack">
-                <span class="gmail-cm-attach-hint">Gambar HTTPS — beberapa URL (baris baru atau koma)</span>
-                <textarea id="nxMailComposeImg" class="gmail-cm-img-urls-ta" rows="4" spellcheck="false" placeholder="https://…&#10;https://…"></textarea>
-                <div id="nxMailComposeImgPreview" class="gmail-compose-attach-preview" aria-hidden="true"></div>
-              </div>
             </div>
           </div>
         </div>
