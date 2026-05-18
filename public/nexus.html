@@ -867,9 +867,15 @@
           <div class="gmail-cm-sheet">
             <div class="gmail-cm-field-row gmail-cm-to-row">
               <span class="gmail-cm-label">To</span>
-              <div class="gmail-cm-field-grow">
-                <input type="text" id="nxMailComposeTo" class="gmail-cm-input" autocomplete="off" spellcheck="false" placeholder="Recipient badges — comma-separated, e.g. user@agency.gov" />
-                <div class="nx-mail-dir-sug gmail-cm-dir-sug" id="nxMailDirSuggest"></div>
+              <div class="gmail-cm-field-grow gmail-cm-recip-grow">
+                <div class="gmail-cm-recip-editor">
+                  <div id="nxMailComposeToChips" class="gmail-cm-chips" aria-live="polite"></div>
+                  <div class="gmail-cm-recip-inputline">
+                    <input type="text" id="nxMailComposeTo" class="gmail-cm-input gmail-cm-recip-draft" autocomplete="off" spellcheck="false" placeholder="Search directory or type a badge, then Add" />
+                    <button type="button" class="gmail-cm-add-recip" id="nxMailComposeToAdd">Add</button>
+                  </div>
+                </div>
+                <div class="nx-mail-dir-sug gmail-cm-dir-sug" id="nxMailDirSuggestTo"></div>
               </div>
               <div class="gmail-cm-cc-bcc">
                 <button type="button" class="gmail-cm-inline-link" id="nxMailComposeCcBtn">Cc</button>
@@ -878,11 +884,29 @@
             </div>
             <div class="gmail-cm-field-row is-hidden" id="nxMailComposeCcRow">
               <span class="gmail-cm-label">Cc</span>
-              <input type="text" id="nxMailComposeCc" class="gmail-cm-input gmail-cm-line" autocomplete="off" spellcheck="false" />
+              <div class="gmail-cm-field-grow gmail-cm-recip-grow">
+                <div class="gmail-cm-recip-editor">
+                  <div id="nxMailComposeCcChips" class="gmail-cm-chips" aria-live="polite"></div>
+                  <div class="gmail-cm-recip-inputline">
+                    <input type="text" id="nxMailComposeCcInp" class="gmail-cm-input gmail-cm-recip-draft" autocomplete="off" spellcheck="false" placeholder="Same as To — directory lookup, then Add" />
+                    <button type="button" class="gmail-cm-add-recip" id="nxMailComposeCcAdd">Add</button>
+                  </div>
+                </div>
+                <div class="nx-mail-dir-sug gmail-cm-dir-sug" id="nxMailDirSuggestCc"></div>
+              </div>
             </div>
             <div class="gmail-cm-field-row is-hidden" id="nxMailComposeBccRow">
               <span class="gmail-cm-label">Bcc</span>
-              <input type="text" id="nxMailComposeBcc" class="gmail-cm-input gmail-cm-line" autocomplete="off" spellcheck="false" />
+              <div class="gmail-cm-field-grow gmail-cm-recip-grow">
+                <div class="gmail-cm-recip-editor">
+                  <div id="nxMailComposeBccChips" class="gmail-cm-chips" aria-live="polite"></div>
+                  <div class="gmail-cm-recip-inputline">
+                    <input type="text" id="nxMailComposeBccInp" class="gmail-cm-input gmail-cm-recip-draft" autocomplete="off" spellcheck="false" placeholder="Same as To — hidden from other recipients" />
+                    <button type="button" class="gmail-cm-add-recip" id="nxMailComposeBccAdd">Add</button>
+                  </div>
+                </div>
+                <div class="nx-mail-dir-sug gmail-cm-dir-sug" id="nxMailDirSuggestBcc"></div>
+              </div>
             </div>
             <div class="gmail-cm-field-row">
               <span class="gmail-cm-label">Subject</span>

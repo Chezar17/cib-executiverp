@@ -1218,6 +1218,26 @@ details.nx-gmail-msg-fold[open]>.nx-gmail-msg-fold-sum{border-bottom:1px solid r
 .gmail-cm-to-row{align-items:flex-start;padding-right:12px;padding-top:2px;padding-bottom:2px;}
 .gmail-cm-label{flex:0 0 72px;padding:10px 4px 0 16px;font-size:14px;color:#5f6368;user-select:none;}
 .gmail-cm-field-grow{flex:1;min-width:0;position:relative;padding-top:2px;}
+.gmail-cm-recip-grow{align-self:stretch;}
+.gmail-cm-recip-editor{display:flex;flex-direction:column;gap:6px;width:100%;box-sizing:border-box;padding:2px 0 4px;}
+.gmail-cm-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:0;width:100%;}
+.gmail-cm-chip{
+  display:inline-flex;align-items:center;gap:2px;max-width:100%;
+  padding:3px 4px 3px 10px;border-radius:999px;background:#eceff1;font-size:13px;color:#202124;
+  border:1px solid #dadce0;box-sizing:border-box;}
+.gmail-cm-chip-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(240px,100%);font-family:inherit;}
+.gmail-cm-chip-x{
+  border:none;background:transparent;cursor:pointer;color:#5f6368;padding:2px 6px;line-height:1;font-size:16px;border-radius:50%;flex-shrink:0;}
+.gmail-cm-chip-x:hover{background:rgba(95,99,104,.12);color:#202124;}
+.gmail-cm-recip-inputline{display:flex;align-items:stretch;gap:8px;width:100%;min-width:0;}
+.gmail-cm-recip-draft{flex:1;min-width:0;border-radius:8px;border:1px solid transparent;padding:8px 10px;background:#fff;}
+.gmail-cm-recip-draft:hover{border-color:#e8eaed;}
+.gmail-cm-recip-draft:focus{border-color:rgba(201,168,76,.85);outline:none;}
+.gmail-cm-add-recip{
+  flex-shrink:0;border:none;border-radius:8px;cursor:pointer;
+  background:linear-gradient(180deg,#edd78a,var(--gold) 48%,#9a7830);color:#1a1406;
+  padding:0 14px;font-size:13px;font-weight:600;font-family:inherit;white-space:nowrap;}
+.gmail-cm-add-recip:hover{filter:brightness(1.05);}
 .gmail-cm-input{border:none;background:transparent;outline:none;color:#202124;font-size:14px;font-family:inherit;
   padding:10px 8px;line-height:1.4;width:100%;box-sizing:border-box;}
 .gmail-cm-line{padding-left:84px;margin-left:-72px;width:calc(100% + 72px);}

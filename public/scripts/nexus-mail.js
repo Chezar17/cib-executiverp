@@ -314,6 +314,10 @@
   /** @type {{to:string}} */
   let pendingCompose = null
 
+  /** @type {{ to: string[], cc: string[], bcc: string[] }} */
+  let nxComposeRecipients = { to: [], cc: [], bcc: [] }
+  let dirDeb = null
+
   function el(id) {
     return document.getElementById(id)
   }
@@ -367,13 +371,225 @@
     n.classList.remove('is-hidden')
   }
 
-  function normalizeComposeToFieldDisplay() {
-    var inp = el('nxMailComposeTo')
+  function normalizeComposeDraft(inp) {
     if (!inp) return
     var canon = parseRecipientBadge(inp.value)
     if (!canon) return
     var v = inp.value.replace(/\u00a0/g, ' ').trim()
     if (v.toLowerCase() !== canon.toLowerCase()) inp.value = canon
+  }
+
+  function badgeKey(b) {
+    return String(b == null ? '' : b)
+      .trim()
+      .toLowerCase()
+  }
+
+  /** @returns {{ inp: HTMLInputElement|null, sug: HTMLElement|null, addBtn: HTMLElement|null, chips: HTMLElement|null }} */
+  function getRecipCfg(kind) {
+    if (kind === 'to')
+      return {
+        inp: /** @type {HTMLInputElement|null} */ (el('nxMailComposeTo')),
+        sug: el('nxMailDirSuggestTo'),
+        addBtn: el('nxMailComposeToAdd'),
+        chips: el('nxMailComposeToChips'),
+      }
+    if (kind === 'cc')
+      return {
+        inp: /** @type {HTMLInputElement|null} */ (el('nxMailComposeCcInp')),
+        sug: el('nxMailDirSuggestCc'),
+        addBtn: el('nxMailComposeCcAdd'),
+        chips: el('nxMailComposeCcChips'),
+      }
+    return {
+      inp: /** @type {HTMLInputElement|null} */ (el('nxMailComposeBccInp')),
+      sug: el('nxMailDirSuggestBcc'),
+      addBtn: el('nxMailComposeBccAdd'),
+      chips: el('nxMailComposeBccChips'),
+    }
+  }
+
+  function recipientListedInKind(kind, badge) {
+    var k = badgeKey(badge)
+    return nxComposeRecipients[kind].some(function (b) {
+      return badgeKey(b) === k
+    })
+  }
+
+  function clearAllSuggestDropdowns() {
+    ;['to', 'cc', 'bcc'].forEach(function (kind) {
+      var s = getRecipCfg(kind).sug
+      if (s) s.innerHTML = ''
+    })
+  }
+
+  function renderComposeChips(kind) {
+    var chipsEl = getRecipCfg(kind).chips
+    if (!chipsEl) return
+    var arr = nxComposeRecipients[kind] || []
+    chipsEl.innerHTML = arr
+      .map(function (badge, idx) {
+        var label = badgeMailboxLabel(badge)
+        return (
+          '<span class="gmail-cm-chip" data-kind="' +
+          kind +
+          '" data-i="' +
+          idx +
+          '"><span class="gmail-cm-chip-txt">' +
+          escapeHtml(label) +
+          '</span><button type="button" class="gmail-cm-chip-x" aria-label="Remove recipient">&times;</button></span>'
+        )
+      })
+      .join('')
+  }
+
+  function renderAllComposeChips() {
+    renderComposeChips('to')
+    renderComposeChips('cc')
+    renderComposeChips('bcc')
+  }
+
+  /** @param {'to'|'cc'|'bcc'} kind @param {string} [rawFromSuggestion] */
+  function tryAddRecipient(kind, rawFromSuggestion) {
+    var cfg = getRecipCfg(kind)
+    var raw =
+      rawFromSuggestion != null && String(rawFromSuggestion).trim() !== ''
+        ? String(rawFromSuggestion).trim()
+        : ((cfg.inp && cfg.inp.value) || '').trim()
+    if (!raw) return
+    var token = parseRecipientBadge(raw) || raw.trim()
+    if (!token) {
+      nxMailToast('Enter a valid mailbox or badge.', 'error')
+      return
+    }
+    var me = myBadgeFromStorage()
+    if (me && badgesEquivalent(token, me)) {
+      nxMailToast('You cannot add yourself as a recipient.', 'error')
+      return
+    }
+    if (recipientListedInKind(kind, token)) {
+      nxMailToast('That recipient is already in this row.', 'error')
+      return
+    }
+    ;['to', 'cc', 'bcc'].forEach(function (knd) {
+      nxComposeRecipients[knd] = nxComposeRecipients[knd].filter(function (b) {
+        return badgeKey(b) !== badgeKey(token)
+      })
+    })
+    nxComposeRecipients[kind].push(token)
+    if (cfg.inp) cfg.inp.value = ''
+    clearAllSuggestDropdowns()
+    renderAllComposeChips()
+  }
+
+  function composeDirSuggestRun(kind) {
+    var cfg = getRecipCfg(kind)
+    var inp = cfg.inp
+    var sug = cfg.sug
+    if (!inp || !sug) return
+    var q = (inp.value || '').trim()
+    if (q.length < 1) {
+      sug.innerHTML = ''
+      return
+    }
+    var qLookup = parseRecipientBadge(q) || q
+    fetchJson('GET', '/api/nexus-mail?directory=1&q=' + encodeURIComponent(qLookup))
+      .then(function (data) {
+        dirCache = data.directory || []
+        sug.innerHTML = dirCache
+          .slice(0, 24)
+          .map(function (u) {
+            var mail = badgeMailboxLabel(u.badge || '')
+            return (
+              '<button type="button" class="nx-mail-sug-it" data-mail="' +
+              escapeHtml(mail) +
+              '">' +
+              escapeHtml(u.name || u.badge || '') +
+              '<span>' +
+              escapeHtml(mail) +
+              '</span></button>'
+            )
+          })
+          .join('')
+        sug.querySelectorAll('.nx-mail-sug-it').forEach(function (b) {
+          b.onmousedown = function (ev) {
+            ev.preventDefault()
+          }
+          b.onclick = function (ev) {
+            ev.preventDefault()
+            var mailAddr = (b.getAttribute('data-mail') || '').trim()
+            tryAddRecipient(kind, mailAddr)
+          }
+        })
+      })
+      .catch(function () {
+        sug.innerHTML = ''
+      })
+  }
+
+  function scheduleComposeSuggest(kind) {
+    ;['to', 'cc', 'bcc'].forEach(function (k) {
+      if (k !== kind) {
+        var o = getRecipCfg(k).sug
+        if (o) o.innerHTML = ''
+      }
+    })
+    clearTimeout(dirDeb)
+    dirDeb = /** @type {unknown} */ (
+      setTimeout(function () {
+        composeDirSuggestRun(kind)
+      }, 240)
+    )
+  }
+
+  var nxComposeRecipWired = false
+  function wireComposeRecipientUi() {
+    if (nxComposeRecipWired) return
+    nxComposeRecipWired = true
+    ;['to', 'cc', 'bcc'].forEach(function (kind) {
+      var cfg = getRecipCfg(kind)
+      if (cfg.inp) {
+        cfg.inp.addEventListener('input', function () {
+          scheduleComposeSuggest(kind)
+        })
+        cfg.inp.addEventListener('focus', function () {
+          scheduleComposeSuggest(kind)
+        })
+        cfg.inp.addEventListener('blur', function () {
+          normalizeComposeDraft(cfg.inp)
+        })
+      }
+      if (cfg.addBtn) {
+        cfg.addBtn.addEventListener('click', function (ev) {
+          ev.preventDefault()
+          tryAddRecipient(kind)
+        })
+      }
+      if (cfg.inp) {
+        cfg.inp.addEventListener('keydown', function (ev) {
+          if (ev.key !== 'Enter') return
+          ev.preventDefault()
+          tryAddRecipient(kind)
+        })
+      }
+    })
+    var modal = el('nxMailComposeModal')
+    if (modal) {
+      modal.addEventListener('click', function (ev) {
+        var x = typeof ev.target.closest === 'function' ? ev.target.closest('.gmail-cm-chip-x') : null
+        if (!x || !modal.contains(x)) return
+        var chip = x.closest('.gmail-cm-chip')
+        if (!chip) return
+        var k = chip.getAttribute('data-kind')
+        var idx = parseInt(chip.getAttribute('data-i') || '-1', 10)
+        if (k !== 'to' && k !== 'cc' && k !== 'bcc') return
+        var arr = nxComposeRecipients[k]
+        if (idx >= 0 && arr) {
+          arr.splice(idx, 1)
+          renderComposeChips(k)
+        }
+      })
+    }
   }
 
   function renderNxComposeAttachments() {
@@ -945,12 +1161,15 @@
   function resetComposeCcBccUi() {
     var ccRow = el('nxMailComposeCcRow')
     var bRow = el('nxMailComposeBccRow')
-    var ccIn = el('nxMailComposeCc')
-    var bIn = el('nxMailComposeBcc')
     if (ccRow) ccRow.classList.add('is-hidden')
     if (bRow) bRow.classList.add('is-hidden')
-    if (ccIn) ccIn.value = ''
-    if (bIn) bIn.value = ''
+    nxComposeRecipients = { to: [], cc: [], bcc: [] }
+    ;['to', 'cc', 'bcc'].forEach(function (kind) {
+      var cfg = getRecipCfg(kind)
+      if (cfg.inp) cfg.inp.value = ''
+      if (cfg.sug) cfg.sug.innerHTML = ''
+    })
+    renderAllComposeChips()
   }
 
   function showCompose() {
@@ -967,15 +1186,14 @@
     var bd = el('nxMailComposeBody')
     var imgDraft = el('nxMailComposeImgDraft')
     var imgRow = el('nxMailComposeImgRow')
-    if (toIn) toIn.value = ''
     if (subIn) subIn.value = ''
     if (bd) bd.innerHTML = ''
     nxComposeAttachUrls = []
     if (imgDraft) imgDraft.value = ''
     if (imgRow) imgRow.classList.add('is-hidden')
-    var sug = el('nxMailDirSuggest')
-    if (sug) sug.innerHTML = ''
     resetComposeCcBccUi()
+    if (toIn) toIn.value = ''
+    clearAllSuggestDropdowns()
     renderNxComposeAttachments()
     setNxComposeErr('')
 
@@ -992,65 +1210,17 @@
     setNxComposeErr('')
   }
 
-  let dirDeb
-  async function composeDirSuggest() {
-    const q =
-      (((el('nxMailComposeTo') && el('nxMailComposeTo').value) || '') + '').trim()
-    const sug = el('nxMailDirSuggest')
-    if (!sug) return
-    clearTimeout(dirDeb)
-    if (q.length < 1) {
-      sug.innerHTML = ''
-      return
-    }
-    dirDeb = setTimeout(async function () {
-      try {
-        const qLookup = parseRecipientBadge(q) || q.trim()
-        const data = await fetchJson(
-          'GET',
-          '/api/nexus-mail?directory=1&q=' + encodeURIComponent(qLookup),
-        )
-        dirCache = data.directory || []
-        sug.innerHTML = dirCache
-          .slice(0, 24)
-          .map(function (u) {
-            var mail = badgeMailboxLabel(u.badge || '')
-            return (
-              `<button type="button" class="nx-mail-sug-it" data-mail="${escapeHtml(mail)}">${escapeHtml(
-                u.name || u.badge || '',
-              )}<span>${escapeHtml(mail)}</span></button>`
-            )
-          })
-          .join('')
-        sug.querySelectorAll('.nx-mail-sug-it').forEach(function (b) {
-          b.onclick = function () {
-            var mailAddr = (b.getAttribute('data-mail') || '').trim()
-            var inp = el('nxMailComposeTo')
-            if (inp) inp.value = mailAddr
-            sug.innerHTML = ''
-          }
-        })
-      } catch (_) {
-        sug.innerHTML = ''
-      }
-    }, 240)
-  }
-
   async function submitComposeNew() {
-    var toEl = el('nxMailComposeTo')
-    var ccEl = el('nxMailComposeCc')
-    var bccEl = el('nxMailComposeBcc')
-    var toStr = ((toEl && toEl.value) || '').trim()
-    var ccStr = ((ccEl && ccEl.value) || '').trim()
-    var bccStr = ((bccEl && bccEl.value) || '').trim()
+    var toA = nxComposeRecipients.to.slice()
+    var ccA = nxComposeRecipients.cc.slice()
+    var bccA = nxComposeRecipients.bcc.slice()
     var subject = ((el('nxMailComposeSub') && el('nxMailComposeSub').value) || '').trim()
     var bodyEl = el('nxMailComposeBody')
     var body = composeBodyFromEditor(bodyEl)
     var attachmentUrls = nxComposeAttachUrls.slice()
 
-    if (!toStr && !ccStr && !bccStr) {
-      var errTo =
-        'Add at least one recipient in To, Cc, or Bcc (comma-separated badges, e.g. user@agency.gov).'
+    if (!toA.length && !ccA.length && !bccA.length) {
+      var errTo = 'Add at least one recipient with Add next to To, Cc, or Bcc (directory search uses the same users table as To).'
       setNxComposeErr(errTo)
       nxMailToast(errTo, 'error')
       return
@@ -1064,9 +1234,9 @@
     setNxComposeErr('')
     try {
       var payload = {
-        to: toStr,
-        cc: ccStr,
-        bcc: bccStr,
+        to: toA,
+        cc: ccA,
+        bcc: bccA,
         subject,
         body,
         image_urls: attachmentUrls,
@@ -1121,7 +1291,15 @@
       ccBtn._nxBound = true
       ccBtn.onclick = function () {
         var r = el('nxMailComposeCcRow')
-        if (r) r.classList.toggle('is-hidden')
+        if (!r) return
+        r.classList.toggle('is-hidden')
+        if (!r.classList.contains('is-hidden')) {
+          var ci = el('nxMailComposeCcInp')
+          if (ci)
+            setTimeout(function () {
+              ci.focus()
+            }, 0)
+        }
       }
     }
     var bccBtn = el('nxMailComposeBccBtn')
@@ -1129,7 +1307,15 @@
       bccBtn._nxBound = true
       bccBtn.onclick = function () {
         var r = el('nxMailComposeBccRow')
-        if (r) r.classList.toggle('is-hidden')
+        if (!r) return
+        r.classList.toggle('is-hidden')
+        if (!r.classList.contains('is-hidden')) {
+          var bi = el('nxMailComposeBccInp')
+          if (bi)
+            setTimeout(function () {
+              bi.focus()
+            }, 0)
+        }
       }
     }
     var tbAa = el('nxMailComposeToolbarToggle')
@@ -1255,14 +1441,7 @@
         compClose._nxBound = true
         compClose.onclick = hideCompose
       }
-      var cto = el('nxMailComposeTo')
-      if (cto && !cto._nxBound) {
-        cto._nxBound = true
-        cto.oninput = composeDirSuggest
-        cto.addEventListener('blur', function () {
-          normalizeComposeToFieldDisplay()
-        })
-      }
+      wireComposeRecipientUi()
       var cDisc = el('nxMailComposeDiscard')
       if (cDisc && !cDisc._nxBound) {
         cDisc._nxBound = true
@@ -1283,6 +1462,7 @@
         })
       }
       bindGmailCompose()
+      wireComposeRecipientUi()
       nxWireMailAttachmentsOnce()
       bindGmailReadQuickReplyOnce()
     },
