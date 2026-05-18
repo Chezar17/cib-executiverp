@@ -120,30 +120,6 @@ async function fetchThreadsForViewer(supabase, meCanon) {
   return { error: null, rows }
 }
 
-async function findExistingThreadDyad(supabase, loCanon, hiCanon) {
-  const { data: eq } = await supabase
-    .from('nx_mail_threads')
-    .select('id,subject')
-    .eq('badge_low', loCanon)
-    .eq('badge_high', hiCanon)
-    .maybeSingle()
-
-  if (eq?.id) return eq
-
-  const pLo = escapeIlikeExact(loCanon)
-  const pHi = escapeIlikeExact(hiCanon)
-  const { data: fuzzy } = await supabase
-    .from('nx_mail_threads')
-    .select('id,subject,badge_low,badge_high')
-    .ilike('badge_low', pLo)
-    .ilike('badge_high', pHi)
-    .limit(4)
-
-  const hit = fuzzy?.find((x) => badgesEquivalent(x.badge_low, loCanon) && badgesEquivalent(x.badge_high, hiCanon))
-  return hit ? { id: hit.id, subject: hit.subject } : null
-}
-
-function sanitizeImageUrl(u) {
   const s = (u ?? '').trim()
   if (!s) return null
   if (s.length > 2048) return null
@@ -463,34 +439,28 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Recipient does not match thread' })
         }
       } else {
+        /** Compose baru = selalu utas baru (layak Gmail). Balasan = POST dengan `thread_id`. */
         const lo = pair[0]
         const hi = pair[1]
-        let thr = await findExistingThreadDyad(supabase, lo, hi)
+        const sub = subject.slice(0, 200) || '(No subject)'
+        const ins = await supabase
+          .from('nx_mail_threads')
+          .insert({
+            badge_low: lo,
+            badge_high: hi,
+            subject: sub,
+          })
+          .select('id')
+          .single()
 
-        if (!thr?.id) {
-          const sub = subject.slice(0, 200) || '(No subject)'
-          const ins = await supabase
-            .from('nx_mail_threads')
-            .insert({
-              badge_low: lo,
-              badge_high: hi,
-              subject: sub,
-            })
-            .select('id')
-            .single()
+        if (ins.error)
+          return jsonApiError(res, 500, 'Failed to create thread', {
+            supabase: ins.error,
+            context: 'nexus-mail insert thread',
+            hint: sendRlsHint(ins.error) ?? undefined,
+          })
 
-          if (ins.error)
-            return jsonApiError(res, 500, 'Failed to create thread', {
-              supabase: ins.error,
-              context: 'nexus-mail insert thread',
-              hint: sendRlsHint(ins.error) ?? undefined,
-            })
-          thr = ins.data
-        } else if (subject && !(thr.subject && thr.subject.trim() && thr.subject !== '(No subject)')) {
-          await supabase.from('nx_mail_threads').update({ subject: subject.slice(0, 200) }).eq('id', thr.id)
-        }
-
-        threadId = thr.id
+        threadId = ins.data.id
       }
 
       const nowIso = new Date().toISOString()
