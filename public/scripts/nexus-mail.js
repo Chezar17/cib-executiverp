@@ -3,7 +3,7 @@
   'use strict'
 
   /** @typedef {{ id:string, peer_badge:string, peer_name:string, subject:string, updated_at:string, last_sender?:string|null, last_snippet?:string, unread_count:number }} NxThread */
-  /** @typedef {{ id:string, sender_badge:string, body:string, image_url:string|null, image_urls:string[], created_at:string }} NxMessage */
+  /** @typedef {{ id:string, sender_badge:string, sender_name?:string, body:string, image_url:string|null, image_urls:string[], created_at:string }} NxMessage */
 
   /** @returns {Record<string,string>} */
   function hdr() {
@@ -19,6 +19,17 @@
       const raw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cib_session') : ''
       if (!raw) return ''
       return String(JSON.parse(raw).badge || '').trim()
+    } catch (_) {
+      return ''
+    }
+  }
+
+  /** Nama untuk baris pengirim "Anda" (dari sesi Nexus). */
+  function myDisplayNameFromStorage() {
+    try {
+      const raw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cib_session') : ''
+      if (!raw) return ''
+      return String(JSON.parse(raw).name || '').trim()
     } catch (_) {
       return ''
     }
@@ -653,13 +664,17 @@
     const peerAddr = escapeHtml(badgeMailboxLabel(peer) || peer || '—')
     const selfAddr = escapeHtml(badgeMailboxLabel(meBadge) || String(meBadge || '').trim() || '—')
     const peerLabel = escapeHtml(meta.peer_name || peer || '')
+    var myPretty = myDisplayNameFromStorage()
     var lastIx = msgs.length - 1
 
     function pieceForSender(m, prevRowForQuote) {
       const mine = meBadge && badgesEquivalent(m.sender_badge, meBadge)
-      const fromName = mine
-        ? 'Anda'
-        : escapeHtml(m.sender_badge === peer ? (meta.peer_name || m.sender_badge) : m.sender_badge)
+      const fromNameUncached = mine
+        ? myPretty || 'Anda'
+        : String(m.sender_name || '').trim() ||
+          (badgesEquivalent(m.sender_badge, peer) ? String(meta.peer_name || '').trim() : '') ||
+          String(m.sender_badge || '').trim()
+      const fromName = escapeHtml(fromNameUncached || '—')
       const fromAddr = mine
         ? selfAddr
         : escapeHtml(badgeMailboxLabel(m.sender_badge || '') || String(m.sender_badge || '').trim() || '')
@@ -668,10 +683,10 @@
           ? `kepada <span class="nx-gmail-kepada-target">${peerLabel || peerAddr}</span>`
           : `kepada <span class="nx-gmail-kepada-me">saya</span>`
       const avatarSeed = mine
-        ? String(meBadge || 'Anda').trim()
-        : m.sender_badge === peer
-          ? meta.peer_name || peer || ''
-          : String(m.sender_badge || '')
+        ? String(myPretty || meBadge || 'Anda').trim()
+        : badgesEquivalent(m.sender_badge, peer)
+          ? String(meta.peer_name || peer || '').trim()
+          : String(fromNameUncached || m.sender_badge || '')
       const letters = nxAvatarLetters(avatarSeed || '—')
       const when = escapeHtml(fmtTime(m.created_at))
       const clockRel =
@@ -699,22 +714,25 @@
       if (prevRowForQuote && msgs.length >= 2) {
         var pm = prevRowForQuote
         var pmMine = meBadge && badgesEquivalent(pm.sender_badge, meBadge)
-        var qName = pmMine
-          ? 'Anda'
-          : escapeHtml(pm.sender_badge === peer ? (meta.peer_name || pm.sender_badge) : pm.sender_badge)
+        var qNmRaw = pmMine
+          ? myPretty || 'Anda'
+          : String(pm.sender_name || '').trim() ||
+            (badgesEquivalent(pm.sender_badge, peer) ? String(meta.peer_name || '').trim() : '') ||
+            String(pm.sender_badge || '')
         var qAddr = escapeHtml(
           badgeMailboxLabel(pm.sender_badge || '') || String(pm.sender_badge || '').trim() || '',
         )
         var cuando = escapeHtml(fmtPadaMenulis(pm.created_at))
         var qp = nxMailSnippetPlain(pm.body, 600)
         var qBody = qp ? escapeHtml(qp).replace(/\n/g, '<br/>') : ''
+        var qNameEscaped = escapeHtml(String(qNmRaw || '—').trim())
         quoteTail =
           '<div class="nx-gmail-thread-quote">' +
           '<span class="nx-gmail-quote-line">' +
           'Pada ' +
           cuando +
           ', <strong>' +
-          qName +
+          qNameEscaped +
           '</strong> &lt;' +
           qAddr +
           '&gt; menulis:</span>' +

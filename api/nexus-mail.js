@@ -284,9 +284,43 @@ export default async function handler(req, res) {
       const { data: urow } = await supabase.from('users').select('name').eq('badge', peer).maybeSingle()
       if (urow?.name) peerName = urow.name
 
+      /** Nama tampilan per badge (huruf dari `users`; key lower-case). */
+      const badgeDisplayName = new Map()
+
+      function rememberName(rawBadge, displayName) {
+        const key = trimBadge(rawBadge || '').toLowerCase()
+        const nm = String(displayName ?? '').trim()
+        if (key && nm) badgeDisplayName.set(key, nm)
+      }
+
+      const senderKeys = new Set(
+        (msgs || []).map((m) => trimBadge(m.sender_badge)).filter(Boolean).concat(trimBadge(peer), trimBadge(me)),
+      )
+      senderKeys.delete('')
+
+      if (senderKeys.size > 0) {
+        const { data: namRows } = await supabase
+          .from('users')
+          .select('badge,name')
+          .in('badge', [...senderKeys])
+
+        for (const r of namRows ?? []) rememberName(r.badge, r.name)
+      }
+      if (urow?.name && trimBadge(peer))
+        rememberName(peer, peerName)
+
+      const senderNameLookup = (rawBadge) => {
+        const k = trimBadge(rawBadge || '').toLowerCase()
+        return k ? badgeDisplayName.get(k) ?? '' : ''
+      }
+
       return res.status(200).json({
         thread: { ...thr, peer_badge: peer, peer_name: peerName },
-        messages: (msgs || []).map(formatMessagePayload),
+        messages: (msgs || []).map((m) => {
+          const base = formatMessagePayload(m)
+          const sn = senderNameLookup(m.sender_badge)
+          return sn ? { ...base, sender_name: sn } : base
+        }),
       })
     }
 
