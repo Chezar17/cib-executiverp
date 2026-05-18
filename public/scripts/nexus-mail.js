@@ -14,11 +14,23 @@
     }
   }
 
+  /** Sama seperti PortalAuth (`cib_badge`); beberapa halaman juga pakai JSON `cib_session`. */
   function myBadgeFromStorage() {
     try {
-      const raw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cib_session') : ''
-      if (!raw) return ''
-      return String(JSON.parse(raw).badge || '').trim()
+      if (typeof sessionStorage === 'undefined') return ''
+      const flat = sessionStorage.getItem('cib_badge')
+      if (flat != null && String(flat).trim()) return String(flat).trim()
+      const raw = sessionStorage.getItem('cib_session')
+      if (raw)
+        try {
+          const b = JSON.parse(raw).badge
+          if (b != null && String(b).trim()) return String(b).trim()
+        } catch (_) {}
+      if (typeof PortalAuth !== 'undefined' && PortalAuth.getSession) {
+        var s = PortalAuth.getSession()
+        if (s && s.badge != null && String(s.badge).trim()) return String(s.badge).trim()
+      }
+      return ''
     } catch (_) {
       return ''
     }
@@ -812,7 +824,11 @@
       const meta = data.thread || {}
       openThread = { meta, msgs: data.messages || [] }
       renderHeader(openThread.meta)
-      renderMessages(openThread.meta, openThread.msgs, myBadgeFromStorage())
+      renderMessages(
+        openThread.meta,
+        openThread.msgs,
+        String(openThread.meta.viewer_badge || '').trim() || myBadgeFromStorage(),
+      )
       const replyHdr = el('nxMailReplyMeta')
       if (replyHdr)
         replyHdr.innerHTML =

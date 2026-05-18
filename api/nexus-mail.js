@@ -285,7 +285,13 @@ export default async function handler(req, res) {
       if (urow?.name) peerName = urow.name
 
       return res.status(200).json({
-        thread: { ...thr, peer_badge: peer, peer_name: peerName },
+        thread: {
+          ...thr,
+          peer_badge: peer,
+          peer_name: peerName,
+          /** Badge pembaca sesi — sinkron dengan `sender_badge` di DB (beda dari kunci sesi kosong/lama di klien). */
+          viewer_badge: me,
+        },
         messages: (msgs || []).map(formatMessagePayload),
       })
     }
