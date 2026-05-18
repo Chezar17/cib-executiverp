@@ -28,16 +28,34 @@
     const opt = { method, headers: hdr() }
     if (body !== undefined && body !== null) opt.body = JSON.stringify(body)
     const r = await fetch(url, opt)
-    const ct = r.headers.get('content-type') || ''
+    const ct = (r.headers.get('content-type') || '').toLowerCase()
+    const txt = await r.text()
+    const trimmed = txt.trim()
+    const tryParse =
+      ct.includes('application/json') ||
+      ct.includes('text/json') ||
+      ct.includes('+json') ||
+      (trimmed.length > 0 && (trimmed[0] === '{' || trimmed[0] === '['))
     let j = null
-    if (ct.includes('application/json'))
+    if (tryParse && trimmed) {
       try {
-        j = await r.json()
+        j = JSON.parse(txt)
       } catch (_) {
-        /* empty */
+        j = null
       }
-    if (!r.ok) throw new Error((j && j.error) || r.statusText || String(r.status))
-    return j || {}
+    }
+    if (!r.ok)
+      throw new Error((j && j.error) || r.statusText || String(r.status))
+    return j && typeof j === 'object' ? j : {}
+  }
+
+  /** Inbox GET: beberapa proxy tidak mengirim Content-Type JSON — tetap parse isi `{ threads }`. */
+  function coerceInboxThreads(data) {
+    if (!data || typeof data !== 'object') return []
+    const t = /** @type {{ threads?: unknown }} */ (data).threads
+    if (Array.isArray(t)) return t
+    if (Array.isArray(data)) return data
+    return []
   }
 
   function escapeHtml(s) {
@@ -214,6 +232,12 @@
     } catch (_) {
       return ''
     }
+  }
+
+  /** Waktu singkat untuk baris kotak masuk dan label pesan (relatif atau jam). */
+  function fmtTime(iso) {
+    if (!iso) return ''
+    return fmtRelativeId(iso) || fmtClockId(iso)
   }
 
   function fmtPadaMenulis(iso) {
@@ -509,7 +533,7 @@
   async function loadInbox() {
     try {
       const data = await fetchJson('GET', '/api/nexus-mail')
-      threads = data.threads || []
+      threads = coerceInboxThreads(data)
       renderThreadRows()
       updateUnreadBell()
     } catch (e) {
