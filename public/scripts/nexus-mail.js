@@ -62,7 +62,7 @@
     const h = String(host || '')
       .trim()
       .toLowerCase()
-    if (!h || h.includes('..') || h.includes('/') || h.includes('\\') || h.includes(':'))
+    if (!h || h.includes('@') || h.includes('..') || h.includes('/') || h.includes('\\') || h.includes(':'))
       return false
     const labels = h.split('.').filter(Boolean)
     if (labels.length < 2) return false
@@ -72,16 +72,26 @@
   }
 
   /** Local badge part with optional `badge@host.gov`; casing preserved — server resolves to `users.badge`. */
+  /** Accepts accidental doubling like `badge@cib.gov@cib.gov` using the hostname after the last `@`. */
   function parseRecipientBadge(raw) {
     let s = String(raw == null ? '' : raw).trim()
     if (!s) return ''
-    const at = s.indexOf('@')
-    if (at >= 0) {
-      const dom = s.slice(at + 1)
-      if (!isGovernmentMailHostname(dom)) return ''
-      s = s.slice(0, at).trim()
-    }
-    return s
+    const atIdx = s.indexOf('@')
+    if (atIdx < 0) return s.trim()
+    const parts = s
+      .split('@')
+      .map(function (p) {
+        return p.trim()
+      })
+      .filter(function (p) {
+        return p.length > 0
+      })
+    if (parts.length < 2) return ''
+    const local = parts[0]
+    const tailHost = parts[parts.length - 1]
+    if (isGovernmentMailHostname(tailHost)) return local
+    if (parts.length === 2 && isGovernmentMailHostname(parts[1])) return local
+    return ''
   }
 
   /** Display line for picker: `badge@defaultGov` — default host is Nexus convenience only. */
@@ -206,6 +216,36 @@
 
   function el(id) {
     return document.getElementById(id)
+  }
+
+  /** In-modal alert; toast sits under #nxMailOverlay without a high enough z-index. */
+  function setNxComposeErr(message) {
+    var n = el('nxMailComposeErr')
+    if (!n) return
+    var msg = String(message == null ? '' : message)
+    if (!msg) {
+      n.textContent = ''
+      n.classList.add('is-hidden')
+      return
+    }
+    n.textContent = msg
+    n.classList.remove('is-hidden')
+  }
+
+  function normalizeComposeToFieldDisplay() {
+    var inp = el('nxMailComposeTo')
+    if (!inp) return
+    var b = parseRecipientBadge(inp.value)
+    if (!b) return
+    var canon = badgeToDefaultGovMail(b)
+    if (!canon) return
+    if (
+      inp.value
+        .replace(/\u00a0/g, ' ')
+        .trim()
+        .toLowerCase() !== canon.toLowerCase()
+    )
+      inp.value = canon
   }
 
   function renderNxComposeAttachments() {
@@ -580,6 +620,7 @@
     if (sug) sug.innerHTML = ''
     resetComposeCcBccUi()
     renderNxComposeAttachments()
+    setNxComposeErr('')
 
     if (bd) bd.focus()
     else if (toIn) toIn.focus()
@@ -591,6 +632,7 @@
       m.classList.remove('is-open')
       m.setAttribute('aria-hidden', 'true')
     }
+    setNxComposeErr('')
   }
 
   let dirDeb
@@ -647,14 +689,16 @@
     var attachmentUrls = nxComposeAttachUrls.slice()
 
     if (!recipient_badge || (!body && !attachmentUrls.length)) {
-      if (!recipient_badge)
-        nxMailToast(
-          'Isi kolom Kepada: badge atau email *.gov yang valid (contoh CID-7429@lscs.gov).',
-          'error',
-        )
-      else nxMailToast('Tulis pesan atau tambahkan minimal satu URL gambar (http/https) lewat Tambah.', 'error')
+      var errTo =
+        'Kepada tidak valid. Perbaiki bentuk badge@instansi.gov (hindari @ganda, contoh salah: user@cib.gov@cib.gov).'
+      var errBody = 'Tulis pesan atau tambahkan minimal satu URL gambar (http/https) lewat Tambah.'
+      if (!recipient_badge) setNxComposeErr(errTo)
+      else setNxComposeErr(errBody)
+      if (!recipient_badge) nxMailToast(errTo, 'error')
+      else nxMailToast(errBody, 'error')
       return
     }
+    setNxComposeErr('')
     try {
       var payload = {
         recipient_badge,
@@ -670,6 +714,7 @@
       if (sent.thread_id) await openThreadFn(sent.thread_id)
     } catch (e) {
       var msg = e && e.message ? e.message : String(e)
+      setNxComposeErr(msg)
       nxMailToast(msg, 'error')
     }
   }
@@ -849,6 +894,9 @@
       if (cto && !cto._nxBound) {
         cto._nxBound = true
         cto.oninput = composeDirSuggest
+        cto.addEventListener('blur', function () {
+          normalizeComposeToFieldDisplay()
+        })
       }
       var cDisc = el('nxMailComposeDiscard')
       if (cDisc && !cDisc._nxBound) {
