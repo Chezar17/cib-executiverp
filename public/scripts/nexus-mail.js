@@ -48,7 +48,7 @@
       .replace(/"/g, '&quot;')
   }
 
-  /** Default domain suffix for autocomplete from directory (`users.badge`). To-field accepts any *.gov hostname. */
+  /** Default gov host only when `users.badge` is a bare slug (legacy); otherwise show badge as stored. */
   const DEFAULT_GOV_MAIL_HOST = 'cib.gov'
   const DEFAULT_GOV_MAIL_SUFFIX = '@' + DEFAULT_GOV_MAIL_HOST
 
@@ -71,13 +71,11 @@
     return labels[labels.length - 1] === 'gov'
   }
 
-  /** Local badge part with optional `badge@host.gov`; casing preserved — server resolves to `users.badge`. */
-  /** Accepts accidental doubling like `badge@cib.gov@cib.gov` using the hostname after the last `@`. */
+  /** Normalized mailbox / badge key for Nexus Mail (`users.badge` is typically full `user@agency.gov`). */
   function parseRecipientBadge(raw) {
     let s = String(raw == null ? '' : raw).trim()
     if (!s) return ''
-    const atIdx = s.indexOf('@')
-    if (atIdx < 0) return s.trim()
+    if (s.indexOf('@') < 0) return s
     const parts = s
       .split('@')
       .map(function (p) {
@@ -89,15 +87,20 @@
     if (parts.length < 2) return ''
     const local = parts[0]
     const tailHost = parts[parts.length - 1]
-    if (isGovernmentMailHostname(tailHost)) return local
-    if (parts.length === 2 && isGovernmentMailHostname(parts[1])) return local
-    return ''
+    if (!isGovernmentMailHostname(tailHost)) return ''
+    return local + '@' + tailHost
   }
 
-  /** Display line for picker: `badge@defaultGov` — default host is Nexus convenience only. */
-  function badgeToDefaultGovMail(badge) {
+  /** Label for compose list / headers — never append `@cib.gov` if badge already ends with valid `*.gov`. */
+  function badgeMailboxLabel(badge) {
     var b = String(badge ?? '').trim()
     if (!b) return ''
+    var at = b.indexOf('@')
+    if (at > 0) {
+      var dom = b.slice(at + 1)
+      if (isGovernmentMailHostname(dom)) return b
+    }
+    if (at === 0) return ''
     return b + DEFAULT_GOV_MAIL_SUFFIX
   }
 
@@ -235,17 +238,10 @@
   function normalizeComposeToFieldDisplay() {
     var inp = el('nxMailComposeTo')
     if (!inp) return
-    var b = parseRecipientBadge(inp.value)
-    if (!b) return
-    var canon = badgeToDefaultGovMail(b)
+    var canon = parseRecipientBadge(inp.value)
     if (!canon) return
-    if (
-      inp.value
-        .replace(/\u00a0/g, ' ')
-        .trim()
-        .toLowerCase() !== canon.toLowerCase()
-    )
-      inp.value = canon
+    var v = inp.value.replace(/\u00a0/g, ' ').trim()
+    if (v.toLowerCase() !== canon.toLowerCase()) inp.value = canon
   }
 
   function renderNxComposeAttachments() {
@@ -462,7 +458,7 @@
       return
     }
     const nm = escapeHtml(meta.peer_name || meta.peer_badge || '')
-    const bd = escapeHtml(badgeToDefaultGovMail(meta.peer_badge || ''))
+    const bd = escapeHtml(badgeMailboxLabel(meta.peer_badge || ''))
     const sub = escapeHtml(meta.subject || '')
     h.innerHTML =
       `<div class="nx-mail-h-left">
@@ -532,7 +528,7 @@
       if (replyHdr)
         replyHdr.innerHTML =
           'Reply to <strong>' +
-          escapeHtml(badgeToDefaultGovMail(meta.peer_badge || '') || meta.peer_badge || '') +
+          escapeHtml(badgeMailboxLabel(meta.peer_badge || '') || meta.peer_badge || '') +
           '</strong>'
       try {
         await fetchJson('PATCH', '/api/nexus-mail', { thread_id: id })
@@ -657,7 +653,7 @@
         sug.innerHTML = dirCache
           .slice(0, 24)
           .map(function (u) {
-            var mail = badgeToDefaultGovMail(u.badge || '')
+            var mail = badgeMailboxLabel(u.badge || '')
             return (
               `<button type="button" class="nx-mail-sug-it" data-mail="${escapeHtml(mail)}">${escapeHtml(
                 u.name || u.badge || '',

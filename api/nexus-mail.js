@@ -31,7 +31,7 @@ function isGovernmentMailHostname(host) {
   const h = String(host ?? '')
     .trim()
     .toLowerCase()
-  if (!h || h.includes('..') || h.includes('/') || h.includes('\\') || h.includes(':'))
+  if (!h || h.includes('@') || h.includes('..') || h.includes('/') || h.includes('\\') || h.includes(':'))
     return false
   const labels = h.split('.').filter(Boolean)
   if (labels.length < 2) return false
@@ -61,6 +61,20 @@ async function resolveUserBadge(supabase, rawInput) {
   const { data: hit } = await supabase.from('users').select('badge').eq('badge', t).maybeSingle()
 
   if (hit?.badge) return hit.badge
+
+  /** `users.badge` may be stored as full `officer@agency.gov`; support typing local-part only. */
+  if (!t.includes('@')) {
+    const prefix = `${escapeIlikeExact(t)}@%`
+    const { data: cands } = await supabase.from('users').select('badge').ilike('badge', prefix).limit(48)
+    if (cands?.length) {
+      const low = t.toLowerCase()
+      const matches = cands.filter(
+        (r) => stripGovernmentMailLocalPart(r.badge).toLowerCase() === low,
+      )
+      if (matches.length === 1) return matches[0].badge
+      if (matches.length > 1) return null
+    }
+  }
 
   const pat = escapeIlikeExact(t)
   const { data: rows } = await supabase.from('users').select('badge').ilike('badge', pat).limit(8)
@@ -404,7 +418,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = typeof req.body === 'object' && req.body ? req.body : {}
-      const typedRecipient = stripGovernmentMailLocalPart(body.recipient_badge)
+      const typedRecipient = trimBadge(body.recipient_badge)
       const recipientCanon = typedRecipient ? await resolveUserBadge(supabase, typedRecipient) : null
       const rawBody = typeof body.body === 'string' ? body.body.trim() : ''
       const subject = typeof body.subject === 'string' ? body.subject.trim() : ''
