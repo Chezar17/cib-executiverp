@@ -120,6 +120,7 @@ async function fetchThreadsForViewer(supabase, meCanon) {
   return { error: null, rows }
 }
 
+function sanitizeImageUrl(u) {
   const s = (u ?? '').trim()
   if (!s) return null
   if (s.length > 2048) return null
