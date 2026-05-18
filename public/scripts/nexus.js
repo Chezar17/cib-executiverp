@@ -52,6 +52,7 @@
       setTimeout(function () {
         if (window.ObSystem) ObSystem.init(session)
       }, 800)
+      if (window.NxMail) NxMail.init()
     }
   });
 

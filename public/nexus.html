@@ -39,6 +39,10 @@
       <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
       <span class="nx-notif-badge" id="nxNotifCount" style="display:none;">0</span>
     </button>
+    <button type="button" class="nx-notif-bell nx-mail-top-btn" id="nxMailBellBtn" onclick="NxMail.open()" title="Nexus Mail" aria-label="Nexus Mail">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      <span class="nx-notif-badge" id="nxMailUnreadBadge" style="display:none;">0</span>
+    </button>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 </div>
@@ -420,6 +424,21 @@
             </div>
 
           </div>
+
+            <div class="dash-mod mod-gold nx-dash-mail-tile" onclick="NxMail.open()" style="border-top:2px solid rgba(201,168,76,.5);cursor:pointer;">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon" style="border-color:rgba(201,168,76,.38);background:rgba(201,168,76,.08);">
+                  <svg viewBox="0 0 24 24"><path fill="#C9A84C" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                <span class="dash-mod-badge badge-ts">INTERNAL</span>
+              </div>
+              <div class="dash-mod-name">Nexus Mail</div>
+              <div class="dash-mod-desc">Officer-to-officer messages · Compose · HTTPS image URLs (reports style)</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">Authenticated session only</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
         </div>
 
       </div><!-- /dash-modules -->
@@ -736,6 +755,140 @@
 
 <div id="inf-toast" style="position:fixed;bottom:28px;right:28px;z-index:9000;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
+
+<!-- NEXUS MAIL FULLSCREEN -->
+<div id="nxMailOverlay" class="is-hidden" aria-hidden="true">
+  <div class="nx-mail-backdrop" onclick="NxMail.close()" aria-hidden="true"></div>
+  <div class="nx-mail-shell" role="dialog" aria-modal="true" aria-label="Nexus Mail" onclick="event.stopPropagation()">
+    <div class="nx-mail-topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="nx-mail-brand">Nexus Mail</span>
+        <span class="nx-mail-chip">1:1 secure · TS compartment</span>
+      </div>
+      <div class="nx-mail-actions">
+        <button type="button" class="nx-mail-close" onclick="NxMail.close()" aria-label="Close Nexus Mail">&times;</button>
+      </div>
+    </div>
+    <div class="nx-mail-body">
+      <aside class="nx-mail-rail" aria-label="Compose shortcut">
+        <button type="button" class="nx-mail-compose-fab" id="nxMailComposeFab" title="Compose">&plus;</button>
+        <div class="nx-mail-rail-tip">Inbox</div>
+      </aside>
+      <div class="nx-mail-list-wrap">
+        <div class="nx-mail-list-head">Primary</div>
+        <div class="nx-mail-thread-list" id="nxMailThreadList"></div>
+      </div>
+      <main class="nx-mail-conv">
+        <header class="nx-mail-thread-head" id="nxMailThreadHeader"></header>
+        <div id="nxMailMsgs" class="nx-mail-msgs"><div class="nx-mail-empty">Select a conversation or Compose new mail.</div></div>
+        <footer id="nxMailComposer" class="nx-mail-composer">
+          <div id="nxMailReplyMeta" class="nx-mail-reply-line">Reply</div>
+          <textarea id="nxMailReplyBody" class="nx-mail-inp-msg" placeholder="Write your reply…"></textarea>
+          <label class="nx-mail-reply-attach-label" for="nxMailReplyImg">Gambar HTTPS (beberapa URL, baris baru atau koma)</label>
+          <textarea id="nxMailReplyImg" class="nx-mail-reply-img-ta" rows="3" spellcheck="false" placeholder="https://…&#10;https://…"></textarea>
+          <div id="nxMailReplyImgPreview" class="nx-mail-reply-attach-preview" aria-hidden="true"></div>
+          <div class="nx-mail-field-row">
+            <button type="button" id="nxMailSendReplyBtn" class="nx-mail-send-btn">Send</button>
+          </div>
+        </footer>
+      </main>
+      <div class="nx-mail-compose-overlay" id="nxMailComposeModal" aria-hidden="true">
+        <div class="nx-mail-compose-modal gmail-compose" onclick="event.stopPropagation()">
+          <header class="gmail-cm-titlebar">
+            <span class="gmail-cm-title" id="nxMailComposeTitle">Pesan Baru</span>
+            <div class="gmail-cm-win-btns">
+              <button type="button" class="gmail-cm-win-btn" id="nxMailComposeMinBtn" title="Minimalkan" aria-label="Minimalkan">−</button>
+              <button type="button" class="gmail-cm-win-btn" id="nxMailComposeMaxBtn" title="Layar penuh" aria-label="Layar penuh">⤢</button>
+              <button type="button" class="gmail-cm-win-btn gmail-cm-close" id="nxMailComposeCloseBtn" title="Tutup" aria-label="Tutup">×</button>
+            </div>
+          </header>
+          <div class="gmail-cm-sheet">
+            <div class="gmail-cm-field-row gmail-cm-to-row">
+              <span class="gmail-cm-label">Kepada</span>
+              <div class="gmail-cm-field-grow">
+                <input type="text" id="nxMailComposeTo" class="gmail-cm-input" autocomplete="off" spellcheck="false" placeholder="Contoh: CID-7429@lscs.gov / badge@council.gov — atau cari nama…" />
+                <div class="nx-mail-dir-sug gmail-cm-dir-sug" id="nxMailDirSuggest"></div>
+              </div>
+              <div class="gmail-cm-cc-bcc">
+                <button type="button" class="gmail-cm-inline-link" id="nxMailComposeCcBtn">Cc</button>
+                <button type="button" class="gmail-cm-inline-link" id="nxMailComposeBccBtn">Bcc</button>
+              </div>
+            </div>
+            <div class="gmail-cm-field-row is-hidden" id="nxMailComposeCcRow">
+              <span class="gmail-cm-label">Cc</span>
+              <input type="text" id="nxMailComposeCc" class="gmail-cm-input gmail-cm-line" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="gmail-cm-field-row is-hidden" id="nxMailComposeBccRow">
+              <span class="gmail-cm-label">Bcc</span>
+              <input type="text" id="nxMailComposeBcc" class="gmail-cm-input gmail-cm-line" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="gmail-cm-field-row">
+              <span class="gmail-cm-label">Subjek</span>
+              <input type="text" id="nxMailComposeSub" class="gmail-cm-input gmail-cm-line" placeholder="Judul pesan…" spellcheck="true" />
+            </div>
+            <div class="gmail-cm-body-wrap">
+              <div id="nxMailComposeBody" class="gmail-cm-body" contenteditable="true" tabindex="0" data-placeholder="Tulis pesan…"></div>
+            </div>
+            <div class="gmail-cm-toolbar-wrap" id="nxMailComposeToolbarWrap">
+              <div class="gmail-cm-toolbar" id="nxMailComposeToolbar">
+                <button type="button" class="gmail-tb-btn" data-cmd="undo" title="Urungkan">↶</button>
+                <button type="button" class="gmail-tb-btn" data-cmd="redo" title="Ulangi">↷</button>
+                <span class="gmail-tb-sep"></span>
+                <select class="gmail-tb-select" id="nxMailComposeFont" title="Font">
+                  <option value="sans-serif" selected>Sans Serif</option>
+                  <option value="serif">Serif</option>
+                  <option value="monospace">Monospace</option>
+                </select>
+                <select class="gmail-tb-select gmail-tb-narrow" id="nxMailComposeSize" title="Ukuran">
+                  <option value="2">Biasa</option>
+                  <option value="3">Sedikit besar</option>
+                  <option value="4">Besar</option>
+                  <option value="6">Judul kecil</option>
+                  <option value="7">Judul besar</option>
+                </select>
+                <span class="gmail-tb-sep"></span>
+                <button type="button" class="gmail-tb-btn gmail-tb-strong" data-cmd="bold" title="Tebal"><b>B</b></button>
+                <button type="button" class="gmail-tb-btn gmail-tb-italic" data-cmd="italic" title="Miring"><i>I</i></button>
+                <button type="button" class="gmail-tb-btn gmail-tb-under" data-cmd="underline" title="Garis bawah"><u>U</u></button>
+                <span class="gmail-tb-sep"></span>
+                <button type="button" class="gmail-tb-btn" data-cmd="insertUnorderedList" title="Daftar berpoin">•≡</button>
+                <button type="button" class="gmail-tb-btn" data-cmd="insertOrderedList" title="Daftar bernomor">1.</button>
+                <button type="button" class="gmail-tb-btn" data-cmd="outdent" title="Indent kurang">«</button>
+                <button type="button" class="gmail-tb-btn" data-cmd="indent" title="Indent lebih">»</button>
+                <button type="button" class="gmail-tb-btn" data-cmd="formatBlock" data-val="blockquote" title="Sitasi">❝</button>
+                <button type="button" class="gmail-tb-btn" data-cmd="removeFormat" title="Hapus format">T̷</button>
+              </div>
+            </div>
+            <div class="gmail-cm-footer">
+              <div class="gmail-cm-footer-left">
+                <div class="gmail-cm-send-split">
+                  <button type="button" class="gmail-cm-send-main" id="nxMailComposeSendBtn">Kirim</button>
+                  <button type="button" class="gmail-cm-send-caret" id="nxMailComposeSendMenuBtn" title="Opsi kirim" aria-hidden="true" tabindex="-1">▾</button>
+                </div>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeToolbarToggle" title="Format teks (Aa)">Aa</button>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeAttachBtn" title="Lampiran / URL gambar">📎</button>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeLinkBtn" title="Tautan">🔗</button>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeImgBtn" title="Gambar (URL)">🖼</button>
+                <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">▴</button>
+                <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">✎</button>
+                <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">⋮</button>
+              </div>
+              <button type="button" class="gmail-cm-trash" id="nxMailComposeDiscard" title="Buang draf">🗑</button>
+            </div>
+            <div class="gmail-cm-img-row is-hidden" id="nxMailComposeImgRow">
+              <div class="gmail-cm-attach-stack">
+                <span class="gmail-cm-attach-hint">Gambar HTTPS — beberapa URL (baris baru atau koma)</span>
+                <textarea id="nxMailComposeImg" class="gmail-cm-img-urls-ta" rows="4" spellcheck="false" placeholder="https://…&#10;https://…"></textarea>
+                <div id="nxMailComposeImgPreview" class="gmail-compose-attach-preview" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- GIU SAP OVERLAY -->
 <div id="giu-overlay" aria-hidden="true">
   <div id="giu-flash"></div>
@@ -823,6 +976,7 @@
 <script src="shared/scripts/portal-auth.js"></script>
 <script src="shared/scripts/site-ui.js"></script>
 <script src="scripts/nexus.js"></script>
+<script src="scripts/nexus-mail.js"></script>
 
 <!-- ═══════════════════════════════════════════════════════════
      ONBOARDING SYSTEM — Lt. Jadda Quetzalli
