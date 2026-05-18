@@ -1310,8 +1310,6 @@ details.nx-gmail-msg-fold[open]>.nx-gmail-msg-fold-sum{border-bottom:1px solid r
   font-family:inherit;font-size:12px;color:#5f6368;margin-top:4px;display:block;}
 
 
-.nx-dash-mail-tile{border-top-color:rgba(201,168,76,.42)!important;cursor:pointer;}
-
 /* Mail thread rows — Gmail-style stacked lines */
 .nx-mail-thread-row{display:block!important;text-align:left;}
 .nx-mail-row-from{display:block;margin-bottom:3px;}
