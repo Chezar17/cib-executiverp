@@ -940,10 +940,17 @@
 .nx-gmail-thread-row{
   width:100%;padding:10px;display:flex;align-items:flex-start;gap:0;border:none;text-align:left;cursor:pointer;
   border-bottom:1px solid rgba(255,255,255,.035);transition:background .12s,color .12s;background:rgba(255,255,255,.02);}
+.nx-gmail-list-star{
+  flex-shrink:0;width:36px;display:flex;align-items:flex-start;justify-content:center;padding-top:2px;
+  color:rgba(255,255,255,.42);font-size:18px;font-weight:300;line-height:1;pointer-events:none;}
+.nx-gmail-thread-row:hover .nx-gmail-list-star{color:rgba(201,168,76,.82);}
 .nx-gmail-thread-row:nth-child(odd){background:rgba(255,255,255,.026);}
 .nx-gmail-thread-row:hover{background:rgba(201,168,76,.068)!important;}
-.nx-gmail-thread-row.is-unread .nx-mail-row-from{font-weight:600;color:rgba(255,255,255,.95);}
-.nx-gmail-thread-row.is-unread .nx-mail-row-sub{font-weight:500;color:rgba(255,244,226,.93);}
+.nx-gmail-thread-row.is-unread .nx-mail-row-from{font-weight:700;color:rgba(255,250,239,.98);letter-spacing:.01em;}
+.nx-gmail-thread-row.is-unread .nx-mail-row-sub{font-weight:700;color:rgba(255,246,232,.98);}
+.nx-gmail-thread-row.is-unread .nx-gmail-thread-sn,.nx-gmail-thread-row.is-unread .nx-mail-row-sn.nx-gmail-thread-sn{font-weight:600;color:rgba(255,244,228,.86);}
+.nx-gmail-thread-row.is-unread .nx-mail-row-time{font-weight:700;color:rgba(201,168,76,.94);}
+.nx-gmail-thread-row.is-unread .nx-gmail-list-star{font-weight:700;color:rgba(201,168,76,.88);}
 .nx-gmail-thread-row.is-selected{border-left:3px solid var(--gold);padding-left:7px;background:rgba(201,168,76,.065)!important;}
 .nx-gmail-row-pad{flex-shrink:0;width:6px;height:42px;background:transparent;align-self:stretch;}
 
@@ -958,60 +965,118 @@
 
 .nx-mail-thread-empty.nx-gmail-thread-empty{font:inherit;font-size:14px;line-height:1.65;color:rgba(255,255,255,.4);padding:48px 20px;text-align:center;}
 
-.nx-gmail-pane-read{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#0f162a;}
-.nx-gmail-read-toolbar{flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.07);padding:6px 8px;background:#121e36;}
+.nx-gmail-pane-read{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:linear-gradient(180deg,#0c1320 0%,#121b2e 100%);}
+.nx-gmail-read-toolbar{flex-shrink:0;border-bottom:1px solid rgba(201,168,76,.22);padding:8px 10px;background:rgba(12,17,29,.94);}
 .nx-gmail-read-toolbar-inner{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:2px 4px;}
 .nx-gmail-toolbar-gap{flex:1;}
-.nx-gmail-toolbar-ic{border:none;background:transparent;width:40px;height:40px;border-radius:50%;color:rgba(255,255,255,.38);cursor:default;font-size:15px;}
-.nx-gmail-toolbar-ic.disabled{opacity:.32;}
+.nx-gmail-toolbar-ic{border:none;background:transparent;width:40px;height:40px;border-radius:50%;color:rgba(201,168,76,.72);cursor:default;font-size:15px;}
+.nx-gmail-toolbar-ic.disabled{opacity:.38;}
 
-.nx-gmail-thread-subject-slot{border-bottom:1px solid rgba(255,255,255,.07);padding:16px 22px;background:#172238;flex-shrink:0;}
-.nx-gmail-thread-title{font-size:22px;font-weight:400;line-height:1.32;color:rgba(254,251,246,.96);margin:0 0 10px;font-family:inherit;letter-spacing:0;}
-.nx-gmail-meta-chips{font-size:13px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:rgba(247,239,226,.92);}
-.nx-gmail-meta-name{font-weight:500;}
-.nx-gmail-subject-slot-empty .nx-gmail-thread-title-muted{margin:0 0 6px;color:rgba(255,255,255,.52);font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:3px;font-size:11px;}
-.nx-gmail-subject-slot-empty .nx-gmail-slot-hint{display:block;line-height:1.5;color:rgba(255,255,255,.32);font-size:13px;font-family:inherit;}
+.nx-gmail-thread-subject-slot{border-bottom:1px solid rgba(201,168,76,.38);padding:18px 22px 14px;background:linear-gradient(180deg,#111b2f 0%,#0f1726 100%);flex-shrink:0;}
+.nx-gmail-thread-title{font-size:21px;font-weight:500;line-height:1.35;color:rgba(253,246,232,.96);margin:0;font-family:Oswald,Roboto,sans-serif;letter-spacing:.02em;}
+.nx-gmail-thread-head-gmail{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0;padding:4px 0 0;}
+.nx-gmail-inbox-folder-chip{
+  flex-shrink:0;display:inline-flex;align-items:center;height:28px;padding:0 14px;border-radius:999px;
+  background:rgba(201,168,76,.14);border:1px solid rgba(201,168,76,.45);font-size:11px;
+  font-family:'Roboto Mono',monospace;letter-spacing:1px;text-transform:uppercase;
+  color:var(--gold);font-weight:500;line-height:1;}
+.nx-gmail-subject-slot-empty .nx-gmail-thread-title-muted{margin:0 0 6px;color:rgba(201,168,76,.82);font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:3px;font-size:11px;}
+.nx-gmail-subject-slot-empty .nx-gmail-slot-hint{display:block;line-height:1.5;color:rgba(255,255,255,.4);font-size:13px;font-family:inherit;}
 
-.nx-gmail-conv-scroll{flex:1;min-height:0;overflow-y:auto;background:#242e48;padding:16px 22px 28px;display:flex;flex-direction:column;gap:0;align-items:stretch;-webkit-overflow-scrolling:touch;}
+.nx-gmail-conv-scroll{
+  flex:1;min-height:0;overflow-y:auto;background:linear-gradient(180deg,#0f1625 0%,#161f32 52%,#141c2e 100%);padding:0 20px 28px;display:flex;
+  flex-direction:column;gap:0;align-items:stretch;-webkit-overflow-scrolling:touch;}
 #nxMailMsgs.nx-gmail-msgs-host{flex-shrink:0;margin:0;padding:0;width:100%;min-width:0;background:transparent;}
 #nxMailMsgs.nx-gmail-msgs-host:has(> .nx-mail-empty){flex:1;min-height:min(420px,calc(100vh - 240px));display:flex;flex-direction:column;align-items:center;justify-content:center;}
 
-.nx-mail-empty,.nx-gmail-reading-empty{font-size:14px;color:rgba(255,255,255,.44);margin:auto;text-align:center;max-width:320px;line-height:1.75;padding:40px;font-family:inherit;}
+.nx-mail-empty,.nx-gmail-reading-empty{font-size:14px;color:rgba(201,168,76,.82);margin:auto;text-align:center;max-width:340px;line-height:1.75;padding:56px 24px;font-family:Roboto,sans-serif;}
 
-#nxMailMsgs.nx-mail-msgs-has-shell .nx-msgs-conv-shell{border-radius:16px 16px 0 0;}
-#nxMailMsgs.nx-mail-msgs-has-shell + footer .nx-msgs-conv-shell--reply{border-radius:0 0 16px 16px;margin-top:-2px;}
+#nxMailMsgs.nx-mail-msgs-has-shell .nx-msgs-conv-shell{border-radius:12px 12px 0 0;margin-top:8px!important;}
+#nxMailMsgs.nx-mail-msgs-has-shell + footer .nx-msgs-conv-shell--reply{border-radius:0 0 12px 12px;margin-top:-1px;}
 
 #nxMailMsgs:not(.nx-mail-msgs-has-shell) + footer .nx-msgs-conv-shell--reply{margin-top:12px;}
 
 .nx-mail-msg-cells{display:flex;flex-direction:column;gap:0;padding-bottom:0;}
 
 .nx-msgs-conv-shell{
-  background:rgba(223,225,229,.4);
-  border-radius:16px;margin:12px auto 0;
+  background:#27344c;
+  border:1px solid rgba(201,168,76,.42);
+  border-radius:14px;margin:14px auto 0;
   overflow:hidden;
   width:min(880px,calc(100% - 8px));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+  box-shadow:0 8px 28px rgba(0,0,0,.45), inset 0 1px 0 rgba(253,239,207,.06);
 }
 .nx-msgs-conv-shell--reply{margin-top:0;margin-left:auto;margin-right:auto;}
-.nx-msg-cells--conv .nx-mail-msg-email{border:none;border-radius:0!important;margin:0;background:#fcfdffe6;}
-.nx-msg-cells--conv .nx-mail-msg-email.is-sent{background:linear-gradient(180deg,#fffcf5 0%,#faf6ee 24%,#fcfbf8);}
-.nx-msg-cells--conv .nx-mail-msg-email.is-received{background:#fff;}
-.nx-msg-cells--conv .nx-mail-msg-email{border-bottom:1px solid rgba(0,0,0,.06)!important;box-shadow:none;}
-.nx-msg-cells--conv .nx-mail-msg-email.nx-gmail-reply-compose{border-bottom:none!important;background:#fff!important;}
-.nx-msg-cells--conv .nx-gmail-reply-top-row .nx-mail-msg-email-k{
-  align-self:flex-start;line-height:1.45;padding-top:1px;color:#80868b;}
-.nx-msg-cells--conv .nx-gmail-reply-draft-label{font-size:13px;line-height:1.45;color:#5f6368;font-family:Roboto,sans-serif;font-weight:400;}
-#nxMailReplyMeta .nx-gmail-reply-to-name{font:inherit;font-weight:500;color:#202124;font-size:14px;line-height:1.5;}
-.nx-msg-cells--conv .nx-mail-msg-email-hdr{background:#f2f4f7;border-bottom:1px solid #e8eaed;}
-.nx-msg-cells--conv .nx-mail-msg-email-k{color:#5f6368;}
-.nx-msg-cells--conv .nx-mail-msg-email-row,.nx-msg-cells--conv .nx-mail-msg-email-row-date{color:#444746;}
-.nx-msg-cells--conv .nx-mail-msg-email-v strong{color:#202124;font-family:inherit;font-weight:500;font-size:14px;text-transform:none;letter-spacing:0;}
-.nx-msg-cells--conv .nx-mail-msg-email-addr{color:#5f6368;}
-.nx-msg-cells--conv .nx-mail-msg-body{color:#202124;}
-.nx-msg-cells--conv .nx-mail-msg-body.nx-mail-msg-body-html blockquote{border-left-color:#dadce0;color:#3c4043;}
-.nx-msg-cells--conv .nx-mail-msg-img-thumb-link{border-color:#dadce0;background:#fff;}
+.nx-msg-cells--conv .nx-mail-msg-email{border:none;border-radius:0!important;margin:0;}
+.nx-msg-cells--conv .nx-mail-msg-email.is-received{background:rgba(255,251,239,.035);}
+.nx-msg-cells--conv .nx-mail-msg-email.is-sent{background:rgba(201,168,76,.079);}
+.nx-msg-cells--conv .nx-mail-msg-email{border-bottom:1px solid rgba(201,168,76,.26)!important;box-shadow:none;}
+.nx-msg-cells--conv .nx-mail-msg-email.nx-gmail-reply-compose{
+  border-bottom:none!important;background:linear-gradient(180deg,#f9f7f4 0%,#e8dfd2 92%)!important;border-top:2px solid rgba(201,168,76,.9)!important;}
+.nx-msg-cells--conv .nx-gmail-reply-top-row .nx-mail-msg-email-k{align-self:flex-start;line-height:1.45;padding-top:1px;color:#5c5244;}
+.nx-msg-cells--conv .nx-gmail-reply-draft-label{font-size:13px;line-height:1.45;color:#474239;font-family:Roboto,sans-serif;font-weight:400;}
+#nxMailReplyMeta .nx-gmail-reply-to-name{font:inherit;font-weight:600;color:#1a140f;font-size:14px;line-height:1.5;}
 
-/* Thread body: classic email message cards */
+/* Baca thread — lipat seperti Gmail + tone Nexus (navy/emas) */
+.nx-msg-cells--conv.nx-msg-cells--gmail-open .nx-mail-msg-email.nx-gmail-msg-read-open{border-left:none!important;}
+.nx-gmail-msg-fold{border-bottom:1px solid rgba(201,168,76,.33);}
+.nx-gmail-msg-fold-sum{
+  cursor:pointer;padding:13px 16px;line-height:1.35;background:rgba(10,17,34,.93);border:none;outline:none;font-family:inherit;list-style:none;}
+.nx-gmail-msg-fold-sum::-webkit-details-marker{display:none;}
+.nx-gmail-msg-fold-sum::marker{display:none;}
+.nx-gmail-fold-sum-inner{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;min-width:0;}
+.nx-gmail-msg-avatar--fold{width:32px;height:32px;font-size:12px;min-width:32px;}
+.nx-gmail-fold-name{font-size:13px;font-weight:500;color:rgba(255,246,229,.93);flex-shrink:0;max-width:38%;overflow:hidden;text-overflow:ellipsis;}
+.nx-gmail-fold-sn{font-size:13px;flex:1;min-width:0;color:rgba(255,255,255,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nx-gmail-fold-time{font-size:12px;color:rgba(201,168,76,.92);opacity:.88;flex-shrink:0;text-align:right;max-width:44%;}
+.nx-gmail-msg-fold:hover>.nx-gmail-msg-fold-sum{background:rgba(201,168,76,.068);}
+details.nx-gmail-msg-fold[open]>.nx-gmail-msg-fold-sum{border-bottom:1px solid rgba(201,168,76,.3);}
+.nx-gmail-fold-body{padding:4px;background:rgba(4,11,26,.94);}
+
+.nx-gmail-msg-fold .nx-mail-msg-email.nx-gmail-msg--in-fold{border-bottom:none!important;}
+.nx-gmail-msg-fold .nx-gmail-read-msg-body{padding-bottom:20px!important;}
+
+.nx-gmail-msg-read-meta{padding:20px 16px 10px;display:flex;align-items:flex-start;gap:14px;background:transparent!important;}
+.nx-gmail-msg-avatar{
+  flex-shrink:0;width:42px;height:42px;border-radius:50%;min-width:42px;margin-top:0;
+  box-shadow:0 0 0 2px rgba(201,168,76,.74), inset 0 1px 0 rgba(255,255,249,.42);
+  background:linear-gradient(165deg,#efd98c,var(--gold) 48%,#6e5a2a);color:#0c100e;font-size:14px;font-weight:700;line-height:1;
+  display:flex;align-items:center;justify-content:center;font-family:Oswald,Roboto,sans-serif;letter-spacing:0;}
+.nx-gmail-msg-ident{flex:1;min-width:0;}
+.nx-gmail-msg-ident-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;line-height:1.5;}
+.nx-gmail-msg-from-name{font-weight:600;font-size:14px;color:rgba(252,246,232,.94);font-family:inherit;}
+.nx-gmail-msg-from-email{font-size:12px;color:rgba(201,168,76,.93);font-family:'Roboto Mono',monospace;font-weight:400;}
+.nx-gmail-msg-open-time{margin-left:auto;font-size:12px;color:rgba(255,255,255,.5);font-family:inherit;font-weight:400;}
+.nx-gmail-msg-kepada{margin-top:5px;font-size:13px;color:rgba(214,219,229,.92);font-family:inherit;line-height:1.4;}
+.nx-gmail-kepada-me{font-weight:600;color:var(--gold);}
+.nx-gmail-kepada-target{font-weight:600;color:rgba(239,229,207,.94);}
+.nx-gmail-read-msg-body{
+  padding:10px 16px 24px;background:transparent;border:none;font-size:14px;line-height:1.7;color:rgba(243,239,229,.93);}
+
+.nx-gmail-thread-quote{margin-top:18px;padding:16px 0 6px;border-top:1px solid rgba(201,168,76,.42);}
+.nx-gmail-quote-line{display:block;font-size:12px;color:rgba(220,226,239,.74);margin-bottom:10px;line-height:1.5;}
+.nx-gmail-quote-line strong{font-weight:600;color:rgba(255,248,236,.93);}
+.nx-gmail-quote-block{
+  margin:0;padding:14px;border-left:3px solid var(--gold);background:rgba(0,0,0,.22);border-radius:0 10px 10px 0;
+  color:rgba(248,238,217,.93);font-size:13px;line-height:1.55;}
+
+.nx-msg-cells--conv .nx-mail-msg-img-thumb-link{border:1px solid rgba(201,168,76,.52);background:rgba(0,0,0,.55);}
+.nx-msg-cells--conv .nx-mail-msg-body.nx-gmail-read-msg-body.nx-mail-msg-body-html blockquote{border-left-color:rgba(201,168,76,.6);color:rgba(237,229,207,.92);}
+
+.nx-gmail-msg-quick-bar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:6px 16px 20px;background:rgba(11,21,41,.94);border-top:1px solid rgba(201,168,76,.44);}
+.nx-gmail-pill-btn{
+  display:inline-flex;align-items:center;gap:8px;font-family:Roboto,Oswald,sans-serif;font-size:13px;line-height:1;font-weight:500;
+  padding:10px 20px;border-radius:999px;border:1px solid rgba(201,168,76,.74);background:rgba(18,34,61,.94);
+  color:rgba(253,239,217,.93);cursor:pointer;transition:background .12s,border-color .12s,color .12s;}
+.nx-gmail-pill-btn:hover:not(:disabled){
+  border-color:var(--gold);color:#120d04;background:rgba(237,217,157,.94);}
+.nx-gmail-pill-btn:disabled{opacity:.38;cursor:not-allowed;border-style:dashed;color:rgba(255,255,255,.42);}
+.nx-gmail-pill-glyph{display:inline-block;font-size:14px;line-height:1;color:rgba(201,168,76,.94);}
+
+.nx-gmail-conv-scroll .nx-mail-msg-email.nx-mail-msg-system{
+  background:rgba(255,251,239,.035)!important;color:rgba(201,168,76,.92)!important;border:1px solid rgba(201,168,76,.52)!important;
+  margin:12px auto;max-width:min(880px,calc(100% - 8px));}
 .nx-mail-msg-email{
   border:1px solid rgba(255,255,255,.1);border-radius:4px;background:rgba(5,11,22,.94);
   max-width:100%;width:100%;box-sizing:border-box;overflow:hidden;

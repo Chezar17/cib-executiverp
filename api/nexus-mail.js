@@ -94,6 +94,14 @@ function canonicalBadges(me, peer) {
   return a < p ? [a, p] : [p, a]
 }
 
+function threadSortKeyMs(row) {
+  let ms = Date.parse(row?.updated_at ?? '')
+  if (Number.isFinite(ms)) return ms
+  ms = Date.parse(row?.created_at ?? '')
+  if (Number.isFinite(ms)) return ms
+  return 0
+}
+
 /** Merge inbox lists keyed by badge_low/badge_high participant (ILIKE insensitive). */
 async function fetchThreadsForViewer(supabase, meCanon) {
   const mePat = escapeIlikeExact(trimBadge(meCanon))
@@ -113,9 +121,7 @@ async function fetchThreadsForViewer(supabase, meCanon) {
   ;(partLow.data || []).forEach((r) => merged.set(r.id, r))
   ;(partHigh.data || []).forEach((r) => merged.set(r.id, r))
 
-  const rows = Array.from(merged.values()).sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-  )
+  const rows = Array.from(merged.values())
 
   return { error: null, rows }
 }
@@ -360,17 +366,34 @@ export default async function handler(req, res) {
       const inbox = rows.map((t) => {
         const peerBadge = badgesEquivalent(t.badge_low, me) ? t.badge_high : t.badge_low
         const last = lastMap[t.id]
+        const lastTs = last?.created_at
+        /** Urutan kotak masuk: gunakan aktivitas percakapan terbaru */
+        const sortMs = Number.isFinite(Date.parse(lastTs || ''))
+          ? Math.max(threadSortKeyMs(t), Date.parse(lastTs))
+          : threadSortKeyMs(t)
         return {
           id: t.id,
           peer_badge: peerBadge,
           peer_name: nameMap[peerBadge] || peerBadge,
           subject: t.subject || '(No subject)',
           updated_at: t.updated_at,
+          created_at: t.created_at,
+          last_message_at: lastTs || null,
           last_sender: last?.sender_badge || null,
           last_snippet: lastSnippet(last),
           unread_count: unreadCounts[t.id] || 0,
+          /** @internal */
+          _nx_sort_ts: sortMs,
         }
       })
+
+      inbox.sort((a, b) => {
+        const d = (b._nx_sort_ts ?? 0) - (a._nx_sort_ts ?? 0)
+        if (d !== 0) return d
+        return String(b.id || '').localeCompare(String(a.id || ''))
+      })
+
+      for (const row of inbox) delete row._nx_sort_ts
 
       return res.status(200).json({ threads: inbox })
     }
