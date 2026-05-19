@@ -259,6 +259,7 @@ function buildCardHTML(w, index) {
   const photoBlock = w.photo_url
     ? `<div class="suspect-photo">
         <img src="${escHtml(w.photo_url)}" alt="${escHtml(w.alias || w.full_name)}"
+             crossorigin="anonymous"
              onerror="this.parentElement.innerHTML='<div class=\\'photo-placeholder\\'><svg viewBox=\\'0 0 24 24\\'></svg></div>'"/>
       </div>`
     : `<div class="suspect-photo">
@@ -501,9 +502,10 @@ function loadImage(url, cardEl) {
     if (!url) return resolve(null)
 
     // Try to reuse the already-loaded DOM image first (no CORS issue)
+    // Only safe if the img was fetched with crossOrigin=anonymous
     if (cardEl) {
       const domImg = cardEl.querySelector('.suspect-photo img')
-      if (domImg && domImg.complete && domImg.naturalWidth > 0) {
+      if (domImg && domImg.complete && domImg.naturalWidth > 0 && domImg.crossOrigin === 'anonymous') {
         return resolve(domImg)
       }
     }
