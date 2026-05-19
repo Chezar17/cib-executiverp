@@ -1,4 +1,4 @@
-// NEXUS Mail — Gmail-style internal DM (secured by /api/nexus-mail).
+// NMAIL — Gmail-style internal DM (secured by /api/nexus-mail).
 ;(function () {
   'use strict'
 
@@ -101,7 +101,7 @@
     return labels[labels.length - 1] === 'gov'
   }
 
-  /** Normalized mailbox / badge key for Nexus Mail (`users.badge` is typically full `user@agency.gov`). */
+  /** Normalized mailbox / badge key for NMAIL (`users.badge` is typically full `user@agency.gov`). */
   function parseRecipientBadge(raw) {
     let s = String(raw == null ? '' : raw).trim()
     if (!s) return ''
@@ -217,7 +217,35 @@
       PortalAuth.showToast(msg, t, 'inf-toast')
       return
     }
-    if (t === 'error' && typeof console !== 'undefined' && console.warn) console.warn('[Nexus Mail]', msg)
+    if (t === 'error' && typeof console !== 'undefined' && console.warn) console.warn('[NMAIL]', msg)
+  }
+
+  /** @param {HTMLElement | null} btn @param {boolean} busy @param {{ text?: string }} [opts] */
+  function nxMailButtonBusy(btn, busy, opts) {
+    opts = opts || {}
+    if (!btn || !(btn instanceof HTMLElement)) return
+    if (busy) {
+      if (btn.dataset.nxBusyOrig == null) btn.dataset.nxBusyOrig = btn.innerHTML
+      btn.disabled = true
+      btn.classList.add('nx-mail-btn-busy')
+      btn.setAttribute('aria-busy', 'true')
+      if (opts.text != null) btn.textContent = opts.text
+    } else {
+      btn.disabled = false
+      btn.classList.remove('nx-mail-btn-busy')
+      btn.removeAttribute('aria-busy')
+      if (btn.dataset.nxBusyOrig != null) {
+        btn.innerHTML = btn.dataset.nxBusyOrig
+        delete btn.dataset.nxBusyOrig
+      }
+    }
+  }
+
+  function nxMailSetMailPaneLoading(on) {
+    var conv = el('nxMailConvScroll')
+    var tl = el('nxMailThreadList')
+    if (conv) conv.classList.toggle('is-nx-mail-loading', !!on)
+    if (tl) tl.classList.toggle('is-nx-mail-loading', !!on)
   }
 
   function fmtClockId(iso) {
@@ -317,6 +345,10 @@
   /** @type {{ to: string[], cc: string[], bcc: string[] }} */
   let nxComposeRecipients = { to: [], cc: [], bcc: [] }
   let dirDeb = null
+  let nxMailSendBusy = false
+  let nxMailReplyBusy = false
+  let nxMailOpenThreadBusy = false
+  let nxMailInboxBusy = false
 
   function el(id) {
     return document.getElementById(id)
@@ -385,26 +417,23 @@
       .toLowerCase()
   }
 
-  /** @returns {{ inp: HTMLInputElement|null, sug: HTMLElement|null, addBtn: HTMLElement|null, chips: HTMLElement|null }} */
+  /** @returns {{ inp: HTMLInputElement|null, sug: HTMLElement|null, chips: HTMLElement|null }} */
   function getRecipCfg(kind) {
     if (kind === 'to')
       return {
         inp: /** @type {HTMLInputElement|null} */ (el('nxMailComposeTo')),
         sug: el('nxMailDirSuggestTo'),
-        addBtn: el('nxMailComposeToAdd'),
         chips: el('nxMailComposeToChips'),
       }
     if (kind === 'cc')
       return {
         inp: /** @type {HTMLInputElement|null} */ (el('nxMailComposeCcInp')),
         sug: el('nxMailDirSuggestCc'),
-        addBtn: el('nxMailComposeCcAdd'),
         chips: el('nxMailComposeCcChips'),
       }
     return {
       inp: /** @type {HTMLInputElement|null} */ (el('nxMailComposeBccInp')),
       sug: el('nxMailDirSuggestBcc'),
-      addBtn: el('nxMailComposeBccAdd'),
       chips: el('nxMailComposeBccChips'),
     }
   }
@@ -558,14 +587,6 @@
         cfg.inp.addEventListener('blur', function () {
           normalizeComposeDraft(cfg.inp)
         })
-      }
-      if (cfg.addBtn) {
-        cfg.addBtn.addEventListener('click', function (ev) {
-          ev.preventDefault()
-          tryAddRecipient(kind)
-        })
-      }
-      if (cfg.inp) {
         cfg.inp.addEventListener('keydown', function (ev) {
           if (ev.key !== 'Enter') return
           ev.preventDefault()
@@ -758,14 +779,33 @@
     }
   }
 
-  async function loadInbox() {
+  async function loadInbox(opt) {
+    opt = opt || {}
+    var refreshBtn = opt.refreshBtn
+    var listBusy = opt.listBusy
+    if (refreshBtn && nxMailInboxBusy) return
+    if (refreshBtn) nxMailInboxBusy = true
+    if (refreshBtn) nxMailButtonBusy(refreshBtn, true, { text: '…' })
+    if (listBusy) {
+      var tl0 = el('nxMailThreadList')
+      if (tl0) tl0.classList.add('is-nx-mail-loading')
+    }
     try {
       const data = await fetchJson('GET', '/api/nexus-mail')
       threads = coerceInboxThreads(data)
       renderThreadRows()
       updateUnreadBell()
     } catch (e) {
-      nxMailToast('Nexus Mail: ' + (e?.message || e), 'error')
+      nxMailToast('NMAIL: ' + (e?.message || e), 'error')
+    } finally {
+      if (listBusy) {
+        var tl1 = el('nxMailThreadList')
+        if (tl1) tl1.classList.remove('is-nx-mail-loading')
+      }
+      if (refreshBtn) {
+        nxMailButtonBusy(refreshBtn, false)
+        nxMailInboxBusy = false
+      }
     }
   }
 
@@ -1077,6 +1117,9 @@
 
   async function openThreadFn(id) {
     if (!id) return
+    if (nxMailOpenThreadBusy) return
+    nxMailOpenThreadBusy = true
+    nxMailSetMailPaneLoading(true)
     try {
       const data = await fetchJson('GET', '/api/nexus-mail?thread=' + encodeURIComponent(id))
       /** @type {any} */
@@ -1125,18 +1168,25 @@
       })
       nxMailScrollConvToEnd()
     } catch (e) {
-        nxMailToast(e.message || String(e), 'error')
+      nxMailToast((e && e.message) || String(e), 'error')
+    } finally {
+      nxMailSetMailPaneLoading(false)
+      nxMailOpenThreadBusy = false
     }
   }
 
   async function submitReply() {
     if (!openThread || !openThread.meta) return
+    if (nxMailReplyBusy) return
     const body = ((el('nxMailReplyBody') && el('nxMailReplyBody').value) || '').trim()
     const attachmentUrls = nxReplyAttachUrls.slice()
     if (!body && !attachmentUrls.length) {
       nxMailToast('Type a message or add at least one image URL (http/https) via Add.', 'error')
       return
     }
+    var replyBtn = el('nxMailSendReplyBtn')
+    nxMailReplyBusy = true
+    nxMailButtonBusy(replyBtn, true, { text: 'Sending…' })
     try {
       await fetchJson('POST', '/api/nexus-mail', {
         thread_id: openThread.meta.id,
@@ -1151,6 +1201,9 @@
       await loadInbox()
     } catch (e) {
       nxMailToast(e.message || String(e), 'error')
+    } finally {
+      nxMailButtonBusy(replyBtn, false)
+      nxMailReplyBusy = false
     }
   }
 
@@ -1211,6 +1264,7 @@
   }
 
   async function submitComposeNew() {
+    if (nxMailSendBusy) return
     var toA = nxComposeRecipients.to.slice()
     var ccA = nxComposeRecipients.cc.slice()
     var bccA = nxComposeRecipients.bcc.slice()
@@ -1220,7 +1274,8 @@
     var attachmentUrls = nxComposeAttachUrls.slice()
 
     if (!toA.length && !ccA.length && !bccA.length) {
-      var errTo = 'Add at least one recipient with Add next to To, Cc, or Bcc (directory search uses the same users table as To).'
+      var errTo =
+        'Add at least one recipient to To, Cc, or Bcc — pick from the directory list or type a badge and press Enter.'
       setNxComposeErr(errTo)
       nxMailToast(errTo, 'error')
       return
@@ -1232,6 +1287,11 @@
       return
     }
     setNxComposeErr('')
+    var sendBtn = el('nxMailComposeSendBtn')
+    var sendCaret = el('nxMailComposeSendMenuBtn')
+    nxMailSendBusy = true
+    nxMailButtonBusy(sendBtn, true, { text: 'Sending…' })
+    nxMailButtonBusy(sendCaret, true, {})
     try {
       var payload = {
         to: toA,
@@ -1251,6 +1311,10 @@
       var msg = e && e.message ? e.message : String(e)
       setNxComposeErr(msg)
       nxMailToast(msg, 'error')
+    } finally {
+      nxMailButtonBusy(sendBtn, false)
+      nxMailButtonBusy(sendCaret, false)
+      nxMailSendBusy = false
     }
   }
 
@@ -1458,11 +1522,10 @@
       if (rf && !rf._nxBound) {
         rf._nxBound = true
         rf.addEventListener('click', function () {
-          loadInbox().catch(function () {})
+          loadInbox({ refreshBtn: rf }).catch(function () {})
         })
       }
       bindGmailCompose()
-      wireComposeRecipientUi()
       nxWireMailAttachmentsOnce()
       bindGmailReadQuickReplyOnce()
     },
@@ -1474,7 +1537,7 @@
       renderHeader({ peer_name: '', peer_badge: '', subject: '', id: '', updated_at: '' })
       renderEmptyState('Select a conversation on the left or tap Compose.')
       nxMailComposerSetOpen(false)
-      loadInbox().then(updateUnreadBell)
+      loadInbox({ listBusy: true }).then(updateUnreadBell)
     },
 
     close: function () {

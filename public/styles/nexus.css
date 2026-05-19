@@ -1189,7 +1189,7 @@ details.nx-gmail-msg-fold[open]>.nx-gmail-msg-fold-sum{border-bottom:1px solid r
 }
 .nx-mail-compose-overlay.is-open{display:flex!important;}
 
-/* Compose window — Gmail-style (light chrome inside Nexus Mail shell) */
+/* Compose window — Gmail-style (light chrome inside NMAIL) */
 .nx-mail-compose-modal.gmail-compose{
   width:min(760px,calc(100vw - 32px));max-height:min(620px,72vh,calc(100vh - 80px));border-radius:8px;background:#fff;
   box-shadow:0 12px 24px rgba(0,0,0,.24),0 4px 8px rgba(0,0,0,.08);border:1px solid #dadce0;display:flex;
@@ -1238,6 +1238,20 @@ details.nx-gmail-msg-fold[open]>.nx-gmail-msg-fold-sum{border-bottom:1px solid r
   background:linear-gradient(180deg,#edd78a,var(--gold) 48%,#9a7830);color:#1a1406;
   padding:0 14px;font-size:13px;font-weight:600;font-family:inherit;white-space:nowrap;}
 .gmail-cm-add-recip:hover{filter:brightness(1.05);}
+
+/* NMAIL — API busy states (send, refresh, open thread) */
+.nx-mail-btn-busy{cursor:wait!important;opacity:.88;}
+#nxMailConvScroll.is-nx-mail-loading{position:relative;pointer-events:none;min-height:80px;}
+#nxMailConvScroll.is-nx-mail-loading::after{
+  content:'Loading…';
+  position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,11,26,.42);
+  color:rgba(201,168,76,.95);font-size:13px;font-weight:500;letter-spacing:.08em;
+  font-family:Roboto,Oswald,sans-serif;
+}
+#nxMailThreadList.is-nx-mail-loading{pointer-events:none;opacity:.52;transition:opacity .15s ease;}
+.gmail-cm-send-main.nx-mail-btn-busy,.nx-gmail-send-submit.nx-mail-btn-busy{min-width:7rem;text-align:center;}
+
 .gmail-cm-input{border:none;background:transparent;outline:none;color:#202124;font-size:14px;font-family:inherit;
   padding:10px 8px;line-height:1.4;width:100%;box-sizing:border-box;}
 .gmail-cm-line{padding-left:84px;margin-left:-72px;width:calc(100% + 72px);}
