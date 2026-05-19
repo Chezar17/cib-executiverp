@@ -6,7 +6,7 @@
 //  POST /api/nexus-mail                   → send (JSON: to[], cc[], bcc[] or recipient_badge)
 //  PATCH /api/nexus-mail                  → mark thread read
 //
-//  DB: run docs/sql/nexus-mail-gmail-migration.sql
+//  DB: docs/sql/nexus-mail-gmail-migration.sql (+ docs/sql/nexus-mail-performance.sql for inbox speed)
 // ============================================================
 
 import { allowMethods } from './_lib/http.js'
@@ -83,20 +83,35 @@ async function resolveUserBadge(supabase, rawInput) {
   return (exactCi || rows[0]).badge
 }
 
-/** Resolve many distinct tokens concurrently (fewer sequential round-trips vs per-token loops). */
+/** Resolve many tokens: batch exact `.in('badge')`, then fuzzy lookups in parallel. */
 async function resolveUserBadgesParallel(supabase, tokens) {
   const uniq = dedupeBadges(tokens)
   if (!uniq.length) return new Map()
 
   /** @type {Map<string, string | null>} */
   const canonByNormalized = new Map()
-  /** @type {Promise<void>[]} */
-  const runners = uniq.map(async (tok) => {
-    const canon = await resolveUserBadge(supabase, tok)
-    canonByNormalized.set(tok.trim().toLowerCase(), canon)
-  })
 
-  await Promise.all(runners)
+  const { data: hitRows } = await supabase.from('users').select('badge').in('badge', uniq)
+  const byCi = new Map()
+  for (const row of hitRows || []) {
+    const b = trimBadge(row?.badge)
+    if (b) byCi.set(b.toLowerCase(), b)
+  }
+
+  const needResolve = dedupeBadges(uniq.filter((tok) => !byCi.has(trimBadge(tok).toLowerCase())))
+
+  for (const tok of uniq) {
+    const canon = byCi.get(trimBadge(tok).toLowerCase())
+    if (canon) canonByNormalized.set(trimBadge(tok).toLowerCase(), canon)
+  }
+
+  await Promise.all(
+    needResolve.map(async (tok) => {
+      const canon = await resolveUserBadge(supabase, tok)
+      canonByNormalized.set(trimBadge(tok).toLowerCase(), canon)
+    }),
+  )
+
   return canonByNormalized
 }
 
@@ -254,6 +269,94 @@ async function fetchThreadsForViewer(supabase, meCanon) {
 
   if (eRows) return { error: eRows, rows: [] }
   return { error: null, rows: rows || [] }
+}
+
+/**
+ * Fallback when Postgres RPC `nx_mail_inbox_agg` is not deployed: loads every message (slow).
+ * @returns { Promise<{ error: unknown|null, lastMap: Record<string, unknown>, unreadCounts: Record<string, number>}> }
+ */
+async function fetchInboxMessageFallback(supabase, me, ids) {
+  /** @type { Record<string, any> } */
+  const lastMap = {}
+  /** @type { Record<string, number> } */
+  const unreadCounts = {}
+  /** @type { Record<string, string> } */
+  const readMap = {}
+
+  const [msgsRes, readsRes] = await Promise.all([
+    supabase
+      .from('nx_mail_messages')
+      .select('thread_id,body,sender_badge,created_at,image_url,image_urls')
+      .in('thread_id', ids),
+    supabase.from('nx_mail_thread_reads').select('thread_id,last_read_at,reader_badge').in('thread_id', ids),
+  ])
+
+  const allMsgs = msgsRes?.data || []
+  if (msgsRes.error) return { error: msgsRes.error, lastMap, unreadCounts }
+
+  if (readsRes?.data) {
+    for (const r of readsRes.data) {
+      if (!badgesEquivalent(r.reader_badge, me)) continue
+      const prev = readMap[r.thread_id]
+      const ts = r.last_read_at
+      if (!prev || new Date(ts).getTime() > new Date(prev).getTime()) readMap[r.thread_id] = ts
+    }
+  }
+
+  /** @type { Record<string, any[]> } */
+  const msgsByThread = {}
+  for (const m of allMsgs) {
+    const tid = m.thread_id
+    const cur = lastMap[tid]
+    if (!cur || new Date(m.created_at).getTime() > new Date(cur.created_at || 0).getTime()) lastMap[tid] = m
+    if (!msgsByThread[tid]) msgsByThread[tid] = []
+    msgsByThread[tid].push(m)
+  }
+
+  const meNorm = trimBadge(me).toLowerCase()
+  for (const id of ids) unreadCounts[id] = 0
+  for (const id of ids) {
+    const lrMs = new Date(readMap[id] || '1970-01-01T00:00:00.000Z').getTime()
+    for (const m of msgsByThread[id] || []) {
+      const sb = trimBadge(m.sender_badge || '').toLowerCase()
+      if (sb === meNorm) continue
+      if (new Date(m.created_at).getTime() <= lrMs) continue
+      unreadCounts[id] = (unreadCounts[id] || 0) + 1
+    }
+  }
+
+  return { error: null, lastMap, unreadCounts }
+}
+
+/** Apply rows from nx_mail_inbox_agg RPC — one row per thread id. */
+function inboxAggFromRpcRows(rows, ids) {
+  /** @type { Record<string, any> } */
+  const lastMap = {}
+  /** @type { Record<string, number> } */
+  const unreadCounts = {}
+
+  const seen = new Set()
+  for (const raw of rows || []) {
+    const tid = raw?.thread_id != null ? String(raw.thread_id) : ''
+    if (!tid) continue
+    seen.add(tid)
+    if (raw.last_created_at != null || raw.last_body || raw.last_sender_badge || raw.last_image_url) {
+      lastMap[tid] = {
+        thread_id: tid,
+        body: raw.last_body ?? null,
+        sender_badge: raw.last_sender_badge ?? null,
+        created_at: raw.last_created_at ?? null,
+        image_url: raw.last_image_url ?? null,
+        image_urls: raw.last_image_urls ?? null,
+      }
+    }
+    unreadCounts[tid] = Number(raw.unread_count) || 0
+  }
+
+  /** RPC must return exactly one row per id; if mismatch, caller should fall back. */
+  const ok =
+    ids.length === 0 || (seen.size === ids.length && ids.every((id) => seen.has(String(id))))
+  return { lastMap, unreadCounts, rowCountOk: ok }
 }
 
 function viewerMayAccessThread(memberHit, me, thrRow) {
@@ -433,30 +536,21 @@ export default async function handler(req, res) {
         })
 
       const ids = rows.map((t) => t.id)
+      /** @type { Record<string, any> } */
       let lastMap = {}
       const membByThread = {}
       let nameMap = {}
-      /** @type { Record<string, string> } */
-      let readMap = {}
       /** @type { Record<string, number> } */
       let unreadCounts = {}
 
       if (ids.length) {
-        const [msgsRes, membRes, readsRes] = await Promise.all([
-          supabase
-            .from('nx_mail_messages')
-            .select('thread_id,body,sender_badge,created_at,image_url,image_urls')
-            .in('thread_id', ids),
+        const [{ data: rpcRows, error: rpcErr }, membRes] = await Promise.all([
+          supabase.rpc('nx_mail_inbox_agg', {
+            p_viewer: me,
+            p_thread_ids: ids,
+          }),
           supabase.from('nx_mail_thread_members').select('thread_id,member_badge').in('thread_id', ids),
-          supabase.from('nx_mail_thread_reads').select('thread_id,last_read_at,reader_badge').in('thread_id', ids),
         ])
-
-        const allMsgs = msgsRes?.data || []
-        if (msgsRes.error)
-          return jsonApiError(res, 500, 'Failed to load messages for inbox', {
-            supabase: msgsRes.error,
-            context: 'nexus-mail inbox messages',
-          })
 
         if (membRes.error)
           return jsonApiError(res, 500, 'Failed to load thread members for inbox', {
@@ -469,42 +563,26 @@ export default async function handler(req, res) {
           membByThread[r.thread_id].push(r.member_badge)
         }
 
-        if (readsRes?.data) {
-          for (const r of readsRes.data) {
-            if (!badgesEquivalent(r.reader_badge, me)) continue
-            const prev = readMap[r.thread_id]
-            const ts = r.last_read_at
-            if (!prev || new Date(ts).getTime() > new Date(prev).getTime()) readMap[r.thread_id] = ts
+        let usedRpcAgg = false
+        if (!rpcErr && Array.isArray(rpcRows)) {
+          const agg = inboxAggFromRpcRows(rpcRows, ids)
+          if (agg.rowCountOk) {
+            lastMap = agg.lastMap
+            unreadCounts = agg.unreadCounts
+            usedRpcAgg = true
           }
         }
 
-        /** One pass: newest message per thread (snippet) + group by thread for unread */
-        /** @type { Record<string, any[]> } */
-        const msgsByThread = {}
-        for (const m of allMsgs) {
-          const tid = m.thread_id
-          let best = lastMap[tid]
-          if (
-            !best ||
-            new Date(m.created_at).getTime() > new Date(best.created_at || 0).getTime()
-          ) {
-            lastMap[tid] = m
-          }
-          if (!msgsByThread[tid]) msgsByThread[tid] = []
-          msgsByThread[tid].push(m)
-        }
-
-        for (const id of ids) unreadCounts[id] = 0
-        const meNorm = trimBadge(me).toLowerCase()
-        for (const id of ids) {
-          const lastRead = readMap[id] || '1970-01-01T00:00:00.000Z'
-          const lrMs = new Date(lastRead).getTime()
-          for (const m of msgsByThread[id] || []) {
-            const sb = trimBadge(m.sender_badge || '').toLowerCase()
-            if (sb === meNorm) continue
-            if (new Date(m.created_at).getTime() <= lrMs) continue
-            unreadCounts[id] = (unreadCounts[id] || 0) + 1
-          }
+        if (!usedRpcAgg) {
+          const fb = await fetchInboxMessageFallback(supabase, me, ids)
+          if (fb.error)
+            return jsonApiError(res, 500, 'Failed to load messages for inbox', {
+              supabase: fb.error,
+              context: 'nexus-mail inbox messages',
+              fallback_recommended: 'deploy docs/sql/nexus-mail-performance.sql',
+            })
+          lastMap = fb.lastMap
+          unreadCounts = fb.unreadCounts
         }
 
         const allPeerBadges = new Set()
