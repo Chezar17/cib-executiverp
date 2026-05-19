@@ -489,47 +489,19 @@ function generateQrCanvas(url, size) {
 }
 
 /**
- * Load an image for canvas drawing.
- * Strategy:
- *   1. Try fetch() -> blob URL  (avoids canvas taint, works for same-origin & CORS-enabled)
- *   2. Fall back to <img crossOrigin="anonymous">
- *   3. Fall back to plain <img> without crossOrigin (same-origin only)
- *   4. Resolve null so the caller shows the placeholder silhouette.
+ * Load an image from URL into ImageBitmap, resolving even on CORS failures
  * @param {string} url
  * @returns {Promise<HTMLImageElement|null>}
  */
 function loadImage(url) {
-  if (!url) return Promise.resolve(null)
-
-  function imgFromSrc(src, crossOrigin) {
-    return new Promise(resolve => {
-      const img = new Image()
-      if (crossOrigin) img.crossOrigin = crossOrigin
-      img.onload  = () => resolve(img)
-      img.onerror = () => resolve(null)
-      img.src = src
-    })
-  }
-
-  // 1. fetch -> blob URL (sidesteps CORS canvas taint)
-  return fetch(url, { mode: 'cors', credentials: 'same-origin' })
-    .then(res => {
-      if (!res.ok) throw new Error('fetch failed')
-      return res.blob()
-    })
-    .then(blob => {
-      const objectUrl = URL.createObjectURL(blob)
-      return imgFromSrc(objectUrl, null).then(img => {
-        if (img) URL.revokeObjectURL(objectUrl)
-        return img
-      })
-    })
-    .catch(() =>
-      // 2. CORS img tag fallback
-      imgFromSrc(url, 'anonymous')
-        .then(img => img || imgFromSrc(url, null))  // 3. plain img (same-origin)
-        .catch(() => null)
-    )
+  return new Promise(resolve => {
+    if (!url) return resolve(null)
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload  = () => resolve(img)
+    img.onerror = () => resolve(null)   // graceful fallback
+    img.src = url
+  })
 }
 
 /**
@@ -619,34 +591,13 @@ async function exportWantedCard(w, btn) {
     ctx.letterSpacing = '3px'
     ctx.fillText('CENTRAL INVESTIGATION BUREAU', PAD + 6, 27)
 
-    // Right header — MOST WANTED badge (bold stamp treatment)
-    ctx.font         = '700 13px "Oswald", sans-serif'
-    ctx.letterSpacing = '5px'
-    const mwLabel    = 'MOST WANTED'
-    const mwTextW    = ctx.measureText(mwLabel).width
-    const mwBadgeW   = mwTextW + 24
-    const mwBadgeH   = 26
-    const mwBadgeX   = W - PAD - mwBadgeW
-    const mwBadgeY   = (headerH - mwBadgeH) / 2
-
-    // Filled red background
+    // Right header — MOST WANTED label
     ctx.fillStyle = '#c0392b'
-    roundRect(ctx, mwBadgeX, mwBadgeY, mwBadgeW, mwBadgeH, 2)
-    ctx.fill()
-
-    // Inner border highlight
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)'
-    ctx.lineWidth   = 0.8
-    roundRect(ctx, mwBadgeX + 2, mwBadgeY + 2, mwBadgeW - 4, mwBadgeH - 4, 1)
-    ctx.stroke()
-
-    // Label text in white for maximum contrast
-    ctx.fillStyle    = '#ffffff'
-    ctx.font         = '700 13px "Oswald", sans-serif'
-    ctx.letterSpacing = '5px'
-    ctx.textAlign    = 'center'
-    ctx.fillText(mwLabel, mwBadgeX + mwBadgeW / 2, mwBadgeY + 17)
-    ctx.textAlign    = 'left'
+    ctx.font      = '700 11px "Oswald", sans-serif'
+    ctx.letterSpacing = '4px'
+    const mwLabel = 'MOST WANTED'
+    const mwW = ctx.measureText(mwLabel).width
+    ctx.fillText(mwLabel, W - PAD - mwW, 27)
 
     // Header bottom separator
     ctx.strokeStyle = 'rgba(201,168,76,0.25)'
@@ -958,35 +909,30 @@ async function exportWantedCard(w, btn) {
       }
     }
 
-    // ── QR Code — placed bottom-left, below the case strip ──
-    // This keeps it entirely within the photo column and away
-    // from any text in the right info column.
-    const qrSize   = 72
+    // ── QR Code ───────────────────────────────────────────
+    const qrSize   = 88
+    const qrX      = W - qrSize - PAD
+    const qrY      = H - qrSize - 44
     const qrUrl    = window.location.origin + window.location.pathname
-    // Anchor: align right edge with right edge of photo column
-    const qrPanelW = qrSize + 16
-    const qrPanelH = qrSize + 22
-    const qrX      = photoX + photoActualW - qrPanelW   // flush right of photo column
-    const qrY      = H - 36 - qrPanelH - 4              // just above footer strip
 
     try {
       const qrCanvas = await generateQrCanvas(qrUrl, qrSize)
 
       // QR background panel
-      ctx.fillStyle   = 'rgba(13,17,23,0.92)'
-      ctx.strokeStyle = 'rgba(201,168,76,0.35)'
+      ctx.fillStyle   = '#0d1117'
+      ctx.strokeStyle = 'rgba(201,168,76,0.3)'
       ctx.lineWidth   = 1
-      roundRect(ctx, qrX, qrY, qrPanelW, qrPanelH, 4)
+      roundRect(ctx, qrX - 8, qrY - 8, qrSize + 16, qrSize + 30, 4)
       ctx.fill()
       ctx.stroke()
 
-      ctx.drawImage(qrCanvas, qrX + 8, qrY + 4, qrSize, qrSize)
+      ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize)
 
-      ctx.fillStyle    = 'rgba(201,168,76,0.55)'
-      ctx.font         = '400 6px "Roboto Mono"'
+      ctx.fillStyle    = 'rgba(201,168,76,0.5)'
+      ctx.font         = '400 7px "Roboto Mono"'
       ctx.letterSpacing = '1.5px'
       ctx.textAlign    = 'center'
-      ctx.fillText('SCAN FOR FULL FILE', qrX + qrPanelW / 2, qrY + qrSize + 14)
+      ctx.fillText('SCAN FOR FULL FILE', qrX + qrSize / 2, qrY + qrSize + 14)
       ctx.textAlign    = 'left'
     } catch(e) {
       console.warn('QR generation failed:', e)
