@@ -358,6 +358,19 @@
     return el('nxMailConvScroll')
   }
 
+  /** Scroll conversation rail to newest content (reply area / latest message). */
+  function nxMailScrollConvToEnd() {
+    var rail = nxMailConvScrollEl()
+    if (!rail) return
+    requestAnimationFrame(function () {
+      try {
+        rail.scrollTop = rail.scrollHeight
+      } catch (_) {
+        /* IE / older */
+      }
+    })
+  }
+
   function nxMailComposerSetOpen(show) {
     var c = el('nxMailComposer')
     var rail = nxMailConvScrollEl()
