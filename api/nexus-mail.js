@@ -83,6 +83,23 @@ async function resolveUserBadge(supabase, rawInput) {
   return (exactCi || rows[0]).badge
 }
 
+/** Resolve many distinct tokens concurrently (fewer sequential round-trips vs per-token loops). */
+async function resolveUserBadgesParallel(supabase, tokens) {
+  const uniq = dedupeBadges(tokens)
+  if (!uniq.length) return new Map()
+
+  /** @type {Map<string, string | null>} */
+  const canonByNormalized = new Map()
+  /** @type {Promise<void>[]} */
+  const runners = uniq.map(async (tok) => {
+    const canon = await resolveUserBadge(supabase, tok)
+    canonByNormalized.set(tok.trim().toLowerCase(), canon)
+  })
+
+  await Promise.all(runners)
+  return canonByNormalized
+}
+
 function canonicalBadges(me, peer) {
   const a = trimBadge(me)
   const p = trimBadge(peer)
@@ -239,14 +256,10 @@ async function fetchThreadsForViewer(supabase, meCanon) {
   return { error: null, rows: rows || [] }
 }
 
-async function viewerCanAccessThread(supabase, thrId, me, thrRow) {
-  const { data: hit } = await supabase
-    .from('nx_mail_thread_members')
-    .select('member_badge')
-    .eq('thread_id', thrId)
-
-  if (hit?.length)
-    return hit.some((x) => badgesEquivalent(x.member_badge, me))
+function viewerMayAccessThread(memberHit, me, thrRow) {
+  const rows = memberHit || []
+  if (rows.length)
+    return rows.some((x) => badgesEquivalent(x.member_badge, me))
 
   if (thrRow?.badge_low && thrRow?.badge_high)
     return badgesEquivalent(thrRow.badge_low, me) || badgesEquivalent(thrRow.badge_high, me)
@@ -315,31 +328,54 @@ export default async function handler(req, res) {
       const threadId = String(req.query.thread || '').trim()
       if (!threadId) return res.status(400).json({ error: 'Missing thread id' })
 
-      const { data: thr, error: te } = await supabase
-        .from('nx_mail_threads')
-        .select('id,badge_low,badge_high,subject,updated_at,created_at')
-        .eq('id', threadId)
-        .single()
+      const [{ data: thr, error: te }, membRes] = await Promise.all([
+        supabase
+          .from('nx_mail_threads')
+          .select('id,badge_low,badge_high,subject,updated_at,created_at')
+          .eq('id', threadId)
+          .single(),
+        supabase.from('nx_mail_thread_members').select('member_badge').eq('thread_id', threadId),
+      ])
 
       if (te || !thr) return res.status(404).json({ error: 'Thread not found' })
 
-      if (!(await viewerCanAccessThread(supabase, threadId, me, thr)))
-        return res.status(403).json({ error: 'Forbidden' })
+      const memberPrefetch = membRes?.data || []
 
-      const { data: memberRows } = await supabase
-        .from('nx_mail_thread_members')
-        .select('member_badge')
-        .eq('thread_id', threadId)
+      if (!viewerMayAccessThread(memberPrefetch, me, thr)) return res.status(403).json({ error: 'Forbidden' })
 
-      const memberBadges = dedupeBadges([
-        ...((memberRows || []).map((r) => r.member_badge) ?? []),
+      const memberBadges = dedupeBadges([...memberPrefetch.map((r) => r.member_badge)])
+
+      const [{ data: msgs, error: meErr }, profilesRes] = await Promise.all([
+        supabase
+          .from('nx_mail_messages')
+          .select('id,sender_badge,body,image_url,image_urls,created_at')
+          .eq('thread_id', threadId)
+          .order('created_at', { ascending: true }),
+        memberBadges.length
+          ? supabase.from('users').select('badge,name').in('badge', memberBadges)
+          : Promise.resolve({ data: [] }),
       ])
 
-      let nameMap = {}
-      if (memberBadges.length) {
-        const { data: profiles } = await supabase.from('users').select('badge,name').in('badge', memberBadges)
-        if (profiles) nameMap = Object.fromEntries(profiles.map((x) => [x.badge, x.name]))
+      const mlistEarly = msgs || []
+      const msgIds = mlistEarly.map((m) => m.id).filter(Boolean)
+
+      let recipientsRows = []
+      if (msgIds.length) {
+        const { data: rrows } = await supabase
+          .from('nx_mail_message_recipients')
+          .select('message_id,recipient_badge,kind')
+          .in('message_id', msgIds)
+        recipientsRows = rrows || []
       }
+
+      if (meErr)
+        return jsonApiError(res, 500, 'Failed to load messages', {
+          supabase: meErr,
+          context: 'nexus-mail messages',
+        })
+
+      const profiles = profilesRes?.data || []
+      const nameMap = Object.fromEntries(profiles.map((x) => [x.badge, x.name]))
 
       const participants = memberBadges.map((b) => ({
         badge: b,
@@ -354,36 +390,16 @@ export default async function handler(req, res) {
         peerName = nameMap[peerBadge] || peerBadge
       }
 
-      const { data: msgs, error: meErr } = await supabase
-        .from('nx_mail_messages')
-        .select('id,sender_badge,body,image_url,image_urls,created_at')
-        .eq('thread_id', threadId)
-        .order('created_at', { ascending: true })
-
-      if (meErr)
-        return jsonApiError(res, 500, 'Failed to load messages', {
-          supabase: meErr,
-          context: 'nexus-mail messages',
-        })
-
-      const mlist = msgs || []
-      const msgIds = mlist.map((m) => m.id).filter(Boolean)
-
       /** @type { Record<string, { recipient_badge: string, kind: string }[]> } */
-      let recByMsg = {}
+      const recByMsg = {}
       if (msgIds.length) {
-        const { data: rrows } = await supabase
-          .from('nx_mail_message_recipients')
-          .select('message_id,recipient_badge,kind')
-          .in('message_id', msgIds)
-
-        for (const r of rrows || []) {
+        for (const r of recipientsRows) {
           if (!recByMsg[r.message_id]) recByMsg[r.message_id] = []
           recByMsg[r.message_id].push({ recipient_badge: r.recipient_badge, kind: r.kind })
         }
       }
 
-      const formatted = mlist.map((m) => {
+      const formatted = mlistEarly.map((m) => {
         const base = {
           ...m,
           image_urls: normalizeStoredAttachmentUrls(m),
@@ -417,94 +433,103 @@ export default async function handler(req, res) {
         })
 
       const ids = rows.map((t) => t.id)
-      const lastMap = {}
-
-      if (ids.length) {
-        const { data: allMsgs, error: mErr } = await supabase
-          .from('nx_mail_messages')
-          .select('thread_id,body,sender_badge,created_at,image_url,image_urls')
-          .in('thread_id', ids)
-          .order('created_at', { ascending: false })
-
-        if (!mErr && allMsgs) {
-          for (const m of allMsgs) {
-            if (!lastMap[m.thread_id]) lastMap[m.thread_id] = m
-          }
-        }
-      }
-
-      /** participant badges per thread (for label + sorting) */
+      let lastMap = {}
       const membByThread = {}
-      if (ids.length) {
-        const { data: allM } = await supabase
-          .from('nx_mail_thread_members')
-          .select('thread_id,member_badge')
-          .in('thread_id', ids)
+      let nameMap = {}
+      /** @type { Record<string, string> } */
+      let readMap = {}
+      /** @type { Record<string, number> } */
+      let unreadCounts = {}
 
-        for (const r of allM || []) {
+      if (ids.length) {
+        const [msgsRes, membRes, readsRes] = await Promise.all([
+          supabase
+            .from('nx_mail_messages')
+            .select('thread_id,body,sender_badge,created_at,image_url,image_urls')
+            .in('thread_id', ids),
+          supabase.from('nx_mail_thread_members').select('thread_id,member_badge').in('thread_id', ids),
+          supabase.from('nx_mail_thread_reads').select('thread_id,last_read_at,reader_badge').in('thread_id', ids),
+        ])
+
+        const allMsgs = msgsRes?.data || []
+        if (msgsRes.error)
+          return jsonApiError(res, 500, 'Failed to load messages for inbox', {
+            supabase: msgsRes.error,
+            context: 'nexus-mail inbox messages',
+          })
+
+        if (membRes.error)
+          return jsonApiError(res, 500, 'Failed to load thread members for inbox', {
+            supabase: membRes.error,
+            context: 'nexus-mail inbox members',
+          })
+
+        for (const r of membRes?.data || []) {
           if (!membByThread[r.thread_id]) membByThread[r.thread_id] = []
           membByThread[r.thread_id].push(r.member_badge)
         }
-      }
 
-      const allPeerBadges = new Set()
-      for (const tid of ids) {
-        const mb = membByThread[tid]
-        if (mb?.length) {
-          for (const b of mb) {
-            if (!badgesEquivalent(b, me)) allPeerBadges.add(b)
-          }
-        } else {
-          const t = rows.find((x) => x.id === tid)
-          if (t) {
-            const pb = badgesEquivalent(t.badge_low, me) ? t.badge_high : t.badge_low
-            if (pb) allPeerBadges.add(pb)
-          }
-        }
-      }
-
-      let nameMap = {}
-      if (allPeerBadges.size) {
-        const { data: profiles } = await supabase
-          .from('users')
-          .select('badge,name')
-          .in('badge', [...allPeerBadges])
-
-        if (profiles) nameMap = Object.fromEntries(profiles.map((x) => [x.badge, x.name]))
-      }
-
-      let readMap = {}
-      if (ids.length) {
-        const { data: reads } = await supabase
-          .from('nx_mail_thread_reads')
-          .select('thread_id,last_read_at,reader_badge')
-          .in('thread_id', ids)
-
-        if (reads) {
-          reads.forEach((r) => {
-            if (!badgesEquivalent(r.reader_badge, me)) return
+        if (readsRes?.data) {
+          for (const r of readsRes.data) {
+            if (!badgesEquivalent(r.reader_badge, me)) continue
             const prev = readMap[r.thread_id]
             const ts = r.last_read_at
             if (!prev || new Date(ts).getTime() > new Date(prev).getTime()) readMap[r.thread_id] = ts
-          })
+          }
         }
-      }
 
-      const unreadCounts = {}
-      if (ids.length) {
-        const { data: recentAll } = await supabase
-          .from('nx_mail_messages')
-          .select('thread_id,sender_badge,created_at')
-          .in('thread_id', ids)
+        /** One pass: newest message per thread (snippet) + group by thread for unread */
+        /** @type { Record<string, any[]> } */
+        const msgsByThread = {}
+        for (const m of allMsgs) {
+          const tid = m.thread_id
+          let best = lastMap[tid]
+          if (
+            !best ||
+            new Date(m.created_at).getTime() > new Date(best.created_at || 0).getTime()
+          ) {
+            lastMap[tid] = m
+          }
+          if (!msgsByThread[tid]) msgsByThread[tid] = []
+          msgsByThread[tid].push(m)
+        }
 
+        for (const id of ids) unreadCounts[id] = 0
+        const meNorm = trimBadge(me).toLowerCase()
         for (const id of ids) {
           const lastRead = readMap[id] || '1970-01-01T00:00:00.000Z'
-          const msgsFor = (recentAll || []).filter((m) => m.thread_id === id)
-          unreadCounts[id] = msgsFor.filter(
-            (m) =>
-              !badgesEquivalent(m.sender_badge, me) &&
-              new Date(m.created_at).getTime() > new Date(lastRead).getTime(),
-          ).length
+          const lrMs = new Date(lastRead).getTime()
+          for (const m of msgsByThread[id] || []) {
+            const sb = trimBadge(m.sender_badge || '').toLowerCase()
+            if (sb === meNorm) continue
+            if (new Date(m.created_at).getTime() <= lrMs) continue
+            unreadCounts[id] = (unreadCounts[id] || 0) + 1
+          }
+        }
+
+        const allPeerBadges = new Set()
+        for (const tid of ids) {
+          const mb = membByThread[tid]
+          if (mb?.length) {
+            for (const b of mb) {
+              if (!badgesEquivalent(b, me)) allPeerBadges.add(b)
+            }
+          } else {
+            const t = rows.find((x) => x.id === tid)
+            if (t) {
+              const pb = badgesEquivalent(t.badge_low, me) ? t.badge_high : t.badge_low
+              if (pb) allPeerBadges.add(pb)
+            }
+          }
+        }
+
+        if (allPeerBadges.size) {
+          const { data: profiles } = await supabase
+            .from('users')
+            .select('badge,name')
+            .in('badge', [...allPeerBadges])
+          nameMap =
+            profiles && profiles.length ? Object.fromEntries(profiles.map((x) => [x.badge, x.name])) : {}
         }
       }
 
@@ -570,14 +595,13 @@ export default async function handler(req, res) {
       const tid = String(threadId || '').trim()
       if (!tid) return res.status(400).json({ error: 'thread_id required' })
 
-      const { data: thr, error: te } = await supabase
-        .from('nx_mail_threads')
-        .select('id,badge_low,badge_high')
-        .eq('id', tid)
-        .single()
+      const [{ data: thr, error: te }, membR] = await Promise.all([
+        supabase.from('nx_mail_threads').select('id,badge_low,badge_high').eq('id', tid).single(),
+        supabase.from('nx_mail_thread_members').select('member_badge').eq('thread_id', tid),
+      ])
 
       if (te || !thr) return res.status(404).json({ error: 'Thread not found' })
-      if (!(await viewerCanAccessThread(supabase, tid, me, thr))) return res.status(403).json({ error: 'Forbidden' })
+      if (!viewerMayAccessThread(membR.data || [], me, thr)) return res.status(403).json({ error: 'Forbidden' })
 
       const ts = new Date().toISOString()
       await supabase.from('nx_mail_thread_reads').upsert(
@@ -613,15 +637,15 @@ export default async function handler(req, res) {
 
       /** ---------- Reply ---------- */
       if (threadIdIn) {
-        const { data: exist, error: exErr } = await supabase
-          .from('nx_mail_threads')
-          .select('*')
-          .eq('id', threadIdIn)
-          .single()
+        const [{ data: exist, error: exErr }, membR] = await Promise.all([
+          supabase.from('nx_mail_threads').select('*').eq('id', threadIdIn).single(),
+          supabase.from('nx_mail_thread_members').select('member_badge').eq('thread_id', threadIdIn),
+        ])
+
+        const mems = membR.data || []
 
         if (exErr || !exist) return res.status(404).json({ error: 'Thread not found' })
-        if (!(await viewerCanAccessThread(supabase, threadIdIn, me, exist)))
-          return res.status(403).json({ error: 'Forbidden' })
+        if (!viewerMayAccessThread(mems, me, exist)) return res.status(403).json({ error: 'Forbidden' })
 
         let toResolved = []
         let ccResolved = []
@@ -631,29 +655,29 @@ export default async function handler(req, res) {
           toTokens.length > 0 || ccTokens.length > 0 || bccTokens.length > 0
 
         if (hasExplicit) {
+          const resMap = await resolveUserBadgesParallel(supabase, [
+            ...toTokens,
+            ...ccTokens,
+            ...bccTokens,
+          ])
           for (const t of toTokens) {
-            const r = await resolveUserBadge(supabase, t)
+            const r = resMap.get(trimBadge(t).toLowerCase()) ?? null
             if (!r) return res.status(400).json({ error: `Unknown recipient: ${t}` })
             if (!badgesEquivalent(r, me)) toResolved.push(r)
           }
           for (const t of ccTokens) {
-            const r = await resolveUserBadge(supabase, t)
+            const r = resMap.get(trimBadge(t).toLowerCase()) ?? null
             if (!r) return res.status(400).json({ error: `Unknown Cc: ${t}` })
             if (!badgesEquivalent(r, me)) ccResolved.push(r)
           }
           for (const t of bccTokens) {
-            const r = await resolveUserBadge(supabase, t)
+            const r = resMap.get(trimBadge(t).toLowerCase()) ?? null
             if (!r) return res.status(400).json({ error: `Unknown Bcc: ${t}` })
             if (!badgesEquivalent(r, me)) bccResolved.push(r)
           }
         } else {
           /** Reply-all: everyone in thread except sender */
-          const { data: mems } = await supabase
-            .from('nx_mail_thread_members')
-            .select('member_badge')
-            .eq('thread_id', threadIdIn)
-
-          if (mems?.length) {
+          if (mems.length) {
             toResolved = dedupeBadges(
               mems.map((x) => x.member_badge).filter((b) => !badgesEquivalent(b, me)),
             )
@@ -727,22 +751,23 @@ export default async function handler(req, res) {
       }
 
       /** ---------- New thread ---------- */
+      const resMapNew = await resolveUserBadgesParallel(supabase, [...toTokens, ...ccTokens, ...bccTokens])
       const toR = []
       const ccR = []
       const bccR = []
 
       for (const t of toTokens) {
-        const r = await resolveUserBadge(supabase, t)
+        const r = resMapNew.get(trimBadge(t).toLowerCase()) ?? null
         if (!r) return res.status(400).json({ error: `Unknown recipient: ${t}` })
         if (!badgesEquivalent(r, me)) toR.push(r)
       }
       for (const t of ccTokens) {
-        const r = await resolveUserBadge(supabase, t)
+        const r = resMapNew.get(trimBadge(t).toLowerCase()) ?? null
         if (!r) return res.status(400).json({ error: `Unknown Cc: ${t}` })
         if (!badgesEquivalent(r, me)) ccR.push(r)
       }
       for (const t of bccTokens) {
-        const r = await resolveUserBadge(supabase, t)
+        const r = resMapNew.get(trimBadge(t).toLowerCase()) ?? null
         if (!r) return res.status(400).json({ error: `Unknown Bcc: ${t}` })
         if (!badgesEquivalent(r, me)) bccR.push(r)
       }
