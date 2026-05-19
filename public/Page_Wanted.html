@@ -489,19 +489,47 @@ function generateQrCanvas(url, size) {
 }
 
 /**
- * Load an image from URL into ImageBitmap, resolving even on CORS failures
+ * Load an image for canvas drawing.
+ * Strategy:
+ *   1. Try fetch() -> blob URL  (avoids canvas taint, works for same-origin & CORS-enabled)
+ *   2. Fall back to <img crossOrigin="anonymous">
+ *   3. Fall back to plain <img> without crossOrigin (same-origin only)
+ *   4. Resolve null so the caller shows the placeholder silhouette.
  * @param {string} url
  * @returns {Promise<HTMLImageElement|null>}
  */
 function loadImage(url) {
-  return new Promise(resolve => {
-    if (!url) return resolve(null)
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload  = () => resolve(img)
-    img.onerror = () => resolve(null)   // graceful fallback
-    img.src = url
-  })
+  if (!url) return Promise.resolve(null)
+
+  function imgFromSrc(src, crossOrigin) {
+    return new Promise(resolve => {
+      const img = new Image()
+      if (crossOrigin) img.crossOrigin = crossOrigin
+      img.onload  = () => resolve(img)
+      img.onerror = () => resolve(null)
+      img.src = src
+    })
+  }
+
+  // 1. fetch -> blob URL (sidesteps CORS canvas taint)
+  return fetch(url, { mode: 'cors', credentials: 'same-origin' })
+    .then(res => {
+      if (!res.ok) throw new Error('fetch failed')
+      return res.blob()
+    })
+    .then(blob => {
+      const objectUrl = URL.createObjectURL(blob)
+      return imgFromSrc(objectUrl, null).then(img => {
+        if (img) URL.revokeObjectURL(objectUrl)
+        return img
+      })
+    })
+    .catch(() =>
+      // 2. CORS img tag fallback
+      imgFromSrc(url, 'anonymous')
+        .then(img => img || imgFromSrc(url, null))  // 3. plain img (same-origin)
+        .catch(() => null)
+    )
 }
 
 /**
