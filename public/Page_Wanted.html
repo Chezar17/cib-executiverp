@@ -259,7 +259,6 @@ function buildCardHTML(w, index) {
   const photoBlock = w.photo_url
     ? `<div class="suspect-photo">
         <img src="${escHtml(w.photo_url)}" alt="${escHtml(w.alias || w.full_name)}"
-             crossorigin="anonymous"
              onerror="this.parentElement.innerHTML='<div class=\\'photo-placeholder\\'><svg viewBox=\\'0 0 24 24\\'></svg></div>'"/>
       </div>`
     : `<div class="suspect-photo">
@@ -490,37 +489,17 @@ function generateQrCanvas(url, size) {
 }
 
 /**
- * Load an image from URL.
- * First tries to reuse the already-rendered <img> from the DOM (avoids CORS).
- * Falls back to creating a new Image() with crossOrigin=anonymous.
+ * Load an image from URL into ImageBitmap, resolving even on CORS failures
  * @param {string} url
- * @param {HTMLElement|null} cardEl  - the .wanted-card element to search within
  * @returns {Promise<HTMLImageElement|null>}
  */
-function loadImage(url, cardEl) {
+function loadImage(url) {
   return new Promise(resolve => {
     if (!url) return resolve(null)
-
-    // Try to reuse the already-loaded DOM image first (no CORS issue)
-    // Only safe if the img was fetched with crossOrigin=anonymous
-    if (cardEl) {
-      const domImg = cardEl.querySelector('.suspect-photo img')
-      if (domImg && domImg.complete && domImg.naturalWidth > 0 && domImg.crossOrigin === 'anonymous') {
-        return resolve(domImg)
-      }
-    }
-
-    // Fallback: fetch fresh with crossOrigin
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload  = () => resolve(img)
-    img.onerror = () => {
-      // Last resort: try without crossOrigin (works if server allows it)
-      const img2 = new Image()
-      img2.onload  = () => resolve(img2)
-      img2.onerror = () => resolve(null)
-      img2.src = url + (url.includes('?') ? '&' : '?') + '_nc=' + Date.now()
-    }
+    img.onerror = () => resolve(null)   // graceful fallback
     img.src = url
   })
 }
@@ -565,9 +544,6 @@ function roundRect(ctx, x, y, w, h, r) {
 async function exportWantedCard(w, btn) {
   btn.classList.add('exporting')
   btn.textContent = 'Generating…'
-
-  // Find the parent .wanted-card element so we can grab the already-loaded DOM image
-  const cardEl = btn.closest('.wanted-card') || null
 
   try {
     // ── Canvas dimensions ──────────────────────────────────
@@ -615,31 +591,13 @@ async function exportWantedCard(w, btn) {
     ctx.letterSpacing = '3px'
     ctx.fillText('CENTRAL INVESTIGATION BUREAU', PAD + 6, 27)
 
-    // Right header — MOST WANTED label (highlighted badge)
+    // Right header — MOST WANTED label
+    ctx.fillStyle = '#c0392b'
     ctx.font      = '700 11px "Oswald", sans-serif'
     ctx.letterSpacing = '4px'
     const mwLabel = 'MOST WANTED'
     const mwW = ctx.measureText(mwLabel).width
-    const mwPadX = 10
-    const mwPadY = 6
-    const mwBadgeX = W - PAD - mwW - mwPadX * 2
-    const mwBadgeY = 7
-    const mwBadgeW = mwW + mwPadX * 2
-    const mwBadgeH = headerH - 14
-
-    // Red filled background
-    ctx.fillStyle = '#c0392b'
-    roundRect(ctx, mwBadgeX, mwBadgeY, mwBadgeW, mwBadgeH, 2)
-    ctx.fill()
-
-    // White border glow
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)'
-    ctx.lineWidth   = 1
-    ctx.stroke()
-
-    // Label text — white for contrast against red bg
-    ctx.fillStyle = '#ffffff'
-    ctx.fillText(mwLabel, mwBadgeX + mwPadX, mwBadgeY + mwBadgeH / 2 + 4)
+    ctx.fillText(mwLabel, W - PAD - mwW, 27)
 
     // Header bottom separator
     ctx.strokeStyle = 'rgba(201,168,76,0.25)'
@@ -647,7 +605,7 @@ async function exportWantedCard(w, btn) {
     ctx.beginPath(); ctx.moveTo(0, headerH); ctx.lineTo(W, headerH); ctx.stroke()
 
     // ── Load suspect photo ─────────────────────────────────
-    const suspectImg = await loadImage(w.photo_url, cardEl)
+    const suspectImg = await loadImage(w.photo_url)
 
     const photoX = PAD + 4
     const photoY = headerH + PAD
@@ -942,14 +900,11 @@ async function exportWantedCard(w, btn) {
       ctx.fillText(w.detective_rank || '', infoX + 44, curY + 40)
 
       if (w.detective_division) {
-        // Position division text to the left of the QR code area (qrSize=88 + padding)
-        const qrReserved = 88 + 8 + PAD   // qrSize + its left-pad + page pad
-        const maxDivX    = infoX + infoW - qrReserved - 8
         ctx.fillStyle    = 'rgba(255,255,255,0.3)'
         ctx.font         = '400 8px "Roboto Mono"'
         ctx.letterSpacing = '1px'
         ctx.textAlign    = 'right'
-        ctx.fillText(w.detective_division, maxDivX, curY + 28)
+        ctx.fillText(w.detective_division, infoX + infoW - 12, curY + 28)
         ctx.textAlign    = 'left'
       }
     }
