@@ -18,6 +18,13 @@ export async function runApiHandler(req, res, pathname, searchParams, apiDir) {
     searchParams = merged;
     endpoint = "finance"
   }
+  // logout → login.js (merged auth endpoints)
+  if (endpoint === "logout") {
+    const merged = new URLSearchParams(searchParams);
+    merged.set("__op", "logout");
+    searchParams = merged;
+    endpoint = "login";
+  }
   const filePath = path.join(apiDir, `${endpoint}.js`);
 
   if (!filePath.startsWith(apiDir) || !fs.existsSync(filePath)) {

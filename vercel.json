@@ -16,6 +16,7 @@
     { "src": "/api/finance-cards", "dest": "/api/finance?__f=cards" },
     { "src": "/api/finance-expenses", "dest": "/api/finance?__f=expenses" },
     { "src": "/api/finance-income", "dest": "/api/finance?__f=income" },
+    { "src": "/api/logout", "dest": "/api/login?__op=logout" },
     { "src": "/api/(.*)",  "dest": "/api/$1"       },
 
     { "src": "/",                "dest": "/public/index.html"           },
