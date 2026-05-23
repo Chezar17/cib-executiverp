@@ -833,9 +833,9 @@
                         </div>
                       </div>
                     </header>
-                    <div class="nx-mail-msg-email-body nx-gmail-reply-compose-body">
+                    <div class="nx-mail-msg-email-body nx-gmail-reply-compose-body nx-mail-attach-drop-zone" id="nxMailReplyDropZone">
                       <textarea id="nxMailReplyBody" class="nx-gmail-reply-textarea nx-mail-msg-native-ta" placeholder="Write your reply…"></textarea>
-                      <label class="nx-gmail-label-sm">Attachments — files upload to secure storage before send</label>
+                      <label class="nx-gmail-label-sm">Attachments — upload to Nexus storage when added</label>
                       <div class="nx-mail-reply-attach-add-row">
                         <button type="button" id="nxMailReplyAttachPickBtn" class="nx-mail-mini-filepick">Choose files…</button>
                         <input type="file" id="nxMailReplyFileInp" class="nx-mail-visually-hidden-file" multiple title="Attachments" tabindex="-1" aria-hidden="true" />
@@ -864,7 +864,7 @@
               <button type="button" class="gmail-cm-win-btn gmail-cm-close" id="nxMailComposeCloseBtn" title="Close" aria-label="Close">×</button>
             </div>
           </header>
-          <div class="gmail-cm-sheet">
+            <div class="gmail-cm-sheet nx-mail-attach-drop-zone" id="nxMailComposeDropZone">
             <div class="gmail-cm-field-row gmail-cm-to-row">
               <span class="gmail-cm-label">To</span>
               <div class="gmail-cm-field-grow gmail-cm-recip-grow">
@@ -914,7 +914,7 @@
             </div>
             <div class="gmail-cm-img-row is-hidden" id="nxMailComposeImgRow">
               <div class="gmail-cm-attach-stack">
-                <span class="gmail-cm-attach-hint">Attach files — up to 15 per message; uploads go to Nexus storage.</span>
+                <span class="gmail-cm-attach-hint">Drop files or choose — uploads start immediately (like Gmail); up to 15.</span>
                 <div class="gmail-cm-attach-add-row">
                   <button type="button" class="gmail-cm-img-add-btn" id="nxMailComposeAttachPickBtn">Choose files…</button>
                   <input type="file" id="nxMailComposeFileInp" class="nx-mail-visually-hidden-file" multiple tabindex="-1" aria-hidden="true" title="Attachments" />
