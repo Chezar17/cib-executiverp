@@ -251,6 +251,7 @@
     return list
   }
 
+  function messageAttachmentUrls(m) {
     if (!m) return []
     if (Array.isArray(m.image_urls) && m.image_urls.length)
       return m.image_urls
