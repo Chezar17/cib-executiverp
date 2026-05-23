@@ -687,10 +687,18 @@ function parseNmailMultipartFile(req) {
   })
 }
 
-async function handleNmailMultipartUpload(req, res, supabase, me) {
+async function handleNmailMultipartUpload(req, res, supabase, me, serviceKeyUnset) {
   const ct = String(req.headers['content-type'] || '').toLowerCase()
   if (!ct.includes('multipart/form-data')) {
     res.status(415).json({ error: 'Expected multipart/form-data' })
+    return undefined
+  }
+  if (serviceKeyUnset) {
+    res.status(503).json({
+      error: 'NMAIL file upload is not configured on this server',
+      hint: 'Set SUPABASE_SERVICE_ROLE_KEY in Vercel (Environment Variables). Use the service_role secret from Supabase Dashboard → Settings → API. Anon key cannot write to Storage under default RLS.',
+      context: 'nexus-mail multipart upload',
+    })
     return undefined
   }
   try {
@@ -713,12 +721,19 @@ async function handleNmailMultipartUpload(req, res, supabase, me) {
       .from(NMAIL_ATTACHMENTS_BUCKET)
       .upload(objectPath, parsed.buffer, { contentType: parsed.mime, upsert: false })
 
-    if (upErr)
-      return jsonApiError(res, 502, upErr.message || 'Storage upload failed', {
+    if (upErr) {
+      const raw = String(upErr.message || upErr.statusCode || '')
+      const rlsBlocked = /row-level security|violates .*policy|42501|PGRST301/i.test(raw)
+      const hint = rlsBlocked
+        ? 'Confirm SUPABASE_SERVICE_ROLE_KEY is set on the server and redeploy; anon uploads are blocked by Storage RLS.'
+        : 'Ensure bucket nmail-attachments exists (docs/sql/nexus-mail-attachments.sql) and MIME/size limits match.'
+      return jsonApiError(res, 503, raw || 'Storage upload failed', {
         cause: upErr,
         context: 'nexus-mail multipart upload',
-        hint: 'Create bucket nmail-attachments (docs/sql/nexus-mail-attachments.sql).',
+        hint,
+        supabase: typeof upErr === 'object' ? upErr : undefined,
       })
+    }
 
     res.status(201).json({
       ok: true,
@@ -771,7 +786,7 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const mulCt = String(req.headers['content-type'] || '').toLowerCase()
       if (mulCt.includes('multipart/form-data'))
-        return await handleNmailMultipartUpload(req, res, supabase, me)
+        return await handleNmailMultipartUpload(req, res, supabase, me, serviceKeyUnset)
     }
 
     if (req.method === 'GET' && req.query?.directory === '1') {

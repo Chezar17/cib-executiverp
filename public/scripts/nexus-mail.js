@@ -94,7 +94,11 @@
         j = null
       }
     }
-    if (!r.ok) throw new Error((j && j.error) || txt || String(r.status))
+    if (!r.ok) {
+      var em = (j && j.error) || txt || String(r.status)
+      if (j && j.hint) em = em + ' — ' + j.hint
+      throw new Error(em)
+    }
     var att = j && j.attachment ? j.attachment : null
     if (!att || typeof att !== 'object' || typeof att.path !== 'string')
       throw new Error('Malformed upload response')

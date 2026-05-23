@@ -23,7 +23,8 @@ COMMENT ON COLUMN public.nx_mail_messages.attachments IS
 -- INSERT INTO migrations_log VALUES ('manual', 'Convert image_urls to attachments legacy_url');
 
 
--- 3) Storage bucket (private); uploads go through POST /api/nexus-mail multipart (field `file`, service role).
+-- 3) Storage bucket (private); uploads: POST /api/nexus-mail multipart, field `file` (needs service role).
+--    Further indexes + bucket upsert: docs/sql/nexus-mail-attachments-followup.sql
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'nmail-attachments',
@@ -42,10 +43,20 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- RLS: with service-role-only API access you usually need no Storage policies here.
+-- REQUIRED on Vercel / API host: set env SUPABASE_SERVICE_ROLE_KEY (Supabase Dashboard → Settings → API → service_role secret).
+-- Without it, uploads use SUPABASE_ANON_KEY and INSERT into storage.objects fails with «row violates row-level security policy».
+
+
 -- If you enable client uploads later, add explicit INSERT policies scoped by folder.
 
 
--- 4) OPTIONAL — extend nx_mail_inbox_agg so inbox previews show "[Attachment]"
+-- 5) Vercel / server environment (outside SQL)
+--    SUPABASE_URL, SUPABASE_ANON_KEY — as today
+--    SUPABASE_SERVICE_ROLE_KEY — REQUIRED for multipart uploads & mail DB under Storage/table RLS.
+--    Redeploy after adding the variable.
+
+
+-- 6) OPTIONAL — extend nx_mail_inbox_agg so inbox previews show "[Attachment]"
 -- Include in the RETURNS TABLE something like last_attachment_count bigint.
 -- Populate it from the latest message row, e.g.:
 --   coalesce(jsonb_array_length(coalesce(last_msg.attachments, '[]'::jsonb)), 0)::bigint
