@@ -4,6 +4,7 @@
 //  GET  /api/nexus-mail?thread=<uuid>      → messages + participants
 //  GET  /api/nexus-mail?directory=1&q=…   → user picker
 //  POST /api/nexus-mail                    → send mail (JSON) **or** multipart attachment upload (`file` field)
+//              **or** JSON `nmail_attachment_direct_prepare` → signed PUT URL (large files bypass Vercel payload cap)
 //  PATCH /api/nexus-mail                  → mark thread read
 //
 //  DB: docs/sql/nexus-mail-gmail-migration.sql (+ docs/sql/nexus-mail-performance.sql for inbox speed
@@ -21,6 +22,7 @@ import {
   NMAIL_ATTACHMENTS_BUCKET,
   NMAIL_MAX_ATTACHMENT_FILES,
   NMAIL_MAX_UPLOAD_BYTES,
+  NMAIL_MULTIPART_SAFE_MAX_BYTES,
   isAttachmentPathOwnedByViewer,
   isAllowedMailMime,
   badgeStorageFolder,
@@ -726,7 +728,7 @@ async function handleNmailMultipartUpload(req, res, supabase, me, serviceKeyUnse
       const rlsBlocked = /row-level security|violates .*policy|42501|PGRST301/i.test(raw)
       const hint = rlsBlocked
         ? 'Confirm SUPABASE_SERVICE_ROLE_KEY is set on the server and redeploy; anon uploads are blocked by Storage RLS.'
-        : 'Ensure bucket nmail-attachments exists (docs/sql/nexus-mail-attachments.sql) and MIME/size limits match.'
+        : `Ensure bucket "${NMAIL_ATTACHMENTS_BUCKET}" exists (docs/sql/nexus-mail-attachments.sql) and MIME/size limits match.`
       return jsonApiError(res, 503, raw || 'Storage upload failed', {
         cause: upErr,
         context: 'nexus-mail multipart upload',
@@ -750,6 +752,96 @@ async function handleNmailMultipartUpload(req, res, supabase, me, serviceKeyUnse
       context: 'nexus-mail multipart upload',
     })
   }
+}
+
+/**
+ * Returns a Storage signed upload URL (tiny JSON body → OK on Vercel); browser PUTs bytes to Supabase directly.
+ * @returns {Promise<boolean>} true if a response was already sent.
+ */
+async function handleNmailPrepareDirectAttachmentUpload(res, earlyBody, supabase, me, serviceKeyUnset) {
+  const body = earlyBody && typeof earlyBody === 'object' ? earlyBody : {}
+  if (body?.nmail_attachment_direct_prepare !== true) return false
+
+  if (serviceKeyUnset) {
+    res.status(503).json({
+      error: 'NMAIL file upload is not configured on this server',
+      hint: 'Set SUPABASE_SERVICE_ROLE_KEY in Vercel (Environment Variables). Use the service_role secret from Supabase Dashboard → Settings → API.',
+      context: 'nexus-mail signed upload preparation',
+    })
+    return true
+  }
+
+  const filename = safeUploadedBasename(body.filename ?? '')
+  const mimeRaw = typeof body.mime === 'string' ? body.mime.trim() : ''
+  const mime = mimeRaw || 'application/octet-stream'
+  const size = typeof body.size_bytes === 'number' ? body.size_bytes : Number(body.size_bytes)
+
+  if (!filename) {
+    res.status(400).json({ error: 'Missing filename' })
+    return true
+  }
+  if (!Number.isFinite(size) || size < 1 || size > NMAIL_MAX_UPLOAD_BYTES) {
+    res.status(400).json({
+      error: 'Invalid size_bytes',
+      hint: `Each file must be between 1 and ${NMAIL_MAX_UPLOAD_BYTES} bytes.`,
+    })
+    return true
+  }
+  /** Guard tiny files — avoid extra round-trip and keep multipart path that does not rely on Storage CORS. */
+  if (size < NMAIL_MULTIPART_SAFE_MAX_BYTES) {
+    res.status(400).json({
+      error: 'Use multipart upload for files under ~4MiB.',
+      hint: 'Send multipart/form-data to this route with field name `file` for smaller uploads.',
+      threshold_bytes: NMAIL_MULTIPART_SAFE_MAX_BYTES,
+    })
+    return true
+  }
+
+  if (!badgeStorageFolder(me)) {
+    res.status(400).json({ error: 'Missing badge on session' })
+    return true
+  }
+  if (!isAllowedMailMime(mime, filename)) {
+    res.status(415).json({ error: 'File type not allowed' })
+    return true
+  }
+
+  const objectPath = buildMailAttachmentStoragePath(me, filename)
+
+  const { data: signData, error: signErr } = await supabase.storage
+    .from(NMAIL_ATTACHMENTS_BUCKET)
+    .createSignedUploadUrl(objectPath)
+
+  if (signErr || !signData?.signedUrl || !signData.token) {
+    const raw = String(signErr?.message || signErr || 'Signed URL failed')
+    const rlsBlocked = /row-level security|violates .*policy|42501|PGRST301/i.test(raw)
+    const hint = rlsBlocked
+      ? 'Confirm SUPABASE_SERVICE_ROLE_KEY is set on the server and redeploy.'
+      : `Ensure bucket "${NMAIL_ATTACHMENTS_BUCKET}" exists and Storage allows signed uploads.`
+    jsonApiError(res, 503, raw, {
+      cause: signErr,
+      context: 'nexus-mail createSignedUploadUrl',
+      hint,
+    })
+    return true
+  }
+
+  res.status(200).json({
+    ok: true,
+    /** Browser: `PUT signed_url` with raw file bytes and Content-Type matching `mime`. */
+    direct_upload: {
+      signed_url: signData.signedUrl,
+      token: signData.token,
+    },
+    attachment: {
+      path: objectPath,
+      filename,
+      mime,
+      size_bytes: Math.floor(size),
+    },
+    hint: `Browser: PUT the file using FormData (field \`cacheControl\`='3600' and an empty-named file part — same shape as Supabase JS \`uploadToSignedUrl\`). Add your site's origin under Supabase Storage CORS if the upload is blocked.`,
+  })
+  return true
 }
 
 export default async function handler(req, res) {
@@ -787,6 +879,12 @@ export default async function handler(req, res) {
       const mulCt = String(req.headers['content-type'] || '').toLowerCase()
       if (mulCt.includes('multipart/form-data'))
         return await handleNmailMultipartUpload(req, res, supabase, me, serviceKeyUnset)
+
+      /** Large files: tiny JSON handshake → signed Storage URL → client PUT skips Vercel ~4.5MB body cap */
+      const earlyBody =
+        typeof req.body === 'object' && req.body !== null && !Array.isArray(req.body) ? req.body : {}
+      const answered = await handleNmailPrepareDirectAttachmentUpload(res, earlyBody, supabase, me, serviceKeyUnset)
+      if (answered) return
     }
 
     if (req.method === 'GET' && req.query?.directory === '1') {

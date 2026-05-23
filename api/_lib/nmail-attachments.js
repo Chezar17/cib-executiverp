@@ -1,10 +1,14 @@
 // Shared NMAIL attachment rules (storage path layout + MIME guard).
 import { randomBytes } from 'crypto'
 
-export const NMAIL_ATTACHMENTS_BUCKET = 'nmail-attachments'
+/** Supabase Storage bucket ID. Override with env if Dashboard name differs from default (e.g. typo). Default: `nmail-attachments`. */
+export const NMAIL_ATTACHMENTS_BUCKET =
+  String(process.env.NMAIL_ATTACHMENTS_BUCKET ?? '').trim() || 'nmail-attachments'
 export const NMAIL_MAX_ATTACHMENT_FILES = 15
 /** Per-file ceiling for upload POST (aligned with sensible serverless limits). */
 export const NMAIL_MAX_UPLOAD_BYTES = 12 * 1024 * 1024
+/** Prefer signed direct-to-Storage upload at or above this size (Vercel caps serverless **request** bodies ~4.5MiB). */
+export const NMAIL_MULTIPART_SAFE_MAX_BYTES = 4 * 1024 * 1024
 
 /** @param {unknown} badge */
 export function badgeStorageFolder(badge) {

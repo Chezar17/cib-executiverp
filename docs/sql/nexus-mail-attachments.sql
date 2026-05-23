@@ -23,8 +23,9 @@ COMMENT ON COLUMN public.nx_mail_messages.attachments IS
 -- INSERT INTO migrations_log VALUES ('manual', 'Convert image_urls to attachments legacy_url');
 
 
--- 3) Storage bucket (private); uploads: POST /api/nexus-mail multipart, field `file` (needs service role).
+-- 3) Storage bucket (private); uploads via API (multipart `file`, or signed direct upload for larger files — see API notes below).
 --    Further indexes + bucket upsert: docs/sql/nexus-mail-attachments-followup.sql
+--    Bucket id/name must read **n-mail** (nmail) — not «nmall» (common typo).
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'nmail-attachments',
@@ -43,9 +44,11 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- RLS: with service-role-only API access you usually need no Storage policies here.
--- REQUIRED on Vercel / API host: set env SUPABASE_SERVICE_ROLE_KEY (Supabase Dashboard → Settings → API → service_role secret).
+-- REQUIRED on Vercel / API host: set env SUPABASE_SERVICE_ROLE_KEY (Dashboard → Settings → API → Secret key).
 -- Without it, uploads use SUPABASE_ANON_KEY and INSERT into storage.objects fails with «row violates row-level security policy».
-
+--
+-- Ops: Vercel limits serverless POST bodies (~4.5MB). File uploads ≥ ~4MiB use a signed PUT to Storage from the browser instead of multipart API.
+--      If uploads fail only in prod with «Failed to fetch» / CORS errors, allow your HTTPS site origin under Supabase → Storage.
 
 -- If you enable client uploads later, add explicit INSERT policies scoped by folder.
 
@@ -53,6 +56,7 @@ ON CONFLICT (id) DO NOTHING;
 -- 5) Vercel / server environment (outside SQL)
 --    SUPABASE_URL, SUPABASE_ANON_KEY — as today
 --    SUPABASE_SERVICE_ROLE_KEY — REQUIRED for multipart uploads & mail DB under Storage/table RLS.
+--    Optional: NMAIL_ATTACHMENTS_BUCKET — bucket id must match Dashboard (defaults to `nmail-attachments` if unset).
 --    Redeploy after adding the variable.
 
 

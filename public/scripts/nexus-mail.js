@@ -63,9 +63,59 @@
         j = null
       }
     }
-    if (!r.ok)
-      throw new Error((j && j.error) || r.statusText || String(r.status))
+    if (!r.ok) {
+      var em = (j && j.error) || r.statusText || String(r.status)
+      if (j && j.hint) em = em + ' — ' + j.hint
+      throw new Error(em)
+    }
     return j && typeof j === 'object' ? j : {}
+  }
+
+  /** Aligned with `NMAIL_MULTIPART_SAFE_MAX_BYTES` (Vercel ~4.5MB serverless body cap). Larger files upload via signed Storage URL — not through Vercel. */
+  var NMAIL_MULTIPART_SAFE_MAX_BYTES = 4 * 1024 * 1024
+
+  /** @returns {Promise<{ path: string, filename: string, mime: string, size_bytes: number }>} */
+  async function nmailUploadFileViaSupabaseSignedPut(file) {
+    var mime = file.type ? String(file.type) : 'application/octet-stream'
+    var prep = await fetchJson('POST', '/api/nexus-mail', {
+      nmail_attachment_direct_prepare: true,
+      filename: file.name,
+      mime: mime,
+      size_bytes: file.size,
+    })
+    var du = prep && prep.direct_upload
+    if (!du || typeof du.signed_url !== 'string') throw new Error('Missing signed upload URL')
+    var att = prep && prep.attachment
+    if (!att || typeof att !== 'object' || typeof att.path !== 'string')
+      throw new Error('Malformed prepare response')
+
+    var fdPut = new FormData()
+    fdPut.append('cacheControl', '3600')
+    fdPut.append('', file)
+
+    var putRes = await fetch(du.signed_url, {
+      method: 'PUT',
+      headers: { 'x-upsert': 'false' },
+      body: fdPut,
+    })
+    if (!putRes.ok) {
+      var putTxt = ''
+      try {
+        putTxt = await putRes.text()
+      } catch (_) {}
+      var putHint = ''
+      if (prep && prep.hint) putHint = ' — ' + prep.hint
+      throw new Error(
+        ('Upload to storage failed: ' + putRes.status + ' ' + (putTxt || putRes.statusText)).trim() + putHint,
+      )
+    }
+
+    return {
+      path: att.path,
+      filename: att.filename,
+      mime: att.mime || mime,
+      size_bytes: file.size,
+    }
   }
 
   /**
@@ -73,6 +123,8 @@
    * @returns {Promise<{ path: string, filename: string, mime: string, size_bytes: number }>}
    */
   async function nmailUploadFile(file) {
+    if (file.size >= NMAIL_MULTIPART_SAFE_MAX_BYTES) return nmailUploadFileViaSupabaseSignedPut(file)
+
     var fd = new FormData()
     fd.append('file', file)
     var r = await fetch('/api/nexus-mail', {
