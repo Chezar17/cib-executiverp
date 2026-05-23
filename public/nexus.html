@@ -835,10 +835,10 @@
                     </header>
                     <div class="nx-mail-msg-email-body nx-gmail-reply-compose-body">
                       <textarea id="nxMailReplyBody" class="nx-gmail-reply-textarea nx-mail-msg-native-ta" placeholder="Write your reply…"></textarea>
-                      <label class="nx-gmail-label-sm" for="nxMailReplyImgDraft">Image URL (HTTPS) — one at a time</label>
+                      <label class="nx-gmail-label-sm">Attachments — files upload to secure storage before send</label>
                       <div class="nx-mail-reply-attach-add-row">
-                        <input type="text" id="nxMailReplyImgDraft" class="nx-mail-reply-draft-inp gmail-nx-draft" autocomplete="off" spellcheck="false" placeholder="Paste URL, then Add" />
-                        <button type="button" id="nxMailReplyImgAddBtn" class="nx-mail-reply-add-btn nx-gmail-mini-send">Add</button>
+                        <button type="button" id="nxMailReplyAttachPickBtn" class="nx-mail-mini-filepick">Choose files…</button>
+                        <input type="file" id="nxMailReplyFileInp" class="nx-mail-visually-hidden-file" multiple title="Attachments" tabindex="-1" aria-hidden="true" />
                       </div>
                       <div id="nxMailReplyImgList" class="nx-mail-reply-attach-list" aria-live="polite"></div>
                       <div class="nx-gmail-reply-footer">
@@ -914,10 +914,10 @@
             </div>
             <div class="gmail-cm-img-row is-hidden" id="nxMailComposeImgRow">
               <div class="gmail-cm-attach-stack">
-                <span class="gmail-cm-attach-hint">Image attachments (HTTPS) — one at a time: paste URL, click Add, repeat as needed.</span>
+                <span class="gmail-cm-attach-hint">Attach files — up to 15 per message; uploads go to Nexus storage.</span>
                 <div class="gmail-cm-attach-add-row">
-                  <input type="text" id="nxMailComposeImgDraft" class="gmail-cm-img-draft-inp" autocomplete="off" spellcheck="false" placeholder="https://…" />
-                  <button type="button" class="gmail-cm-img-add-btn" id="nxMailComposeImgAddBtn">Add</button>
+                  <button type="button" class="gmail-cm-img-add-btn" id="nxMailComposeAttachPickBtn">Choose files…</button>
+                  <input type="file" id="nxMailComposeFileInp" class="nx-mail-visually-hidden-file" multiple tabindex="-1" aria-hidden="true" title="Attachments" />
                 </div>
                 <div id="nxMailComposeImgList" class="gmail-compose-attach-list" aria-live="polite"></div>
               </div>
@@ -960,9 +960,9 @@
                   <button type="button" class="gmail-cm-send-caret" id="nxMailComposeSendMenuBtn" title="Send options" aria-hidden="true" tabindex="-1">▾</button>
                 </div>
                 <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeToolbarToggle" title="Text format (Aa)">Aa</button>
-                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeAttachBtn" title="Attachments / image URL">📎</button>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeAttachBtn" title="Attachments">📎</button>
                 <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeLinkBtn" title="Link">🔗</button>
-                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeImgBtn" title="Image (URL)">🖼</button>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeImgBtn" title="Attachments">🖼</button>
                 <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">▴</button>
                 <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">✎</button>
                 <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">⋮</button>

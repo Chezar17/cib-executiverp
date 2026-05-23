@@ -3,17 +3,30 @@
 //  GET  /api/nexus-mail                    → inbox
 //  GET  /api/nexus-mail?thread=<uuid>      → messages + participants
 //  GET  /api/nexus-mail?directory=1&q=…   → user picker
-//  POST /api/nexus-mail                   → send (JSON: to[], cc[], bcc[] or recipient_badge)
+//  POST /api/nexus-mail                    → send mail (JSON) **or** multipart attachment upload (`file` field)
 //  PATCH /api/nexus-mail                  → mark thread read
 //
-//  DB: docs/sql/nexus-mail-gmail-migration.sql (+ docs/sql/nexus-mail-performance.sql for inbox speed)
+//  DB: docs/sql/nexus-mail-gmail-migration.sql (+ docs/sql/nexus-mail-performance.sql for inbox speed
+//       + docs/sql/nexus-mail-attachments.sql for Storage bucket + attachments jsonb column)
 // ============================================================
+
+import busboyPkg from 'busboy'
 
 import { allowMethods } from './_lib/http.js'
 import { requireSession } from './_lib/session.js'
 import { SUPABASE_SERVICE_ROLE_KEY } from './_lib/config.js'
 import { getSupabaseService } from './_lib/supabase.js'
 import { jsonApiError } from './_lib/api-error.js'
+import {
+  NMAIL_ATTACHMENTS_BUCKET,
+  NMAIL_MAX_ATTACHMENT_FILES,
+  NMAIL_MAX_UPLOAD_BYTES,
+  isAttachmentPathOwnedByViewer,
+  isAllowedMailMime,
+  badgeStorageFolder,
+  buildMailAttachmentStoragePath,
+  safeUploadedBasename,
+} from './_lib/nmail-attachments.js'
 
 function trimBadge(b) {
   return String(b || '').trim()
@@ -157,8 +170,6 @@ function sanitizeImageUrl(u) {
   }
 }
 
-const MAX_MAIL_ATTACHMENT_URLS = 15
-
 function coerceJsonUrlArray(raw) {
   if (Array.isArray(raw)) return raw
   if (typeof raw === 'string') {
@@ -189,13 +200,233 @@ function collectPostedImageUrls(bodyObj) {
   function pushOne(cand) {
     const s = sanitizeImageUrl(cand)
     if (!s || out.includes(s)) return
-    if (out.length >= MAX_MAIL_ATTACHMENT_URLS) return
+    if (out.length >= NMAIL_MAX_ATTACHMENT_FILES) return
     out.push(s)
   }
   if (Array.isArray(bodyObj?.image_urls))
     for (const x of bodyObj.image_urls) pushOne(typeof x === 'string' ? x : '')
   if (typeof bodyObj?.image_url === 'string' && bodyObj.image_url.trim()) pushOne(bodyObj.image_url)
   return out
+}
+
+function coerceJsonAttachmentsArray(raw) {
+  if (Array.isArray(raw)) return raw
+  if (!raw || typeof raw !== 'object') return []
+  if (typeof raw === 'string') {
+    try {
+      const p = JSON.parse(raw)
+      return Array.isArray(p) ? p : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+function filenameGuessFromLegacyUrl(u) {
+  try {
+    const pathname = new URL(u).pathname
+    const tail = pathname.split('/').pop() || 'file'
+    return tail.slice(0, 260)
+  } catch {
+    return 'file'
+  }
+}
+
+/** @typedef {{ path?: string | null, legacy_url?: string | null, filename: string, mime: string, size_bytes?: number }} NxMailStoredAttachment */
+
+/**
+ * Rows as stored/read from DB (+ merge legacy image_url/s when attachments empty).
+ * @returns {NxMailStoredAttachment[]}
+ */
+function attachmentListFromDbRow(row) {
+  /** @type {NxMailStoredAttachment[]} */
+  const out = []
+  const j = coerceJsonAttachmentsArray(row?.attachments)
+
+  function pushParsed(x, idxFallback) {
+    if (!x || typeof x !== 'object') return
+    const path = typeof x.path === 'string' ? x.path.trim() : ''
+    const legacy_url = typeof x.legacy_url === 'string' ? x.legacy_url.trim() : ''
+    let filename =
+      typeof x.filename === 'string'
+        ? x.filename.trim().slice(0, 260)
+        : ''
+    let mime =
+      typeof x.mime === 'string'
+        ? x.mime.trim().slice(0, 120).toLowerCase()
+        : ''
+    const szRaw = typeof x.size_bytes === 'number' ? x.size_bytes : 0
+    const size_bytes = Number.isFinite(szRaw) ? Math.max(0, Math.floor(szRaw)) : 0
+    if (path && !legacy_url) {
+      if (!filename) filename = `attachment-${idxFallback}`
+      if (!mime || !isAllowedMailMime(mime, filename)) return
+      out.push({ path, filename, mime, size_bytes })
+      return
+    }
+    const su = sanitizeImageUrl(legacy_url)
+    if (su) {
+      if (!filename) filename = filenameGuessFromLegacyUrl(su)
+      out.push({
+        legacy_url: su,
+        filename: filename || 'attachment',
+        mime: mime || 'application/octet-stream',
+        size_bytes,
+      })
+    }
+  }
+
+  for (let i = 0; i < j.length && out.length < NMAIL_MAX_ATTACHMENT_FILES; i++) pushParsed(j[i], i)
+
+  if (out.length) return out
+
+  /** Legacy-only messages */
+  for (const u of normalizeStoredAttachmentUrls(row)) {
+    const su = sanitizeImageUrl(typeof u === 'string' ? u : '')
+    if (!su || out.length >= NMAIL_MAX_ATTACHMENT_FILES) continue
+    out.push({
+      legacy_url: su,
+      filename: filenameGuessFromLegacyUrl(su),
+      mime: 'image/jpeg',
+      size_bytes: 0,
+    })
+  }
+
+  return out
+}
+
+/** @param {NxMailStoredAttachment[]} list */
+async function hydrateAttachmentsOutbound(supabase, list, expiresSec = 7200) {
+  const ttl = Math.min(Math.max(expiresSec, 60), 60 * 60 * 48)
+  return Promise.all(
+    list.map(async (a) => {
+      if (a.legacy_url) {
+        const u = sanitizeImageUrl(a.legacy_url)
+        return u
+          ? {
+              path: null,
+              legacy_url: u,
+              filename: a.filename,
+              mime: a.mime,
+              size_bytes: a.size_bytes ?? 0,
+              download_url: u,
+            }
+          : null
+      }
+      if (!a.path) return null
+      const { data, error } = await supabase.storage
+        .from(NMAIL_ATTACHMENTS_BUCKET)
+        .createSignedUrl(a.path, ttl)
+      if (error && !data?.signedUrl) {
+        return {
+          path: a.path,
+          legacy_url: null,
+          filename: a.filename,
+          mime: a.mime,
+          size_bytes: a.size_bytes ?? 0,
+          download_url: null,
+          _sign_err: error?.message || String(error || ''),
+        }
+      }
+      return {
+        path: a.path,
+        legacy_url: null,
+        filename: a.filename,
+        mime: a.mime,
+        size_bytes: a.size_bytes ?? 0,
+        download_url: data?.signedUrl || null,
+      }
+    }),
+  ).then((arr) => arr.filter(Boolean))
+}
+
+/**
+ * Client POST attachments: `{ path, filename, mime, size_bytes }` must match prior upload prefixes.
+ */
+function collectPostedAttachmentRecords(me, bodyObj) {
+  /** @type {NxMailStoredAttachment[]} */
+  const out = []
+  const arr = coerceJsonAttachmentsArray(bodyObj?.attachments)
+  /** @type {Set<string>} */
+  const pathsSeen = new Set()
+  /** @type {Set<string>} */
+  const urlSeen = new Set()
+
+  for (const raw of arr) {
+    if (out.length >= NMAIL_MAX_ATTACHMENT_FILES) break
+    if (!raw || typeof raw !== 'object') continue
+    const path = typeof raw.path === 'string' ? raw.path.trim() : ''
+    const legacy_url = typeof raw.legacy_url === 'string' ? raw.legacy_url.trim() : ''
+    const filename =
+      typeof raw.filename === 'string'
+        ? raw.filename.trim().slice(0, 260)
+        : ''
+    let mime =
+      typeof raw.mime === 'string'
+        ? raw.mime.trim().slice(0, 120).toLowerCase()
+        : ''
+    const szRaw = typeof raw.size_bytes === 'number' ? raw.size_bytes : 0
+    const size_bytes = Number.isFinite(szRaw) ? Math.max(0, Math.floor(szRaw)) : 0
+
+    if (path && !legacy_url) {
+      if (!isAttachmentPathOwnedByViewer(path, me)) continue
+      if (pathsSeen.has(path)) continue
+      if (!filename) continue
+      if (!mime || !isAllowedMailMime(mime, filename)) continue
+      pathsSeen.add(path)
+      out.push({ path, filename, mime, size_bytes })
+      continue
+    }
+    const su = sanitizeImageUrl(legacy_url)
+    if (!su || urlSeen.has(su)) continue
+    urlSeen.add(su)
+    out.push({
+      legacy_url: su,
+      filename: filename || filenameGuessFromLegacyUrl(su),
+      mime: mime || 'application/octet-stream',
+      size_bytes,
+    })
+  }
+
+  /** Optional legacy compose clients */
+  for (const u of collectPostedImageUrls(bodyObj)) {
+    if (out.length >= NMAIL_MAX_ATTACHMENT_FILES) break
+    if (urlSeen.has(u)) continue
+    urlSeen.add(u)
+    out.push({
+      legacy_url: u,
+      filename: filenameGuessFromLegacyUrl(u),
+      mime: 'image/jpeg',
+      size_bytes: 0,
+    })
+  }
+
+  return out
+}
+
+function legacyImageColumnsFromAttachments(storedForDb) {
+  const urls = []
+  for (const a of storedForDb) {
+    const u = a.legacy_url ? sanitizeImageUrl(a.legacy_url) : null
+    if (u && !urls.includes(u)) urls.push(u)
+    if (urls.length >= NMAIL_MAX_ATTACHMENT_FILES) break
+  }
+  return { image_urls: urls, image_url: urls[0] || null }
+}
+
+/** Plain JSON rows for Postgres jsonb insert */
+function attachmentsForDbInsert(list) {
+  return list.map((x) => {
+    /** @type {Record<string, unknown>} */
+    const o = {}
+    o.filename = x.filename
+    o.mime = x.mime
+    o.size_bytes = x.size_bytes ?? 0
+    if (x.path) o.path = x.path
+    const leg = x.legacy_url ? sanitizeImageUrl(x.legacy_url) : null
+    if (leg) o.legacy_url = leg
+    return o
+  })
 }
 
 /** Dedupe resolved badges preserving first occurrence order */
@@ -218,6 +449,20 @@ function lastSnippet(last) {
     .replace(/\s+/g, ' ')
     .trim()
   if (txt.length) return txt.length > 120 ? `${txt.slice(0, 120)}…` : txt
+
+  const stubRaw = last.attachments_stub
+  const stub =
+    typeof stubRaw === 'number' && Number.isFinite(stubRaw) ? Math.max(0, Math.floor(stubRaw)) : null
+  if (stub !== null && stub > 0) return stub > 1 ? `[${stub} attachments]` : '[Attachment]'
+
+  const list = attachmentListFromDbRow(last)
+  if (list.length > 1) return `[${list.length} attachments]`
+  if (list.length === 1) {
+    const mime = String(list[0].mime || '').toLowerCase()
+    if (mime.startsWith('image/') || list[0].legacy_url) return '[Image]'
+    return '[Attachment]'
+  }
+
   const imgs = normalizeStoredAttachmentUrls(last)
   if (imgs.length > 1) return `[${imgs.length} images]`
   if (imgs.length === 1) return '[Image]'
@@ -286,7 +531,7 @@ async function fetchInboxMessageFallback(supabase, me, ids) {
   const [msgsRes, readsRes] = await Promise.all([
     supabase
       .from('nx_mail_messages')
-      .select('thread_id,body,sender_badge,created_at,image_url,image_urls')
+      .select('thread_id,body,sender_badge,created_at,image_url,image_urls,attachments')
       .in('thread_id', ids),
     supabase.from('nx_mail_thread_reads').select('thread_id,last_read_at,reader_badge').in('thread_id', ids),
   ])
@@ -340,7 +585,16 @@ function inboxAggFromRpcRows(rows, ids) {
     const tid = raw?.thread_id != null ? String(raw.thread_id) : ''
     if (!tid) continue
     seen.add(tid)
-    if (raw.last_created_at != null || raw.last_body || raw.last_sender_badge || raw.last_image_url) {
+    const acRaw = Number(raw.last_attachment_count)
+    const attachmentStub =
+      Number.isFinite(acRaw) && acRaw > 0 ? Math.max(1, Math.floor(acRaw)) : null
+    const hasLast =
+      raw.last_created_at != null ||
+      raw.last_body ||
+      raw.last_sender_badge ||
+      raw.last_image_url ||
+      attachmentStub != null
+    if (hasLast) {
       lastMap[tid] = {
         thread_id: tid,
         body: raw.last_body ?? null,
@@ -348,6 +602,7 @@ function inboxAggFromRpcRows(rows, ids) {
         created_at: raw.last_created_at ?? null,
         image_url: raw.last_image_url ?? null,
         image_urls: raw.last_image_urls ?? null,
+        ...(attachmentStub != null ? { attachments_stub: attachmentStub } : {}),
       }
     }
     unreadCounts[tid] = Number(raw.unread_count) || 0
@@ -380,6 +635,108 @@ async function upsertThreadMembers(supabase, threadId, badges) {
   return error
 }
 
+/**
+ * One file per request; multipart field name `file`.
+ * @returns {Promise<{ buffer: Buffer, filename: string, mime: string } | { error: string }>}
+ */
+function parseNmailMultipartFile(req) {
+  return new Promise((resolve, reject) => {
+    /** @type {Buffer[]} */
+    const chunks = []
+    let wrote = false
+    let filename = ''
+    let mime = 'application/octet-stream'
+    let total = 0
+
+    try {
+      const busboyFactory = typeof busboyPkg === 'function' ? busboyPkg : busboyPkg.default || busboyPkg
+      const bb = busboyFactory({
+        headers: req.headers,
+        limits: {
+          files: 1,
+          parts: 3,
+          fileSize: NMAIL_MAX_UPLOAD_BYTES,
+        },
+      })
+      bb.once('error', reject)
+      bb.on('file', (name, stream, info) => {
+        if (name !== 'file' || wrote) return
+        wrote = true
+        mime = info?.mimeType || 'application/octet-stream'
+        filename = safeUploadedBasename(info?.filename ?? 'upload')
+        stream.on('data', (chunk) => {
+          total += chunk.length
+          if (total > NMAIL_MAX_UPLOAD_BYTES) stream.resume()
+          else chunks.push(chunk)
+        })
+        stream.on('limit', () => {})
+      })
+      bb.once('close', () => {
+        try {
+          if (!wrote || !chunks.length || total > NMAIL_MAX_UPLOAD_BYTES)
+            resolve({ error: total > NMAIL_MAX_UPLOAD_BYTES ? 'File too large' : 'Missing file field' })
+          else resolve({ buffer: Buffer.concat(chunks), filename, mime })
+        } catch (e) {
+          reject(e)
+        }
+      })
+      req.pipe(bb)
+    } catch (e) {
+      reject(e)
+    }
+  })
+}
+
+async function handleNmailMultipartUpload(req, res, supabase, me) {
+  const ct = String(req.headers['content-type'] || '').toLowerCase()
+  if (!ct.includes('multipart/form-data')) {
+    res.status(415).json({ error: 'Expected multipart/form-data' })
+    return undefined
+  }
+  try {
+    const parsed = await parseNmailMultipartFile(req)
+    if ('error' in parsed) {
+      res.status(400).json({ error: parsed.error })
+      return undefined
+    }
+    if (!badgeStorageFolder(me)) {
+      res.status(400).json({ error: 'Missing badge on session' })
+      return undefined
+    }
+    if (!isAllowedMailMime(parsed.mime, parsed.filename)) {
+      res.status(415).json({ error: 'File type not allowed' })
+      return undefined
+    }
+    const objectPath = buildMailAttachmentStoragePath(me, parsed.filename)
+
+    const { error: upErr } = await supabase.storage
+      .from(NMAIL_ATTACHMENTS_BUCKET)
+      .upload(objectPath, parsed.buffer, { contentType: parsed.mime, upsert: false })
+
+    if (upErr)
+      return jsonApiError(res, 502, upErr.message || 'Storage upload failed', {
+        cause: upErr,
+        context: 'nexus-mail multipart upload',
+        hint: 'Create bucket nmail-attachments (docs/sql/nexus-mail-attachments.sql).',
+      })
+
+    res.status(201).json({
+      ok: true,
+      attachment: {
+        path: objectPath,
+        filename: parsed.filename,
+        mime: parsed.mime,
+        size_bytes: parsed.buffer.length,
+      },
+    })
+  } catch (e) {
+    return jsonApiError(res, 500, e?.message || 'Multipart upload failed', {
+      cause: e,
+      context: 'nexus-mail multipart upload',
+    })
+  }
+}
+
 export default async function handler(req, res) {
   try {
     if (!allowMethods(req, res, ['GET', 'POST', 'PATCH', 'OPTIONS'])) return
@@ -408,6 +765,13 @@ export default async function handler(req, res) {
     if (!me) {
       res.status(400).json({ error: 'Missing badge on session' })
       return
+    }
+
+    /** POST multipart → same `/api/nexus-mail` URL as JSON (Hobby 12-fn cap); field `file`. */
+    if (req.method === 'POST') {
+      const mulCt = String(req.headers['content-type'] || '').toLowerCase()
+      if (mulCt.includes('multipart/form-data'))
+        return await handleNmailMultipartUpload(req, res, supabase, me)
     }
 
     if (req.method === 'GET' && req.query?.directory === '1') {
@@ -451,7 +815,7 @@ export default async function handler(req, res) {
       const [{ data: msgs, error: meErr }, profilesRes] = await Promise.all([
         supabase
           .from('nx_mail_messages')
-          .select('id,sender_badge,body,image_url,image_urls,created_at')
+          .select('id,sender_badge,body,image_url,image_urls,attachments,created_at')
           .eq('thread_id', threadId)
           .order('created_at', { ascending: true }),
         memberBadges.length
@@ -502,17 +866,39 @@ export default async function handler(req, res) {
         }
       }
 
-      const formatted = mlistEarly.map((m) => {
-        const base = {
-          ...m,
-          image_urls: normalizeStoredAttachmentUrls(m),
-          image_url: normalizeStoredAttachmentUrls(m)[0] || null,
-        }
-        let recs = recByMsg[m.id] || syntheticRecipientsLegacy(thr, m)
-        const isSender = badgesEquivalent(m.sender_badge, me)
-        recs = filterRecipientsForViewer(recs, me, m.sender_badge, isSender)
-        return { ...base, recipients: recs }
-      })
+      const formatted = await Promise.all(
+        mlistEarly.map(async (m) => {
+          const baseList = attachmentListFromDbRow(m)
+          const attachments = await hydrateAttachmentsOutbound(supabase, baseList)
+          const imgFromAtt = attachments
+            .filter(
+              (x) => x.download_url && String(x.mime || '').toLowerCase().startsWith('image/'),
+            )
+            .map((x) => x.download_url)
+
+          /** @type {string[]} */
+          let image_urls = [...imgFromAtt]
+          for (const u of normalizeStoredAttachmentUrls(m)) {
+            const su = sanitizeImageUrl(u)
+            if (su && !image_urls.includes(su)) image_urls.push(su)
+            if (image_urls.length >= NMAIL_MAX_ATTACHMENT_FILES) break
+          }
+
+          image_urls = image_urls.slice(0, NMAIL_MAX_ATTACHMENT_FILES)
+
+          const base = {
+            ...m,
+            attachments,
+            image_urls,
+            image_url: image_urls[0] || null,
+          }
+
+          let recs = recByMsg[m.id] || syntheticRecipientsLegacy(thr, m)
+          const isSender = badgesEquivalent(m.sender_badge, me)
+          recs = filterRecipientsForViewer(recs, me, m.sender_badge, isSender)
+          return { ...base, recipients: recs }
+        }),
+      )
 
       return res.status(200).json({
         thread: {
@@ -698,7 +1084,11 @@ export default async function handler(req, res) {
       const body = typeof req.body === 'object' && req.body ? req.body : {}
       const rawBody = typeof body.body === 'string' ? body.body.trim() : ''
       const subject = typeof body.subject === 'string' ? body.subject.trim() : ''
-      const postedUrls = collectPostedImageUrls(body)
+
+      /** @type {NxMailStoredAttachment[]} */
+      const attachmentRecords = collectPostedAttachmentRecords(me, body)
+      const { image_url: legImgUrl, image_urls: legImgUrls } =
+        legacyImageColumnsFromAttachments(attachmentRecords)
 
       const toTokens = [
         ...parseAddressTokens(body.to),
@@ -707,11 +1097,13 @@ export default async function handler(req, res) {
       const ccTokens = parseAddressTokens(body.cc)
       const bccTokens = parseAddressTokens(body.bcc)
 
-      if (!rawBody && !postedUrls.length) {
-        return res.status(400).json({ error: 'body or image_urls required' })
+      if (!rawBody && !attachmentRecords.length) {
+        return res.status(400).json({ error: 'body or attachments required' })
       }
 
       const threadIdIn = typeof body.thread_id === 'string' ? body.thread_id.trim() : ''
+
+      const attachJson = attachmentsForDbInsert(attachmentRecords)
 
       /** ---------- Reply ---------- */
       if (threadIdIn) {
@@ -795,8 +1187,9 @@ export default async function handler(req, res) {
             thread_id: threadIdIn,
             sender_badge: me,
             body: rawBody.slice(0, 16000),
-            image_url: postedUrls[0] || null,
-            image_urls: postedUrls.length ? postedUrls : [],
+            image_url: legImgUrl || null,
+            image_urls: legImgUrls || [],
+            attachments: attachJson,
           })
           .select('id')
           .single()
@@ -900,8 +1293,9 @@ export default async function handler(req, res) {
           thread_id: newTid,
           sender_badge: me,
           body: rawBody.slice(0, 16000),
-          image_url: postedUrls[0] || null,
-          image_urls: postedUrls.length ? postedUrls : [],
+          image_url: legImgUrl || null,
+          image_urls: legImgUrls || [],
+          attachments: attachJson,
         })
         .select('id')
         .single()
