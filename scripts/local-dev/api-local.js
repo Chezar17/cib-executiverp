@@ -32,10 +32,17 @@ export async function runApiHandler(req, res, pathname, searchParams, apiDir) {
   }
 
   req.query = toQueryObject(searchParams);
-  req.body =
-    req.method === "GET" || req.method === "HEAD"
-      ? {}
-      : await readJsonBody(req);
+  if (req.method === "GET" || req.method === "HEAD") {
+    req.body = {};
+  } else {
+    const ct = String(req.headers["content-type"] || "").toLowerCase();
+    if (ct.includes("multipart/form-data")) {
+      /** Body stream left for handlers (`/api/nexus-mail` multipart / busboy). */
+      req.body = {};
+    } else {
+      req.body = await readJsonBody(req);
+    }
+  }
 
   const moduleUrl = `${pathToFileURL(filePath).href}?v=${Date.now()}`;
   const mod = await import(moduleUrl);

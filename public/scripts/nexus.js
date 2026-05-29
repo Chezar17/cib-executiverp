@@ -1,9 +1,97 @@
+// ── Weekly Report (CIB / GIU Google Docs) ───────────────────
+  const NX_WEEKLY_REPORT = {
+    preview: {
+      cib:
+        'https://docs.google.com/document/d/1Sk945flgQ_o7mYFslHGRhmUAhNb1KuL-oEq4SRdbUXY/preview',
+      giu:
+        'https://docs.google.com/document/d/1eL6YB93JeQJRVq2nnorEJESB288WGPNkrREjkaz8iD4/preview',
+    },
+    edit: {
+      cib:
+        'https://docs.google.com/document/d/1Sk945flgQ_o7mYFslHGRhmUAhNb1KuL-oEq4SRdbUXY/edit?tab=t.a5pl6qt90u7p',
+      giu:
+        'https://docs.google.com/document/d/1eL6YB93JeQJRVq2nnorEJESB288WGPNkrREjkaz8iD4/edit?tab=t.5xzq1rmkdlev',
+    },
+  }
+
+  /** Matches verify-token classification e.g. top_secret, TOP SECRET, ts */
+  function nxIsTopSecretClassification(raw) {
+    const x = String(raw || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[\s-]+/g, '_')
+    return x === 'top_secret' || x === 'ts' || x === 'topsecret'
+  }
+
+  /** GIU weekly doc requires is_giu && top_secret (server verify-token fields). */
+  function nxWeeklyReportGiuGateOk() {
+    return sessionStorage.getItem('cib_weekly_giu_allowed') === '1'
+  }
+
+  async function nxWeeklyReportInitGiulGate() {
+    document.body.classList.remove('nx-weekly-report-giu-ok')
+    sessionStorage.setItem('cib_weekly_giu_allowed', '0')
+    const token = sessionStorage.getItem('cib_token')
+    if (!token) return
+    try {
+      const res = await fetch('/api/verify-token', {
+        method: 'GET',
+        headers: { 'x-session-token': token },
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      const allowed =
+        !!data.success && !!data.is_giu && nxIsTopSecretClassification(data.classification)
+      sessionStorage.setItem('cib_weekly_giu_allowed', allowed ? '1' : '0')
+      if (allowed) document.body.classList.add('nx-weekly-report-giu-ok')
+
+      /** If iframe was pointed at GIU doc but clearance failed, revert to CIB. */
+      if (!allowed && data.success) {
+        const frame = document.getElementById('nxWeeklyReportFrame')
+        if (frame && /1eL6YB93JeQJRVq2nnorEJESB288WGPNkrREjkaz8iD4/.test(frame.src || ''))
+          showWeeklyReport('cib')
+      }
+    } catch (_) {
+      sessionStorage.setItem('cib_weekly_giu_allowed', '0')
+    }
+  }
+
+  function showWeeklyReport(kind, navEl) {
+    const k = kind === 'giu' ? 'giu' : 'cib'
+    if (k === 'giu' && !nxWeeklyReportGiuGateOk()) {
+      showToast(
+        'Laporan mingguan GIU hanya untuk anggota GIU dengan klasifikasi Top Secret.',
+        'error',
+      )
+      return
+    }
+    if (!navEl) navEl = document.querySelector('.nx-nav-item--sub[data-weekly-nav="' + k + '"]')
+    showPanel('weekly-report', navEl || null)
+    const frame = document.getElementById('nxWeeklyReportFrame')
+    const openA = document.getElementById('nxWeeklyReportOpenTab')
+    if (frame) frame.src = NX_WEEKLY_REPORT.preview[k]
+    if (openA) openA.href = NX_WEEKLY_REPORT.edit[k]
+    document.querySelectorAll('.nx-weekly-report-tab').forEach(function (b) {
+      const active = b.getAttribute('data-weekly') === k
+      b.classList.toggle('is-active', active)
+      b.setAttribute('aria-selected', active ? 'true' : 'false')
+    })
+  }
+
 // ── PANEL DATA ──────────────────────────────────────────────
   const PANEL_META = {
     dashboard: {bc:'NEXUS · PORTAL',     title:'Dashboard',          sub:'Command overview · Active session',                              badge:''},
     guidebook: {bc:'NEXUS · DOCUMENTS',  title:'CIB Guidebook',      sub:'Standard operating procedures · Rules of engagement',           badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.3);">INTERNAL</span>'},
     penal:     {bc:'NEXUS · DOCUMENTS',  title:'Penal Codes',        sub:'Criminal statutes · Charge reference · Sentencing guidelines',  badge:''},
     directory: {bc:'NEXUS · DOCUMENTS',  title:'Main Directory',     sub:'Complete case files · Operation archives · Personnel records',  badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);">TOP SECRET</span>'},
+    'weekly-report': {
+      bc: 'NEXUS · DOCUMENTS',
+      title: 'Weekly Report',
+      sub:
+        'CIB Command vs GIU weekly templates · Embedded Google Documents — open in tab for editing',
+      badge:
+        '<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.3);">INTERNAL</span>',
+    },
     weapons:   {bc:'NEXUS · INTELLIGENCE',title:'Weapons Tracker',   sub:'Active arms networks · Seizure logs · Supply chain mapping',   badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);">CIB EYES ONLY</span>'},
     gang:      {bc:'NEXUS · INTELLIGENCE',title:'Gang Intelligence',  sub:'Active gang profiles · Territorial maps · Threat assessments', badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(224,90,40,0.1);color:#E05A28;border:1px solid rgba(224,90,40,0.3);">GRD DATABASE</span>'},
     informant: {bc:'NEXUS · INTELLIGENCE',title:'Informant Registry', sub:'Handler access only · Identities classified · 33 registered', badge:'<span style="font-family:\'Roboto Mono\',monospace;font-size:8px;letter-spacing:2px;padding:3px 10px;background:rgba(192,57,43,0.1);color:var(--red-alert);border:1px solid rgba(192,57,43,0.3);">HANDLER EYES ONLY</span>'},
@@ -25,10 +113,14 @@
   }
 
   function showPanelByName(name) {
+    if (name === 'weekly-report') {
+      showWeeklyReport('cib')
+      return
+    }
     const navEl = [...document.querySelectorAll('.nx-nav-item')].find(el =>
       el.getAttribute('onclick')?.includes("'" + name + "'")
-    );
-    showPanel(name, navEl);
+    )
+    showPanel(name, navEl)
   }
 
   // ── Auth + clock + idle timeout (via shared portal-auth.js) ──
@@ -53,6 +145,7 @@
         if (window.ObSystem) ObSystem.init(session)
       }, 800)
       if (window.NxMail) NxMail.init()
+      nxWeeklyReportInitGiulGate()
     }
   });
 

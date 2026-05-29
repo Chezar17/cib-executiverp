@@ -3,7 +3,8 @@
   'use strict'
 
   /** @typedef {{ id:string, peer_badge:string, peer_name:string, subject:string, updated_at:string, last_sender?:string|null, last_snippet?:string, unread_count:number }} NxThread */
-  /** @typedef {{ id:string, sender_badge:string, body:string, image_url:string|null, image_urls:string[], created_at:string }} NxMessage */
+  /** @typedef {{ download_url:string|null, filename:string, mime:string|null, size_bytes?:number, path?:string|null, legacy_url?:string|null }} NxOutgoingAttachment */
+  /** @typedef {{ id:string, sender_badge:string, body:string, image_url:string|null, image_urls:string[], attachments?:NxOutgoingAttachment[], created_at:string }} NxMessage */
 
   /** @returns {Record<string,string>} */
   function hdr() {
@@ -12,6 +13,12 @@
       'Content-Type': 'application/json',
       ...(t ? { 'x-session-token': t } : {}),
     }
+  }
+
+  /** Headers for multipart upload (leave Content-Type unset for boundary). */
+  function hdrMultipart() {
+    const t = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cib_token') : ''
+    return t ? { 'x-session-token': t } : {}
   }
 
   /** Sama seperti PortalAuth (`cib_badge`); beberapa halaman juga pakai JSON `cib_session`. */
@@ -56,9 +63,98 @@
         j = null
       }
     }
-    if (!r.ok)
-      throw new Error((j && j.error) || r.statusText || String(r.status))
+    if (!r.ok) {
+      var em = (j && j.error) || r.statusText || String(r.status)
+      if (j && j.hint) em = em + ' — ' + j.hint
+      throw new Error(em)
+    }
     return j && typeof j === 'object' ? j : {}
+  }
+
+  /** Aligned with `NMAIL_MULTIPART_SAFE_MAX_BYTES` (Vercel ~4.5MB serverless body cap). Larger files upload via signed Storage URL — not through Vercel. */
+  var NMAIL_MULTIPART_SAFE_MAX_BYTES = 4 * 1024 * 1024
+
+  /** @returns {Promise<{ path: string, filename: string, mime: string, size_bytes: number }>} */
+  async function nmailUploadFileViaSupabaseSignedPut(file) {
+    var mime = file.type ? String(file.type) : 'application/octet-stream'
+    var prep = await fetchJson('POST', '/api/nexus-mail', {
+      nmail_attachment_direct_prepare: true,
+      filename: file.name,
+      mime: mime,
+      size_bytes: file.size,
+    })
+    var du = prep && prep.direct_upload
+    if (!du || typeof du.signed_url !== 'string') throw new Error('Missing signed upload URL')
+    var att = prep && prep.attachment
+    if (!att || typeof att !== 'object' || typeof att.path !== 'string')
+      throw new Error('Malformed prepare response')
+
+    var fdPut = new FormData()
+    fdPut.append('cacheControl', '3600')
+    fdPut.append('', file)
+
+    var putRes = await fetch(du.signed_url, {
+      method: 'PUT',
+      headers: { 'x-upsert': 'false' },
+      body: fdPut,
+    })
+    if (!putRes.ok) {
+      var putTxt = ''
+      try {
+        putTxt = await putRes.text()
+      } catch (_) {}
+      var putHint = ''
+      if (prep && prep.hint) putHint = ' — ' + prep.hint
+      throw new Error(
+        ('Upload to storage failed: ' + putRes.status + ' ' + (putTxt || putRes.statusText)).trim() + putHint,
+      )
+    }
+
+    return {
+      path: att.path,
+      filename: att.filename,
+      mime: att.mime || mime,
+      size_bytes: file.size,
+    }
+  }
+
+  /**
+   * @param {File} file
+   * @returns {Promise<{ path: string, filename: string, mime: string, size_bytes: number }>}
+   */
+  async function nmailUploadFile(file) {
+    if (file.size >= NMAIL_MULTIPART_SAFE_MAX_BYTES) return nmailUploadFileViaSupabaseSignedPut(file)
+
+    var fd = new FormData()
+    fd.append('file', file)
+    var r = await fetch('/api/nexus-mail', {
+      method: 'POST',
+      headers: hdrMultipart(),
+      body: fd,
+    })
+    var ct = (r.headers.get('content-type') || '').toLowerCase()
+    var txt = await r.text()
+    var trimmed = txt.trim()
+    var j = null
+    var looksJson =
+      ct.includes('application/json') ||
+      (trimmed.length > 0 && (trimmed[0] === '{' || trimmed[0] === '['))
+    if (looksJson && trimmed) {
+      try {
+        j = JSON.parse(trimmed)
+      } catch (_) {
+        j = null
+      }
+    }
+    if (!r.ok) {
+      var em = (j && j.error) || txt || String(r.status)
+      if (j && j.hint) em = em + ' — ' + j.hint
+      throw new Error(em)
+    }
+    var att = j && j.attachment ? j.attachment : null
+    if (!att || typeof att !== 'object' || typeof att.path !== 'string')
+      throw new Error('Malformed upload response')
+    return att
   }
 
   /** Inbox GET: beberapa proxy tidak mengirim Content-Type JSON — tetap parse isi `{ threads }`. */
@@ -182,20 +278,33 @@
     return sanitizeMailBodyHtml(s)
   }
 
-  /** Max matches API (`image_urls` cap). */
+  /** Max matches API cap. */
   const NX_MAX_MAIL_ATTACH = 15
 
-  /** @param {unknown} raw */
-  function parseOneAttachUrl(raw) {
-    var cand = String(raw == null ? '' : raw).trim()
-    if (!cand) return ''
-    try {
-      var url = new URL(cand)
-      if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
-      return url.toString()
-    } catch (_) {
-      return ''
-    }
+  /** @param {NxMessage | Record<string, unknown> | null} msg */
+  function nxMailRenderableAttachments(msg) {
+    if (!msg) return []
+    var att = /** @type {unknown} */ (msg.attachments)
+    if (Array.isArray(att) && att.length)
+      return att
+        .filter(function (x) {
+          return x && typeof x === 'object'
+        })
+        .map(function (x) {
+          return /** @type {NxOutgoingAttachment} */ (x)
+        })
+        .slice(0, NX_MAX_MAIL_ATTACH)
+    var urls = messageAttachmentUrls(/** @type {NxMessage} */ (msg))
+    var list = []
+    for (var i = 0; i < urls.length; i++)
+      list.push({
+        download_url: urls[i],
+        filename: 'Image',
+        mime: 'image/jpeg',
+        legacy_url: null,
+        path: null,
+      })
+    return list
   }
 
   function messageAttachmentUrls(m) {
@@ -330,10 +439,14 @@
   /** @type {NxThread[]} */
   let dirCache = []
 
-  /** @type {string[]} */
-  let nxComposeAttachUrls = []
-  /** @type {string[]} */
-  let nxReplyAttachUrls = []
+  let nxNextLocalAttId = 1
+  /**
+   * Like Gmail web: uploads start when files are picked/dropped. `_previewUrl` holds a blob URL for thumbnails until removed.
+   * @type {{ _id:number, path?:string, filename:string, mime:string, size_bytes:number, _uploading?:boolean, _previewUrl?:string }[]}
+   */
+  let nxComposeAttachments = []
+  /** @type {{ _id:number, path?:string, filename:string, mime:string, size_bytes:number, _uploading?:boolean, _previewUrl?:string }[]} */
+  let nxReplyAttachments = []
 
   /** @type {{ meta: Partial<NxThread> & { peer_badge?: string, peer_name?: string, subject?: string } | null, msgs: NxMessage[] }} */
   let openThread = null
@@ -626,19 +739,219 @@
     }
   }
 
+  /** @param {unknown} mime @param {unknown} filename */
+  function nxMailMimeIsBrowserImageThumb(mime, filename) {
+    var m = String(mime || '').toLowerCase()
+    if (m === 'image/jpg') m = 'image/jpeg'
+    if (/^image\/(jpeg|png|gif|webp)$/.test(m)) return true
+    return /\.(jpe?g|png|gif|webp)$/i.test(String(filename || ''))
+  }
+
+  /** @param {{ _previewUrl?: string } | null | undefined} row */
+  function nxMailRevokeAttachmentRowPreview(row) {
+    if (!row || typeof row._previewUrl !== 'string') return
+    try {
+      URL.revokeObjectURL(row._previewUrl)
+    } catch (_) {}
+    delete row._previewUrl
+  }
+
+  /** Badge text for non-image preview tiles */
+  function nxMailAttachmentTypeBadge(filename, mime) {
+    var fn = String(filename || 'file')
+    var ext = /\.([a-zA-Z0-9]{1,8})$/i.exec(fn)
+    if (ext && ext[1]) return ext[1].toUpperCase()
+    var tail = String(mime || '').split('/')[1]
+    if (tail) return tail.replace(/[^\w]/g, '').slice(0, 6).toUpperCase() || 'FILE'
+    return 'FILE'
+  }
+
+  /**
+   * Thumbnail row: image blob URL when available; otherwise type badge placeholder.
+   * @param {{ filename?: string, mime?: string, _previewUrl?: string }} att
+   * @param {boolean} forReply
+   */
+  function nxMailComposePreviewMarkup(att, forReply) {
+    var fnEsc = escapeHtml(String(att.filename || 'file'))
+    var urlRaw = typeof att._previewUrl === 'string' ? att._previewUrl : ''
+    var isBlobImg =
+      urlRaw && /^blob:/i.test(urlRaw) && nxMailMimeIsBrowserImageThumb(att.mime, att.filename)
+
+    var wrapCls = forReply ? 'nx-mail-reply-thumb-wrap' : 'gmail-compose-att-thumb-wrap'
+    if (isBlobImg)
+      return (
+        '<div class="' +
+        wrapCls +
+        ' nx-mail-att-preview-shell">' +
+        '<img class="gmail-compose-att-thumb ' +
+        (forReply ? 'nx-mail-reply-att-local-thumb' : 'gmail-compose-att-local-thumb') +
+        '" src="' +
+        escapeHtml(urlRaw) +
+        '" alt="' +
+        fnEsc +
+        '" loading="lazy"/></div>'
+      )
+
+    var badge = nxMailAttachmentTypeBadge(att.filename, att.mime)
+    var ph =
+      wrapCls +
+      ' nx-mail-att-preview-placeholder' +
+      (forReply ? ' nx-mail-att-preview-ph-reply' : '')
+    return (
+      '<div class="' + ph + '" title="' + fnEsc + '">' + escapeHtml(badge) + '</div>'
+    )
+  }
+
+  function nxMailDrainBucketAttachments(bucket) {
+    for (var i = 0; i < bucket.length; i++) nxMailRevokeAttachmentRowPreview(bucket[i])
+    bucket.length = 0
+  }
+
+  function nxMailAttachmentUploadingPending(bucket) {
+    return bucket.some(function (a) {
+      return a && a._uploading
+    })
+  }
+
+  /** Server-ready attachment rows only (omit in-flight stubs). */
+  function nxMailAttachmentsReadyPayload(bucket) {
+    return bucket
+      .filter(function (a) {
+        return a && !a._uploading && typeof a.path === 'string' && a.path.length > 0
+      })
+      .map(function (a) {
+        return {
+          path: a.path,
+          filename: a.filename,
+          mime: a.mime,
+          size_bytes: typeof a.size_bytes === 'number' ? a.size_bytes : 0,
+        }
+      })
+  }
+
+  /**
+   * Upload files to Nexus Storage as soon as they are chosen (parallel, Gmail-like).
+   * @param {'compose' | 'reply'} scope
+   * @param {FileList | File[] | null} rawFiles
+   */
+  async function handleMailboxFileSelection(scope, rawFiles) {
+    var bucket = scope === 'reply' ? nxReplyAttachments : nxComposeAttachments
+    /** @type {File[]} */
+    var files = []
+    if (rawFiles && typeof rawFiles.length === 'number') {
+      for (var jj = 0; jj < rawFiles.length; jj++) {
+        var item = rawFiles[jj]
+        if (item instanceof File) files.push(item)
+      }
+    }
+    if (!files.length) return
+
+    if (scope === 'compose') {
+      var ir0 = el('nxMailComposeImgRow')
+      if (ir0) ir0.classList.remove('is-hidden')
+    }
+
+    /** @type {{ _id:number, file:File }[]} */
+    var jobs = []
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i]
+      if (!(f instanceof File) || !f.name) continue
+      if (bucket.length >= NX_MAX_MAIL_ATTACH) {
+        nxMailToast('Maximum ' + NX_MAX_MAIL_ATTACH + ' attachments.', 'error')
+        break
+      }
+      var id = nxNextLocalAttId++
+      var row = {
+        _id: id,
+        _uploading: true,
+        filename: String(f.name || 'file'),
+        mime: f.type ? String(f.type) : 'application/octet-stream',
+        size_bytes: typeof f.size === 'number' ? f.size : 0,
+      }
+      if (nxMailMimeIsBrowserImageThumb(row.mime, row.filename))
+        row._previewUrl = URL.createObjectURL(f)
+      bucket.push(row)
+      jobs.push({ _id: id, file: f })
+    }
+    if (!jobs.length) return
+    if (scope === 'reply') renderNxReplyAttachments()
+    else renderNxComposeAttachments()
+
+    function renderAtt() {
+      if (scope === 'reply') renderNxReplyAttachments()
+      else renderNxComposeAttachments()
+    }
+
+    await Promise.all(
+      jobs.map(function (job) {
+        return nmailUploadFile(job.file)
+          .then(function (uploaded) {
+            var found = bucket.find(function (x) {
+              return x && x._id === job._id
+            })
+            if (found && found._uploading) {
+              found.path = uploaded.path
+              found.filename = uploaded.filename
+              found.mime = uploaded.mime
+              found.size_bytes =
+                typeof uploaded.size_bytes === 'number' ? uploaded.size_bytes : job.file.size || 0
+              delete found._uploading
+            }
+            renderAtt()
+          })
+          .catch(function (err) {
+            var j = bucket.findIndex(function (x) {
+              return x && x._id === job._id
+            })
+            if (j >= 0) {
+              nxMailRevokeAttachmentRowPreview(bucket[j])
+              bucket.splice(j, 1)
+            }
+            nxMailToast('Upload failed: ' + ((err && err.message) || err), 'error')
+            renderAtt()
+          })
+      }),
+    )
+  }
+
+  function formatBytesShort(n) {
+    if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0) return ''
+    if (n < 1024) return n + ' B'
+    var kb = n / 1024
+    if (kb < 1024) return (kb >= 100 ? kb.toFixed(0) : kb.toFixed(1)) + ' KB'
+    var mb = kb / 1024
+    return (mb >= 10 ? mb.toFixed(0) : mb.toFixed(1)) + ' MB'
+  }
+
   function renderNxComposeAttachments() {
     var listEl = el('nxMailComposeImgList')
     if (!listEl) return
-    listEl.innerHTML = nxComposeAttachUrls
-      .map(function (u, idx) {
+    listEl.innerHTML = nxComposeAttachments
+      .map(function (a, idx) {
+        var sz =
+          typeof a.size_bytes === 'number' && a.size_bytes > 0 ? formatBytesShort(a.size_bytes) : ''
+        var mi = escapeHtml(String(a.mime || '').slice(0, 80))
+        var uploading = !!a._uploading
+        var up = uploading
+          ? '<span class="gmail-compose-att-progress">Uploading…</span>'
+          : '<span class="gmail-compose-att-done">Uploaded</span>'
+        var rmDis = uploading ? ' disabled' : ''
         return (
-          '<div class="gmail-compose-att-item">' +
-          '<button type="button" class="gmail-compose-att-remove" data-i="' +
+          '<div class="gmail-compose-att-item gmail-compose-att-item--preview">' +
+          '<button type="button" class="gmail-compose-att-remove"' +
+          rmDis +
+          ' data-scope="compose" data-i="' +
           idx +
-          '" aria-label="Hapus lampiran">&times;</button>' +
-          '<div class="gmail-compose-att-thumb-wrap"><img class="gmail-compose-att-thumb" src="' +
-          escapeHtml(u) +
-          '" alt="" loading="lazy" referrerpolicy="no-referrer"/></div>' +
+          '" aria-label="Remove attachment">&times;</button>' +
+          nxMailComposePreviewMarkup(a, false) +
+          '<div class="gmail-compose-att-file-row"><div class="gmail-compose-att-meta">' +
+          escapeHtml(String(a.filename || 'file')) +
+          '<br/><span style="opacity:.82;font-size:11px">' +
+          mi +
+          (sz ? ' · ' + escapeHtml(sz) : '') +
+          ' · ' +
+          up +
+          '</span></div></div>' +
           '</div>'
         )
       })
@@ -648,62 +961,95 @@
   function renderNxReplyAttachments() {
     var listEl = el('nxMailReplyImgList')
     if (!listEl) return
-    listEl.innerHTML = nxReplyAttachUrls
-      .map(function (u, idx) {
+    listEl.innerHTML = nxReplyAttachments
+      .map(function (a, idx) {
+        var sz =
+          typeof a.size_bytes === 'number' && a.size_bytes > 0 ? formatBytesShort(a.size_bytes) : ''
+        var mi = escapeHtml(String(a.mime || '').slice(0, 80))
+        var repUp = !!a._uploading
+        var up = repUp
+          ? '<span class="nx-mail-att-progress">Uploading…</span>'
+          : '<span class="nx-mail-att-done">Uploaded</span>'
+        var rmDis = repUp ? ' disabled' : ''
         return (
-          '<div class="nx-mail-reply-att-item">' +
-          '<button type="button" class="nx-mail-reply-att-remove" data-i="' +
+          '<div class="nx-mail-reply-att-item nx-mail-reply-att--preview">' +
+          '<button type="button" class="nx-mail-reply-att-remove"' +
+          rmDis +
+          ' data-scope="reply" data-i="' +
           idx +
-          '" aria-label="Hapus lampiran">&times;</button>' +
-          '<div class="nx-mail-reply-att-thumb-wrap"><img class="nx-mail-reply-att-thumb" src="' +
-          escapeHtml(u) +
-          '" alt="" loading="lazy" referrerpolicy="no-referrer"/></div>' +
+          '" aria-label="Remove attachment">&times;</button>' +
+          nxMailComposePreviewMarkup(a, true) +
+          '<div class="nx-mail-reply-att-file-row"><div class="gmail-compose-att-meta">' +
+          escapeHtml(String(a.filename || 'file')) +
+          '<br/><span style="opacity:.82;font-size:11px">' +
+          mi +
+          (sz ? ' · ' + escapeHtml(sz) : '') +
+          ' · ' +
+          up +
+          '</span></div></div>' +
           '</div>'
         )
       })
       .join('')
   }
 
-  function tryAddNxComposeAttachment() {
-    var draft = el('nxMailComposeImgDraft')
-    var v = draft ? draft.value.trim() : ''
-    var canon = parseOneAttachUrl(v)
-    if (!canon) {
-      nxMailToast('URL tidak valid. Gunakan alamat yang diawali http:// atau https://', 'error')
-      return
-    }
-    if (nxComposeAttachUrls.indexOf(canon) >= 0) {
-      nxMailToast('URL lampiran ini sudah ditambahkan.', 'error')
-      return
-    }
-    if (nxComposeAttachUrls.length >= NX_MAX_MAIL_ATTACH) {
-      nxMailToast('Maksimal ' + NX_MAX_MAIL_ATTACH + ' lampiran gambar.', 'error')
-      return
-    }
-    nxComposeAttachUrls.push(canon)
-    if (draft) draft.value = ''
-    renderNxComposeAttachments()
-  }
+  /**
+   * Drag-and-drop files onto compose sheet or reply (capture phase avoids contenteditable swallowing drops).
+   * @param {'compose' | 'reply'} scope
+   * @param {HTMLElement | null} zone
+   */
+  function bindAttachmentDropZone(scope, zone) {
+    if (!zone || zone._nxMailDropBound) return
+    zone._nxMailDropBound = true
 
-  function tryAddNxReplyAttachment() {
-    var draft = el('nxMailReplyImgDraft')
-    var v = draft ? draft.value.trim() : ''
-    var canon = parseOneAttachUrl(v)
-    if (!canon) {
-      nxMailToast('URL tidak valid. Gunakan alamat yang diawali http:// atau https://', 'error')
-      return
+    /** @param {DragEvent} ev */
+    function hasFiles(ev) {
+      var dt = ev.dataTransfer
+      if (!dt || !dt.types) return false
+      var ts = dt.types
+      for (var i = 0; i < ts.length; i++) if (ts[i] === 'Files') return true
+      return false
     }
-    if (nxReplyAttachUrls.indexOf(canon) >= 0) {
-      nxMailToast('URL lampiran ini sudah ditambahkan.', 'error')
-      return
-    }
-    if (nxReplyAttachUrls.length >= NX_MAX_MAIL_ATTACH) {
-      nxMailToast('Maksimal ' + NX_MAX_MAIL_ATTACH + ' lampiran gambar.', 'error')
-      return
-    }
-    nxReplyAttachUrls.push(canon)
-    if (draft) draft.value = ''
-    renderNxReplyAttachments()
+
+    var depth = 0
+    zone.addEventListener('dragenter', function (ev) {
+      if (!hasFiles(ev)) return
+      ev.preventDefault()
+      depth++
+      if (depth === 1) zone.classList.add('is-nx-mail-drop-hover')
+    })
+    zone.addEventListener('dragleave', function (ev) {
+      if (!hasFiles(ev)) return
+      ev.preventDefault()
+      depth = Math.max(0, depth - 1)
+      if (depth === 0) zone.classList.remove('is-nx-mail-drop-hover')
+    })
+    zone.addEventListener(
+      'dragover',
+      function (ev) {
+        if (!hasFiles(ev)) return
+        ev.preventDefault()
+        try {
+          if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy'
+        } catch (_) {}
+      },
+      true,
+    )
+    zone.addEventListener(
+      'drop',
+      function (ev) {
+        if (!hasFiles(ev)) return
+        ev.preventDefault()
+        ev.stopPropagation()
+        depth = 0
+        zone.classList.remove('is-nx-mail-drop-hover')
+        var fl = ev.dataTransfer && ev.dataTransfer.files
+        if (fl && fl.length) {
+          void handleMailboxFileSelection(scope, fl)
+        }
+      },
+      true,
+    )
   }
 
   /** One-time delegated handlers for compose/reply attachment UI. */
@@ -711,62 +1057,54 @@
   function nxWireMailAttachmentsOnce() {
     if (nxMailAttachmentsWired) return
     nxMailAttachmentsWired = true
-    var cList = el('nxMailComposeImgList')
-    if (cList) {
-      cList.addEventListener('click', function (ev) {
-        var rm = typeof ev.target.closest === 'function' ? ev.target.closest('.gmail-compose-att-remove') : null
-        if (!rm || !cList.contains(rm)) return
+
+    var nxRoot = el('nxMailOverlay') || document
+    nxRoot.addEventListener('click', function (ev) {
+      var tgt = typeof ev.target.closest === 'function' ? ev.target.closest('.gmail-compose-att-remove, .nx-mail-reply-att-remove') : null
+      if (!tgt || tgt.disabled) return
+      var sc = tgt.getAttribute('data-scope')
+      var i = parseInt(tgt.getAttribute('data-i') || '-1', 10)
+      if (sc === 'compose' && i >= 0 && i < nxComposeAttachments.length) {
         ev.preventDefault()
-        var i = parseInt(rm.getAttribute('data-i') || '-1', 10)
-        if (i >= 0 && i < nxComposeAttachUrls.length) {
-          nxComposeAttachUrls.splice(i, 1)
-          renderNxComposeAttachments()
-        }
+        nxMailRevokeAttachmentRowPreview(nxComposeAttachments[i])
+        nxComposeAttachments.splice(i, 1)
+        renderNxComposeAttachments()
+      } else if (sc === 'reply' && i >= 0 && i < nxReplyAttachments.length) {
+        ev.preventDefault()
+        nxMailRevokeAttachmentRowPreview(nxReplyAttachments[i])
+        nxReplyAttachments.splice(i, 1)
+        renderNxReplyAttachments()
+      }
+    })
+
+    var cPick = el('nxMailComposeAttachPickBtn')
+    var cInp = el('nxMailComposeFileInp')
+    if (cPick && cInp) {
+      cPick.addEventListener('click', function (ev) {
+        ev.preventDefault()
+        cInp.click()
+      })
+      cInp.addEventListener('change', function () {
+        void handleMailboxFileSelection('compose', cInp.files)
+        cInp.value = ''
       })
     }
-    var rList = el('nxMailReplyImgList')
-    if (rList) {
-      rList.addEventListener('click', function (ev) {
-        var rm = typeof ev.target.closest === 'function' ? ev.target.closest('.nx-mail-reply-att-remove') : null
-        if (!rm || !rList.contains(rm)) return
+
+    var rPick = el('nxMailReplyAttachPickBtn')
+    var rInp = el('nxMailReplyFileInp')
+    if (rPick && rInp) {
+      rPick.addEventListener('click', function (ev) {
         ev.preventDefault()
-        var i = parseInt(rm.getAttribute('data-i') || '-1', 10)
-        if (i >= 0 && i < nxReplyAttachUrls.length) {
-          nxReplyAttachUrls.splice(i, 1)
-          renderNxReplyAttachments()
-        }
+        rInp.click()
+      })
+      rInp.addEventListener('change', function () {
+        void handleMailboxFileSelection('reply', rInp.files)
+        rInp.value = ''
       })
     }
-    var cAdd = el('nxMailComposeImgAddBtn')
-    if (cAdd) {
-      cAdd.addEventListener('click', function (ev) {
-        ev.preventDefault()
-        tryAddNxComposeAttachment()
-      })
-    }
-    var cDraft = el('nxMailComposeImgDraft')
-    if (cDraft) {
-      cDraft.addEventListener('keydown', function (ev) {
-        if (ev.key !== 'Enter') return
-        ev.preventDefault()
-        tryAddNxComposeAttachment()
-      })
-    }
-    var rAdd = el('nxMailReplyImgAddBtn')
-    if (rAdd) {
-      rAdd.addEventListener('click', function (ev) {
-        ev.preventDefault()
-        tryAddNxReplyAttachment()
-      })
-    }
-    var rDraft = el('nxMailReplyImgDraft')
-    if (rDraft) {
-      rDraft.addEventListener('keydown', function (ev) {
-        if (ev.key !== 'Enter') return
-        ev.preventDefault()
-        tryAddNxReplyAttachment()
-      })
-    }
+
+    bindAttachmentDropZone('compose', el('nxMailComposeDropZone'))
+    bindAttachmentDropZone('reply', el('nxMailReplyDropZone'))
   }
 
   function updateUnreadBell() {
@@ -1004,14 +1342,31 @@
         }`
       const bodyHtml = renderMsgBodyMarkup(m.body)
       const htmlClass = /<[a-z]/i.test(String(m.body || '')) ? ' nx-mail-msg-body-html' : ''
-      const attUrls = messageAttachmentUrls(m)
+      const attachments = nxMailRenderableAttachments(m)
       let attHtml = ''
-      if (attUrls.length) {
+      if (attachments.length) {
         attHtml =
           '<div class="nx-mail-msg-attachments">' +
-          attUrls
-            .map(function (u) {
-              return `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer" class="nx-mail-msg-img-thumb-link"><img class="nx-mail-msg-img-thumb" src="${escapeHtml(u)}" alt="attachment" loading="lazy" referrerpolicy="no-referrer"/></a>`
+          attachments
+            .map(function (a) {
+              var fname = escapeHtml(String(a.filename || 'file'))
+              var url = typeof a.download_url === 'string' ? a.download_url.trim() : ''
+              var mime = String(a.mime || '').toLowerCase()
+              var isImg = url && mime.indexOf('image/') === 0
+              if (!url)
+                return (
+                  '<span class="nx-mail-msg-file-chip" title="Unavailable">' +
+                  fname +
+                  ' <span style="opacity:.7">(refresh thread)</span></span>'
+                )
+              const uEsc = escapeHtml(url)
+              if (isImg)
+                return `<a href="${uEsc}" target="_blank" rel="noopener noreferrer" class="nx-mail-msg-img-thumb-link"><img class="nx-mail-msg-img-thumb" src="${uEsc}" alt="${fname}" loading="lazy" referrerpolicy="no-referrer"/></a>`
+              return (
+                `<a href="${uEsc}" target="_blank" rel="noopener noreferrer" class="nx-mail-msg-file-chip" download>` +
+                fname +
+                `</a>`
+              )
             })
             .join('') +
           '</div>'
@@ -1073,7 +1428,14 @@
           var fromEmailSpan = p.fromEmailSpan
 
           if (foldOlder) {
-            var sn = nxMailSnippetPlain(m.body, 64)
+            var snRaw = nxMailSnippetPlain(m.body, 64)
+            var snText = snRaw.trim() ? snRaw : ''
+            if (!snText) {
+              var attN = nxMailRenderableAttachments(m).length
+              if (attN > 1) snText = '[' + attN + ' attachments]'
+              else if (attN === 1) snText = '[Attachment]'
+              else snText = '…'
+            }
             return (
               `<details class="nx-gmail-msg-fold">` +
               `<summary class="nx-gmail-msg-fold-sum"><span class="nx-gmail-fold-sum-inner">` +
@@ -1081,7 +1443,7 @@
                 p.letters,
               )}</span>` +
               `<span class="nx-gmail-fold-name">${p.fromName}</span>` +
-              `<span class="nx-gmail-fold-sn">${escapeHtml(sn)}</span>` +
+              `<span class="nx-gmail-fold-sn">${escapeHtml(snText)}</span>` +
               `<span class="nx-gmail-fold-time">${p.clockRel}</span>` +
               `</span></summary>` +
               `<div class="nx-gmail-fold-body">` +
@@ -1172,8 +1534,7 @@
         await loadInbox()
       }
       el('nxMailReplyBody') && (el('nxMailReplyBody').value = '')
-      nxReplyAttachUrls = []
-      el('nxMailReplyImgDraft') && (el('nxMailReplyImgDraft').value = '')
+      nxMailDrainBucketAttachments(nxReplyAttachments)
       renderNxReplyAttachments()
       nxMailComposerSetOpen(true)
       document.querySelectorAll('.nx-mail-thread-row').forEach(function (btn) {
@@ -1192,9 +1553,13 @@
     if (!openThread || !openThread.meta) return
     if (nxMailReplyBusy) return
     const body = ((el('nxMailReplyBody') && el('nxMailReplyBody').value) || '').trim()
-    const attachmentUrls = nxReplyAttachUrls.slice()
-    if (!body && !attachmentUrls.length) {
-      nxMailToast('Type a message or add at least one image URL (http/https) via Add.', 'error')
+    if (nxMailAttachmentUploadingPending(nxReplyAttachments)) {
+      nxMailToast('Wait for attachments to finish uploading.', 'error')
+      return
+    }
+    var attaches = nxMailAttachmentsReadyPayload(nxReplyAttachments)
+    if (!body && !attaches.length) {
+      nxMailToast('Write a message or attach at least one file.', 'error')
       return
     }
     var replyBtn = el('nxMailSendReplyBtn')
@@ -1204,11 +1569,10 @@
       await fetchJson('POST', '/api/nexus-mail', {
         thread_id: openThread.meta.id,
         body,
-        image_urls: attachmentUrls,
+        attachments: attaches,
       })
       el('nxMailReplyBody').value = ''
-      nxReplyAttachUrls = []
-      el('nxMailReplyImgDraft') && (el('nxMailReplyImgDraft').value = '')
+      nxMailDrainBucketAttachments(nxReplyAttachments)
       renderNxReplyAttachments()
       await openThreadFn(openThread.meta.id)
       await loadInbox()
@@ -1250,12 +1614,10 @@
     var toIn = el('nxMailComposeTo')
     var subIn = el('nxMailComposeSub')
     var bd = el('nxMailComposeBody')
-    var imgDraft = el('nxMailComposeImgDraft')
     var imgRow = el('nxMailComposeImgRow')
     if (subIn) subIn.value = ''
     if (bd) bd.innerHTML = ''
-    nxComposeAttachUrls = []
-    if (imgDraft) imgDraft.value = ''
+    nxMailDrainBucketAttachments(nxComposeAttachments)
     if (imgRow) imgRow.classList.add('is-hidden')
     resetComposeCcBccUi()
     if (toIn) toIn.value = ''
@@ -1284,7 +1646,13 @@
     var subject = ((el('nxMailComposeSub') && el('nxMailComposeSub').value) || '').trim()
     var bodyEl = el('nxMailComposeBody')
     var body = composeBodyFromEditor(bodyEl)
-    var attachmentUrls = nxComposeAttachUrls.slice()
+    if (nxMailAttachmentUploadingPending(nxComposeAttachments)) {
+      var uw = 'Wait for attachments to finish uploading.'
+      setNxComposeErr(uw)
+      nxMailToast(uw, 'error')
+      return
+    }
+    var attaches = nxMailAttachmentsReadyPayload(nxComposeAttachments)
 
     if (!toA.length && !ccA.length && !bccA.length) {
       var errTo =
@@ -1293,8 +1661,8 @@
       nxMailToast(errTo, 'error')
       return
     }
-    if (!body && !attachmentUrls.length) {
-      var errBody = 'Type a message or add at least one image URL (http/https) via Add.'
+    if (!body && !attaches.length) {
+      var errBody = 'Type a message or attach at least one file.'
       setNxComposeErr(errBody)
       nxMailToast(errBody, 'error')
       return
@@ -1312,11 +1680,12 @@
         bcc: bccA,
         subject,
         body,
-        image_urls: attachmentUrls,
+        attachments: attaches,
       }
-      if (attachmentUrls.length) payload.image_url = attachmentUrls[0]
 
       var sent = await fetchJson('POST', '/api/nexus-mail', payload)
+      nxMailDrainBucketAttachments(nxComposeAttachments)
+      renderNxComposeAttachments()
       hideCompose()
       await loadInbox()
       if (sent.thread_id) await openThreadFn(sent.thread_id)
@@ -1403,14 +1772,15 @@
         if (s) s.classList.toggle('is-toolbar-collapsed')
       }
     }
-    function toggleImgRow() {
+    function toggleImgRow(ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault()
       var row = el('nxMailComposeImgRow')
       if (row) {
         row.classList.toggle('is-hidden')
-        var i = el('nxMailComposeImgDraft')
-        if (i && !row.classList.contains('is-hidden')) {
-          i.focus()
+        if (!row.classList.contains('is-hidden')) {
           renderNxComposeAttachments()
+          var pick = el('nxMailComposeAttachPickBtn')
+          if (pick) pick.focus()
         }
       }
     }

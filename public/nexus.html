@@ -92,6 +92,18 @@
         <span class="nx-nav-label">Main Directory</span>
         <span class="nx-nav-badge badge-ts">TS</span>
       </div>
+      <div class="nx-nav-submenu-block">
+        <div class="nx-nav-sublabel">Weekly Report</div>
+        <div class="nx-nav-item nx-nav-item--sub" data-weekly-nav="cib" onclick="showWeeklyReport('cib', this)">
+          <div class="nx-nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></div>
+          <span class="nx-nav-label">CIB</span>
+        </div>
+        <div class="nx-nav-item nx-nav-item--sub nx-weekly-giu-gated" data-weekly-nav="giu" onclick="showWeeklyReport('giu', this)">
+          <div class="nx-nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></div>
+          <span class="nx-nav-label">GIU</span>
+          <span class="nx-nav-badge badge-ts">GIU</span>
+        </div>
+      </div>
     </div>
 
     <div class="nx-nav-group">
@@ -249,13 +261,13 @@
 
         <div class="dash-section-head">
           <span class="dash-section-cat">Available Modules</span>
-          <span class="dash-section-label">8 sections · Select to navigate</span>
+          <span class="dash-section-label">10 modules · Select to navigate</span>
         </div>
 
         <!-- DOCUMENTS -->
         <div class="dash-cat">
           <div class="dash-cat-label">Documents</div>
-          <div class="dash-mod-grid cols-3">
+          <div class="dash-mod-grid cols-4">
 
             <div class="dash-mod mod-gold" onclick="showPanelByName('guidebook')">
               <div class="dash-mod-top">
@@ -298,6 +310,21 @@
               <div class="dash-mod-desc">Complete case files · Operation archives · All divisional records</div>
               <div class="dash-mod-footer">
                 <span class="dash-mod-meta">GRD · CID · Command</span>
+                <span class="dash-mod-arrow">›</span>
+              </div>
+            </div>
+
+            <div class="dash-mod mod-gold" onclick="showPanelByName('weekly-report')">
+              <div class="dash-mod-top">
+                <div class="dash-mod-icon">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zm-11-9h2v7H7v-7zm8 0h2v7h-2v-7zM7 13h2v2H7v-2zm8 0h2v2h-2v-2z"/></svg>
+                </div>
+                <span class="dash-mod-badge">Internal</span>
+              </div>
+              <div class="dash-mod-name">Weekly Report</div>
+              <div class="dash-mod-desc">CIB Command &amp; GIU weekly templates · Google Docs embedded</div>
+              <div class="dash-mod-footer">
+                <span class="dash-mod-meta">Documents</span>
                 <span class="dash-mod-arrow">›</span>
               </div>
             </div>
@@ -495,6 +522,35 @@
         <div class="lp-info-cell"><div class="lp-info-cell-label">Hosted On</div><div class="lp-info-cell-value">Google Drive</div></div>
         <div class="lp-info-cell"><div class="lp-info-cell-label">Access Level</div><div class="lp-info-cell-value">Top Secret · Cleared</div></div>
         <div class="lp-info-cell"><div class="lp-info-cell-label">Covers</div><div class="lp-info-cell-value">GRD · CID · All Cases</div></div>
+      </div>
+    </div>
+
+    <!-- WEEKLY REPORT -->
+    <div class="nx-panel" id="panel-weekly-report">
+      <div class="lp-card">
+        <div class="lp-eyebrow">Documents · Recurring submission</div>
+        <div class="lp-title">Weekly Report</div>
+        <div class="lp-divider"></div>
+        <div class="lp-desc">Select <strong>CIB</strong> or <strong>GIU</strong> to load the corresponding weekly report Google Document. A preview is embedded below; open in a new tab for full editing and tab navigation.</div>
+        <div class="lp-tags"><span class="lp-tag lp-tag-r">Internal</span><span class="lp-tag lp-tag-i">Weekly</span></div>
+      </div>
+      <div class="nx-weekly-report-toolbar" role="tablist" aria-label="Weekly report type">
+        <button type="button" class="nx-weekly-report-tab is-active" role="tab" aria-selected="true" data-weekly="cib" onclick="showWeeklyReport('cib')">CIB</button>
+        <button type="button" class="nx-weekly-report-tab nx-weekly-giu-gated" role="tab" aria-selected="false" data-weekly="giu" onclick="showWeeklyReport('giu')">GIU</button>
+      </div>
+      <div class="lp-embed" aria-label="Weekly report document preview">
+        <iframe id="nxWeeklyReportFrame" class="lp-embed-frame" title="Weekly report preview"
+          src="https://docs.google.com/document/d/1Sk945flgQ_o7mYFslHGRhmUAhNb1KuL-oEq4SRdbUXY/preview"
+          loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <div class="lp-embed-bar">
+        <span class="lp-embed-hint">Preview embedded · Full editor in Google Docs</span>
+        <a id="nxWeeklyReportOpenTab" class="lp-open-btn" href="https://docs.google.com/document/d/1Sk945flgQ_o7mYFslHGRhmUAhNb1KuL-oEq4SRdbUXY/edit?tab=t.a5pl6qt90u7p" target="_blank" rel="noopener noreferrer">Open in new tab <span class="lp-open-btn-arrow">↗</span></a>
+      </div>
+      <div class="lp-info-strip">
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Variants</div><div class="lp-info-cell-value">CIB · GIU</div></div>
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Format</div><div class="lp-info-cell-value">Google Document</div></div>
+        <div class="lp-info-cell"><div class="lp-info-cell-label">Cadence</div><div class="lp-info-cell-value">Weekly</div></div>
       </div>
     </div>
 
@@ -833,12 +889,12 @@
                         </div>
                       </div>
                     </header>
-                    <div class="nx-mail-msg-email-body nx-gmail-reply-compose-body">
+                    <div class="nx-mail-msg-email-body nx-gmail-reply-compose-body nx-mail-attach-drop-zone" id="nxMailReplyDropZone">
                       <textarea id="nxMailReplyBody" class="nx-gmail-reply-textarea nx-mail-msg-native-ta" placeholder="Write your reply…"></textarea>
-                      <label class="nx-gmail-label-sm" for="nxMailReplyImgDraft">Image URL (HTTPS) — one at a time</label>
+                      <label class="nx-gmail-label-sm">Attachments — upload to Nexus storage when added</label>
                       <div class="nx-mail-reply-attach-add-row">
-                        <input type="text" id="nxMailReplyImgDraft" class="nx-mail-reply-draft-inp gmail-nx-draft" autocomplete="off" spellcheck="false" placeholder="Paste URL, then Add" />
-                        <button type="button" id="nxMailReplyImgAddBtn" class="nx-mail-reply-add-btn nx-gmail-mini-send">Add</button>
+                        <button type="button" id="nxMailReplyAttachPickBtn" class="nx-mail-mini-filepick">Choose files…</button>
+                        <input type="file" id="nxMailReplyFileInp" class="nx-mail-visually-hidden-file" multiple title="Attachments" tabindex="-1" aria-hidden="true" />
                       </div>
                       <div id="nxMailReplyImgList" class="nx-mail-reply-attach-list" aria-live="polite"></div>
                       <div class="nx-gmail-reply-footer">
@@ -864,7 +920,7 @@
               <button type="button" class="gmail-cm-win-btn gmail-cm-close" id="nxMailComposeCloseBtn" title="Close" aria-label="Close">×</button>
             </div>
           </header>
-          <div class="gmail-cm-sheet">
+            <div class="gmail-cm-sheet nx-mail-attach-drop-zone" id="nxMailComposeDropZone">
             <div class="gmail-cm-field-row gmail-cm-to-row">
               <span class="gmail-cm-label">To</span>
               <div class="gmail-cm-field-grow gmail-cm-recip-grow">
@@ -914,10 +970,10 @@
             </div>
             <div class="gmail-cm-img-row is-hidden" id="nxMailComposeImgRow">
               <div class="gmail-cm-attach-stack">
-                <span class="gmail-cm-attach-hint">Image attachments (HTTPS) — one at a time: paste URL, click Add, repeat as needed.</span>
+                <span class="gmail-cm-attach-hint">Drop files or choose — uploads start immediately (like Gmail); up to 15.</span>
                 <div class="gmail-cm-attach-add-row">
-                  <input type="text" id="nxMailComposeImgDraft" class="gmail-cm-img-draft-inp" autocomplete="off" spellcheck="false" placeholder="https://…" />
-                  <button type="button" class="gmail-cm-img-add-btn" id="nxMailComposeImgAddBtn">Add</button>
+                  <button type="button" class="gmail-cm-img-add-btn" id="nxMailComposeAttachPickBtn">Choose files…</button>
+                  <input type="file" id="nxMailComposeFileInp" class="nx-mail-visually-hidden-file" multiple tabindex="-1" aria-hidden="true" title="Attachments" />
                 </div>
                 <div id="nxMailComposeImgList" class="gmail-compose-attach-list" aria-live="polite"></div>
               </div>
@@ -960,9 +1016,9 @@
                   <button type="button" class="gmail-cm-send-caret" id="nxMailComposeSendMenuBtn" title="Send options" aria-hidden="true" tabindex="-1">▾</button>
                 </div>
                 <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeToolbarToggle" title="Text format (Aa)">Aa</button>
-                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeAttachBtn" title="Attachments / image URL">📎</button>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeAttachBtn" title="Attachments">📎</button>
                 <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeLinkBtn" title="Link">🔗</button>
-                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeImgBtn" title="Image (URL)">🖼</button>
+                <button type="button" class="gmail-cm-icon-btn" id="nxMailComposeImgBtn" title="Attachments">🖼</button>
                 <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">▴</button>
                 <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">✎</button>
                 <button type="button" class="gmail-cm-icon-btn gmail-cm-icon-muted" disabled title="—">⋮</button>
