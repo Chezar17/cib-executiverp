@@ -201,6 +201,7 @@
 // ════════════════════════════════════════════════════════════
 
 const MW_API = '/api/press-releases?type=wanted'
+let mwWantedData = []
 
 const THREAT_LABELS = {
   critical: 'Critical',
@@ -298,9 +299,6 @@ function buildCardHTML(w, index) {
     `NATIONALITY: ${escHtml(w.nationality || 'UNKNOWN')}`,
   ].filter(Boolean).join(' &nbsp;|&nbsp; ')
 
-  // Serialize data for export
-  const exportData = escHtml(JSON.stringify(w))
-
   return `
     <div class="wanted-card" data-export-index="${index}">
 
@@ -358,7 +356,7 @@ function buildCardHTML(w, index) {
       </div>
 
       <!-- EXPORT BUTTON -->
-      <button class="card-export-btn" data-export='${exportData}' title="Export as image">
+      <button class="card-export-btn" data-export-index="${index}" title="Export as image">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
@@ -405,13 +403,15 @@ async function loadWantedList() {
       return
     }
 
+    mwWantedData = data
     listEl.innerHTML = data.map((w, i) => buildCardHTML(w, i)).join('')
 
     // Attach export listeners
     document.querySelectorAll('.card-export-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const raw = btn.getAttribute('data-export')
-        const w = JSON.parse(raw)
+        const idx = parseInt(btn.getAttribute('data-export-index'), 10)
+        const w = mwWantedData[idx]
+        if (!w) return
         exportWantedCard(w, btn)
       })
     })
