@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Infrastructure Funding Proposal · Annex A · CIB-PROP-2026-001</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@300;400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css">
+</head>
+<body>
+<nav class="topbar">
+  <div class="tb-left">
+    <div class="tb-brand">NEXUS</div>
+    <div class="tb-divider"></div>
+    <div class="tb-sub">Infrastructure Funding Proposal · Annex A</div>
+  </div>
+  <ul class="nav-pills">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#modules">Modules</a></li>
+    <li><a href="#value">Value</a></li>
+    <li><a href="#security">Security</a></li>
+    <li><a href="#closing">Closing</a></li>
+  </ul>
+  <div class="tb-right">
+    <div class="tb-ref">REF: CIB-PROP-2026-001-ANNEX-A</div>
+    <div class="tb-class">Top Secret</div>
+    <button class="back-btn" onclick="window.close(); window.history.back();">← Back to CIB Proposal</button>
+  </div>
+</nav>
+<div class="class-banner">
+  <div class="class-banner-text">
+    TOP SECRET // CLASSIFIED // COUNCIL EYES ONLY // AUTHORIZED PERSONNEL ONLY // UNAUTHORIZED ACCESS IS A FEDERAL OFFENSE // TOP SECRET // CLASSIFIED // COUNCIL EYES ONLY // AUTHORIZED PERSONNEL ONLY // UNAUTHORIZED ACCESS IS A FEDERAL OFFENSE
+  </div>
+</div>
+<section class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="hero-radial"></div>
+  <div class="hero-content">
+    <div class="hero-seal">
+      <div class="hero-seal-outer"></div>
+      <div class="hero-seal-mid"></div>
+      <div class="hero-seal-inner"></div>
+      <div class="hero-seal-core">
+        <img
+          src="https://centralinvestigationbureau.vercel.app/images/cib-logo.png"
+          alt="CIB"
+          style="width:90px;height:90px;object-fit:contain;filter:brightness(0.92) contrast(1.08);position:relative;z-index:1;"
+          onerror="this.outerHTML='<div style=\'font-family:var(--oswald);font-size:42px;font-weight:700;letter-spacing:0.08em;color:var(--gold);text-shadow:0 0 30px rgba(201,168,76,0.4);\'>N</div>'"
+        />
+      </div>
+    </div>
+    <div class="hero-stamp">Top Secret — Council Eyes Only</div>
+    <div class="hero-eyebrow">Central Investigation Bureau · Supplementary Annex A</div>
+    <h1 class="hero-title">
+      <span>NEXUS</span>
+    </h1>
+    <div class="hero-subtitle">Internal Intelligence Platform — Funding Proposal</div>
+    <p class="hero-desc">
+      NEXUS is the classified digital backbone of the Central Investigation Bureau — a purpose-built internal intelligence portal that centralises case management, secure communications, and operational intelligence for every CIB detective in the field. This annex presents its full capability, strategic value, and budget rationale.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val" data-count="14">14</div>
+        <div class="hero-stat-label">Operational Modules</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" data-count="4">4</div>
+        <div class="hero-stat-label">Clearance Tiers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" data-count="100">100%</div>
+        <div class="hero-stat-label">Internal — No External Exposure</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" data-count="1">v1.0</div>
+        <div class="hero-stat-label">Current Deployment</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="hero-scroll-line"></div>
+    <div class="hero-scroll-label">Scroll to read</div>
+  </div>
+</section>
+<div class="ticker">
+  <div class="ticker-label">Classified</div>
+  <div style="overflow:hidden;flex:1;">
+    <div class="ticker-track">
+      <span><b>NEXUS v1.0</b> · All activity within this portal is logged and monitored by CIB Command</span>
+      <span><b>ANNEX A</b> · This document is a classified supplement to CIB-PROP-2026-001</span>
+      <span><b>REMINDER:</b> Do not share portal access or document contents with unauthorised personnel</span>
+      <span><b>CLASSIFICATION:</b> Contents are TOP SECRET — unauthorised disclosure is a federal offence</span>
+      <span><b>NEXUS v1.0</b> · All activity within this portal is logged and monitored by CIB Command</span>
+      <span><b>ANNEX A</b> · This document is a classified supplement to CIB-PROP-2026-001</span>
+      <span><b>REMINDER:</b> Do not share portal access or document contents with unauthorised personnel</span>
+      <span><b>CLASSIFICATION:</b> Contents are TOP SECRET — unauthorised disclosure is a federal offence</span>
+    </div>
+  </div>
+</div>
+<div id="overview" style="padding-top:5rem;">
+<div class="section">
+  <div class="section-header reveal">
+    <div class="section-number">Section I · Overview</div>
+    <div class="section-eyebrow">Platform Overview</div>
+    <h2 class="section-title">What Is <span>NEXUS</span>?</h2>
+    <p class="section-lead">
+      NEXUS is a fully classified, role-authenticated internal intelligence portal built exclusively for CIB personnel — invisible to the public, inaccessible without verified credentials, and engineered from the ground up to handle the bureau's most sensitive operational data.
+    </p>
+  </div>
+  <div class="overview-grid reveal">
+    <div class="overview-cell">
+      <div class="ov-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l4.59-4.58L17 9l-6 6z"/></svg>
+      </div>
+      <div class="ov-label">Access Control</div>
+      <div class="ov-title">Clearance-Gated Entry</div>
+      <div class="ov-desc">NEXUS operates behind a role-based authentication gate. No detective enters without a verified badge and clearance tier — Detective, Senior, Command, or Council. Audit logging captures every session.</div>
+    </div>
+    <div class="overview-cell">
+      <div class="ov-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.06 15.94 0 13.36 0c-1.36 0-2.56.56-3.41 1.45L10 1.41 9.05.45C8.2.56 7 1.12 6.64 1.96 4.06 1.96 2 4.02 2 6.6c0 .48.11.92.18 1.36H0v14h20V6zm-9 13H5v-2h6v2zm0-4H5v-2h6v2zm8 4h-6v-2h6v2zm0-4h-6v-2h6v2z"/></svg>
+      </div>
+      <div class="ov-label">Architecture</div>
+      <div class="ov-title">Air-Gapped Intelligence</div>
+      <div class="ov-desc">All intelligence data — informant registries, gang intel, weapons tracking, HVC profiles — exists entirely within NEXUS. No external APIs, no public-facing data paths. Zero exposure by design.</div>
+    </div>
+    <div class="overview-cell">
+      <div class="ov-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      </div>
+      <div class="ov-label">Scope</div>
+      <div class="ov-title">14 Operational Modules</div>
+      <div class="ov-desc">From the dashboard intelligence overview to the GIU Weekly Report, NEXUS unifies 14 distinct operational functions into a single authenticated session — eliminating information silos across all CIB divisions and sub-units.</div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="divider-section reveal">
+  <div class="divider-inner">
+    <div class="divider-tag">Module Architecture</div>
+    <div class="divider-line"></div>
+    <div class="divider-ref">CIB-PROP-2026-001-ANNEX-A · Section II</div>
+  </div>
+</div>
+<div id="modules">
+<div class="section">
+  <div class="section-header reveal">
+    <div class="section-number">Section II · Modules</div>
+    <div class="section-eyebrow">System Architecture</div>
+    <h2 class="section-title">Fourteen Modules. <span>One Platform.</span></h2>
+    <p class="section-lead">
+      Every CIB operational need is served through NEXUS's modular architecture. Each module is access-controlled, audit-logged, and designed to eliminate the paper-trail, spreadsheet, and off-portal communication gaps that expose sensitive intelligence.
+    </p>
+  </div>
+  <div class="mod-showcase reveal">
+    
+    <div class="mod-item" style="--mod-accent: var(--gold);">
+      <div class="mod-tag">Intelligence</div>
+      <div class="mod-name">Command Dashboard</div>
+      <div class="mod-desc">The operational nerve centre. Every Detectives's first view on login — live session status, clearance level, portal health, and quick access to all modules. Senior Command can monitor active sessions in real time.</div>
+      <ul class="mod-benefits">
+        <li>Real-time session and portal health monitoring</li>
+        <li>Clearance-personalised module availability</li>
+        <li>Live alert strip for threat status changes</li>
+        <li>Reduces time-to-access for critical data from minutes to seconds</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--gold);">
+      <div class="mod-tag">Documentation</div>
+      <div class="mod-name">CIB Official Guidebook</div>
+      <div class="mod-desc">The complete operational manual — SOPs, chain of command, rules of engagement, and division protocols — embedded directly inside NEXUS. No external links, no version drift, always current.</div>
+      <ul class="mod-benefits">
+        <li>Instant access to procedures during live operations</li>
+        <li>Eliminates out-of-date printed or external copies</li>
+        <li>Single source of truth for conduct and protocol</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: #4fc3f7;">
+      <div class="mod-tag" style="background:rgba(79,195,247,0.06);color:#4fc3f7;border-color:rgba(79,195,247,0.35);">Legal Reference</div>
+      <div class="mod-name">Penal Code Reference</div>
+      <div class="mod-desc">The full San Andreas penal code embedded in-portal. Detectives can verify charges, cross-reference statutes, and confirm sentencing guidelines without leaving the secure environment mid-case.</div>
+      <ul class="mod-benefits">
+        <li>In-portal legal reference during interrogations and write-ups</li>
+        <li>Reduces erroneous charging that creates case vulnerabilities</li>
+        <li>Keeps detectives in the secure environment at all times</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--red-alert);">
+      <div class="mod-tag" style="background:rgba(192,57,43,0.07);color:var(--red-alert);border-color:rgba(192,57,43,0.35);">Top Secret</div>
+      <div class="mod-name">Main Personnel Directory</div>
+      <div class="mod-desc">The classified internal directory of all CIB personnel — rank, division, clearance tier, and contact chain. Access is restricted by clearance, ensuring sensitive command structures are never exposed to junior ranks.</div>
+      <ul class="mod-benefits">
+        <li>Speeds coordination across divisions during multi-team operations</li>
+        <li>Clearance-gated: command hierarchy never exposed downward</li>
+        <li>Replaces insecure off-portal message chains for internal contact</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--red-alert);">
+      <div class="mod-tag" style="background:rgba(192,57,43,0.07);color:var(--red-alert);border-color:rgba(192,57,43,0.35);">Top Secret</div>
+      <div class="mod-name">Weapons Tracker</div>
+      <div class="mod-desc">A live intelligence registry of tracked illegal weapons circulating in San Andreas — type, origin, last known holder, and associated cases. Cross-referenceable against active investigations and HVC profiles.</div>
+      <ul class="mod-benefits">
+        <li>Links weapons to case files and suspect profiles automatically</li>
+        <li>Provides City Council with verifiable weapons intelligence data</li>
+        <li>Supports prosecution with chain-of-custody tracking</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--orange);">
+      <div class="mod-tag" style="background:rgba(224,83,28,0.07);color:var(--orange);border-color:rgba(224,83,28,0.35);">Top Secret</div>
+      <div class="mod-name">Gang Intelligence Module</div>
+      <div class="mod-desc">Structured intelligence profiles on active criminal organisations operating in San Andreas — membership estimates, territory mapping, known associates, and threat levels. Maintained by the dedicated Gang Intelligence Unit.</div>
+      <ul class="mod-benefits">
+        <li>Enables City Council to see the organised crime landscape at a glance</li>
+        <li>Feeds directly into HVC targeting and resource allocation decisions</li>
+        <li>Eliminates siloed gang intel that dies with individual detectives</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--red-alert);">
+      <div class="mod-tag" style="background:rgba(192,57,43,0.07);color:var(--red-alert);border-color:rgba(192,57,43,0.35);">Handler Only</div>
+      <div class="mod-name">Informant Registry</div>
+      <div class="mod-desc">A classified registry of active CIB informants — handler assignments, gang affiliations, active tasking, and operational history. Identities are protected under a separate encryption layer accessible only to handlers and Command.</div>
+      <ul class="mod-benefits">
+        <li>Protects informant lives through strict compartmentalisation</li>
+        <li>Enables Command to audit handler relationships without exposure</li>
+        <li>Prevents duplicate recruitment of the same informant across teams</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: #E74C3C;">
+      <div class="mod-tag" style="background:rgba(231,76,60,0.08);color:#E74C3C;border-color:rgba(231,76,60,0.4);">Command Eyes Only</div>
+      <div class="mod-name">High-Value Criminal Targets</div>
+      <div class="mod-desc">Dedicated target profiles for San Andreas's most wanted — full dossiers including known associates, active warrants, threat assessments, last known locations, and recommended engagement protocols.</div>
+      <ul class="mod-benefits">
+        <li>Provides City Council with structured accountability on major criminal targets</li>
+        <li>Enables multi-division coordination against single high-value targets</li>
+        <li>Live warrant status prevents operational delays in the field</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--green);">
+      <div class="mod-tag" style="background:rgba(39,174,96,0.08);color:var(--green);border-color:rgba(39,174,96,0.3);">Financial</div>
+      <div class="mod-name">Budget Ledger</div>
+      <div class="mod-desc">A classified internal ledger tracking departmental operational budgets, personal expense card allocations, and transaction logs by division. Provides Command full financial accountability without external exposure.</div>
+      <ul class="mod-benefits">
+        <li>Gives City Council direct financial accountability within NEXUS</li>
+        <li>Replaces informal expense tracking susceptible to error or manipulation</li>
+        <li>Full audit trail for every budgetary line item</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: #4fc3f7;">
+      <div class="mod-tag" style="background:rgba(79,195,247,0.06);color:#4fc3f7;border-color:rgba(79,195,247,0.35);">Secure Comms</div>
+      <div class="mod-name">NMAIL — Internal Mail System</div>
+      <div class="mod-desc">A fully encrypted internal mail system operating entirely within the NEXUS secure environment. Detectives compose, send, and receive classified communications — including file attachments — without ever touching an external email provider.</div>
+      <ul class="mod-benefits">
+        <li>Zero reliance on external email for classified operational communications</li>
+        <li>Full attachment support with image draft previews inside the secure portal</li>
+        <li>Notification bell and unread badge keep detectives informed without leaving NEXUS</li>
+        <li>Audit trail of all inter-division communications at Command's discretion</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: #4fc3f7;">
+      <div class="mod-tag" style="background:rgba(79,195,247,0.06);color:#4fc3f7;border-color:rgba(79,195,247,0.35);">Documentation</div>
+      <div class="mod-name">Investigation Reports (Form 0001)</div>
+      <div class="mod-desc">The standardised CIB Form 0001 investigation report module. Detectives file, review, and archive case reports entirely within NEXUS — structured documentation from first contact to case closure, accessible to Council-tier clearance at any time.</div>
+      <ul class="mod-benefits">
+        <li>Standardised form eliminates incomplete or legally non-compliant filings</li>
+        <li>Full case archive accessible to Command and Council clearance tiers</li>
+        <li>PDF export capability for prosecution submissions and inter-agency handoffs</li>
+        <li>Every report timestamped and linked to the filing detective's authenticated session</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--gold);">
+      <div class="mod-tag">Weekly Intelligence</div>
+      <div class="mod-name">Weekly Report — CIB Division</div>
+      <div class="mod-desc">A structured weekly operational summary produced by CIB Command — covering case openings, closures, arrests, key intelligence developments, and divisional performance. Submitted in-portal and retained as an auditable operational record for the bureau and the City Council.</div>
+      <ul class="mod-benefits">
+        <li>Provides City Council a reliable weekly accountability snapshot of CIB activity</li>
+        <li>Replaces informal verbal or off-portal reporting that leaves no audit trail</li>
+        <li>Searchable historical archive allows trend analysis across reporting periods</li>
+        <li>All personnel with appropriate clearance can review current and past reports</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: var(--red-alert);">
+      <div class="mod-tag" style="background:rgba(192,57,43,0.07);color:var(--red-alert);border-color:rgba(192,57,43,0.35);">GIU · Top Secret</div>
+      <div class="mod-name">Weekly Report — GIU Division</div>
+      <div class="mod-desc">A classified, separately gated weekly intelligence summary produced by the Gang Intelligence Unit. Access is restricted to GIU-credentialed detectives and above — the most sensitive operational intelligence is never mixed with general CIB access tiers.</div>
+      <ul class="mod-benefits">
+        <li>GIU clearance gate ensures gang intelligence never reaches unauthorised tiers</li>
+        <li>Delivers structured organised-crime intelligence directly to City Council when requested</li>
+        <li>Compartmentalised from CIB weekly report — separate module, separate access control</li>
+        <li>Supports GIU accountability to both CIB Command and the State Council</li>
+      </ul>
+    </div>
+    
+    <div class="mod-item" style="--mod-accent: #4fc3f7;">
+      <div class="mod-tag" style="background:rgba(79,195,247,0.06);color:#4fc3f7;border-color:rgba(79,195,247,0.35);">Public Affairs</div>
+      <div class="mod-name">Public Announcements</div>
+      <div class="mod-desc">A dedicated module for CIB's official public-facing communications — press releases, community safety notices, operation outcome statements, and inter-agency announcements. Drafted inside NEXUS by Command, then released through official public channels.</div>
+      <ul class="mod-benefits">
+        <li>Centralises public communications drafting within the secure portal before release</li>
+        <li>Ensures Command approval and consistency before any statement reaches the public</li>
+        <li>Provides City Council visibility into CIB's public accountability posture</li>
+        <li>Archived within NEXUS for governance and historical record</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+<div class="divider-section reveal">
+  <div class="divider-inner">
+    <div class="divider-tag">Strategic Value Assessment</div>
+    <div class="divider-line"></div>
+    <div class="divider-ref">CIB-PROP-2026-001-ANNEX-A · Section III</div>
+  </div>
+</div>
+<div id="value">
+<div class="section">
+  <div class="section-header reveal">
+    <div class="section-number">Section III · Value Proposition</div>
+    <div class="section-eyebrow">Why NEXUS Must Be Funded</div>
+    <h2 class="section-title">Value to the <span>City Council</span> & CIB</h2>
+    <p class="section-lead">
+      The City Council does not merely fund an intelligence portal. It funds the operational capability, accountability infrastructure, and institutional memory of its primary investigative bureau. Without NEXUS, CIB reverts to fragmented, insecure, and unaccountable operations.
+    </p>
+  </div>
+  <div class="value-grid reveal">
+    <div class="value-card" style="--vc-color: var(--gold);">
+      <div class="vc-number">01</div>
+      <div class="vc-title">Operational Cohesion</div>
+      <div class="vc-body">Before NEXUS, intelligence lived in individual detective notes, unsecured chats, and disconnected documents. NEXUS unifies every data point — suspects, weapons, gang structures, active cases — into one authenticated session. The result: faster decisions, fewer coordination failures, and no intelligence lost when a detective leaves the bureau.</div>
+    </div>
+    <div class="value-card" style="--vc-color: #4fc3f7;">
+      <div class="vc-number">02</div>
+      <div class="vc-title">Council Accountability</div>
+      <div class="vc-body">NEXUS provides the City Council a direct window into CIB operations: financial ledgers, case counts, HVC target progress, and weekly divisional reports are all structured, auditable, and accessible to Council-tier clearance. Funding CIB without NEXUS means funding a black box. With NEXUS, every coin is traceable.</div>
+    </div>
+    <div class="value-card" style="--vc-color: var(--green);">
+      <div class="vc-number">03</div>
+      <div class="vc-title">Security by Design</div>
+      <div class="vc-body">Every piece of intelligence in NEXUS exists behind clearance-gated authentication with full audit logging. Informant identities, HVC profiles, and gang intel never touch the open web. The alternative — detectives sharing this data via unsecured channels — represents a catastrophic operational security failure that NEXUS eliminates permanently.</div>
+    </div>
+    <div class="value-card" style="--vc-color: var(--orange);">
+      <div class="vc-number">04</div>
+      <div class="vc-title">Institutional Memory</div>
+      <div class="vc-body">Detectives rotate. Detectives resign. Criminal organisations do not. Without NEXUS, every personnel change bleeds intelligence that took months to build. The Weapons Tracker, Gang Intel module, and Informant Registry ensure that institutional knowledge survives turnover — the bureau remains effective regardless of who is in the field.</div>
+    </div>
+    <div class="value-card" style="--vc-color: var(--red-alert);">
+      <div class="vc-number">05</div>
+      <div class="vc-title">Prosecutorial Strength</div>
+      <div class="vc-body">Cases are won and lost on documentation. NEXUS's standardised CIB Form 0001, in-portal penal code reference, and structured evidence logs ensure that every investigation is documented to legal standard. Sloppy or incomplete reports — the kind that sink prosecutions — are systematically eliminated.</div>
+    </div>
+    <div class="value-card" style="--vc-color: #E74C3C;">
+      <div class="vc-number">06</div>
+      <div class="vc-title">City-Wide Safety ROI</div>
+      <div class="vc-body">The Gang Intel and HVC modules give Command and the City Council a current, structured picture of the organised crime landscape in San Andreas. Resource allocation, joint operations, and prioritisation decisions are backed by data rather than intuition — directly improving the efficiency of every dollar the Council invests in law enforcement.</div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="divider-section reveal">
+  <div class="divider-inner">
+    <div class="divider-tag">Impact Analysis by Stakeholder</div>
+    <div class="divider-line"></div>
+    <div class="divider-ref">CIB-PROP-2026-001-ANNEX-A · Section IV</div>
+  </div>
+</div>
+<div class="section reveal">
+  <div class="section-header">
+    <div class="section-number">Section IV · Impact Analysis</div>
+    <div class="section-eyebrow">Stakeholder Impact</div>
+    <h2 class="section-title">Who Benefits. <span>How.</span></h2>
+  </div>
+  <table class="impact-table">
+    <thead>
+      <tr>
+        <th>Module</th>
+        <th>Benefit to CIB Detectives</th>
+        <th>Benefit to City Council</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Command Dashboard</td>
+        <td>Instant operational overview on login — session status, threat level, and module access in under 3 seconds</td>
+        <td>Council-tier view shows live bureau readiness and active case volume at any time</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>CIB Guidebook</td>
+        <td>Procedures available in the field without leaving the secure portal — no printed manuals, no version confusion</td>
+        <td>Guarantees standardised conduct across all detectives; reduces liability from protocol deviations</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Penal Code</td>
+        <td>Legal reference during active cases — charge verification in real time without leaving NEXUS</td>
+        <td>Reduces prosecutorial failures caused by incorrect charging; strengthens conviction rate</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Weapons Tracker</td>
+        <td>Live cross-reference between seized weapons and open cases — instant linkage without manual trawling</td>
+        <td>Structured, auditable record of illegal weapons removed from circulation — direct safety metric</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Gang Intel</td>
+        <td>Current threat profiles enable safe field decisions and targeted investigation priorities</td>
+        <td>Council receives a mapped picture of organised crime for resource and policy decisions</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Informant Registry</td>
+        <td>Handlers manage assets securely with encrypted identity protection and full tasking history</td>
+        <td>Command can audit handler relationships — prevents misuse of informant relationships</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>HVC Targets</td>
+        <td>Full dossiers on priority targets enable multi-division coordination without repeated briefings</td>
+        <td>Visible progress on San Andreas's most dangerous criminals — direct accountability mechanism</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Budget Ledger</td>
+        <td>Division heads track operational spend in real time — no surprise overruns</td>
+        <td>Full financial transparency over every SAD allocated to CIB operations</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>NMAIL</td>
+        <td>Encrypted internal communications — no classified data transmitted over unsecured external channels; attachment support included</td>
+        <td>Audit trail of all inter-division communications; evidence of inter-team coordination available on demand</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Investigation Reports</td>
+        <td>Standardised CIB Form 0001 ensures complete, legally-sound case documentation every time; PDF export for prosecution</td>
+        <td>Full case archive accessible to Council-tier clearance — accountability on every investigation opened</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Weekly Report — CIB</td>
+        <td>Detectives and Command access structured weekly operational summaries covering cases, arrests, and divisional performance in-portal</td>
+        <td>Reliable weekly accountability snapshot of CIB activity — searchable, archived, and audit-logged</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Weekly Report — GIU</td>
+        <td>GIU-credentialed detectives access classified gang intelligence summaries fully segregated from standard CIB access</td>
+        <td>Structured organised-crime intelligence delivered to Council on request; compartmentalised by design</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>Public Announcements</td>
+        <td>Command drafts and archives all public-facing CIB communications inside NEXUS before release through official channels</td>
+        <td>Full visibility into CIB's public accountability posture; all statements approved and archived within the portal</td>
+        <td><span class="status-badge badge-live">Live</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="divider-section reveal">
+  <div class="divider-inner">
+    <div class="divider-tag">Security Architecture</div>
+    <div class="divider-line"></div>
+    <div class="divider-ref">CIB-PROP-2026-001-ANNEX-A · Section V</div>
+  </div>
+</div>
+<div id="security">
+<div class="section">
+  <div class="section-header reveal">
+    <div class="section-number">Section V · Security</div>
+    <div class="section-eyebrow">Operational Security Architecture</div>
+    <h2 class="section-title">Built to Be <span>Impenetrable.</span></h2>
+    <p class="section-lead">
+      NEXUS's security model is not an afterthought. Every module, every data path, and every session is governed by a layered security architecture designed to make unauthorised access operationally impossible and every authorised action fully auditable.
+    </p>
+  </div>
+  <div class="security-grid reveal">
+    <div class="sec-cell">
+      <div class="sec-icon">[ AUTH ]</div>
+      <div>
+        <div class="sec-title">Role-Based Authentication</div>
+        <div class="sec-body">Four clearance tiers — Detective, Senior Detective, Command, and Council — each with precisely scoped module access. No detective can access data above their clearance tier regardless of technical knowledge.</div>
+      </div>
+    </div>
+    <div class="sec-cell">
+      <div class="sec-icon">[ AUDIT ]</div>
+      <div>
+        <div class="sec-title">Full Audit Logging</div>
+        <div class="sec-body">Every session, every data access, and every modification is timestamped and logged. Command and Council can pull complete audit trails for any detective, any module, or any time window at any point.</div>
+      </div>
+    </div>
+    <div class="sec-cell">
+      <div class="sec-icon">[ COMMS ]</div>
+      <div>
+        <div class="sec-title">Encrypted Internal Communications</div>
+        <div class="sec-body">NMAIL operates entirely within NEXUS's secure environment. Classified operational communications never traverse external email infrastructure — zero interception surface, zero external exposure by architectural design.</div>
+      </div>
+    </div>
+    <div class="sec-cell">
+      <div class="sec-icon">[ IDFX ]</div>
+      <div>
+        <div class="sec-title">Informant Identity Protection</div>
+        <div class="sec-body">The Informant Registry operates behind a second compartmentalisation layer. Identities are accessible only to the assigned handler and Command-level clearance — structurally separate from all other modules.</div>
+      </div>
+    </div>
+    <div class="sec-cell">
+      <div class="sec-icon">[ GATE ]</div>
+      <div>
+        <div class="sec-title">Access Gate Verification</div>
+        <div class="sec-body">Every NEXUS session begins with a clearance verification sequence. Sessions expire after 30 minutes of inactivity. Shared credentials or session hijacking attempts are flagged to Command automatically.</div>
+      </div>
+    </div>
+    <div class="sec-cell">
+      <div class="sec-icon">[ ISOL ]</div>
+      <div>
+        <div class="sec-title">No External Data Paths</div>
+        <div class="sec-body">NEXUS does not connect to public APIs, external databases, or third-party services for any intelligence module. All sensitive data is contained within CIB-controlled infrastructure. The attack surface is zero by architecture.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="closing" id="closing">
+  <div class="closing-seal">
+    <img src="https://centralinvestigationbureau.vercel.app/images/cib-logo.png" alt="CIB" style="width:36px;height:36px;object-fit:contain;filter:brightness(0.85);" onerror="this.style.display='none'">
+  </div>
+  <div class="closing-title">State Council — Funding Decision Required</div>
+  <p class="closing-text">
+    NEXUS is not aspirational software. It is a live, operational intelligence platform that the Central Investigation Bureau relies on every shift to keep its detectives coordinated, its intelligence secure, and its cases properly documented. This proposal asks the Council not to fund a promise — but to sustain the infrastructure that is already keeping San Andreas safer, quietly and precisely, every day.
+  </p>
+  <div class="closing-motto">"Quietly. Precisely. And Decisively." — CIB</div>
+  <div style="border-top:1px solid var(--navy-border); border-bottom:1px solid var(--navy-border); padding:2rem 0; margin:2rem auto; max-width:720px;">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:1rem;">FORMAL DECLARATION</div>
+    <p style="font-family:var(--serif);font-size:1rem;color:var(--text-sec);line-height:1.75;">We, the undersigned leadership of the Central Investigation Bureau, certify that the information contained in this supplementary annex is accurate, that all requested NEXUS infrastructure funds will be applied exclusively to the stated platform purposes, and that CIB remains fully accountable to the State Council of San Andreas for all allocated resources.</p>
+  </div>
+</div>
+<footer>
+  <div class="footer-left">
+    REF: CIB-PROP-2026-001-ANNEX-A &nbsp;·&nbsp; NEXUS INFRASTRUCTURE PROPOSAL &nbsp;·&nbsp; CENTRAL INVESTIGATION BUREAU &nbsp;·&nbsp; STATE OF SAN ANDREAS &nbsp;·&nbsp; 2026<br>
+    <span style="margin-top:4px;display:block;">This supplementary annex is a classified attachment to the CIB Digital Infrastructure Funding Proposal. All figures are estimates in San Andreas Dollars (SAD).</span>
+  </div>
+  <div class="footer-class">Top Secret — Council Eyes Only</div>
+</footer>
+<script src="nexus.js"></script>
+</body>
+</html>
