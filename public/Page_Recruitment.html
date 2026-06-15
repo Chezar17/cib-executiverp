@@ -19,7 +19,6 @@
 
 <div data-shared-site-header></div>
 
-<!-- HERO -->
 <section class="page-hero">
   <div class="page-hero-bg"></div>
   <div class="page-hero-grid"></div>
@@ -29,20 +28,20 @@
     <h1>The Bureau Does Not Recruit.</h1>
     <div class="page-hero-line"></div>
     <p class="page-hero-desc">The Central Investigation Bureau selects. There are no open applications, no submission portals, and no waiting lists. If you have to ask how to get in — you are not ready.</p>
+    <div class="clearance-stamp">Clearance Required &nbsp;·&nbsp; For Public Distribution</div>
   </div>
 </section>
 
-<!-- PHILOSOPHY SECTION -->
 <section class="philosophy-section">
   <div class="philosophy-inner">
 
-    <div class="philosophy-header">
+    <div class="philosophy-header reveal">
       <div class="section-eyebrow">Bureau Standard</div>
       <h2>This Is Not an Application Process</h2>
-      <div class="philosophy-line"></div>
+      <div class="philosophy-line line-reveal"></div>
     </div>
 
-    <div class="philosophy-grid">
+    <div class="philosophy-grid reveal-group">
       <div class="philosophy-text">
         <p>The Central Investigation Bureau operates differently from every other unit within the San Andreas law enforcement structure. We do not post vacancies. We do not run intake cycles. We do not advertise.</p>
         <p>The selection of Bureau personnel is a matter handled internally — through observation, reputation, and direct approach. Those who have demonstrated the qualities we value already know who we are, and know how to find us.</p>
@@ -58,9 +57,8 @@
   </div>
 </section>
 
-<!-- DIVIDER BAR -->
 <div class="division-bar">
-  <div class="division-bar-inner">
+  <div class="division-bar-inner reveal-group">
     <div class="division-item">
       <div class="division-label">Entry Method</div>
       <div class="division-value">Direct Approach Only</div>
@@ -83,18 +81,17 @@
   </div>
 </div>
 
-<!-- WHAT WE LOOK FOR -->
 <section class="criteria-section">
   <div class="criteria-inner">
 
-    <div class="criteria-header">
+    <div class="criteria-header reveal">
       <div class="section-eyebrow">What Matters to Us</div>
       <h2>The Standard</h2>
-      <div class="criteria-line"></div>
+      <div class="criteria-line line-reveal-center"></div>
       <p>We are not evaluating credentials. We are evaluating character, conduct, and capability. These are the qualities that distinguish those who belong in the Bureau from those who do not.</p>
     </div>
 
-    <div class="criteria-grid">
+    <div class="criteria-grid reveal-group">
 
       <div class="criteria-card">
         <div class="criteria-icon">
@@ -125,7 +122,7 @@
           </svg>
         </div>
         <div class="criteria-card-title">Record Without Stain</div>
-        <p class="criteria-card-desc">Your conduct on file must be unambiguous. Excessive force, procedural violations, or a pattern of poor judgment are not starting points for conversation — they are the end of one.</p>
+        <p class="criteria-card-desc">Your conduct on file must be unambiguous. Excessive force, procedural violations, or a pattern of poor judgment are not starting points for a conversation — they are the end of one.</p>
       </div>
 
       <div class="criteria-card">
@@ -172,17 +169,16 @@
   </div>
 </section>
 
-<!-- HOW IT ACTUALLY WORKS -->
 <section class="pathway-section">
   <div class="pathway-inner">
 
-    <div class="pathway-header">
+    <div class="pathway-header reveal">
       <div class="section-eyebrow">The Pathway</div>
       <h2>How Entry Into the Bureau Works</h2>
-      <div class="pathway-line"></div>
+      <div class="pathway-line line-reveal-center"></div>
     </div>
 
-    <div class="pathway-body">
+    <div class="pathway-body reveal-group">
       <div class="pathway-statement">
         <div class="pathway-num">I.</div>
         <div class="pathway-detail">
@@ -209,12 +205,11 @@
   </div>
 </section>
 
-<!-- CLOSING STATEMENT -->
 <section class="closing-section">
   <div class="closing-inner">
     <div class="closing-rule"></div>
     <blockquote class="closing-quote">
-      "The Bureau does not lower its standard to fill its ranks.<br>
+      "The Bureau does not lower its standard to fill its ranks.
       It waits for those who meet it."
     </blockquote>
     <div class="closing-attr">— CIB Command</div>
@@ -226,5 +221,23 @@
 <script type="module" src="shared/components/site-footer.js"></script>
 <script src="shared/scripts/site-ui.js"></script>
 <script src="scripts/recruitment.js"></script>
+
+<script>
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.15});
+
+  document.querySelectorAll(
+    '.reveal, .reveal-group, .line-reveal, .line-reveal-center, .closing-rule, .closing-quote, .closing-attr'
+  ).forEach(function(el){ io.observe(el); });
+})();
+</script>
+
 </body>
 </html>
