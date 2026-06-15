@@ -68,10 +68,8 @@
         </div>
       </div>
 
-      <!-- Submit (disabled) -->
       <button class="login-btn" id="loginBtnMain" disabled style="opacity:0.35;cursor:not-allowed;" title="Portal login is currently under development">Portal Under Development</button>
 
-      <!-- Forgot Password -->
       <div class="forgot-section">
         <div class="forgot-label">Forgot your password?</div>
         <div class="forgot-card">
@@ -85,21 +83,17 @@
           </div>
         </div>
       </div>
-
     </div>
-
     <div class="login-footer-bar">
       <span class="login-footer-left">&copy; 2026 CENTRAL INVESTIGATION BUREAU</span>
       <span class="login-secure-badge"><span class="secure-dot"></span> ENCRYPTED CHANNEL</span>
     </div>
-
   </div>
 </div>
 <div id="surv-overlay">
   <div class="surv-corner surv-corner-tr"></div>
   <div class="surv-corner surv-corner-bl"></div>
   <div class="surv-corner surv-corner-br"></div>
-
   <div class="surv-box">
     <div class="surv-topbar">
       <div class="surv-topbar-left">
@@ -111,7 +105,6 @@
         <span class="surv-topbar-time" id="surv-time">&ndash;</span>
       </div>
     </div>
-
     <div class="surv-body">
       <div class="surv-icon">
         <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1zm0 2.18l7 3.12V11c0 4.54-3.13 8.79-7 9.93C8.13 19.79 5 15.54 5 11V6.3l7-3.12zM11 7v2H9v2h2v2h2v-2h2V9h-2V7h-2z"/></svg>
@@ -284,7 +277,6 @@
 <div id="chpw-modal">
   <div class="chpw-box">
 
-    <!-- top bar -->
     <div class="chpw-topbar">
       <div class="chpw-topbar-left">
         <div class="chpw-topbar-dot"></div>
@@ -292,10 +284,7 @@
       </div>
       <span style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(192,57,43,0.4);text-transform:uppercase;">SYS-AUTH v1.0</span>
     </div>
-
     <div class="chpw-body">
-
-
       <div class="chpw-alert">
         <span class="chpw-alert-icon">&#9888;</span>
         <div class="chpw-alert-text">
@@ -303,8 +292,6 @@
           Your account has been flagged by CIB Command. You must set a new password before accessing the portal. This action is mandatory and cannot be skipped.
         </div>
       </div>
-
-
       <div class="form-group">
         <label class="form-label" for="chpw-old">Current Password</label>
         <div class="form-input-wrap">
@@ -370,7 +357,6 @@ let _chpwBadge = null
 function openChangePasswordModal(token, badge) {
   _chpwToken = token
   _chpwBadge = badge
-  // Reset form state
   document.getElementById('chpw-old').value    = ''
   document.getElementById('chpw-new').value    = ''
   document.getElementById('chpw-verify').value = ''

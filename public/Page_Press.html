@@ -19,10 +19,8 @@
 </head>
 <body>
 
-<!-- NAV -->
 <div data-shared-site-header></div>
 
-<!-- PAGE HERO -->
 <div class="page-hero">
   <div class="page-hero-grid"></div>
   <div class="page-hero-inner">
@@ -32,8 +30,6 @@
     <p class="page-hero-desc">Official press releases, public advisories, and statements issued by the Central Investigation Bureau and its sub-divisions. All communications are authorized by the Office of the CIB Director.</p>
   </div>
 </div>
-
-<!-- MAIN CONTENT -->
 <div class="press-wrap">
   <div class="press-layout">
 
@@ -69,16 +65,10 @@
         </div>
 
         <div class="sub-pr-grid">
-          <!-- Populated dynamically by JS from /api/press-releases -->
           <div style="font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">Loading...</div>
         </div>
       </div>
-      <!-- END SUB HEADLINE SECTION -->
-
     </div>
-    <!-- END LEFT COLUMN -->
-
-    <!-- SIDEBAR -->
     <aside class="sidebar">
 
       <div class="sidebar-card">
@@ -106,7 +96,6 @@
   </div>
 </div>
 
-<!-- FOOTER -->
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
 
@@ -261,7 +250,6 @@ function renderSingleRelease(r) {
     <div id="export-card-host" style="position:fixed;left:-9999px;top:0;width:450px;height:800px;z-index:-1;"></div>
   `
 
-  // Store current release data for the export functions
   window._currentPressRelease = r
   window._exportFmt = 'jpg'
 }
@@ -274,13 +262,6 @@ function renderAllReleases(releases) {
   if (mainList) mainList.innerHTML = mains.length ? mains.map(buildMainCard).join('') : '<div style="font-family:\'Roboto Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">No main headlines published yet.</div>'
   if (subGrid)  subGrid.innerHTML  = subs.length  ? subs.map(buildSubCard).join('')   : '<div style="font-family:\'Roboto Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);opacity:0.4;padding:20px 0;text-transform:uppercase;">No sub headlines published yet.</div>'
 }
-
-// ═══════════════════════════════════════════════════════════
-//  EXPORT ENGINE — 9:16 press card renderer
-//  Uses DOM-in-host + html2canvas for accurate rendering.
-//  Card design: CIB dark aesthetic, gold/red accents.
-// ═══════════════════════════════════════════════════════════
-
 function openExportModal() {
   const m = document.getElementById('export-modal')
   if (m) { m.style.display = 'flex'; document.body.style.overflow = 'hidden' }
@@ -302,20 +283,17 @@ function setExportFmt(fmt, btn) {
   })
 }
 
-// Build the 450×800 card DOM inside #export-card-host
 function buildExportCard(r, qrDataUrl) {
   const host = document.getElementById('export-card-host')
   if (!host) return
   const cc  = CAT_CLASS[r.news_type] || 'cat-official'
   const accentColor = cc === 'cat-advisory' ? '#C0392B' : cc === 'cat-operation' ? '#27AE60' : cc === 'cat-personnel' ? '#3498DB' : '#C9A84C'
 
-  // Strip HTML tags to get clean plain text for the export card
   const _bodyTmp  = document.createElement('div')
   _bodyTmp.innerHTML = bodyToHtml(r.body || '')
   const bodyRaw   = (_bodyTmp.textContent || _bodyTmp.innerText || '').replace(/\s+/g, ' ').trim()
   const bodyShort = bodyRaw.length > 600 ? bodyRaw.slice(0, 597) + '...' : bodyRaw
 
-  // Scan-line pattern as a 1×2px data URI (pure CSS, no external img)
   const scanLine = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAADUlEQVQI12NgYGD4DwABBAEAWjR/LQAAAABJRU5ErkJggg=='
 
   const imgSection = r.photo_url
@@ -429,8 +407,6 @@ function buildExportCard(r, qrDataUrl) {
   </div>`
 }
 
-// ── QR code generator ────────────────────────────────────
-// Uses qrcodejs to render into a temp canvas, returns data URL
 function generateQrDataUrl(url) {
   return new Promise(resolve => {
     try {
@@ -447,7 +423,6 @@ function generateQrDataUrl(url) {
         correctLevel:  QRCode.CorrectLevel.M,
       })
 
-      // QRCode renders async via image — wait for it
       setTimeout(() => {
         const img = tmp.querySelector('img')
         if (img && img.src) {
@@ -479,7 +454,6 @@ async function generateExportPreview() {
   if (status) status.textContent = 'Rendering preview...'
   buildExportCard(r, qrDataUrl)
 
-  // Wait a frame for images to settle
   await new Promise(res => setTimeout(res, 120))
 
   try {
@@ -543,20 +517,15 @@ async function doExportImage() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// Close export modal on backdrop click
 document.addEventListener('click', e => {
   const modal = document.getElementById('export-modal')
   if (modal && e.target === modal) closeExportModal()
 })
 
 async function initPressPage() {
-  // ?release= now carries the pr_number (e.g. PR-2026-01)
   const prNumber = new URLSearchParams(location.search).get('release')
   try {
     if (prNumber) {
-      // Fetch the full list then find the matching record client-side.
-      // This avoids any backend API changes — no new query param needed.
       const res  = await fetch(PA_API)
       const json = await res.json()
       if (json.success && json.data) {

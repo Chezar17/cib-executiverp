@@ -36,8 +36,6 @@
     <div class="section-title">Commanding Officers</div>
     <div class="section-rule"></div>
   </div>
-
-  <!-- Commissioner — Featured Hero -->
   <div class="commissioner-wrap comm-entrance">
     <div class="commissioner-card" onclick="openBio('gunner')">
       <div class="comm-particles" id="comm-particles"></div>
@@ -77,7 +75,6 @@
     </div>
   </div>
 
-  <!-- Sheriff + Chief — 2 card row -->
   <div class="sub-leaders-grid">
 
     <div class="leader-card sub-entrance-1" onclick="openBio('wesley')">
@@ -153,9 +150,6 @@
 
   <div class="section-divider"></div>
 
-  <!-- ══════════════════════════════════════════════
-       SECTION 2 — DEPARTMENTS
-  ══════════════════════════════════════════════ -->
   <div class="section-head reveal" style="margin-top:72px;">
     <div class="section-eyebrow">Law Enforcement Bodies</div>
     <div class="section-title">Departments</div>
@@ -164,10 +158,6 @@
 
   <div class="dept-grid">
 
-    <!-- ════════════════════════════════
-         DEPT 1 — San Andreas State Trooper
-         onclick opens the modal with id "modal-sast"
-    ════════════════════════════════ -->
     <div class="dept-card dept-sast reveal" onclick="openDept('sast')">
       <div class="dept-logo-zone">
         <!-- &#9654;' UPLOAD: replace src with images/dept-sast-logo.png &#9654;' -->
@@ -188,12 +178,8 @@
       </div>
     </div>
 
-    <!-- ════════════════════════════════
-         DEPT 2 — Los Santos County Sheriff
-    ════════════════════════════════ -->
     <div class="dept-card dept-lcso reveal reveal-d1" onclick="openDept('lcso')">
       <div class="dept-logo-zone">
-        <!-- &#9654;' UPLOAD: replace src with images/dept-lcso-logo.png &#9654;' -->
         <img class="dept-logo"
              src="images/LSCS_Logo.png"
              alt="LCSO Logo"
@@ -210,12 +196,8 @@
       </div>
     </div>
 
-    <!-- ════════════════════════════════
-         DEPT 3 — Los Santos Police Department
-    ════════════════════════════════ -->
     <div class="dept-card dept-lspd reveal reveal-d2" onclick="openDept('lspd')">
       <div class="dept-logo-zone">
-        <!-- &#9654;' UPLOAD: replace src with images/dept-lspd-logo.png &#9654;' -->
         <img class="dept-logo"
              src="images/LSPD_Logo.png"
              alt="LSPD Logo"
@@ -236,24 +218,9 @@
 
 </div><!-- /page-wrap -->
 
-
-<!-- ══════════════════════════════════════════════════════════
-     DEPARTMENT MODALS
-     Each modal contains: header (logo + name), office photo,
-     and two-column body (About + Jurisdiction).
-
-     HOW TO ADD OFFICE PHOTO:
-       1. Save your photo as images/dept-DEPT-office.jpg (or .png)
-       2. Set the src on the <img class="office-img"> inside that modal
-       3. The placeholder disappears automatically when the image loads
-
-     HOW TO EDIT CONTENT:
-       Each modal is clearly labelled. Edit text directly inside.
-══════════════════════════════════════════════════════════════ -->
 <div id="dept-modal" onclick="handleModalBackdrop(event)">
   <div class="dept-modal-box" id="modal-box" data-dept="">
 
-    <!-- MODAL HEADER — populated by JS -->
     <div class="dept-modal-header" id="modal-header">
       <div class="modal-logo-zone" id="modal-logo-zone">
         <div class="modal-logo-frame">
@@ -270,7 +237,6 @@
       <button class="modal-close-btn" onclick="closeDept()">✕</button>
     </div>
 
-    <!-- OFFICE PHOTO -->
     <div class="modal-office-photo" id="modal-office-wrap">
       <!-- Image is shown when src is valid; placeholder shown otherwise -->
       <img id="modal-office-img" src="" alt="Department Office" style="display:none;" onerror="this.style.display='none';document.getElementById('modal-office-placeholder').style.display='flex';"/>
@@ -281,15 +247,12 @@
       <div class="modal-office-caption" id="modal-office-caption"></div>
     </div>
 
-    <!-- TWO-COLUMN BODY -->
     <div class="modal-body" id="modal-body">
-      <!-- left col -->
       <div class="modal-col">
         <div class="modal-col-title">About</div>
         <div id="modal-about-text" class="modal-text"></div>
         <div class="modal-info-rows" id="modal-info-rows"></div>
       </div>
-      <!-- right col -->
       <div class="modal-col">
         <div class="modal-col-title">Jurisdiction &amp; Authority</div>
         <div class="jur-list" id="modal-jur-list"></div>
@@ -300,17 +263,11 @@
 </div>
 
 
-<!-- ══════════════ FOOTER ══════════════ -->
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
 
-
 <script src="shared/scripts/site-ui.js"></script>
 
-
-
-
-<!-- Biography Modal -->
 <div id="bio-modal" onclick="if(event.target===this)closeBio()">
   <div class="bio-box">
     <div class="bio-banner">

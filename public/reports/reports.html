@@ -13,7 +13,6 @@
 </head>
 <body>
 
-<!-- ACCESS GATE -->
 <div id="access-gate">
   <div class="gate-logo">
     <img src="/images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
@@ -21,8 +20,6 @@
   <div class="gate-text">Verifying Clearance...</div>
   <div class="gate-bar"><div class="gate-progress"></div></div>
 </div>
-
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
     <img class="topbar-logo" src="/images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
@@ -38,14 +35,12 @@
   </div>
 </div>
 
-<!-- CLASSIFICATION BANNER -->
 <div class="class-banner">
   <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
   <div class="class-banner-text">TOP SECRET // CLASSIFIED // AUTHORIZED PERSONNEL ONLY // UNAUTHORIZED ACCESS IS A FEDERAL OFFENSE</div>
   <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
 </div>
 
-<!-- MAIN CONTENT -->
 <div class="portal-content" id="portalContent" style="display:none">
   <div class="page-header">
     <div class="page-header-left">
@@ -62,7 +57,6 @@
     </div>
   </div>
 
-  <!-- STATS ROW -->
   <div class="stats-row" id="statsRow">
     <div class="stat-card"><div class="stat-val" id="statTotal">0</div><div class="stat-lbl">Total Cases</div></div>
     <div class="stat-card"><div class="stat-val open" id="statOpen">0</div><div class="stat-lbl">Open</div></div>
@@ -70,7 +64,6 @@
     <div class="stat-card"><div class="stat-val cold" id="statCold">0</div><div class="stat-lbl">Cold</div></div>
   </div>
 
-  <!-- TABLE SECTION -->
   <div class="table-section">
     <div class="table-toolbar">
       <input type="text" id="searchInput" class="search-input" placeholder="Search case number, title, detective..." oninput="filterTable()"/>
@@ -107,7 +100,6 @@
   </div>
 </div>
 
-<!-- DELETE MODAL -->
 <div id="deleteModal" class="modal-overlay" style="display:none">
   <div class="modal-box">
     <div class="modal-title">Confirm Delete</div>

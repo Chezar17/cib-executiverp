@@ -14,7 +14,6 @@
 </head>
 <body>
 
-<!-- ACCESS GATE -->
 <div id="access-gate">
   <div class="gate-logo">
     <img src="../images/GIU.png" alt="GIU" onerror="this.style.display='none'"/>
@@ -23,14 +22,12 @@
   <div class="gate-bar"><div class="gate-progress"></div></div>
 </div>
 
-<!-- Atmospheric decorations -->
 <div class="dir-scanline"></div>
 <div class="dir-corner tl"></div>
 <div class="dir-corner tr"></div>
 <div class="dir-corner bl"></div>
 <div class="dir-corner br"></div>
 
-<!-- ── TOPBAR ── -->
 <div class="dir-topbar">
   <div class="dir-topbar-left">
     <a class="dir-back" href="../nexus.html">
@@ -47,17 +44,14 @@
   </div>
 </div>
 
-<!-- ── CLASSIFICATION TICKER ── -->
 <div class="dir-class-banner">
   <div class="dir-banner-dots"><span></span><span></span><span></span></div>
   <div class="dir-banner-text">TS/SCI // GIU SPECIAL ACCESS PROGRAM // EYES ONLY // UNAUTHORIZED ACCESS IS A CAPITAL OFFENSE</div>
   <div class="dir-banner-dots"><span></span><span></span><span></span></div>
 </div>
 
-<!-- ── LAYOUT ── -->
 <div class="dir-layout">
 
-  <!-- Access denied (shown if classification insufficient) -->
   <div class="dir-access-denied" id="dirAccessDenied">
     <div class="dir-access-denied-title">&#9888; Access Denied</div>
     <div class="dir-access-denied-text">
@@ -67,7 +61,6 @@
     </div>
   </div>
 
-  <!-- Page header -->
   <div class="dir-header" id="dirHeader" style="display:none;">
     <div class="dir-header-left">
       <div class="dir-header-eyebrow">Gang Intelligence Unit · Special Access Program</div>
@@ -96,7 +89,6 @@
     </div>
   </div>
 
-  <!-- Section tabs — shown after auth -->
   <div class="dir-section-tabs" id="dirSectionTabs" style="display:none;">
     <button class="dir-section-tab active" id="tabDirectives" onclick="switchTab('directives', this)">
       <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
@@ -116,7 +108,6 @@
     </button>
   </div>
 
-  <!-- Toolbar -->
   <div class="dir-toolbar" id="dirToolbar" style="display:none;">
     <div class="dir-filter-group">
       <button class="dir-filter-btn active" data-filter="all"     onclick="setFilter('all',this)">All</button>
@@ -125,16 +116,13 @@
       <button class="dir-filter-btn"        data-filter="failed"  onclick="setFilter('failed',this)">Failed</button>
     </div>
     <div class="dir-toolbar-sep"></div>
-    <!-- Only visible to top_secret users — controlled in JS -->
     <button class="dir-new-btn hidden" id="btnNewDirective" onclick="openCreateModal()">
       <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
       Issue Directive
     </button>
   </div>
 
-  <!-- Cards grid -->
   <div class="dir-grid" id="dirGrid">
-    <!-- Skeletons while loading -->
     <div class="dir-skeleton">
       <div class="skel-line short"></div><div class="skel-line med"></div>
       <div class="skel-line full"></div><div class="skel-line full"></div>
@@ -150,12 +138,8 @@
   </div>
 
 
-  <!-- ════════════════════
-       GIU MEMBERS SECTION
-  ════════════════════ -->
   <div id="membersSection" class="dir-members-page" style="display:none;">
 
-    <!-- Members toolbar -->
     <div class="dir-toolbar" id="membersToolbar">
       <span class="dir-members-count" id="membersCount">— members</span>
       <div class="dir-toolbar-sep"></div>
@@ -165,7 +149,6 @@
       </button>
     </div>
 
-    <!-- Shared grid: GIU Members + Fenrir Members tabs use the same markup -->
     <div class="dir-members-grid" id="membersGrid">
       <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
       <div class="dir-skeleton"><div class="skel-line short"></div><div class="skel-line med"></div><div class="skel-line full"></div></div>
@@ -175,13 +158,9 @@
   </div>
 
 
-  <!-- ════════════════════
-       WAR MAP SECTION
-  ════════════════════ -->
   <div id="warmapSection" style="display:none;">
     <div class="warmap-shell">
 
-      <!-- Toolbar -->
       <div class="warmap-toolbar">
         <span class="warmap-toolbar-label">&#9679; Mark Type</span>
         <div class="warmap-type-btns">
@@ -206,17 +185,11 @@
         </button>
       </div>
 
-      <!-- Map canvas -->
       <div class="warmap-canvas-wrap not-placing" id="wmCanvas" onclick="wmCanvasClick(event)" onmousemove="wmMouseMove(event)" onmouseleave="wmMouseLeave()">
-
-        <!-- The map image -->
         <img class="warmap-img" id="wmMapImg" src="../images/warmap.png" alt="Los Santos War Map"
           onerror="this.src='warmap.png'"/>
-
-        <!-- Crosshair ghost while placing -->
         <div class="warmap-crosshair" id="wmCrosshair"></div>
 
-        <!-- Legend -->
         <div class="warmap-legend">
           <div class="wm-legend-title">&#9673; Legend</div>
           <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#E74C3C;"></div>Objective</div>
@@ -227,28 +200,18 @@
           <div class="wm-legend-item"><div class="wm-legend-dot" style="background:#1ABC9C;"></div>Contact</div>
         </div>
 
-        <!-- Zoom controls -->
         <div class="warmap-zoom-controls">
           <button class="warmap-zoom-btn" onclick="wmZoom(1)">+</button>
           <button class="warmap-zoom-btn" onclick="wmZoom(-1)">−</button>
           <button class="warmap-reset-btn" onclick="wmResetView()" title="Reset view">⊙</button>
         </div>
-
-        <!-- Marker tooltip (shown on hover) -->
         <div class="wm-tooltip" id="wmTooltip" style="display:none;"></div>
-
-        <!-- Markers injected here by JS -->
         <div id="wmMarkersContainer"></div>
+      </div>
+    </div>
+  </div>
 
-      </div><!-- /wmCanvas -->
-    </div><!-- /warmap-shell -->
-  </div><!-- /warmapSection -->
-
-</div><!-- /dir-layout -->
-
-<!-- ════════════════════════════════════════════════
-     CREATE / EDIT DIRECTIVE MODAL  (top_secret only)
-════════════════════════════════════════════════ -->
+</div>
 <div class="dir-modal-overlay" id="createModal">
   <div class="dir-modal">
     <div class="dir-modal-topbar">
@@ -298,11 +261,6 @@
     </div>
   </div>
 </div>
-
-<!-- ════════════════════════════════════════════════
-     UPDATE DIRECTIVE MODAL (top_secret only)
-     Handles: accept/decline, progress, outcome+notes
-════════════════════════════════════════════════ -->
 <div class="dir-modal-overlay" id="updateModal">
   <div class="dir-modal">
     <div class="dir-modal-topbar">
@@ -313,8 +271,6 @@
       <button class="dir-modal-close" onclick="closeUpdateModal()">✕</button>
     </div>
     <div class="dir-modal-body">
-
-      <!-- Response section -->
       <div class="dir-form-group">
         <label class="dir-form-label">Response</label>
         <div style="display:flex;gap:10px;margin-bottom:8px;">
@@ -331,8 +287,6 @@
       </div>
 
       <div class="dir-modal-divider"></div>
-
-      <!-- Progress -->
       <div class="dir-form-group">
         <label class="dir-form-label">Task Progress</label>
         <div class="dir-range-wrap">
@@ -344,7 +298,6 @@
 
       <div class="dir-modal-divider"></div>
 
-      <!-- Outcome -->
       <div class="dir-form-group">
         <label class="dir-form-label">Task Outcome</label>
         <div style="display:flex;gap:10px;margin-bottom:8px;">
@@ -369,9 +322,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     DETAIL / VIEW MODAL (all cleared users) + CHAT
-════════════════════════════════════════════════ -->
 <div class="dir-modal-overlay" id="detailModal">
   <div class="dir-modal" style="max-width:680px;">
     <div class="dir-modal-topbar">
@@ -382,10 +332,8 @@
       <button class="dir-modal-close" onclick="closeDetailModal()">✕</button>
     </div>
     <div class="dir-modal-body" id="detailBody" style="font-family:var(--mono);font-size:11px;line-height:1.8;">
-      <!-- filled by JS -->
     </div>
 
-    <!-- CHAT THREAD -->
     <div class="dir-chat-section" id="chatSection">
       <div class="dir-chat-header">
         <span class="dir-chat-title">Field Log / Discussion</span>
@@ -410,10 +358,6 @@
   </div>
 </div>
 
-
-<!-- ════════════════════════════════════════════════
-     CREATE / EDIT MEMBER MODAL (top_secret only)
-════════════════════════════════════════════════ -->
 <div class="dir-modal-overlay" id="memberModal">
   <div class="dir-modal" style="border-top-color:var(--gold);max-width:620px;">
     <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
@@ -484,9 +428,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     MEMBER DETAIL MODAL (read-only for secret)
-════════════════════════════════════════════════ -->
 <div class="dir-modal-overlay" id="memberDetailModal">
   <div class="dir-modal" style="border-top-color:var(--gold);max-width:540px;">
     <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
@@ -505,10 +446,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     MEMBER PROFILE PHOTO — URL + proxy preview (Cropper.js)
-     Mirrors Investigation Report remote image modal.
-════════════════════════════════════════════════ -->
 <div class="dir-modal-overlay" id="memberUrlPhotoModal">
   <div class="dir-modal" style="border-top-color:var(--gold);max-width:580px;">
     <div class="dir-modal-topbar" style="background:rgba(201,168,76,0.06);">
@@ -537,9 +474,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     WAR MAP — ADD / EDIT MARKER MODAL
-════════════════════════════════════════════════ -->
 <div class="dir-modal-overlay" id="wmMarkerModal">
   <div class="dir-modal wm-modal">
     <div class="dir-modal-topbar">
@@ -594,16 +528,13 @@
         Coordinates: <span id="wmCoordDisplay" style="color:var(--gold);">—</span>
       </div>
 
-      <!-- ── LOCATION PHOTOS ─────────────────────────────────── -->
       <div class="dir-form-group" style="margin-top:16px;">
         <label class="dir-form-label">
           Location / Objective Photos
           <span style="font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;font-weight:400;text-transform:none;margin-left:8px;">up to 5 · used in briefing</span>
         </label>
 
-        <!-- Photo slot grid -->
         <div class="wm-photo-slots" id="wmPhotoSlots">
-          <!-- 5 slots rendered by JS -->
         </div>
         <div class="wm-photo-hint">JPG / PNG / WEBP · max 4 MB each · photos appear in Brief Mode when this marker is presented</div>
       </div>
@@ -620,9 +551,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     BRIEFING MODE OVERLAY
-════════════════════════════════════════════════ -->
 <div class="wm-briefing-overlay" id="wmBriefingOverlay">
   <div class="wm-brief-topbar">
     <div class="wm-brief-topbar-left">
@@ -647,25 +575,17 @@
     <button class="wm-brief-close" onclick="closeBriefing()">End Briefing</button>
   </div>
   <div class="wm-brief-body">
-    <!-- Left: map with all phase markers visible -->
     <div class="wm-brief-map-pane">
-      <!-- All zoomable content lives inside this group so map + spotlight scale together -->
       <div class="wm-brief-map-group" id="wmbMapGroup">
-        <!-- wmbImgWrap is sized to the image's exact aspect ratio in JS.
-             Pins at left/top % of this wrapper = exact pixel match. -->
         <div id="wmbImgWrap">
           <img class="wm-brief-map-img" id="wmbMapImg" src="../images/warmap.png" alt="Map" onerror="this.src='warmap.png'" onload="onBriefImgLoad()"/>
-          <!-- Spotlight sits inside the zoom group so it scales with the map -->
           <div class="wm-brief-spotlight" id="wmbSpotlight">
             <div class="wm-brief-spotlight-ring"></div>
             <div class="wm-brief-spotlight-dot"></div>
           </div>
         </div>
       </div>
-      <!-- Markers layer lives OUTSIDE the zoom group — pins are never scaled,
-           so they are always crisp. JS positions them in screen-pixel coords. -->
       <div id="wmbMarkersLayer"></div>
-      <!-- These stay fixed on top of the pane, outside the zoom group -->
       <div class="wm-brief-grid"></div>
       <div class="wm-brief-corner tl"></div>
       <div class="wm-brief-corner tr"></div>
@@ -673,19 +593,14 @@
       <div class="wm-brief-corner br"></div>
       <div class="wm-brief-coords" id="wmbCoords"></div>
     </div>
-    <!-- Right: accumulating intel pane -->
     <div class="wm-brief-intel-pane">
-      <!-- Phase header — stays fixed for whole phase -->
       <div class="wm-brief-phase-header" id="wmbPhaseHeader">
         <div class="wm-brief-phase-eyebrow" id="wmbPhaseEyebrow">PHASE 1</div>
         <div class="wm-brief-phase-objective" id="wmbPhaseObjective">—</div>
         <div class="wm-brief-phase-obj-notes" id="wmbPhaseObjNotes"></div>
-        <!-- Objective images — rendered by renderBriefPhase when objective has images -->
         <div class="wm-brief-obj-img-strip" id="wmbPhaseObjImages" style="display:none;"></div>
       </div>
-      <!-- Marker list — grows as user clicks Next -->
       <div class="wm-brief-markers-list" id="wmbMarkersList"></div>
-      <!-- Nav -->
       <div class="wm-brief-nav">
         <button class="wm-brief-nav-btn wm-brief-nav-prev" id="wmbPrev" onclick="briefNav(-1)" disabled>&#8592; Back</button>
         <div class="wm-brief-nav-progress">
@@ -697,28 +612,17 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div id="dir-toast"></div>
 
-<!-- Background music for briefing mode -->
 <audio id="briefingMusic" loop preload="auto">
   <source src="../audio/briefing_music.mp3" type="audio/mpeg"/>
   <source src="../audio/briefing_music.ogg" type="audio/ogg"/>
 </audio>
 
-<!-- ═══════════════════════════════════════════════════════
-     SCRIPTS
-═══════════════════════════════════════════════════════ -->
 <script src="../shared/scripts/portal-auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <script>
-// ════════════════════════════════════════════════════════════
-//  GIU DIRECTIVES — directives.html inline script
-//  Uses /api/informants?type=directive for all CRUD.
-// ════════════════════════════════════════════════════════════
-
-// ── State ─────────────────────────────────────────────────
 let _allDirectives  = []
 let _currentFilter  = 'all'
 let _isTopSecret    = false

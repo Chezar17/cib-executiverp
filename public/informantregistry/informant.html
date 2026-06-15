@@ -13,8 +13,6 @@
 <link rel="stylesheet" href="informant.css"/>
 </head>
 <body>
-
-<!-- ACCESS GATE — flashes briefly while auth is verified -->
 <div id="access-gate">
   <div class="gate-logo">
     <img src="images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
@@ -22,8 +20,6 @@
   <div class="gate-text">Verifying Clearance...</div>
   <div class="gate-bar"><div class="gate-progress"></div></div>
 </div>
-
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
     <img class="topbar-logo" src="images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
@@ -39,14 +35,11 @@
   </div>
 </div>
 
-<!-- CLASSIFICATION BANNER -->
 <div class="class-banner">
   <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
   <div class="class-banner-text">TOP SECRET // CLASSIFIED // AUTHORIZED PERSONNEL ONLY // UNAUTHORIZED ACCESS IS A FEDERAL OFFENSE</div>
   <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
 </div>
-
-<!-- TICKER -->
 <div class="ticker">
   <div class="ticker-label">CLASSIFIED</div>
   <div style="overflow:hidden;flex:1;">
@@ -63,7 +56,6 @@
   </div>
 </div>
 
-<!-- HERO -->
 <div class="nexus-hero">
   <div class="nexus-hero-grid"></div>
   <div class="nexus-hero-inner">
@@ -82,8 +74,6 @@
   </div>
 </div>
 
-<!-- MAIN CONTENT -->
-
 <div class="nexus-wrap">
 
   <div class="nx-section">
@@ -97,7 +87,6 @@
       </div>
     </div>
 
-    <!-- Stats row -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:16px;">
       <div style="background:var(--navy-card);border:1px solid var(--navy-border);padding:12px 16px;display:flex;align-items:center;gap:10px;">
         <div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
@@ -116,7 +105,6 @@
       </div>
     </div>
 
-    <!-- Filter bar -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center;">
       <button class="inf-filter-btn inf-active-filter" data-filter="all"
         style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid var(--gold);padding:5px 14px;cursor:pointer;">
@@ -146,25 +134,19 @@
     </div>
 
     <div class="informant-grid" id="informant-grid">
-      <!-- Cards are dynamically rendered from the database via renderAll() -->
         </div><!-- end informant-grid -->
     <div id="inf-no-results" style="display:none;padding:40px;text-align:center;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;">
       No informants match your filter
     </div>
   </div>
 
-</div><!-- end .nexus-wrap -->
+</div>
 
 
-<!-- NEXUS FOOTER -->
 <div class="nexus-footer">
   <div class="nexus-footer-left">© 2026 CENTRAL INVESTIGATION BUREAU · NEXUS INTERNAL PORTAL · ALL ACTIVITY IS LOGGED</div>
   <div class="nexus-footer-right">TOP SECRET // CLASSIFIED // AUTHORIZED PERSONNEL ONLY</div>
 </div>
-
-
-
-<!-- ══════════════ INFORMANT ADD / EDIT MODAL ══════════════ -->
 <div id="inf-modal">
   <div class="inf-modal-box">
     <div class="inf-modal-header">
@@ -223,7 +205,6 @@
   </div>
 </div>
 
-<!-- ══════════════ DELETE CONFIRM MODAL ══════════════ -->
 <div id="inf-del-modal">
   <div class="inf-del-box">
     <div class="inf-del-title">Confirm Deletion</div>
@@ -235,7 +216,6 @@
   </div>
 </div>
 
-<!-- ══════════════ TOAST CONTAINER ══════════════ -->
 <div id="inf-toast"></div>
 
 

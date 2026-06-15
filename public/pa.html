@@ -12,15 +12,9 @@
 <link rel="stylesheet" href="../shared/styles/portal-shell.css"/>
 <style>
 
-/* ═══════════════════════════════════════════════════════════
-   PA.HTML — PUBLIC AFFAIRS PRESS RELEASE MANAGER
-   Inherits CIB NEXUS design language
-   ═══════════════════════════════════════════════════════════ */
-
 html, body { height:100%; overflow:hidden; }
 body { display:flex; flex-direction:column; background:#060A14; }
 
-/* ── Top bar ── */
 .pa-topbar {
   display:flex; align-items:center; justify-content:space-between;
   height:50px; padding:0 24px;
@@ -54,7 +48,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 }
 .pa-back-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
 
-/* ── Classification banner ── */
 .pa-class-banner {
   background:rgba(192,57,43,0.12); border-bottom:1px solid rgba(192,57,43,0.25);
   padding:5px 24px; display:flex; align-items:center; justify-content:center; gap:16px;
@@ -65,12 +58,10 @@ body { display:flex; flex-direction:column; background:#060A14; }
   color:var(--red-alert); text-transform:uppercase; opacity:0.8;
 }
 
-/* ── Shell ── */
 .pa-shell {
   display:flex; flex:1; overflow:hidden; min-height:0;
 }
 
-/* ── Left pane: list of releases ── */
 .pa-list-pane {
   width:340px; flex-shrink:0;
   background:#070C18;
@@ -151,7 +142,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
   color:var(--muted); opacity:0.5;
 }
 
-/* ── Right pane: form / detail view ── */
 .pa-form-pane {
   flex:1; overflow-y:auto; overflow-x:hidden;
   display:flex; flex-direction:column; min-width:0;
@@ -208,7 +198,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 .pa-select option { background:#0D1526; }
 .pa-textarea { resize:vertical; min-height:120px; line-height:1.7; }
 
-/* Headline type toggle */
 .pa-type-toggle { display:flex; gap:0; }
 .pa-type-opt {
   flex:1; padding:9px 8px; border:1px solid var(--navy-border);
@@ -227,15 +216,12 @@ body { display:flex; flex-direction:column; background:#060A14; }
   border-color:rgba(201,168,76,0.35);
 }
 
-/* Photo upload area */
 .pa-photo-area {
   border:1px dashed var(--navy-border);
   background:#090E1C; padding:18px;
   transition:border-color 0.15s;
 }
 .pa-photo-area:hover { border-color:rgba(79,195,247,0.3); }
-/* Use contain so the full image always shows, regardless of aspect ratio.
-   max-height caps runaway tall images; auto width fills the available space. */
 .pa-photo-preview {
   width:100%; max-height:320px; min-height:80px;
   object-fit:contain; object-position:center;
@@ -263,14 +249,12 @@ body { display:flex; flex-direction:column; background:#060A14; }
 .pa-photo-btn.pa-photo-clear { color:rgba(192,57,43,0.7); border-color:rgba(192,57,43,0.3); }
 .pa-photo-btn.pa-photo-clear:hover { color:var(--red-alert); border-color:var(--red-alert); }
 
-/* URL field below photo area */
 .pa-photo-url-row { margin-top:8px; display:flex; align-items:center; gap:8px; }
 .pa-photo-url-label {
   font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:2px;
   color:var(--muted); opacity:0.5; flex-shrink:0; text-transform:uppercase;
 }
 
-/* Share link row */
 .pa-share-row {
   display:flex; align-items:center; gap:10px;
   padding:10px 14px;
@@ -293,7 +277,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 }
 .pa-share-copy:hover { background:rgba(79,195,247,0.1); }
 
-/* Action buttons */
 .pa-btn {
   font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:3px;
   text-transform:uppercase; padding:9px 22px; cursor:pointer;
@@ -320,7 +303,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 .pa-btn-save:hover { background:rgba(39,174,96,0.25); }
 .pa-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
-/* Empty/welcome state */
 .pa-welcome {
   flex:1; display:flex; flex-direction:column; align-items:center;
   justify-content:center; gap:18px; padding:40px;
@@ -341,7 +323,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
   color:var(--muted); opacity:0.5; max-width:360px; line-height:1.7;
 }
 
-/* Confirmation modal */
 .pa-modal-backdrop {
   position:fixed; inset:0; background:rgba(0,0,0,0.7);
   display:none; align-items:center; justify-content:center; z-index:500;
@@ -362,13 +343,11 @@ body { display:flex; flex-direction:column; background:#060A14; }
 }
 .pa-modal-btns { display:flex; gap:10px; justify-content:flex-end; }
 
-/* Toast */
 #pa-toast {
   position:fixed; bottom:28px; right:28px; z-index:9000;
   display:flex; flex-direction:column; gap:8px; pointer-events:none;
 }
 
-/* Access gate */
 #pa-access-gate {
   position:fixed; inset:0; background:#060A14;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -389,7 +368,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 }
 @keyframes gateLoad { to { width:100%; } }
 
-/* ── Module tabs ── */
 .pa-module-tabs {
   display:flex; border-bottom:1px solid var(--navy-border);
   flex-shrink:0; background:#040810;
@@ -407,7 +385,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 .pa-module-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
 .pa-module-tab.active.wanted-tab { color:var(--red-alert); border-bottom-color:var(--red-alert); }
 
-/* Threat level toggle */
 .pa-threat-opt {
   flex:1; padding:8px 4px; border:1px solid var(--navy-border);
   background:#0D1526; cursor:pointer; transition:all 0.15s;
@@ -421,7 +398,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 .pa-threat-opt.selected-medium   { background:rgba(241,196,15,0.12); color:#f1c40f; border-color:rgba(241,196,15,0.35); }
 .pa-threat-opt.selected-low      { background:rgba(39,174,96,0.12); color:#27ae60; border-color:rgba(39,174,96,0.35); }
 
-/* Wanted list item status dot */
 .w-status-dot {
   width:6px; height:6px; border-radius:50%; flex-shrink:0;
 }
@@ -430,7 +406,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 .w-status-deceased  { background:var(--muted); }
 .w-status-cleared   { background:var(--muted); opacity:0.4; }
 
-/* Scrollbar */
 .pa-list-scroll::-webkit-scrollbar,
 .pa-form-pane::-webkit-scrollbar { width:4px; }
 .pa-list-scroll::-webkit-scrollbar-track,
@@ -438,7 +413,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 .pa-list-scroll::-webkit-scrollbar-thumb,
 .pa-form-pane::-webkit-scrollbar-thumb { background:var(--navy-border); border-radius:2px; }
 
-/* Clearance denied state */
 .pa-denied {
   flex:1; display:flex; flex-direction:column; align-items:center;
   justify-content:center; gap:14px; padding:40px; text-align:center;
@@ -456,7 +430,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
   color:var(--muted); opacity:0.5;
 }
 
-/* ── Rich Text Editor ──────────────────────────────────────── */
 .pa-rte-wrap {
   border: 1px solid var(--navy-border);
   background: #0D1526;
@@ -518,7 +491,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
   color: var(--muted); opacity: 0.4;
   pointer-events: none;
 }
-/* Rendered styles inside the editor */
 .pa-rte-editor p { margin: 0 0 0.8em; }
 .pa-rte-editor b, .pa-rte-editor strong { color: var(--white); }
 .pa-rte-editor i, .pa-rte-editor em { color: rgba(240,237,228,0.8); }
@@ -542,7 +514,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 </style>
 <body>
 
-<!-- ACCESS GATE -->
 <div id="pa-access-gate">
   <img class="pa-gate-logo" src="../images/cib-logo.png" alt="CIB"
        onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
@@ -550,7 +521,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
   <div class="pa-gate-bar"><div class="pa-gate-progress"></div></div>
 </div>
 
-<!-- TOP BAR -->
 <div class="pa-topbar">
   <div class="pa-topbar-left">
     <img class="pa-topbar-logo" src="../images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
@@ -564,18 +534,14 @@ body { display:flex; flex-direction:column; background:#060A14; }
   </div>
 </div>
 
-<!-- CLASSIFICATION BANNER -->
 <div class="pa-class-banner">
   <div class="pa-class-text">SECRET // PUBLIC AFFAIRS OFFICE // AUTHORIZED EDITORIAL PERSONNEL ONLY</div>
 </div>
 
-<!-- SHELL -->
 <div class="pa-shell" id="paShell" style="display:none;">
 
-  <!-- Left pane: tabbed list -->
   <div class="pa-list-pane">
 
-    <!-- Module tabs -->
     <div class="pa-module-tabs">
       <button class="pa-module-tab active" id="tabPressBtn" onclick="switchModule('press')">
         <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
@@ -629,10 +595,8 @@ body { display:flex; flex-direction:column; background:#060A14; }
 
   </div>
 
-  <!-- Right pane: form / welcome -->
   <div class="pa-form-pane" id="paFormPane">
 
-    <!-- Welcome state (shown when nothing selected) -->
     <div class="pa-welcome" id="paWelcome">
       <div class="pa-welcome-icon">
         <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
@@ -641,7 +605,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
       <div class="pa-welcome-sub">Select an existing release from the list to edit, or create a new one. Published releases appear live on the Public Press Room page.</div>
     </div>
 
-    <!-- Edit / create form (hidden until needed) -->
     <div class="pa-form-inner" id="paFormInner" style="display:none;">
 
       <div class="pa-form-header">
@@ -656,14 +619,12 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- Share link (only visible when editing existing) -->
       <div class="pa-share-row" id="paShareRow" style="display:none;">
         <span class="pa-share-label">Share Link</span>
         <span class="pa-share-url" id="paShareUrl">—</span>
         <button class="pa-share-copy" onclick="copyShareLink()">Copy</button>
       </div>
 
-      <!-- ── SECTION: Classification ── -->
       <div class="pa-section-label">Headline Classification</div>
 
       <div class="pa-field-row cols-1">
@@ -681,7 +642,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── SECTION: Release identity ── -->
       <div class="pa-section-label">Release Identity</div>
 
       <div class="pa-field-row cols-3">
@@ -717,7 +677,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── SECTION: Authorship & Dates ── -->
       <div class="pa-section-label">Authorship & Dates</div>
 
       <div class="pa-field-row cols-2">
@@ -741,7 +700,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── SECTION: Content ── -->
       <div class="pa-section-label">News Content</div>
 
       <div class="pa-field-row cols-1">
@@ -753,11 +711,8 @@ body { display:flex; flex-direction:column; background:#060A14; }
       <div class="pa-field-row cols-1">
         <div class="pa-field">
           <label class="pa-label">News Body <span class="req">*</span></label>
-          <!-- Rich text editor -->
           <div class="pa-rte-wrap">
-            <!-- Toolbar -->
             <div class="pa-rte-toolbar" id="paRteToolbar">
-              <!-- Text alignment -->
               <div class="pa-rte-group">
                 <button class="pa-rte-btn" title="Align Left"      onclick="rteCmd('justifyLeft')"   data-cmd="justifyLeft">
                   <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 4h12v2H3zm0 4h18v2H3zm0 4h12v2H3zm0 4h18v2H3z"/></svg>
@@ -773,14 +728,12 @@ body { display:flex; flex-direction:column; background:#060A14; }
                 </button>
               </div>
               <div class="pa-rte-sep"></div>
-              <!-- Inline formatting -->
               <div class="pa-rte-group">
                 <button class="pa-rte-btn pa-rte-btn-text" title="Bold"      onclick="rteCmd('bold')"      data-cmd="bold"><b>B</b></button>
                 <button class="pa-rte-btn pa-rte-btn-text" title="Italic"    onclick="rteCmd('italic')"    data-cmd="italic"><i>I</i></button>
                 <button class="pa-rte-btn pa-rte-btn-text" title="Underline" onclick="rteCmd('underline')" data-cmd="underline"><u>U</u></button>
               </div>
               <div class="pa-rte-sep"></div>
-              <!-- Block elements -->
               <div class="pa-rte-group">
                 <button class="pa-rte-btn pa-rte-btn-text" title="Blockquote"      onclick="rteToggleBlockquote()" data-cmd="blockquote" style="font-size:14px;">"</button>
                 <button class="pa-rte-btn pa-rte-btn-text" title="Bullet List"     onclick="rteCmd('insertUnorderedList')" data-cmd="insertUnorderedList">• ≡</button>
@@ -793,16 +746,13 @@ body { display:flex; flex-direction:column; background:#060A14; }
                 <button class="pa-rte-btn pa-rte-btn-text pa-rte-btn-danger" title="Clear Formatting" onclick="rteCmd('removeFormat')">✕ fmt</button>
               </div>
             </div>
-            <!-- Editable area -->
             <div class="pa-rte-editor" id="paRteEditor" contenteditable="true"
                  data-placeholder="Write the press release body here..."></div>
-            <!-- Hidden input synced to editor HTML — this is what gets saved -->
             <input type="hidden" id="fieldBody"/>
           </div>
         </div>
       </div>
 
-      <!-- ── SECTION: Media ── -->
       <div class="pa-section-label">Media / Photo</div>
 
       <div class="pa-field-row cols-1">
@@ -838,7 +788,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- Bottom save button repeated for convenience -->
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--navy-border);">
         <button class="pa-btn pa-btn-danger" id="paDeleteBtn2" onclick="confirmDelete()" style="display:none;">Delete Release</button>
         <button class="pa-btn pa-btn-secondary" onclick="cancelForm()">Cancel</button>
@@ -847,18 +796,12 @@ body { display:flex; flex-direction:column; background:#060A14; }
 
     </div><!-- /pa-form-inner -->
 
-    <!-- Access denied (shown for insufficient clearance) -->
     <div class="pa-denied" id="paDenied" style="display:none;">
       <div class="pa-denied-icon">⊘</div>
       <div class="pa-denied-title">Access Denied</div>
       <div class="pa-denied-sub">Secret or Top Secret clearance required to manage press releases.</div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════
-         WANTED LIST FORM (shown when module = wanted)
-         ══════════════════════════════════════════════════ -->
-
-    <!-- Wanted welcome state -->
     <div class="pa-welcome" id="paWantedWelcome" style="display:none;">
       <div class="pa-welcome-icon" style="background:rgba(192,57,43,0.1);border-color:rgba(192,57,43,0.3);">
         <svg viewBox="0 0 24 24" style="fill:var(--red-alert);"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
@@ -867,7 +810,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
       <div class="pa-welcome-sub">Select a wanted individual from the list or add a new entry. Published entries appear live on the public Most Wanted page.</div>
     </div>
 
-    <!-- Wanted form -->
     <div class="pa-form-inner" id="paWantedFormInner" style="display:none;">
 
       <div class="pa-form-header">
@@ -882,7 +824,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── Identification ── -->
       <div class="pa-section-label" style="color:var(--red-alert);">Suspect Identification</div>
       <div class="pa-field-row cols-2">
         <div class="pa-field">
@@ -919,7 +860,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── Threat & Bounty ── -->
       <div class="pa-section-label" style="color:var(--red-alert);">Threat Level & Bounty</div>
       <div class="pa-field-row cols-2">
         <div class="pa-field">
@@ -953,7 +893,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── Intel ── -->
       <div class="pa-section-label" style="color:var(--red-alert);">Intelligence</div>
       <div class="pa-field-row cols-2">
         <div class="pa-field">
@@ -978,7 +917,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── Detective ── -->
       <div class="pa-section-label" style="color:var(--red-alert);">Primary Detective</div>
       <div class="pa-field-row cols-2">
         <div class="pa-field">
@@ -1001,7 +939,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- ── Photo ── -->
       <div class="pa-section-label" style="color:var(--red-alert);">Suspect Photo</div>
       <div class="pa-field-row cols-1">
         <div class="pa-field">
@@ -1034,7 +971,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- Bottom save -->
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--navy-border);">
         <button class="pa-btn pa-btn-danger" id="paWantedDeleteBtn2" onclick="confirmWantedDelete()" style="display:none;">Delete Entry</button>
         <button class="pa-btn pa-btn-secondary" onclick="cancelWantedForm()">Cancel</button>
@@ -1043,9 +979,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 
     </div><!-- /paWantedFormInner -->
 
-    <!-- ══════════════════════════════════════════
-         NOTIFICATION FORM
-         ══════════════════════════════════════════ -->
     <div id="paNotifFormInner" style="display:none;" class="pa-form-inner">
 
       <div class="pa-form-header">
@@ -1060,7 +993,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- Type selector -->
       <div class="pa-section-label" style="color:#f39c12;">Notification Type</div>
       <div class="pa-field-row cols-1" style="margin-bottom:18px;">
         <div class="pa-field">
@@ -1083,7 +1015,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- Content -->
       <div class="pa-section-label" style="color:#f39c12;">Content</div>
       <div class="pa-field-row cols-1">
         <div class="pa-field">
@@ -1098,7 +1029,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
         </div>
       </div>
 
-      <!-- Expiry -->
       <div class="pa-section-label" style="color:#f39c12;">Expiry (Optional)</div>
       <div class="pa-field-row cols-2">
         <div class="pa-field">
@@ -1123,7 +1053,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
 
 </div><!-- /pa-shell -->
 
-<!-- Wanted delete confirmation modal -->
 <div class="pa-modal-backdrop" id="paWantedDeleteModal">
   <div class="pa-modal">
     <div class="pa-modal-title">Remove from Wanted List</div>
@@ -1135,7 +1064,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
   </div>
 </div>
 
-<!-- Notification deactivate confirmation modal -->
 <div class="pa-modal-backdrop" id="paNotifDeleteModal">
   <div class="pa-modal">
     <div class="pa-modal-title">Deactivate Notification</div>
@@ -1147,7 +1075,6 @@ body { display:flex; flex-direction:column; background:#060A14; }
   </div>
 </div>
 
-<!-- Delete confirmation modal -->
 <div class="pa-modal-backdrop" id="paDeleteModal">
   <div class="pa-modal">
     <div class="pa-modal-title">Confirm Deletion</div>
@@ -1159,27 +1086,20 @@ body { display:flex; flex-direction:column; background:#060A14; }
   </div>
 </div>
 
-<!-- Toast -->
 <div id="pa-toast"></div>
 
 <script src="../shared/scripts/portal-auth.js"></script>
 <script>
 
-// ═══════════════════════════════════════════════════════════
-//  PA.HTML — PRESS RELEASE MANAGER
-//  Internal CMS for CIB Public Affairs
-//  Requires: secret or top_secret classification
-// ═══════════════════════════════════════════════════════════
 
 const PA_API   = '/api/press-releases'
 const WRITE_CL = ['secret', 'top_secret']
 
 let _releases    = []
-let _editingId   = null   // null = new, string = editing existing
-let _photoBase64 = null   // base64 of uploaded file (if any)
+let _editingId   = null  
+let _photoBase64 = null   
 let _canWrite    = false
 
-// ── Auth / init ──────────────────────────────────────────────
 PortalAuth.init({
   loginHref:   '/Page_Login.html',
   nameEls:     [],
@@ -1193,17 +1113,14 @@ PortalAuth.init({
     const cls = (session?.classification || '').toLowerCase().replace(/\s+/g, '_')
     _canWrite  = WRITE_CL.includes(cls)
 
-    // Dismiss access gate
     const gate = document.getElementById('pa-access-gate')
     if (gate) { gate.style.opacity = '0'; gate.style.transition = 'opacity 0.4s'; setTimeout(() => gate.remove(), 400); }
 
-    // Show shell
     document.getElementById('paShell').style.display = 'flex'
 
     if (!_canWrite) {
       document.getElementById('paDenied').style.display  = 'flex'
       document.getElementById('paWelcome').style.display = 'none'
-      // Hide new button
       document.querySelector('.pa-new-btn').style.display = 'none'
     }
 
@@ -1211,17 +1128,14 @@ PortalAuth.init({
   }
 })
 
-// ── Navigate back to NEXUS ───────────────────────────────────
 function goBack() {
   window.location.href = '../nexus.html'
 }
 
-// ── Toast ────────────────────────────────────────────────────
 function showToast(msg, type) {
   PortalAuth.showToast(msg, type, 'pa-toast')
 }
 
-// ── Load all releases from API ───────────────────────────────
 async function loadReleases() {
   try {
     const res  = await fetch(PA_API)
@@ -1237,7 +1151,6 @@ async function loadReleases() {
   }
 }
 
-// ── Render the left list panel ───────────────────────────────
 function renderList() {
   const el = document.getElementById('paReleaseList')
   if (!_releases.length) {
@@ -1258,7 +1171,6 @@ function renderList() {
   `).join('')
 }
 
-// ── Open blank new form ──────────────────────────────────────
 function openNewForm() {
   if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
   _editingId   = null
@@ -1272,14 +1184,12 @@ function openNewForm() {
   document.getElementById('paWelcome').style.display       = 'none'
   document.getElementById('paDenied').style.display        = 'none'
   document.getElementById('paFormInner').style.display     = 'block'
-  // Default dates to today
   const today = new Date().toISOString().split('T')[0]
   document.getElementById('fieldEventDate').value   = today
   document.getElementById('fieldReleaseDate').value = today
   renderList()
 }
 
-// ── Open edit form for existing release ──────────────────────
 function openEditForm(id) {
   const r = _releases.find(x => x.id === id)
   if (!r) return
@@ -1293,7 +1203,6 @@ function openEditForm(id) {
   document.getElementById('paDeleteBtn').style.display   = _canWrite ? 'inline-flex' : 'none'
   document.getElementById('paDeleteBtn2').style.display  = _canWrite ? 'inline-flex' : 'none'
 
-  // Share link
   const shareUrl = buildShareUrl(r.pr_number)
   document.getElementById('paShareUrl').textContent    = shareUrl
   document.getElementById('paShareRow').style.display  = 'flex'
@@ -1302,7 +1211,6 @@ function openEditForm(id) {
   document.getElementById('paDenied').style.display    = 'none'
   document.getElementById('paFormInner').style.display = 'block'
 
-  // Disable inputs if no write access
   setFormReadOnly(!_canWrite)
 
   renderList()
@@ -1329,7 +1237,6 @@ function cancelForm() {
   renderList()
 }
 
-// ── Populate form from a release object ──────────────────────
 function populateForm(r) {
   selectHeadlineType(r.headline_type || 'sub')
   document.getElementById('fieldPRNumber').value      = r.pr_number    || ''
@@ -1365,7 +1272,6 @@ function clearFormFields() {
   _photoBase64 = null
 }
 
-// ── Headline type toggle ──────────────────────────────────────
 function selectHeadlineType(type) {
   document.getElementById('fieldHeadlineType').value = type
   const main = document.getElementById('typeOptMain')
@@ -1374,7 +1280,6 @@ function selectHeadlineType(type) {
   sub.className  = 'pa-type-opt' + (type === 'sub'  ? ' selected-sub'  : '')
 }
 
-// ── Photo handling ────────────────────────────────────────────
 function handlePhotoUpload(input) {
   const file = input.files[0]
   if (!file) return
@@ -1409,7 +1314,6 @@ function clearPhotoPreview() {
   document.getElementById('paPhotoPlaceholder').style.display = 'flex'
 }
 
-// ── Save (create or update) ───────────────────────────────────
 async function saveRelease() {
   if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
 
@@ -1474,7 +1378,6 @@ async function saveRelease() {
   }
 }
 
-// ── Delete ────────────────────────────────────────────────────
 function confirmDelete() {
   if (!_editingId || !_canWrite) return
   document.getElementById('paDeleteModal').classList.add('visible')
@@ -1507,7 +1410,6 @@ async function executeDelete() {
   }
 }
 
-// ── Share link ────────────────────────────────────────────────
 function buildShareUrl(prNumber) {
   return `${location.origin}/Page_Press.html?release=${encodeURIComponent(prNumber)}`
 }
@@ -1516,7 +1418,6 @@ function copyShareLink() {
   navigator.clipboard.writeText(url).then(() => showToast('Link copied', 'success'))
 }
 
-// ── Utilities ─────────────────────────────────────────────────
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
@@ -1526,10 +1427,6 @@ function formatDisplayDate(d) {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   } catch { return d }
 }
-
-// ══════════════════════════════════════════════════════════════
-//  MODULE SWITCHING — Press Releases | Wanted List | Notifications
-// ══════════════════════════════════════════════════════════════
 
 let _currentModule = 'press'  // 'press' | 'wanted' | 'notif'
 let _wanteds       = []
@@ -1542,19 +1439,15 @@ function switchModule(mod) {
   const isNotif  = mod === 'notif'
   const isPress  = mod === 'press'
 
-  // Tab states
   document.getElementById('tabPressBtn').classList.toggle('active', isPress)
   document.getElementById('tabWantedBtn').classList.toggle('active', isWanted)
   document.getElementById('tabWantedBtn').classList.toggle('wanted-tab', isWanted)
   document.getElementById('tabNotifBtn').classList.toggle('active', isNotif)
-
-  // Topbar subtitle
   document.getElementById('paTopbarSub').textContent = isWanted
     ? 'Public Affairs · Most Wanted Manager'
     : isNotif ? 'Public Affairs · Notification Manager'
     : 'Public Affairs · Press Release Manager'
 
-  // List pane switching
   document.getElementById('listHeaderPress').style.display  = isPress  ? 'block' : 'none'
   document.getElementById('listHeaderWanted').style.display = isWanted ? 'block' : 'none'
   document.getElementById('listHeaderNotif').style.display  = isNotif  ? 'block' : 'none'
@@ -1564,8 +1457,6 @@ function switchModule(mod) {
   document.getElementById('paReleaseList').style.display    = isPress  ? 'block' : 'none'
   document.getElementById('paWantedList').style.display     = isWanted ? 'block' : 'none'
   document.getElementById('paNotifList').style.display      = isNotif  ? 'block' : 'none'
-
-  // Hide ALL right pane panels first
   document.getElementById('paFormInner').style.display       = 'none'
   document.getElementById('paWelcome').style.display         = 'none'
   document.getElementById('paDenied').style.display          = 'none'
@@ -1587,9 +1478,6 @@ function switchModule(mod) {
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  WANTED LIST — CRUD
-// ══════════════════════════════════════════════════════════════
 
 const MW_API = '/api/press-releases?type=wanted'
 
@@ -1735,7 +1623,6 @@ function selectThreat(level) {
   })
 }
 
-// ── Photo handling for Wanted ────────────────────────────────
 function handleWantedPhotoUpload(input) {
   const file = input.files[0]
   if (!file) return
@@ -1767,7 +1654,6 @@ function clearWantedPhotoPreview() {
   document.getElementById('paWantedPhotoPlaceholder').style.display = 'flex'
 }
 
-// ── Save wanted entry ────────────────────────────────────────
 async function saveWanted() {
   if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
   const caseNum  = document.getElementById('wCaseNumber').value.trim()
@@ -1831,7 +1717,6 @@ async function saveWanted() {
   }
 }
 
-// ── Delete wanted entry ──────────────────────────────────────
 function confirmWantedDelete() {
   if (!_editingWantedId || !_canWrite) return
   document.getElementById('paWantedDeleteModal').classList.add('visible')
@@ -1863,12 +1748,10 @@ async function executeWantedDelete() {
   }
 }
 
-// ── Rich Text Editor ─────────────────────────────────────────
 
 const _rteEditor  = () => document.getElementById('paRteEditor')
 const _rteHidden  = () => document.getElementById('fieldBody')
 
-// Execute a standard execCommand and sync state
 function rteCmd(cmd) {
   _rteEditor().focus()
   document.execCommand(cmd, false, null)
@@ -1876,7 +1759,6 @@ function rteCmd(cmd) {
   _rteUpdateToolbar()
 }
 
-// Toggle blockquote: wrap/unwrap selection
 function rteToggleBlockquote() {
   const editor = _rteEditor()
   editor.focus()
@@ -1897,20 +1779,17 @@ function rteToggleBlockquote() {
   _rteUpdateToolbar()
 }
 
-// Insert a horizontal rule at cursor
 function rteInsertHr() {
   _rteEditor().focus()
   document.execCommand('insertHTML', false, '<hr/><p><br/></p>')
   _rteSync()
 }
 
-// Sync editor HTML → hidden input
 function _rteSync() {
   const html = _rteEditor().innerHTML
   _rteHidden().value = (html === '<br>' || html === '') ? '' : html
 }
 
-// Highlight active toolbar buttons based on cursor state
 function _rteUpdateToolbar() {
   const cmds = ['bold','italic','underline','justifyLeft','justifyCenter','justifyRight','justifyFull','insertUnorderedList','insertOrderedList']
   cmds.forEach(cmd => {
@@ -1918,7 +1797,6 @@ function _rteUpdateToolbar() {
     if (!btn) return
     try { btn.classList.toggle('active', document.queryCommandState(cmd)) } catch(e){}
   })
-  // Blockquote active state
   const bqBtn = document.querySelector('.pa-rte-btn[data-cmd="blockquote"]')
   if (bqBtn) {
     const sel = window.getSelection()
@@ -1930,7 +1808,6 @@ function _rteUpdateToolbar() {
   }
 }
 
-// Wire up editor events after DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   const editor = _rteEditor()
   if (!editor) return
@@ -1938,7 +1815,6 @@ document.addEventListener('DOMContentLoaded', () => {
   editor.addEventListener('keyup',     _rteUpdateToolbar)
   editor.addEventListener('mouseup',   _rteUpdateToolbar)
   editor.addEventListener('selectionchange', _rteUpdateToolbar)
-  // Ensure paste strips foreign styling
   editor.addEventListener('paste', e => {
     e.preventDefault()
     const text = (e.clipboardData || window.clipboardData).getData('text/plain')
@@ -1946,11 +1822,9 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 })
 
-// Set RTE content (used when loading an existing release)
 function rteSetContent(html) {
   const editor = _rteEditor()
   if (!editor) return
-  // Legacy plain-text bodies: convert blank-line paragraphs to <p> tags
   if (html && !/<[a-z]/i.test(html)) {
     html = html.split(/\n\s*\n/).map(p => `<p>${escHtml(p.trim()).replace(/\n/g,'<br/>')}</p>`).join('')
   }
@@ -1965,9 +1839,6 @@ function rteClear() {
   _rteSync()
 }
 
-// ══════════════════════════════════════════════════════════════
-//  NOTIFICATIONS — CRUD
-// ══════════════════════════════════════════════════════════════
 
 const NT_API = '/api/press-releases?type=notification'
 
@@ -1975,12 +1846,9 @@ let _notifs         = []
 let _editingNotifId = null
 let _currentBadge   = null
 
-// Store badge for dismiss operations after auth
 PortalAuth._origOnReady = PortalAuth._origOnReady || null
-// Intercept badge after init (badge comes from onReady)
 const _ntOnReadyOrig = window.__ntOnReadyHook
 ;(function patchBadge() {
-  // We'll get badge from sessionStorage after auth
   const tryGetBadge = () => {
     const raw = sessionStorage.getItem('cib_session')
     if (raw) {
@@ -2032,16 +1900,12 @@ function renderNotifList() {
 }
 
 function showNotifWelcome() {
-  // Show a welcome/intro state in right pane (reuse paWelcome style inline)
   document.getElementById('paNotifFormInner').style.display = 'none'
-  // We show a mini welcome using existing logic — paWelcome is for press, so just leave right pane empty
-  // (already hidden in switchModule; the list alone is sufficient)
 }
 
 function openNewNotifForm() {
   if (!_canWrite) { showToast('Insufficient clearance', 'error'); return }
   _editingNotifId = null
-  // Clear fields
   document.getElementById('notifTitle').value   = ''
   document.getElementById('notifMessage').value = ''
   document.getElementById('notifExpiry').value  = ''

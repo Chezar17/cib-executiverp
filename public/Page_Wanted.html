@@ -14,12 +14,9 @@
 <link rel="stylesheet" href="shared/styles/site-header.css"/>
 <script type="module" src="shared/components/site-header.js"></script>
 <link rel="stylesheet" href="styles/wanted.css"/>
-
-<!-- QR Code library (no build step needed) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-/* ── Loading / empty states ── */
 .mw-loading {
   display:flex; flex-direction:column; align-items:center;
   gap:18px; padding:80px 40px; text-align:center;
@@ -65,7 +62,6 @@
   color:var(--muted); opacity:0.5;
 }
 
-/* ── Export Button ── */
 .card-export-btn {
   position: absolute;
   bottom: 16px;
@@ -99,12 +95,10 @@
   pointer-events: none;
 }
 
-/* Make card relatively positioned for the absolute button */
 .wanted-card {
   position: relative;
 }
 
-/* ── Export Toast ── */
 #mwExportToast {
   position: fixed;
   bottom: 32px;
@@ -129,7 +123,6 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── Hidden QR render container ── */
 #mwQrContainer {
   position: fixed;
   left: -9999px;
@@ -141,10 +134,7 @@
 </head>
 <body>
 
-<!-- NAV -->
 <div data-shared-site-header></div>
-
-<!-- PAGE HERO -->
 <div class="page-hero">
   <div class="page-hero-grid"></div>
   <div class="page-hero-inner">
@@ -158,8 +148,6 @@
     </div>
   </div>
 </div>
-
-<!-- MAIN CONTENT -->
 <div class="mw-wrap">
 
   <div class="count-bar">
@@ -169,10 +157,7 @@
     </div>
     <div class="count-bar-right" id="mwLastUpdated">LOADING... &nbsp;|&nbsp; CIB PRIORITY LIST</div>
   </div>
-
-  <!-- Wanted list container — populated by JS -->
   <div class="wanted-list" id="mwWantedList">
-    <!-- Loading state -->
     <div class="mw-loading" id="mwLoadingState">
       <div class="mw-loading-text">Retrieving Priority Target Data...</div>
       <div class="mw-loading-bar"><div class="mw-loading-progress"></div></div>
@@ -180,14 +165,8 @@
   </div>
 
 </div>
-
-<!-- Export toast notification -->
 <div id="mwExportToast">⬇ Card Exported</div>
-
-<!-- Hidden QR code render target -->
 <div id="mwQrContainer"></div>
-
-<!-- FOOTER -->
 <div data-shared-footer></div>
 <script type="module" src="shared/components/site-footer.js"></script>
 
@@ -195,10 +174,6 @@
 <script src="scripts/wanted.js"></script>
 
 <script>
-// ════════════════════════════════════════════════════════════
-//  Page_Wanted.html — Dynamic Wanted List Loader
-//  Fetches from GET /api/press-releases?type=wanted (public)
-// ════════════════════════════════════════════════════════════
 
 const MW_API = '/api/press-releases?type=wanted'
 let mwWantedData = []
@@ -224,7 +199,6 @@ const STATUS_COLORS = {
   cleared:    'var(--muted)',
 }
 
-// Canvas hex equivalents (no CSS vars)
 const STATUS_HEX = {
   at_large:   '#c0392b',
   in_custody: '#27ae60',
@@ -378,8 +352,6 @@ async function loadWantedList() {
     if (!json.success) throw new Error(json.error || 'Failed to load')
 
     const data = (json.data || []).filter(w => w.status !== 'cleared')
-
-    // Update count bar
     const activeCount = data.filter(w => w.status === 'at_large').length
     document.getElementById('mwCountNum').textContent = String(activeCount).padStart(2, '0')
 
@@ -405,8 +377,6 @@ async function loadWantedList() {
 
     mwWantedData = data
     listEl.innerHTML = data.map((w, i) => buildCardHTML(w, i)).join('')
-
-    // Attach export listeners
     document.querySelectorAll('.card-export-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-export-index'), 10)
@@ -415,8 +385,6 @@ async function loadWantedList() {
         exportWantedCard(w, btn)
       })
     })
-
-    // Re-trigger scroll reveal for new cards
     if (window.SiteUi && SiteUi.initScrollReveal) {
       SiteUi.initScrollReveal()
     }
@@ -432,9 +400,6 @@ async function loadWantedList() {
   }
 }
 
-// ════════════════════════════════════════════════════════════
-//  EXPORT ENGINE — Canvas-based poster export
-// ════════════════════════════════════════════════════════════
 
 function showToast(msg) {
   const t = document.getElementById('mwExportToast')
@@ -443,12 +408,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2800)
 }
 
-/**
- * Generate QR code as an ImageBitmap/canvas snapshot
- * @param {string} url
- * @param {number} size
- * @returns {Promise<HTMLCanvasElement>}
- */
+
 function generateQrCanvas(url, size) {
   return new Promise((resolve, reject) => {
     const container = document.getElementById('mwQrContainer')
@@ -465,13 +425,11 @@ function generateQrCanvas(url, size) {
         colorLight:     '#0d1117',
         correctLevel:   QRCode.CorrectLevel.M,
       })
-      // QRCode lib renders synchronously via canvas or img
       setTimeout(() => {
         const qrCanvas = container.querySelector('canvas')
         if (qrCanvas) {
           resolve(qrCanvas)
         } else {
-          // Fallback: try img tag
           const qrImg = container.querySelector('img')
           if (qrImg) {
             const tmpC = document.createElement('canvas')
@@ -488,11 +446,6 @@ function generateQrCanvas(url, size) {
   })
 }
 
-/**
- * Load an image from URL into ImageBitmap, resolving even on CORS failures
- * @param {string} url
- * @returns {Promise<HTMLImageElement|null>}
- */
 function loadImage(url) {
   return new Promise(resolve => {
     if (!url) return resolve(null)
@@ -504,9 +457,6 @@ function loadImage(url) {
   })
 }
 
-/**
- * Wrap text to fit within maxWidth, returning array of lines
- */
 function wrapText(ctx, text, maxWidth) {
   const words = text.split(' ')
   const lines = []
@@ -524,9 +474,6 @@ function wrapText(ctx, text, maxWidth) {
   return lines
 }
 
-/**
- * Draw a rounded rectangle path
- */
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
@@ -546,7 +493,6 @@ async function exportWantedCard(w, btn) {
   btn.textContent = 'Generating…'
 
   try {
-    // ── Canvas dimensions ──────────────────────────────────
     const SCALE   = 2          // retina
     const W       = 960
     const H       = 560
@@ -559,12 +505,9 @@ async function exportWantedCard(w, btn) {
     const ctx = canvas.getContext('2d')
     ctx.scale(SCALE, SCALE)
 
-    // ── Background ─────────────────────────────────────────
-    // Deep navy base
     ctx.fillStyle = '#0d1117'
     ctx.fillRect(0, 0, W, H)
 
-    // Subtle grid overlay
     ctx.strokeStyle = 'rgba(255,255,255,0.03)'
     ctx.lineWidth   = 1
     const GRID = 40
@@ -575,23 +518,19 @@ async function exportWantedCard(w, btn) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
     }
 
-    // Left accent stripe (red/gold based on threat)
     const threatBorder = THREAT_BORDER_HEX[w.threat_level] || '#c0392b'
     ctx.fillStyle = threatBorder
     ctx.fillRect(0, 0, 4, H)
 
-    // Top header bar
     const headerH = 44
     ctx.fillStyle = 'rgba(0,0,0,0.45)'
     ctx.fillRect(0, 0, W, headerH)
 
-    // CIB header text
     ctx.fillStyle  = '#c9a84c'
     ctx.font       = '500 10px "Roboto Mono", monospace'
     ctx.letterSpacing = '3px'
     ctx.fillText('CENTRAL INVESTIGATION BUREAU', PAD + 6, 27)
 
-    // Right header — MOST WANTED label
     ctx.fillStyle = '#c0392b'
     ctx.font      = '700 11px "Oswald", sans-serif'
     ctx.letterSpacing = '4px'
@@ -599,12 +538,10 @@ async function exportWantedCard(w, btn) {
     const mwW = ctx.measureText(mwLabel).width
     ctx.fillText(mwLabel, W - PAD - mwW, 27)
 
-    // Header bottom separator
     ctx.strokeStyle = 'rgba(201,168,76,0.25)'
     ctx.lineWidth   = 1
     ctx.beginPath(); ctx.moveTo(0, headerH); ctx.lineTo(W, headerH); ctx.stroke()
 
-    // ── Load suspect photo ─────────────────────────────────
     const suspectImg = await loadImage(w.photo_url)
 
     const photoX = PAD + 4
@@ -612,7 +549,6 @@ async function exportWantedCard(w, btn) {
     const photoH = H - headerH - PAD * 2 - 44  // leave room for footer strip
     const photoActualW = PHOTO_W - 8
 
-    // Photo frame shadow
     ctx.shadowColor   = 'rgba(0,0,0,0.6)'
     ctx.shadowBlur    = 20
     ctx.shadowOffsetX = 4
@@ -627,7 +563,6 @@ async function exportWantedCard(w, btn) {
     ctx.shadowOffsetY = 0
 
     if (suspectImg) {
-      // Crop-fill the photo
       ctx.save()
       ctx.beginPath()
       ctx.rect(photoX, photoY, photoActualW, photoH)
@@ -646,14 +581,12 @@ async function exportWantedCard(w, btn) {
       ctx.drawImage(suspectImg, drawX, drawY, drawW, drawH)
       ctx.restore()
 
-      // Gradient vignette over photo
       const vg = ctx.createLinearGradient(photoX, photoY + photoH * 0.4, photoX, photoY + photoH)
       vg.addColorStop(0, 'rgba(13,17,23,0)')
       vg.addColorStop(1, 'rgba(13,17,23,0.75)')
       ctx.fillStyle = vg
       ctx.fillRect(photoX, photoY, photoActualW, photoH)
     } else {
-      // Placeholder silhouette
       ctx.fillStyle = '#1a2232'
       ctx.fillRect(photoX, photoY, photoActualW, photoH)
       ctx.fillStyle = 'rgba(201,168,76,0.08)'
@@ -663,11 +596,9 @@ async function exportWantedCard(w, btn) {
       ctx.textAlign = 'left'
     }
 
-    // Photo left edge accent
     ctx.fillStyle = 'rgba(201,168,76,0.6)'
     ctx.fillRect(photoX, photoY, 2, photoH)
 
-    // Case strip at bottom of photo
     const caseStripY = photoY + photoH
     ctx.fillStyle = 'rgba(0,0,0,0.7)'
     ctx.fillRect(photoX, caseStripY, photoActualW, 38)
@@ -681,12 +612,10 @@ async function exportWantedCard(w, btn) {
     ctx.font      = '500 9px "Roboto Mono"'
     ctx.fillText('WANTED SINCE: ' + formatDate(w.wanted_since), photoX + 8, caseStripY + 28)
 
-    // ── Right info column ──────────────────────────────────
     const infoX = photoX + photoActualW + 20
     const infoW = W - infoX - PAD
     let   curY  = headerH + PAD
 
-    // Alias
     if (w.alias) {
       ctx.fillStyle    = 'rgba(201,168,76,0.6)'
       ctx.font         = '400 10px "Roboto Mono"'
@@ -695,14 +624,12 @@ async function exportWantedCard(w, btn) {
       curY += 20
     }
 
-    // Full name
     ctx.fillStyle    = '#f0e6cc'
     ctx.font         = '700 32px "Oswald"'
     ctx.letterSpacing = '1px'
     ctx.fillText((w.full_name || 'UNKNOWN').toUpperCase(), infoX, curY + 32)
     curY += 44
 
-    // Meta ID line
     const metaParts = [
       w.suspect_id ? 'SUSPECT ID: ' + w.suspect_id : null,
       'DOB: ' + (w.dob || 'UNKNOWN'),
@@ -715,13 +642,11 @@ async function exportWantedCard(w, btn) {
     ctx.fillText(metaParts, infoX, curY)
     curY += 6
 
-    // Separator
     ctx.strokeStyle = 'rgba(201,168,76,0.2)'
     ctx.lineWidth   = 1
     ctx.beginPath(); ctx.moveTo(infoX, curY); ctx.lineTo(infoX + infoW, curY); ctx.stroke()
     curY += 14
 
-    // Threat badge
     const threatLbl  = THREAT_LABELS[w.threat_level] || 'High'
     const badgeColor = THREAT_BORDER_HEX[w.threat_level] || '#c0392b'
     const BADGE_W    = 110
@@ -748,7 +673,6 @@ async function exportWantedCard(w, btn) {
     ctx.fillText(threatLbl.toUpperCase(), BADGE_X + BADGE_W / 2, BADGE_Y + 30)
     ctx.textAlign = 'left'
 
-    // Bounty row
     const bountyRowY = curY
     ctx.fillStyle    = 'rgba(255,255,255,0.08)'
     roundRect(ctx, infoX, bountyRowY, infoW, 46, 4)
@@ -803,7 +727,6 @@ async function exportWantedCard(w, btn) {
     })
     curY += 54
 
-    // Debrief
     if (w.debrief) {
       ctx.fillStyle    = 'rgba(201,168,76,0.5)'
       ctx.font         = '400 7.5px "Roboto Mono"'
@@ -825,7 +748,6 @@ async function exportWantedCard(w, btn) {
       curY += 4
     }
 
-    // Charges
     const charges = Array.isArray(w.charges) ? w.charges : []
     if (charges.length && curY < H - 80) {
       ctx.fillStyle    = 'rgba(201,168,76,0.5)'
@@ -857,7 +779,6 @@ async function exportWantedCard(w, btn) {
       curY += 26
     }
 
-    // Detective row
     if ((w.detective_name || w.detective_initials) && curY < H - 60) {
       ctx.fillStyle   = 'rgba(255,255,255,0.05)'
       roundRect(ctx, infoX, curY, infoW, 42, 4)
@@ -909,7 +830,6 @@ async function exportWantedCard(w, btn) {
       }
     }
 
-    // ── QR Code ───────────────────────────────────────────
     const qrSize   = 88
     const qrX      = W - qrSize - PAD
     const qrY      = H - qrSize - 44
@@ -918,7 +838,6 @@ async function exportWantedCard(w, btn) {
     try {
       const qrCanvas = await generateQrCanvas(qrUrl, qrSize)
 
-      // QR background panel
       ctx.fillStyle   = '#0d1117'
       ctx.strokeStyle = 'rgba(201,168,76,0.3)'
       ctx.lineWidth   = 1
@@ -938,7 +857,6 @@ async function exportWantedCard(w, btn) {
       console.warn('QR generation failed:', e)
     }
 
-    // ── Footer strip ───────────────────────────────────────
     const footerY = H - 36
     ctx.fillStyle = 'rgba(0,0,0,0.5)'
     ctx.fillRect(0, footerY, W, 36)
@@ -964,7 +882,6 @@ async function exportWantedCard(w, btn) {
     ctx.fillText('GENERATED: ' + exportedAt + ' +7 GMT', W - PAD, footerY + 22)
     ctx.textAlign    = 'left'
 
-    // ── Download ───────────────────────────────────────────
     const filename = 'CIB-WANTED-' + (w.full_name || 'SUSPECT').replace(/\s+/g, '_').toUpperCase() + '.png'
     const link = document.createElement('a')
     link.download = filename
@@ -988,7 +905,6 @@ async function exportWantedCard(w, btn) {
   }
 }
 
-// Initialize
 loadWantedList()
 </script>
 </body>

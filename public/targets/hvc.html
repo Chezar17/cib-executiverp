@@ -14,7 +14,6 @@
 </head>
 <body>
 
-<!-- ACCESS GATE -->
 <div id="access-gate">
   <div class="gate-logo">
     <img src="/images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
@@ -23,7 +22,6 @@
   <div class="gate-bar"><div class="gate-progress"></div></div>
 </div>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
     <img class="topbar-logo" src="/images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
@@ -39,14 +37,12 @@
   </div>
 </div>
 
-<!-- CLASSIFICATION BANNER -->
 <div class="class-banner">
   <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
   <div class="class-banner-text">TOP SECRET // CLASSIFIED // AUTHORIZED PERSONNEL ONLY // UNAUTHORIZED ACCESS IS A FEDERAL OFFENSE</div>
   <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
 </div>
 
-<!-- TICKER -->
 <div class="ticker">
   <div class="ticker-label">HVC ALERT</div>
   <div style="overflow:hidden;flex:1;">
@@ -63,7 +59,6 @@
   </div>
 </div>
 
-<!-- HERO -->
 <div class="nexus-hero">
   <div class="nexus-hero-grid"></div>
   <div class="nexus-hero-inner">
@@ -81,7 +76,6 @@
   </div>
 </div>
 
-<!-- MAIN CONTENT -->
 <div class="nexus-wrap">
 
   <div class="nx-section">
@@ -95,7 +89,6 @@
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="hvc-stats">
       <div class="hvc-stat stat-critical">
         <div class="hvc-stat-dot"></div>
@@ -119,7 +112,6 @@
       </div>
     </div>
 
-    <!-- Toolbar -->
     <div class="hvc-toolbar">
       <button class="hvc-filter-btn active-filter" data-filter="all">All (0)</button>
       <button class="hvc-filter-btn" data-filter="critical">Critical (0)</button>
@@ -136,9 +128,7 @@
       </div>
     </div>
 
-    <!-- Grid -->
     <div class="hvc-grid" id="hvc-grid">
-      <!-- Cards rendered dynamically from database via renderAll() -->
     </div>
     <div id="hvc-no-results">No subjects match your filter</div>
 
@@ -146,13 +136,11 @@
 
 </div><!-- end .nexus-wrap -->
 
-<!-- NEXUS FOOTER -->
 <div class="nexus-footer">
   <div class="nexus-footer-left">© 2026 CENTRAL INVESTIGATION BUREAU · NEXUS INTERNAL PORTAL · ALL ACTIVITY IS LOGGED</div>
   <div class="nexus-footer-right">TOP SECRET // CLASSIFIED // AUTHORIZED PERSONNEL ONLY</div>
 </div>
 
-<!-- ══════════ ADD / EDIT MODAL ══════════ -->
 <div id="hvc-modal">
   <div class="hvc-modal-box">
     <div class="hvc-modal-header">
@@ -163,7 +151,6 @@
       <input type="hidden" id="hvc-edit-id"/>
       <div class="hvc-form-grid">
 
-        <!-- Photo upload -->
         <div class="hvc-form-group full">
           <label class="hvc-form-label">Subject Photo</label>
           <div class="hvc-photo-upload-zone" id="photoUploadZone">
@@ -215,7 +202,6 @@
           <textarea class="hvc-form-textarea" id="hvc-f-bio" placeholder="Background, history, operational profile…"></textarea>
         </div>
 
-        <!-- Crimes list -->
         <div class="hvc-form-group full">
           <label class="hvc-form-label">Known Crimes / Charges</label>
           <div class="hvc-crimes-input-wrap">
@@ -246,7 +232,6 @@
   </div>
 </div>
 
-<!-- ══════════ DELETE CONFIRM MODAL ══════════ -->
 <div id="hvc-del-modal">
   <div class="hvc-del-box">
     <div class="hvc-del-title">Confirm Deletion</div>
@@ -262,7 +247,6 @@
   </div>
 </div>
 
-<!-- ══════════ VIEW / DETAIL MODAL ══════════ -->
 <div id="hvc-view-modal">
   <div class="hvc-view-box">
     <div class="hvc-view-header">
@@ -281,7 +265,6 @@
   </div>
 </div>
 
-<!-- ══════════ TOAST ══════════ -->
 <div id="hvc-toast"></div>
 
 
