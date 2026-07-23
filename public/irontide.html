@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSOTF-OPORD-001 // OPERATION IRON TIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#111213; --panel-2:#161718; --line:#2a2b2c;
+    --red:#c31f2a; --red-dim:#7a1319; --amber:#c9a04a; --text:#dcdcdc; --muted:#8b8d8f; --green:#5fae6b;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Mono', monospace; line-height:1.6; overflow-x:hidden; }
+  h1,h2,h3,h4{ font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:.04em; margin:0; }
+  a{color:var(--red);}
+  .scanlines{ pointer-events:none; position:fixed; inset:0; z-index:9999;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:overlay; }
+  .scanline-sweep{ pointer-events:none; position:fixed; left:0; right:0; height:120px; z-index:9998;
+    background:linear-gradient(to bottom, transparent, rgba(195,31,42,0.05), transparent); animation:sweep 7s linear infinite; }
+  @keyframes sweep{ 0%{top:-120px;} 100%{top:100vh;} }
+  @media (prefers-reduced-motion: reduce){ .scanline-sweep{animation:none; display:none;} }
+
+  .classbar{ position:sticky; top:0; z-index:500; background:var(--red); color:#0a0a0a; font-family:'Oswald', sans-serif;
+    font-weight:700; letter-spacing:.1em; font-size:12px; padding:6px 10px; animation:flicker 6s infinite;
+    display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; text-align:center; }
+  @keyframes flicker{ 0%,93%,100%{opacity:1;} 94%{opacity:.7;} 95%{opacity:1;} 96%{opacity:.6;} 97%{opacity:1;} }
+
+  .lang-toggle{
+    position:fixed; top:38px; right:14px; z-index:600;
+    background:#0a0a0a; border:1px solid var(--red); border-radius:2px;
+    display:flex; overflow:hidden; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:.1em;
+  }
+  .lang-toggle button{
+    background:transparent; border:none; color:var(--muted); padding:8px 12px; cursor:pointer;
+    font-family:inherit; font-size:inherit; letter-spacing:inherit; transition:background .2s, color .2s;
+  }
+  .lang-toggle button.active{ background:var(--red); color:#0a0a0a; font-weight:700; }
+  .lang-toggle button:not(.active):hover{ color:#fff; }
+  @media (max-width:640px){ .lang-toggle{ top:auto; bottom:14px; right:14px; } }
+
+  nav{ position:sticky; top:26px; z-index:400; background:rgba(10,10,10,0.94); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); display:flex; overflow-x:auto; scrollbar-width:none; }
+  nav::-webkit-scrollbar{display:none;}
+  nav a{ color:var(--muted); text-decoration:none; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    padding:12px 14px; white-space:nowrap; border-right:1px solid var(--line); transition:color .2s, background .2s; }
+  nav a:hover{ color:var(--red); background:var(--panel); }
+
+  .hero{ position:relative; padding:90px 24px 70px; text-align:center; border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% -10%, rgba(195,31,42,0.12), transparent 60%), var(--bg); overflow:hidden; }
+  .hero::before{ content:""; position:absolute; inset:0;
+    background-image:linear-gradient(rgba(195,31,42,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(195,31,42,0.05) 1px, transparent 1px);
+    background-size:38px 38px; mask-image:radial-gradient(ellipse at 50% 20%, black 30%, transparent 75%); }
+  .hero-content{position:relative; z-index:2;}
+  .doc-number{ color:var(--amber); font-size:12px; letter-spacing:.25em; margin-bottom:18px; }
+  .stamp{ display:inline-block; border:3px solid var(--red); color:var(--red); font-family:'Oswald', sans-serif; font-weight:700;
+    font-size:14px; letter-spacing:.3em; padding:6px 18px; transform:rotate(-4deg) scale(2.2); opacity:0;
+    animation:stampDown .5s cubic-bezier(.2,.9,.3,1.3) .3s forwards; }
+  @keyframes stampDown{ 0%{opacity:0; transform:rotate(-4deg) scale(2.6); filter:blur(2px);} 60%{opacity:1;}
+    100%{opacity:.92; transform:rotate(-4deg) scale(1); filter:blur(0);} }
+  .hero h1{ font-size:clamp(34px, 6vw, 68px); margin:26px 0 8px; color:#fff; text-shadow:0 0 30px rgba(195,31,42,0.35); }
+  .hero h1 span{ color:var(--red); }
+  .hero .subtitle{ color:var(--muted); font-size:14px; letter-spacing:.15em; margin-bottom:30px; }
+  .meta-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:1px; max-width:900px;
+    margin:36px auto 0; background:var(--line); border:1px solid var(--line); text-align:left; }
+  .meta-cell{ background:var(--panel); padding:14px 18px; }
+  .meta-cell .k{ font-size:10px; color:var(--muted); letter-spacing:.15em; text-transform:uppercase; }
+  .meta-cell .v{ font-size:13px; color:var(--text); margin-top:4px; }
+
+  section.block{ max-width:980px; margin:0 auto; padding:70px 24px; border-bottom:1px solid var(--line);
+    opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
+  section.block.in{ opacity:1; transform:translateY(0); }
+  .eyebrow{ color:var(--red); font-size:11px; letter-spacing:.25em; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:10px; }
+  .eyebrow::before{ content:""; width:24px; height:1px; background:var(--red); }
+  h2.title{ font-size:clamp(24px,3.4vw,36px); color:#fff; margin-bottom:26px; }
+  h3.subtitle2{ margin-top:50px; color:#fff; font-size:16px; letter-spacing:.06em; }
+  p{ color:var(--text); font-size:14.5px; }
+  .lede{ color:var(--muted); font-size:15px; max-width:760px; margin-bottom:30px; }
+
+  ul.tac-list{ list-style:none; padding:0; margin:0; display:grid; gap:0; }
+  ul.tac-list li{ padding:10px 0 10px 22px; border-bottom:1px dashed var(--line); position:relative; font-size:14px; color:var(--text); }
+  ul.tac-list li::before{ content:"▸"; position:absolute; left:0; color:var(--red); }
+  ul.tac-list.compact li{ font-size:13px; padding:7px 0 7px 20px; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:40px; }
+  .three-col{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  @media (max-width:720px){ .two-col, .three-col{ grid-template-columns:1fr; } }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:22px; }
+  .card h3{ font-size:14px; color:var(--amber); letter-spacing:.08em; margin-bottom:10px; }
+
+  .obj-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-top:20px; }
+  .obj-card{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--red); padding:18px; transition:transform .2s, border-color .2s, background .2s; }
+  .obj-card:hover{ transform:translateY(-3px); border-color:var(--red); background:var(--panel-2); }
+  .obj-card .code{ color:var(--red); font-size:11px; letter-spacing:.2em; margin-bottom:8px; }
+  .obj-card p{ font-size:13.5px; margin:0; color:var(--text); }
+
+  .redact{ background:#1a1a1a; border:1px solid var(--red-dim); padding:20px 22px; margin:24px 0; position:relative; }
+  .redact .rlabel{ color:var(--red); font-size:11px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .redact .rlabel::before{ content:"●"; animation:blink 1.4s infinite; }
+  @keyframes blink{ 50%{opacity:.2;} }
+  .bar{ display:inline-block; background:#111; color:transparent; cursor:pointer; user-select:none; padding:0 4px; border-radius:2px; transition:color .25s, background .25s; }
+  .bar.revealed{ background:transparent; color:var(--text); }
+  .redact .hint{ margin-top:12px; font-size:11px; color:var(--muted); letter-spacing:.05em; }
+
+  .mission-box{ background:#000; border:1px solid var(--line); padding:26px 24px; font-size:14px; color:var(--green); position:relative; min-height:150px; }
+  .mission-box .prompt{ display:block; color:var(--muted); font-size:11px; margin-bottom:14px; }
+  #typewriter::after{ content:"▌"; animation:blink 1s step-start infinite; color:var(--green); }
+
+  .phase-track{ position:relative; margin-top:40px; padding-left:34px; }
+  .phase-track::before{ content:""; position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:linear-gradient(to bottom, var(--red), var(--red-dim), transparent); }
+  .phase{ position:relative; padding-bottom:36px; }
+  .phase:last-child{ padding-bottom:0; }
+  .phase::before{ content:""; position:absolute; left:-34px; top:2px; width:18px; height:18px; border-radius:50%; background:var(--bg); border:2px solid var(--red); }
+  .phase .pnum{ color:var(--red); font-size:11px; letter-spacing:.2em; margin-bottom:4px; }
+  .phase h4{ font-size:18px; color:#fff; margin-bottom:8px; }
+  .phase p{ color:var(--muted); font-size:13.5px; margin:0 0 10px; }
+  .phase ul.tac-list li{ font-size:13px; padding:6px 0 6px 20px; }
+
+  .role-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:24px; }
+  .role-card{ background:var(--panel); border:1px solid var(--line); padding:18px; }
+  .role-card h3{ color:#fff; font-size:14px; margin-bottom:10px; border-bottom:1px solid var(--line); padding-bottom:8px;}
+  .role-card ul{ margin:0; padding-left:16px; color:var(--muted); font-size:12.5px; }
+  .role-card ul li{ margin-bottom:4px; }
+
+  .pir-list{ display:grid; gap:1px; background:var(--line); border:1px solid var(--line); margin-top:20px; }
+  .pir-row{ background:var(--panel); display:grid; grid-template-columns:90px 1fr; }
+  .pir-row .id{ background:var(--red-dim); color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; letter-spacing:.1em;}
+  .pir-row .txt{ padding:12px 16px; font-size:13.5px; color:var(--text); }
+
+  .accordion{ margin-top:24px; border-top:1px solid var(--line); }
+  .acc-item{ border-bottom:1px solid var(--line); }
+  .acc-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 4px; cursor:pointer;
+    font-family:'Oswald', sans-serif; letter-spacing:.06em; color:#fff; font-size:15px; gap:12px; }
+  .acc-head .tag{ color:var(--red); font-size:11px; margin-right:12px; letter-spacing:.15em; flex-shrink:0; }
+  .acc-head .chev{ color:var(--muted); transition:transform .25s; font-size:12px; flex-shrink:0; }
+  .acc-item.open .chev{ transform:rotate(45deg); color:var(--red); }
+  .acc-body{ max-height:0; overflow:hidden; transition:max-height .4s ease; font-size:13.5px; color:var(--muted); }
+  .acc-item.open .acc-body{ max-height:500px; }
+  .acc-body-inner{ padding:0 4px 20px; }
+  .acc-body-inner b{ color:var(--text); }
+  .acc-body-inner ul{ margin:10px 0 0; padding-left:18px; }
+  .acc-body-inner ul li{ margin-bottom:4px; }
+
+  .annex-accordion .acc-body-inner ul{ columns:2; -webkit-columns:2; }
+  @media (max-width:640px){ .annex-accordion .acc-body-inner ul{ columns:1; } }
+
+  .certification{ max-width:980px; margin:0 auto; padding:70px 24px 100px; }
+  .sig-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:30px; margin-top:40px; }
+  .sig{ border-top:1px solid var(--line); padding-top:14px; }
+  .sig .name{ color:#fff; font-size:14px; }
+  .sig .title{ color:var(--muted); font-size:11px; margin-top:2px; }
+  .sig .line{ margin-top:26px; border-top:1px dashed var(--muted); padding-top:6px; font-size:10px; color:var(--muted); letter-spacing:.1em; }
+  .quote-block{ text-align:center; margin:60px auto 0; max-width:600px; color:var(--amber); font-style:italic; font-size:15px; }
+  .quote-block .en{ color:var(--muted); font-size:12px; margin-top:8px; font-style:normal; }
+  footer{ text-align:center; padding:30px; color:var(--muted); font-size:11px; border-top:1px solid var(--line); letter-spacing:.08em; }
+
+  table.doc-table{ width:100%; border-collapse:collapse; margin-top:20px; font-size:13px; }
+  table.doc-table td, table.doc-table th{ border:1px solid var(--line); padding:10px 14px; text-align:left; }
+  table.doc-table th{ background:var(--panel); color:var(--amber); font-family:'Oswald',sans-serif; letter-spacing:.08em; text-transform:uppercase; font-size:11px; }
+  table.doc-table td.k{ color:var(--muted); width:220px; }
+  table.doc-table td.v{ color:var(--text); }
+
+  .callsign-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); margin-top:16px;}
+  .callsign-cell{ background:var(--panel); padding:12px 14px; }
+  .callsign-cell .role{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+  .callsign-cell .sign{ font-size:15px; color:var(--red); font-family:'Oswald',sans-serif; letter-spacing:.06em; margin-top:4px; }
+
+  ::selection{ background:var(--red); color:#000; }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="scanline-sweep"></div>
+
+<div class="classbar" id="classbar"></div>
+<div class="lang-toggle">
+  <button id="btnEN" class="active">EN</button>
+  <button id="btnID">ID</button>
+</div>
+
+<nav id="mainNav"></nav>
+
+<header class="hero" id="heroSection"></header>
+
+<section class="block" id="docControlSection"></section>
+<section class="block" id="situationSection"></section>
+<section class="block" id="missionSection"></section>
+<section class="block" id="executionSection"></section>
+<section class="block" id="adminSection"></section>
+<section class="block" id="commandSection"></section>
+<section class="block" id="intelSection"></section>
+<section class="block" id="branchSection"></section>
+<section class="block" id="terminationSection"></section>
+<section class="block" id="annexSection"></section>
+<section class="certification" id="certSection"></section>
+<footer id="footerSection"></footer>
+
+<script>
+/* =========================================================
+   CONTENT — EN / ID
+   ========================================================= */
+const CONTENT = {
+en: {
+  classbar: "TOP SECRET // STATE COUNCIL EYES ONLY — UNAUTHORIZED DISCLOSURE PROHIBITED",
+  nav: {
+    docControl:"Doc Control", situation:"I. Situation", mission:"II. Mission", execution:"III. Execution",
+    admin:"IV. Admin & Logistics", command:"V. Command", intel:"VI. Intelligence", branch:"VII. Branch Plans",
+    annex:"VIII. Annexes", cert:"Certification"
+  },
+  hero:{
+    docNumber:"DOCUMENT NO. JSOTF-OPORD-001 // VERSION 1.1",
+    stamp:"TOP SECRET",
+    title1:"OPERATION", title2:"IRON TIDE",
+    subtitle:"JOINT SPECIAL OPERATIONS TASK FORCE — OPERATIONAL ORDER",
+    meta:[
+      ["Issuing Authority","Police Commissioner, SASP"],
+      ["Authorizing Authority","Head of State Council"],
+      ["Area of Operations","San Andreas & Cayo Perico"],
+      ["Status","Draft — Pending Authorization"],
+      ["Prepared By","Andrew Gunner, Police Commissioner"],
+      ["Submitted To","Vania Uzmur La Petite"]
+    ]
+  },
+  docControl:{
+    eyebrow:"Document Control", title:"Control, Revision & Distribution",
+    lede:"Administrative record of this Operational Order, its revision history, and the personnel authorized to receive it.",
+    controlTable:[
+      ["Document Title","Operational Order (OPORD) — Operation Iron Tide"],
+      ["Classification","TOP SECRET // EYES ONLY"],
+      ["Document Number","JSOTF-OPORD-001"],
+      ["Version","1.1"],
+      ["Status","Draft — Pending Commander and State Council Authorization"],
+      ["Prepared By","Andrew Gunner, Police Commissioner, San Andreas State Police"],
+      ["Issuing Authority","Police Commissioner, San Andreas State Police"],
+      ["Authorizing Authority","Head of State Council"],
+      ["Reviewing Authority","State Council"],
+      ["Distribution","Restricted"],
+      ["Related Documents","Charter for the Establishment of the JSOTF (SC/JSOTF-2026-001); Threat Assessment Report (SC/TS-2026-017)"]
+    ],
+    revisionTitle:"Revision History",
+    revisions:[
+      ["0.1","Initial Draft"],
+      ["0.5","Command Element Review"],
+      ["0.8","Legal & Intelligence Review"],
+      ["1.0","Final Operational Order — Submitted for Authorization"],
+      ["1.1","Revised Immediate Operational Objectives to reflect the controlled release of Frost as a bait operation, pending re-apprehension"]
+    ],
+    distTitle:"Distribution List",
+    distLede:"This Operational Order shall be distributed only to the following, unless further dissemination is expressly authorized by the JSOTF Commander or the State Council:",
+    distribution:["Head of State Council","Police Commissioner","JSOTF Commander","Deputy Commander","Intelligence Element","Tactical Element","Investigative Element","Support Element"]
+  },
+  situation:{
+    eyebrow:"Chapter I", title:"Situation",
+    lede:"The Government of San Andreas has identified a significant escalation in hostile activity originating from Cayo Perico — an organized network with the capability to conduct armed operations, coordinate personnel, and project influence beyond the island.",
+    backgroundTitle:"1.1 — 1.3 Background, Environment & Friendly Situation",
+    background:"While Cayo Perico remains designated a No Man's Land under the Cayo Perico Treaty, hostile actors are actively attempting to consolidate authority, establish operational infrastructure, and challenge San Andreas's strategic interests — an extraordinary threat requiring a coordinated, interagency response. The operational environment is characterized by limited governmental access, incomplete intelligence, uncertain hostile strength, and a rapidly evolving security situation. The JSOTF has been activated under the authority of the Head of State Council to coordinate a unified response, with participating agencies committing personnel capable of intelligence operations, tactical intervention, criminal investigation, operational support, and strategic coordination.",
+    enemyTitle:"Enemy Situation",
+    enemyLede:"A structured hostile organization operates within Cayo Perico under the leadership of Alexander Petrovich. Assessed capabilities include:",
+    enemyList:["Recruit and organize armed personnel","Maintain operational security","Conduct coordinated hostile actions","Establish logistical support","Utilize maritime access routes","Conduct counter-surveillance","Expand operational influence into San Andreas"],
+    enemyNote:"The full size of the organization remains unknown.",
+    assumeTitle:"1.6 Planning Assumptions",
+    assumeList:["Additional unidentified hostile personnel remain active","Hostile elements possess local terrain knowledge superior to Government forces","Armed resistance should be anticipated during any enforcement action","Maritime routes remain the primary avenue for reinforcement, logistics, and escape","Intelligence obtained from confidential sources requires independent verification","The operational environment may change without warning","Hostile leadership may relocate in response to perceived Government activity","Civilian presence cannot be completely excluded from the Area of Operations"],
+    constraintsTitle:"1.7 Operational Constraints",
+    constraintsList:["Applicable laws of San Andreas","Directives issued by the Head of State Council","Approved Rules of Engagement","Operational Security requirements","Authorized Intelligence Collection Procedures","Applicable provisions of the Cayo Perico Treaty, except where superseded by lawful Government authorization"],
+    opportunitiesTitle:"1.8 Operational Opportunities",
+    opportunitiesList:["Identification of senior associates with direct access to organizational leadership","Exploitation of intelligence obtained through lawful apprehension and structured interviews","Disruption of hostile logistics and communications","Controlled isolation of operational areas to restrict hostile movement","Integration of intelligence from multiple participating agencies into a unified picture"],
+    redactLabel:"Priority Asset Status — Click bars to declassify",
+    redactHint:"CLEARANCE REQUIRED: STATE COUNCIL EYES ONLY — click each redaction bar to reveal",
+    redactSegments:[
+      {t:"plain", v:""},
+      {t:"bar", v:"Frost"},
+      {t:"plain", v:", previously apprehended and exploited as "},
+      {t:"bar", v:"Cooperating Human Intelligence Source (CHIS-01)"},
+      {t:"plain", v:", has since been deliberately "},
+      {t:"bar", v:"released under controlled conditions as an operational bait"},
+      {t:"plain", v:" intended to draw out additional hostile associates. Current priority is monitoring for compromise and "},
+      {t:"bar", v:"controlled re-apprehension once utility as bait is fulfilled"},
+      {t:"plain", v:"."}
+    ]
+  },
+  mission:{
+    eyebrow:"Chapter II", title:"Mission",
+    prompt:"ROOT@JSOTF:~$ cat mission_statement.txt",
+    text:"Effective upon authorization by the Head of State Council, the Joint Special Operations Task Force (JSOTF) shall conduct Operation IRON TIDE, a coordinated intelligence-led special operation within the State of San Andreas and designated operational areas of Cayo Perico, in order to identify, isolate, apprehend, exploit, and dismantle the hostile organization led by Alexander Petrovich — while restoring Government freedom of action, preserving public safety, and preventing further expansion of hostile influence.",
+    strategicMissionTitle:"Strategic Mission",
+    strategicMission:"To eliminate the operational capability of the hostile organization by systematically disrupting its leadership, command structure, logistics, communications, financial support, and operational infrastructure. Success shall be measured not only by arrests, but by the complete degradation of the organization's ability to threaten the Government of San Andreas.",
+    objTitle:"Strategic Objectives",
+    objectives:[
+      ["ALPHA","Dismantle the hostile organization led by Alexander Petrovich."],
+      ["BRAVO","Restore operational freedom over Cayo Perico; prevent permanent hostile control."],
+      ["CHARLIE","Protect citizens, institutions, and strategic interests of San Andreas."],
+      ["DELTA","Develop intelligence to disrupt any successor organization."],
+      ["ECHO","Support lawful prosecution via evidentiary collection and exploitation."]
+    ],
+    immediateTitle:"2.4 Immediate Operational Objectives",
+    immediateLede:"Frost, previously apprehended and exploited as CHIS-01, has since been deliberately released under controlled conditions as bait to draw out additional hostile associates. The following reflect the monitoring and re-apprehension phase:",
+    immediateList:[
+      ["Priority One","Confirm Frost's current location, movements, and associations following release; monitor for intelligence opportunities."],
+      ["Priority Two","Conduct controlled re-apprehension of Frost once his utility as bait is fulfilled, or upon Commander's determination of unacceptable risk."],
+      ["Priority Three","Continue exploitation of intelligence derived from Frost through structured interviews, electronic exploitation, and corroborated analysis."],
+      ["Priority Four","Identify the current location, movement patterns, command relationships, and operational routines of Alexander Petrovich."],
+      ["Priority Five","Develop the operational conditions necessary for subsequent action against Petrovich and remaining leadership."]
+    ],
+    intentTitle:"2.5 Commander's Intent",
+    purposeTitle:"Purpose", purpose:"To remove the hostile organization's ability to operate within or influence the State of San Andreas by dismantling its leadership and supporting network through coordinated intelligence and precision operations.",
+    methodTitle:"Method",
+    methodList:["Intelligence superiority","Operational security","Precision targeting","Controlled escalation","Unified interagency coordination","Flexibility in operational planning","Lawful application of force"],
+    endStateTitle:"End State",
+    endStateList:["Petrovich apprehended or permanently deprived of ability to command","Hostile command structure dismantled","Remaining members no longer capable of coordinated activity","Government operational freedom restored","Intelligence objectives satisfied","Responsibility transferred to conventional agencies"],
+    prioritizationTitle:"2.6 Operational Prioritization",
+    prioritization:"Strategic objectives define the long-term purpose of the operation and remain unchanged unless modified by the Head of State Council. Operational priorities may be adjusted by the Commander in response to emerging intelligence, tactical opportunities, or changes in the operational environment.",
+    principlesTitle:"2.7 Operational Principles",
+    principlesList:["Mission Before Recognition — operational success takes precedence over institutional or individual credit","Intelligence Before Action — tactical action shall be informed by verified intelligence whenever feasible","Precision Over Force — minimum force necessary shall be employed","Unity of Command — all personnel operate under JSOTF Commander authority while attached","Operational Adaptability — plans remain flexible and responsive to developing intelligence","Capture Before Neutralization — HVTs shall be apprehended alive whenever operationally feasible"]
+  },
+  execution:{
+    eyebrow:"Chapter III–IX", title:"Execution — Six Operational Phases",
+    lede:"Operation Iron Tide is a phased, intelligence-driven joint special operation. Transitions between phases are authorized by the Commander based on operational conditions, not fixed timelines; phases may be suspended, accelerated, repeated, or combined.",
+    phases:[
+      {n:"PHASE I", t:"Intelligence Development", p:"Establish an accurate operational picture through systematic collection, verification, and analysis.",
+       list:["Identify key personnel & confirm command relationships","Confirm locations, communications, and logistics","Confirm maritime movement & weapons storage locations","Establish patterns of life"]},
+      {n:"PHASE II", t:"Controlled Apprehension Operations", p:"Lawful, coordinated apprehension of designated Operational Priority Targets whose capture significantly improves the likelihood of achieving strategic objectives.",
+       list:["Positive identification & continuous surveillance","Tactical isolation & controlled apprehension","Immediate extraction & preservation of evidence","Capture alive whenever feasible; immediate medical care provided"]},
+      {n:"PHASE III", t:"Intelligence Exploitation", p:"Transform information from apprehended personnel, seized materials, and technical collection into actionable intelligence.",
+       list:["Structured interviews & digital exploitation","Financial documentation & communications devices","Corroborated intelligence analysis"]},
+      {n:"PHASE IV", t:"Operational Preparation Against Strategic Leadership", p:"Prepare favorable operational conditions for direct action against Petrovich and remaining leadership.",
+       list:["Covert reconnaissance & target validation","Prepare arrest teams & position support assets","No direct action until reasonable probability of success is confirmed"]},
+      {n:"PHASE V", t:"Direct Action", p:"Execute coordinated tactical operations against strategic targets while preserving intelligence opportunities.",
+       list:["Priority 1: Protection of Government personnel","Priority 2: Protection of civilians","Priority 3: Capture of strategic targets","Priority 4–5: Preservation of intelligence & evidence"]},
+      {n:"PHASE VI", t:"Stabilization & Transition", p:"Restore normal Government operations following completion of tactical objectives.",
+       list:["Follow-up investigations & After Action Review","Evaluate remaining threats","Transfer responsibility to conventional agencies where appropriate"]}
+    ],
+    directivesTitle:"Commander's Execution Directives",
+    directivesLede:"Throughout Operation Iron Tide, all personnel shall observe the following:",
+    directivesList:["Maintain Operational Security at all times","Preserve intelligence opportunities whenever feasible","Capture strategic personnel alive whenever operationally practicable","Minimize unnecessary use of force","Protect civilian life and property","Maintain unified command throughout all operational phases","Immediately report significant operational developments","Preserve evidentiary integrity for subsequent judicial proceedings","Remain prepared to adapt operational priorities in response to developing intelligence","Maintain mission focus until formally released by the Commander"]
+  },
+  admin:{
+    eyebrow:"Part IV", title:"Administration & Logistics",
+    lede:"Operational success depends on continuous availability of personnel, transportation, communications, medical support, equipment, and logistical sustainment, coordinated centrally through the JSOTF Support Element.",
+    cards:[
+      {h:"Personnel Administration", list:["Personnel remain administratively attached to their parent agency while under JSOTF operational control (OPCON)","Continuous accountability: duty status, location, readiness, equipment, medical status, emergency contacts","Personnel must meet qualification requirements, complete briefings, and remain available for immediate deployment"]},
+      {h:"Equipment", list:["Individual: duty equipment, tactical protection, comms, medical kits, less-lethal options","Tactical: ballistic protection, entry & observation equipment, maritime & night operations gear","Specialized (Commander authorization required): technical surveillance, drones, signal interception, breaching equipment"]},
+      {h:"Transportation", list:["Priority 1: Operational personnel","Priority 2: Detainee transportation","Priority 3: Critical equipment","Priority 4: Evidence transport","Priority 5: Administrative support"]},
+      {h:"Medical Support", list:["Every operational element has immediate access to emergency medical response","Casualty categories: Minor / Serious / Critical / Fatality","All detainees receive medical assessment; treatment shall not be withheld"]},
+      {h:"Detention & Evidence Management", list:["Detainees: searched, medically evaluated, identified, photographed, property inventoried, transferred under secure escort","Uninterrupted chain of custody for all evidence: time, date, location, officers, description, classification","Sensitive intelligence material transferred to the Intelligence Element for exploitation prior to evidentiary processing where legally authorized"]},
+      {h:"Resource & Contingency Management", list:["Resources allocated by mission priority, threat level, intelligence value, personnel safety, and sustainability","Contingency sustainment: alternate supply routes/staging areas, emergency medical evacuation, maritime extraction, emergency resupply","Contingency plans reviewed prior to each operational phase"]}
+    ],
+    reportingTitle:"Administrative Reporting",
+    reportingLede:"Following each operational phase, participating elements shall submit:",
+    reportingList:["Personnel Status Report (PERSTAT)","Equipment Status Report (EQUSTAT)","Intelligence Summary (INTSUM)","Logistics Status Report (LOGSTAT)","Significant Activity Report (SIGACT)","Casualty Report (CASREP), if applicable"]
+  },
+  command:{
+    eyebrow:"Part V", title:"Command & Signal",
+    lede:"The JSOTF Commander exercises Operational Control (OPCON) over all assigned personnel and assets. Subordinate leaders retain Tactical Control (TACON) consistent with the Commander's Intent. Administrative control remains with each member's parent agency unless otherwise directed.",
+    relTitle:"Command Relationships",
+    relList:["Overall command is vested in the JSOTF Commander, acting under authority delegated by the Head of State Council","OPCON includes mission planning, force allocation, tasking, mission approval, tactical adjustments, intelligence prioritization, and operational suspension or termination","TACON: Subordinate Element Leaders retain tactical control during mission execution, consistent with Commander's Intent","Succession of Command: authority transfers per the approved JSOTF Chain of Succession without interruption to mission execution"],
+    rolesTitle:"Command Responsibilities",
+    roles:[
+      {h:"JSOTF Commander", list:["Overall mission execution","Approval of major decisions","Resource & intel prioritization","Council coordination"]},
+      {h:"Deputy Commander", list:["Day-to-day operations","Supervises subordinate elements","Assumes command when required","Synchronizes operational phases"]},
+      {h:"Intelligence Division Chief", list:["Collection & analysis","Target development","Threat assessments","Operational recommendations"]},
+      {h:"Tactical Support Chief", list:["Execution of tactical ops","Officer safety","Contingency planning","Immediate response to resistance"]},
+      {h:"Operational Support Chief", list:["Logistics & medical","Communications","Transportation","Equipment accountability"]},
+      {h:"Investigations Chief", list:["Post-op investigations","Evidence & chain of custody","Criminal case development","Judicial coordination"]},
+      {h:"Legal & Compliance Officer", list:["Legal review of plans","ROE compliance","Treaty interpretation","Lawful authority advisement"]},
+      {h:"Operations Division Chief", list:["Planning & scheduling","Cross-division synchronization","Status reporting to Commander"]}
+    ],
+    commsTitle:"Communications",
+    commsLede:"Secure, timely, and reliable communication is essential to mission success. Operational security takes precedence over convenience.",
+    commsPriorities:["Priority 1: Emergency traffic","Priority 2: Officer safety","Priority 3: Operational intelligence","Priority 4: Mission coordination","Priority 5: Administrative communication"],
+    callsignTitle:"Call Sign Structure (Example)",
+    callsigns:[["Command","IRON ACTUAL"],["Deputy","IRON 6"],["Intelligence","IRON INTEL"],["Tactical","IRON 1"],["Investigation","IRON 2"],["Support","IRON 3"],["Medical","IRON MED"],["Reserve","IRON RESERVE"]],
+    infosecTitle:"Information Security",
+    infosecList:["Secure storage of operational documents","Restricted dissemination & need-to-know access","Immediate reporting of suspected information compromise"],
+    decisionTitle:"Decision Authority",
+    decisionLede:"The following decisions require Commander approval:",
+    decisionList:["Commencement of Direct Action","Modification of Operational Priorities","Deployment of reserve assets","Expansion of operational scope","Tactical escalation beyond approved plans","Mission suspension or termination"],
+    contingencyTitle:"Contingency Command Procedures",
+    contingencyLede:"Should communications with JSOTF Headquarters be interrupted:",
+    contingencyList:["Subordinate commanders continue executing the last confirmed lawful order","Tactical adjustments necessary to preserve life may be made immediately","Significant deviations are reported as soon as communications are restored","If conditions fundamentally change, transition to contingency procedures per Annex I"],
+    ccirTitle:"Commander's Critical Information Requirements (CCIR)",
+    ccirLede:"The Commander shall be immediately notified of any event involving:",
+    ccirList:["Positive identification of Alexander Petrovich","Confirmed location/status of Frost during the controlled release period, and any indication of compromise","Identification of additional senior associates","Officer seriously injured or killed","Civilian casualties","Hostage situations","Discovery of weapons caches or major intelligence materials","Escape of any Operational Priority Target","Loss of operational secrecy","Failure of primary communications","Requests for tactical escalation","Significant changes in hostile capability"],
+    philosophyTitle:"Command Philosophy",
+    philosophy:"The JSOTF operates under the principles of mission command. Subordinate leaders are expected to exercise disciplined initiative within the Commander's Intent whenever changing conditions require immediate action. Initiative shall never replace coordination, and independent action shall always support the strategic objectives of Operation Iron Tide."
+  },
+  intel:{
+    eyebrow:"Part VI", title:"Intelligence & Special Operational Procedures",
+    lede:"Intelligence is the decisive advantage of Operation Iron Tide. Every operational activity is informed by timely, verified, actionable intelligence to maximize effectiveness while minimizing unnecessary risk.",
+    cycleTitle:"Intelligence Cycle",
+    cycle:["Planning","Collection","Processing","Analysis","Dissemination","Operational Action","Exploitation","Reassessment"],
+    pirTitle:"Priority Intelligence Requirements",
+    pir:[
+      "Determine the current location of Alexander Petrovich.",
+      "Determine Petrovich's security routine and daily movement pattern.",
+      "Identify all remaining members of the Petrovich Organization.",
+      "Identify command succession should Petrovich become unavailable.",
+      "Locate weapons storage facilities and logistical infrastructure.",
+      "Identify maritime routes for personnel movement, resupply, escape.",
+      "Identify financial support networks and facilitators.",
+      "Identify external organizations providing assistance or sanctuary."
+    ],
+    eeiTitle:"Essential Elements of Information (EEI)",
+    eeiList:["Meeting locations","Safehouses","Vehicle usage","Communication devices","Financial transactions","Recruitment methods","Weapons suppliers","Leadership meetings","Maritime schedules","Counter-surveillance methods","Escape plans","Operational documents"],
+    naiTitle:"Named Areas of Interest (NAI)",
+    naiLede:"The Intelligence Element designates and continually updates NAIs, which may include:",
+    naiList:["Maritime access points","Bridges & transportation routes","Known meeting locations","Suspected safehouses","Communications relay locations","Storage facilities","Financial exchange points","Observation locations","Possible extraction routes"],
+    hvtTitle:"High Value Target Development",
+    hvtLede:"Strategic targets undergo continuous intelligence development prior to direct action:",
+    hvtList:["Identity verification","Pattern-of-life analysis","Communications assessment","Network association mapping","Financial analysis","Movement prediction","Threat & opportunity assessment"],
+    hvtNote:"No strategic target shall be engaged solely upon unverified reporting where additional verification remains reasonably achievable.",
+    surveillanceTitle:"Surveillance Operations",
+    surveillanceList:["Static surveillance","Mobile surveillance","Maritime observation","Technical surveillance","Aerial observation (if available)","Human intelligence reporting","Undercover observation"],
+    sourceTitle:"Controlled Source Operations",
+    sourceLede:"Individuals providing information may, subject to Commander approval, be designated Controlled Sources (confidential informants, cooperating witnesses/detainees, undercover assets). Utilization requires comprehensive risk assessment and Commander approval; source identity and status are protected to the greatest extent consistent with mission requirements.",
+    exploitTitle:"Intelligence Exploitation",
+    exploitLede:"All intelligence undergoes systematic exploitation, prioritizing material capable of generating follow-on operations:",
+    exploitList:["Electronic devices","Documents & digital media","Communications & financial records","Maps & weapons documentation","Interview reports"],
+    ciTitle:"Counterintelligence",
+    ciList:["Vetting participating personnel","Monitoring unauthorized disclosures","Verification of confidential reporting","Detection of deception","Protection against surveillance","Operational compartmentalization","Immediate investigation of suspected compromise"],
+    specialTitle:"Special Operational Procedures",
+    specialList:["Controlled meetings","Intelligence-led apprehension operations","Coordinated surveillance operations","Simultaneous warrant execution","Maritime interception","Strategic isolation measures","Tactical deception, where lawful","Controlled operational pauses to exploit emerging intelligence"]
+  },
+  branch:{
+    eyebrow:"Part VII", title:"Branch Plans",
+    lede:"Pre-developed contingencies allowing the Task Force to respond to foreseeable developments without compromising strategic objectives. Activation requires Commander approval unless immediate action is necessary to preserve life. Click to expand.",
+    plans:[
+      {tag:"ALPHA", title:"Controlled Apprehension Successful", situation:"Operational Priority Target apprehended without significant resistance.", actions:["Secure detainee","Establish immediate perimeter security","Conduct medical assessment","Preserve all evidence","Transfer to secure holding facility","Initiate intelligence exploitation"], outcome:"Generate actionable intelligence supporting follow-on operations against Petrovich."},
+      {tag:"BRAVO", title:"Non-Cooperative Detainee", situation:"Operational Priority Target refuses cooperation.", actions:["Continue lawful detention","Expand digital exploitation","Conduct independent intelligence verification","Increase surveillance operations","Continue investigation through alternative sources"], outcome:"Prevent intelligence failure while maintaining operational momentum."},
+      {tag:"CHARLIE", title:"Strategic Target Relocation", situation:"Alexander Petrovich changes location before execution of Direct Action.", actions:["Suspend immediate assault","Re-establish surveillance","Confirm new location","Update operational picture","Reassign reconnaissance assets","Resume planning following confirmation"], outcome:"Maintain operational surprise while avoiding unnecessary exposure."},
+      {tag:"DELTA", title:"Operational Compromise", situation:"Evidence indicates hostile personnel have become aware of Government operational activity (increased hostile movement, communications silence, abandoned locations, unexpected defensive preparations, confirmed leak).", actions:["Immediately reassess mission","Determine source of compromise","Secure classified material","Suspend exposed operations","Initiate counterintelligence measures","Activate alternate operational timeline if appropriate"], outcome:"Preserve operational capability and prevent complete mission failure."},
+      {tag:"ECHO", title:"Hostage Incident", situation:"Government personnel or civilians taken hostage by hostile forces.", actions:["Establish Crisis Command","Confirm hostage status","Secure perimeter","Initiate negotiations where appropriate","Prepare Tactical Rescue Element","Maintain continuous intelligence collection"], outcome:"Protection of hostage life shall remain the highest tactical priority."},
+      {tag:"FOXTROT", title:"Destruction / Denial of Access Routes", situation:"Continued access between San Andreas and Cayo Perico presents an unacceptable operational risk.", actions:["Temporary closure of bridge access","Maritime exclusion zones","Vehicle checkpoints","Controlled demolition of critical infrastructure, where specifically authorized","Alternative access-denial methods consistent with operational and legal requirements"], outcome:"Hostile mobility significantly reduced while Government forces retain the ability to conduct controlled operations. Subject to authorization by the Head of State Council; considerations include civilian safety, environmental impact, and follow-on restoration."},
+      {tag:"GOLF", title:"Escape of Strategic Target", situation:"Alexander Petrovich successfully evades immediate apprehension.", actions:["Initiate pursuit only if operationally justified","Preserve intelligence opportunities","Exploit recovered materials","Expand surveillance","Develop revised target package","Prepare follow-on operation"], outcome:"Mission continuation shall prioritize long-term dismantling of the hostile organization over immediate but high-risk pursuit."},
+      {tag:"HOTEL", title:"Emergence of Successor Leadership", situation:"Intelligence confirms another individual has assumed operational leadership of the hostile organization.", actions:["Conduct immediate threat reassessment","Develop new target profile","Update Priority Intelligence Requirements","Adjust Operational Priorities","Continue dismantling remaining organizational capabilities"], outcome:"The strategic objective of Operation Iron Tide shall remain unchanged regardless of changes in hostile leadership."}
+    ]
+  },
+  termination:{
+    eyebrow:"Chapter XLVI", title:"Mission Termination Criteria",
+    lede:"Operation Iron Tide may be concluded upon Commander determination, with State Council concurrence where required, that one or more of the following conditions have been met:",
+    conclude:["Strategic objectives have been achieved","The hostile organization has been rendered operationally ineffective","Government authority has been restored within the Area of Operations","Remaining threats can be managed by conventional Government agencies","Continued JSOTF deployment no longer provides proportional operational benefit"],
+    suspendTitle:"Conversely, the operation may be suspended or terminated if:",
+    suspend:["The legal basis for the operation is withdrawn","Operational risk becomes disproportionate to expected strategic benefit","Essential operational capabilities are no longer available","A superseding directive is issued by competent Government authority"]
+  },
+  annex:{
+    eyebrow:"Part VIII", title:"Annexes",
+    lede:"Each Annex provides detailed operational guidance supporting execution of this Operational Order and shall be read alongside the corresponding chapters. Annexes may be updated independently without requiring republication, provided revisions do not alter authorized strategic objectives. Click to expand.",
+    list:[
+      {l:"A", h:"Area of Operations (AO)", items:["Operational Area Map","San Andreas Operational Boundaries","Cayo Perico Operational Boundaries","Maritime Area of Operations","Primary & Secondary Access Routes","Bridge Access","Staging Areas","Landing Zones (LZ)","Observation Points","Checkpoints","Emergency Extraction Routes"], attach:"Recommended: satellite imagery, tactical map, bridge schematic, maritime chart."},
+      {l:"B", h:"Organizational Structure", items:["JSOTF Organizational Chart","Chain of Command","Participating Agencies","Command Relationships","Operational Control Structure","Tactical Control Assignments","Reserve Element","Intelligence Cell Organization"], attach:"Recommended: organizational flow chart."},
+      {l:"C", h:"Execution Synchronization Matrix", items:["Operational Phase Matrix across Command, Intelligence, Tactical, Investigative, and Support elements for each phase from Intelligence Development through Stabilization."], attach:"Serves as the primary synchronization reference during mission execution."},
+      {l:"D", h:"Target Intelligence Package", items:["Separate profile per individual: Name, Alias, Photograph, Known Associates, Threat Assessment, Intelligence Value, Criminal Activities, Last Known Location, Vehicles, Weapons, Pattern of Life, Communications, Operational Recommendation"], attach:"Current targets: Alexander Petrovich · Frost (Controlled Release / Bait — pending re-apprehension) · Leiman · additional subjects as identified."},
+      {l:"E", h:"Communications Plan", items:["Radio Channels","Call Signs","Authentication Procedures","Emergency Signals","Communication Hierarchy","Alternate Communication Methods","Lost Communication Procedures","Encryption Procedures"], attach:""},
+      {l:"F", h:"Medical Support Plan", items:["CASEVAC Procedures","Casualty Collection Points","Ambulance Routes","Medical Facilities & Equipment","Trauma Priorities","Officer Injury Procedures","Detainee Medical Procedures"], attach:""},
+      {l:"G", h:"Rules of Engagement Quick Reference", items:["Use of Force","Deadly Force","Arrest Procedures","Civilian Protection","Tactical Withdrawal","Officer Self Defense","Hostage Situations","Surrender Procedures"], attach:"Designed as a one-page operational reference."},
+      {l:"H", h:"Intelligence Collection Plan", items:["Priority Intelligence Requirements (PIR)","Essential Elements of Information (EEI)","Named Areas of Interest (NAI)","Information Collection Matrix","Intelligence Collection Responsibilities","Reporting Procedures"], attach:""},
+      {l:"I", h:"Risk Assessment Matrix", items:["Personnel, Tactical, Intelligence, Operational, Political, Public Safety, and Logistical Risk — each rated for Probability, Impact, Mitigation, and Residual Risk"], attach:""},
+      {l:"J", h:"Operational Timeline", items:["Mission Timeline","Decision Points","Commander Decision Matrix","Branch Plan Activation Points","Operational Triggers","Mission Completion Criteria"], attach:""},
+      {l:"K", h:"After Action Report (AAR)", items:["Mission Summary","Objectives Achieved","Personnel Involved","Significant Events","Intelligence Obtained","Evidence Collected","Lessons Learned","Recommendations","Commander Comments"], attach:""},
+      {l:"L", h:"Evidence Management", items:["Evidence Inventory","Digital Evidence, Weapons, Documents, Financial Records, Electronic Devices","Chain of Custody","Evidence Transfer Procedures","Storage Procedures"], attach:""},
+      {l:"M", h:"Operational Lessons Learned", items:["Remains blank until mission completion. Documents operational and intelligence successes/failures, tactical and leadership observations, and recommendations for future joint operations."], attach:"Serves as the official institutional record supporting future Government operations."}
+    ]
+  },
+  cert:{
+    eyebrow:"Final Certification", title:"Commander's Closing Directive",
+    lede:"Operation Iron Tide is founded on the principle that decisive action is most effective when guided by disciplined intelligence, lawful authority, and unified command. Every member of the Task Force is entrusted with responsibilities extending beyond individual assignments. Mission success shall be measured not solely by apprehension, but by the lasting disruption of the hostile network's capacity to threaten the State of San Andreas. The Commander expects every member to exercise sound judgment, maintain the highest standards of professionalism, and remain steadfast in the execution of this mission.",
+    certText:"I hereby certify that this Operational Order has been prepared in accordance with the authority delegated by the Head of State Council and reflects the operational intent of the Joint Special Operations Task Force concerning Operation IRON TIDE. All personnel assigned to this operation are directed to familiarize themselves with the contents of this Operational Order and its accompanying Annexes prior to operational deployment. Execution of Operation IRON TIDE shall commence only upon formal authorization by competent Government authority.",
+    sigs:[
+      ["Andrew Gunner","Police Commissioner — Issued By"],
+      ["[ Name To Be Designated ]","JSOTF Commander — Approved For Execution"],
+      ["Vania Uzmur La Petite","Head of State Council — Authorized By"]
+    ],
+    sigLine:"SIGNATURE · DATE ________",
+    quote:"\"Dulce et decorum est pro patria mori.\"",
+    quoteEn:"\"It is sweet and fitting to die for one's country.\" — this motto stands as a reminder, not a celebration, of service to the State of San Andreas."
+  },
+  footer:"SC/JSOTF-2026-001 // TOP SECRET // DISTRIBUTION RESTRICTED — STATE COUNCIL, JSOTF COMMAND ELEMENT ONLY"
+},
+
+id: {
+  classbar: "SANGAT RAHASIA // HANYA UNTUK DEWAN NEGARA — DILARANG MENYEBARLUASKAN TANPA IZIN",
+  nav: {
+    docControl:"Kontrol Dok.", situation:"I. Situasi", mission:"II. Misi", execution:"III. Pelaksanaan",
+    admin:"IV. Administrasi & Logistik", command:"V. Komando", intel:"VI. Intelijen", branch:"VII. Rencana Cabang",
+    annex:"VIII. Lampiran", cert:"Pengesahan"
+  },
+  hero:{
+    docNumber:"NOMOR DOKUMEN JSOTF-OPORD-001 // VERSI 1.1",
+    stamp:"SANGAT RAHASIA",
+    title1:"OPERASI", title2:"IRON TIDE",
+    subtitle:"SATUAN TUGAS GABUNGAN OPERASI KHUSUS — PERINTAH OPERASI (OPORD)",
+    meta:[
+      ["Otoritas Penerbit","Komisaris Polisi, SASP"],
+      ["Otoritas Pengesah","Ketua Dewan Negara"],
+      ["Wilayah Operasi","San Andreas & Cayo Perico"],
+      ["Status","Rancangan — Menunggu Pengesahan"],
+      ["Disusun Oleh","Andrew Gunner, Komisaris Polisi"],
+      ["Diajukan Kepada","Vania Uzmur La Petite"]
+    ]
+  },
+  docControl:{
+    eyebrow:"Kontrol Dokumen", title:"Kontrol, Revisi & Distribusi",
+    lede:"Catatan administratif Perintah Operasi ini, riwayat revisinya, dan personel yang berwenang menerimanya.",
+    controlTable:[
+      ["Judul Dokumen","Perintah Operasi (OPORD) — Operasi Iron Tide"],
+      ["Klasifikasi","SANGAT RAHASIA // TERBATAS"],
+      ["Nomor Dokumen","JSOTF-OPORD-001"],
+      ["Versi","1.1"],
+      ["Status","Rancangan — Menunggu Pengesahan Komandan dan Dewan Negara"],
+      ["Disusun Oleh","Andrew Gunner, Komisaris Polisi, Kepolisian Negara Bagian San Andreas"],
+      ["Otoritas Penerbit","Komisaris Polisi, Kepolisian Negara Bagian San Andreas"],
+      ["Otoritas Pengesah","Ketua Dewan Negara"],
+      ["Otoritas Peninjau","Dewan Negara"],
+      ["Distribusi","Terbatas"],
+      ["Dokumen Terkait","Piagam Pembentukan JSOTF (SC/JSOTF-2026-001); Laporan Penilaian Ancaman (SC/TS-2026-017)"]
+    ],
+    revisionTitle:"Riwayat Revisi",
+    revisions:[
+      ["0.1","Rancangan Awal"],
+      ["0.5","Tinjauan Unsur Komando"],
+      ["0.8","Tinjauan Hukum & Intelijen"],
+      ["1.0","Perintah Operasi Final — Diajukan untuk Pengesahan"],
+      ["1.1","Revisi Sasaran Operasional Segera untuk mencerminkan pelepasan terkendali Frost sebagai operasi umpan, menunggu penangkapan kembali"]
+    ],
+    distTitle:"Daftar Distribusi",
+    distLede:"Perintah Operasi ini hanya didistribusikan kepada pihak berikut, kecuali penyebaran lebih lanjut secara tegas diizinkan oleh Komandan JSOTF atau Dewan Negara:",
+    distribution:["Ketua Dewan Negara","Komisaris Polisi","Komandan JSOTF","Wakil Komandan","Unsur Intelijen","Unsur Taktis","Unsur Penyidikan","Unsur Pendukung"]
+  },
+  situation:{
+    eyebrow:"Bab I", title:"Situasi",
+    lede:"Pemerintah San Andreas mengidentifikasi eskalasi signifikan aktivitas bermusuhan yang berasal dari Cayo Perico — sebuah jaringan terorganisir dengan kemampuan melakukan operasi bersenjata, mengoordinasikan personel, dan memproyeksikan pengaruh melampaui pulau tersebut.",
+    backgroundTitle:"1.1 — 1.3 Latar Belakang, Lingkungan & Situasi Kawan",
+    background:"Meski Cayo Perico tetap ditetapkan sebagai Wilayah Tak Bertuan berdasarkan Perjanjian Cayo Perico, aktor bermusuhan secara aktif berupaya mengonsolidasikan kekuasaan, membangun infrastruktur operasional, dan menantang kepentingan strategis San Andreas — sebuah ancaman luar biasa yang memerlukan respons antarlembaga yang terkoordinasi. Lingkungan operasi ditandai dengan akses pemerintah yang terbatas, intelijen yang belum lengkap, kekuatan musuh yang belum pasti, dan situasi keamanan yang terus berkembang. JSOTF telah diaktifkan atas wewenang Ketua Dewan Negara untuk mengoordinasikan respons terpadu, dengan lembaga-lembaga peserta mengerahkan personel yang mampu melakukan operasi intelijen, intervensi taktis, penyidikan pidana, dukungan operasional, dan koordinasi strategis.",
+    enemyTitle:"Situasi Musuh",
+    enemyLede:"Sebuah organisasi bermusuhan yang terstruktur beroperasi di Cayo Perico di bawah kepemimpinan Alexander Petrovich. Kemampuan yang dinilai meliputi:",
+    enemyList:["Merekrut dan mengorganisasi personel bersenjata","Menjaga keamanan operasi","Melancarkan aksi bermusuhan yang terkoordinasi","Membangun dukungan logistik","Memanfaatkan jalur akses laut","Melakukan kontra-pengawasan","Memperluas pengaruh operasional ke San Andreas"],
+    enemyNote:"Ukuran penuh organisasi ini masih belum diketahui.",
+    assumeTitle:"1.6 Asumsi Perencanaan",
+    assumeList:["Personel musuh tambahan yang belum teridentifikasi tetap aktif","Unsur musuh memiliki pengetahuan medan lokal yang lebih unggul dari pasukan Pemerintah","Perlawanan bersenjata harus diantisipasi dalam setiap tindakan penegakan hukum","Jalur laut tetap menjadi jalur utama untuk bala bantuan, logistik, dan pelarian","Intelijen dari sumber rahasia memerlukan verifikasi independen","Lingkungan operasi dapat berubah tanpa peringatan","Pimpinan musuh dapat berpindah lokasi sebagai respons atas aktivitas Pemerintah yang terdeteksi","Kehadiran warga sipil tidak dapat sepenuhnya dikesampingkan dari Wilayah Operasi"],
+    constraintsTitle:"1.7 Batasan Operasional",
+    constraintsList:["Hukum yang berlaku di San Andreas","Arahan dari Ketua Dewan Negara","Aturan Pelibatan (ROE) yang telah disetujui","Persyaratan Keamanan Operasi","Prosedur Pengumpulan Intelijen yang diotorisasi","Ketentuan yang berlaku dari Perjanjian Cayo Perico, kecuali digantikan oleh otorisasi Pemerintah yang sah"],
+    opportunitiesTitle:"1.8 Peluang Operasional",
+    opportunitiesList:["Identifikasi rekan senior dengan akses langsung ke pucuk pimpinan organisasi","Eksploitasi intelijen dari penangkapan sah dan wawancara terstruktur","Gangguan terhadap logistik dan komunikasi musuh","Isolasi terkendali terhadap area operasi untuk membatasi pergerakan musuh","Integrasi intelijen dari berbagai lembaga peserta ke dalam satu gambaran terpadu"],
+    redactLabel:"Status Aset Prioritas — Klik batang untuk membuka rahasia",
+    redactHint:"MEMERLUKAN OTORISASI: HANYA UNTUK DEWAN NEGARA — klik setiap batang sensor untuk menampilkan",
+    redactSegments:[
+      {t:"plain", v:""},
+      {t:"bar", v:"Frost"},
+      {t:"plain", v:", sebelumnya ditangkap dan dimanfaatkan sebagai "},
+      {t:"bar", v:"Sumber Intelijen Manusia Kooperatif (CHIS-01)"},
+      {t:"plain", v:", sejak itu dengan sengaja "},
+      {t:"bar", v:"dilepaskan dalam kondisi terkendali sebagai umpan operasional"},
+      {t:"plain", v:" untuk memancing rekan-rekan musuh lainnya. Prioritas saat ini adalah memantau kemungkinan terbongkarnya operasi serta "},
+      {t:"bar", v:"penangkapan kembali secara terkendali setelah kegunaannya sebagai umpan terpenuhi"},
+      {t:"plain", v:"."}
+    ]
+  },
+  mission:{
+    eyebrow:"Bab II", title:"Misi",
+    prompt:"ROOT@JSOTF:~$ cat pernyataan_misi.txt",
+    text:"Efektif setelah diotorisasi oleh Ketua Dewan Negara, Satuan Tugas Gabungan Operasi Khusus (JSOTF) akan melaksanakan Operasi IRON TIDE, sebuah operasi khusus yang dipimpin intelijen secara terkoordinasi di dalam Negara Bagian San Andreas dan area operasi yang ditetapkan di Cayo Perico, guna mengidentifikasi, mengisolasi, menangkap, mengeksploitasi, dan membubarkan organisasi bermusuhan yang dipimpin oleh Alexander Petrovich — sambil memulihkan kebebasan bertindak Pemerintah, menjaga keselamatan publik, dan mencegah perluasan pengaruh musuh lebih lanjut.",
+    strategicMissionTitle:"Misi Strategis",
+    strategicMission:"Menghilangkan kemampuan operasional organisasi bermusuhan dengan secara sistematis mengganggu kepemimpinan, struktur komando, logistik, komunikasi, dukungan finansial, dan infrastruktur operasionalnya. Keberhasilan diukur bukan hanya dari jumlah penangkapan, tetapi dari terdegradasinya sepenuhnya kemampuan organisasi tersebut untuk mengancam Pemerintah San Andreas.",
+    objTitle:"Sasaran Strategis",
+    objectives:[
+      ["ALPHA","Membubarkan organisasi bermusuhan yang dipimpin Alexander Petrovich."],
+      ["BRAVO","Memulihkan kebebasan operasional atas Cayo Perico; mencegah kendali musuh yang permanen."],
+      ["CHARLIE","Melindungi warga, institusi, dan kepentingan strategis San Andreas."],
+      ["DELTA","Mengembangkan intelijen untuk mengganggu organisasi penerus mana pun."],
+      ["ECHO","Mendukung penuntutan yang sah melalui pengumpulan dan eksploitasi bukti."]
+    ],
+    immediateTitle:"2.4 Sasaran Operasional Segera",
+    immediateLede:"Frost, sebelumnya ditangkap dan dimanfaatkan sebagai CHIS-01, sejak itu sengaja dilepaskan dalam kondisi terkendali sebagai umpan untuk memancing rekan-rekan musuh lainnya. Prioritas berikut mencerminkan fase pemantauan dan penangkapan kembali:",
+    immediateList:[
+      ["Prioritas Satu","Memastikan lokasi, pergerakan, dan asosiasi Frost saat ini pasca pelepasan; memantau peluang intelijen yang muncul."],
+      ["Prioritas Dua","Melakukan penangkapan kembali Frost secara terkendali setelah kegunaannya sebagai umpan terpenuhi, atau atas penilaian Komandan bahwa risiko sudah tidak dapat diterima."],
+      ["Prioritas Tiga","Melanjutkan eksploitasi intelijen dari Frost melalui wawancara terstruktur, eksploitasi elektronik, dan analisis yang terverifikasi."],
+      ["Prioritas Empat","Mengidentifikasi lokasi, pola pergerakan, hubungan komando, dan rutinitas operasional Alexander Petrovich saat ini."],
+      ["Prioritas Lima","Mengembangkan kondisi operasional yang diperlukan untuk tindakan lanjutan terhadap Petrovich dan sisa pimpinan."]
+    ],
+    intentTitle:"2.5 Niat Komandan",
+    purposeTitle:"Tujuan", purpose:"Menghilangkan kemampuan organisasi bermusuhan untuk beroperasi di dalam atau memengaruhi Negara Bagian San Andreas dengan membubarkan kepemimpinan dan jaringan pendukungnya melalui intelijen terkoordinasi dan operasi presisi.",
+    methodTitle:"Metode",
+    methodList:["Keunggulan intelijen","Keamanan operasi","Penargetan presisi","Eskalasi terkendali","Koordinasi antarlembaga yang terpadu","Fleksibilitas dalam perencanaan operasi","Penggunaan kekuatan yang sah"],
+    endStateTitle:"Kondisi Akhir",
+    endStateList:["Petrovich ditangkap atau kehilangan kemampuan memimpin secara permanen","Struktur komando musuh dibubarkan","Anggota tersisa tidak lagi mampu melakukan aktivitas terkoordinasi","Kebebasan operasional Pemerintah dipulihkan","Sasaran intelijen terpenuhi","Tanggung jawab dialihkan ke lembaga konvensional"],
+    prioritizationTitle:"2.6 Prioritisasi Operasional",
+    prioritization:"Sasaran strategis mendefinisikan tujuan jangka panjang operasi dan tetap tidak berubah kecuali diubah oleh Ketua Dewan Negara. Prioritas operasional dapat disesuaikan oleh Komandan sebagai respons atas intelijen baru, peluang taktis, atau perubahan lingkungan operasi.",
+    principlesTitle:"2.7 Prinsip Operasional",
+    principlesList:["Misi di Atas Pengakuan — keberhasilan operasi lebih diutamakan daripada penghargaan institusi atau individu","Intelijen Sebelum Tindakan — tindakan taktis harus didasarkan pada intelijen yang terverifikasi bila memungkinkan","Presisi di Atas Kekuatan — kekuatan minimum yang diperlukan akan digunakan","Kesatuan Komando — seluruh personel beroperasi di bawah wewenang Komandan JSOTF selama diperbantukan","Adaptabilitas Operasional — rencana tetap fleksibel dan responsif terhadap intelijen yang berkembang","Penangkapan Sebelum Penetralan — target bernilai tinggi ditangkap hidup-hidup bila memungkinkan secara operasional"]
+  },
+  execution:{
+    eyebrow:"Bab III–IX", title:"Pelaksanaan — Enam Fase Operasional",
+    lede:"Operasi Iron Tide adalah operasi khusus gabungan yang bertahap dan dipimpin intelijen. Transisi antarfase diotorisasi oleh Komandan berdasarkan kondisi operasional, bukan jadwal tetap; fase dapat ditunda, dipercepat, diulang, atau digabungkan.",
+    phases:[
+      {n:"FASE I", t:"Pengembangan Intelijen", p:"Membangun gambaran operasional yang akurat melalui pengumpulan, verifikasi, dan analisis yang sistematis.",
+       list:["Identifikasi personel kunci & konfirmasi hubungan komando","Konfirmasi lokasi, komunikasi, dan logistik","Konfirmasi pergerakan laut & lokasi penyimpanan senjata","Membangun pola kehidupan (pattern of life)"]},
+      {n:"FASE II", t:"Operasi Penangkapan Terkendali", p:"Penangkapan yang sah dan terkoordinasi terhadap Target Prioritas Operasional yang penangkapannya secara signifikan meningkatkan peluang tercapainya sasaran strategis.",
+       list:["Identifikasi positif & pengawasan berkelanjutan","Isolasi taktis & penangkapan terkendali","Evakuasi segera & pelestarian bukti","Ditangkap hidup-hidup bila memungkinkan; perawatan medis segera diberikan"]},
+      {n:"FASE III", t:"Eksploitasi Intelijen", p:"Mengubah informasi dari personel yang ditangkap, materi yang disita, dan pengumpulan teknis menjadi intelijen yang dapat ditindaklanjuti.",
+       list:["Wawancara terstruktur & eksploitasi digital","Dokumentasi keuangan & perangkat komunikasi","Analisis intelijen yang terverifikasi"]},
+      {n:"FASE IV", t:"Persiapan Operasional Terhadap Pimpinan Strategis", p:"Mempersiapkan kondisi operasional yang menguntungkan untuk tindakan langsung terhadap Petrovich dan sisa pimpinan.",
+       list:["Pengintaian rahasia & validasi target","Menyiapkan tim penangkapan & memposisikan aset pendukung","Tidak ada tindakan langsung sebelum peluang keberhasilan yang wajar dikonfirmasi"]},
+      {n:"FASE V", t:"Tindakan Langsung", p:"Melaksanakan operasi taktis terkoordinasi terhadap target strategis sambil menjaga peluang intelijen.",
+       list:["Prioritas 1: Perlindungan personel Pemerintah","Prioritas 2: Perlindungan warga sipil","Prioritas 3: Penangkapan target strategis","Prioritas 4–5: Pelestarian intelijen & bukti"]},
+      {n:"FASE VI", t:"Stabilisasi & Transisi", p:"Memulihkan operasi normal Pemerintah setelah tuntasnya sasaran taktis.",
+       list:["Penyelidikan lanjutan & Tinjauan Pasca-Aksi (AAR)","Evaluasi ancaman yang tersisa","Pengalihan tanggung jawab ke lembaga konvensional bila sesuai"]}
+    ],
+    directivesTitle:"Arahan Pelaksanaan Komandan",
+    directivesLede:"Sepanjang Operasi Iron Tide, seluruh personel wajib mematuhi arahan berikut:",
+    directivesList:["Menjaga Keamanan Operasi setiap saat","Melestarikan peluang intelijen bila memungkinkan","Menangkap personel strategis hidup-hidup bila memungkinkan secara operasional","Meminimalkan penggunaan kekuatan yang tidak perlu","Melindungi nyawa dan harta warga sipil","Menjaga kesatuan komando di seluruh fase operasi","Segera melaporkan perkembangan operasional yang signifikan","Menjaga integritas bukti untuk proses hukum selanjutnya","Tetap siap mengadaptasi prioritas operasional sesuai intelijen yang berkembang","Menjaga fokus misi hingga secara resmi dibebastugaskan oleh Komandan"]
+  },
+  admin:{
+    eyebrow:"Bagian IV", title:"Administrasi & Logistik",
+    lede:"Keberhasilan operasi bergantung pada ketersediaan berkelanjutan personel, transportasi, komunikasi, dukungan medis, peralatan, dan keberlangsungan logistik, yang dikoordinasikan secara terpusat melalui Unsur Pendukung JSOTF.",
+    cards:[
+      {h:"Administrasi Personel", list:["Personel tetap terikat secara administratif pada lembaga induknya selama berada di bawah kendali operasional (OPCON) JSOTF","Akuntabilitas berkelanjutan: status tugas, lokasi, kesiapan, peralatan, status medis, kontak darurat","Personel wajib memenuhi persyaratan kualifikasi, menyelesaikan pengarahan, dan siap untuk penugasan segera"]},
+      {h:"Peralatan", list:["Individu: perlengkapan tugas, perlindungan taktis, komunikasi, kit medis, opsi non-mematikan","Taktis: perlindungan balistik, peralatan masuk & pengamatan, perlengkapan laut & operasi malam","Khusus (memerlukan otorisasi Komandan): pengawasan teknis, drone, penyadapan sinyal, peralatan pendobrakan"]},
+      {h:"Transportasi", list:["Prioritas 1: Personel operasional","Prioritas 2: Transportasi tahanan","Prioritas 3: Peralatan kritis","Prioritas 4: Transportasi bukti","Prioritas 5: Dukungan administratif"]},
+      {h:"Dukungan Medis", list:["Setiap unsur operasional memiliki akses segera ke respons medis darurat","Kategori korban: Ringan / Serius / Kritis / Meninggal","Semua tahanan menerima penilaian medis; perawatan tidak boleh ditahan"]},
+      {h:"Manajemen Penahanan & Bukti", list:["Tahanan: digeledah, dinilai medis, diidentifikasi, difoto, harta benda diinventarisasi, dipindahkan dengan pengawalan aman","Rantai penyimpanan bukti tanpa terputus: waktu, tanggal, lokasi, petugas, deskripsi, klasifikasi","Materi intelijen sensitif dipindahkan ke Unsur Intelijen untuk eksploitasi sebelum diproses sebagai barang bukti, bila diizinkan secara hukum"]},
+      {h:"Manajemen Sumber Daya & Kontinjensi", list:["Sumber daya dialokasikan berdasarkan prioritas misi, tingkat ancaman, nilai intelijen, keselamatan personel, dan keberlanjutan","Keberlangsungan kontinjensi: jalur suplai/area persiapan alternatif, evakuasi medis darurat, ekstraksi laut, pasokan ulang darurat","Rencana kontinjensi ditinjau sebelum setiap fase operasi"]}
+    ],
+    reportingTitle:"Pelaporan Administratif",
+    reportingLede:"Setelah setiap fase operasi, unsur peserta wajib menyerahkan:",
+    reportingList:["Laporan Status Personel (PERSTAT)","Laporan Status Peralatan (EQUSTAT)","Ringkasan Intelijen (INTSUM)","Laporan Status Logistik (LOGSTAT)","Laporan Aktivitas Signifikan (SIGACT)","Laporan Korban (CASREP), bila berlaku"]
+  },
+  command:{
+    eyebrow:"Bagian V", title:"Komando & Komunikasi",
+    lede:"Komandan JSOTF memegang Kendali Operasional (OPCON) atas seluruh personel dan aset yang ditugaskan. Pimpinan bawahan mempertahankan Kendali Taktis (TACON) yang selaras dengan Niat Komandan. Kendali administratif tetap berada pada lembaga induk masing-masing anggota kecuali diarahkan lain.",
+    relTitle:"Hubungan Komando",
+    relList:["Komando keseluruhan berada pada Komandan JSOTF, bertindak atas wewenang yang didelegasikan oleh Ketua Dewan Negara","OPCON mencakup perencanaan misi, alokasi kekuatan, penugasan, persetujuan misi, penyesuaian taktis, prioritisasi intelijen, serta penundaan atau penghentian operasi","TACON: Pimpinan Unsur Bawahan mempertahankan kendali taktis selama pelaksanaan misi, selaras dengan Niat Komandan","Suksesi Komando: wewenang beralih sesuai Rantai Suksesi JSOTF yang disetujui tanpa mengganggu pelaksanaan misi"],
+    rolesTitle:"Tanggung Jawab Komando",
+    roles:[
+      {h:"Komandan JSOTF", list:["Pelaksanaan misi secara keseluruhan","Persetujuan keputusan besar","Prioritisasi sumber daya & intelijen","Koordinasi dengan Dewan"]},
+      {h:"Wakil Komandan", list:["Operasi sehari-hari","Mengawasi unsur bawahan","Mengambil alih komando bila diperlukan","Menyinkronkan fase operasi"]},
+      {h:"Kepala Divisi Intelijen", list:["Pengumpulan & analisis","Pengembangan target","Penilaian ancaman","Rekomendasi operasional"]},
+      {h:"Kepala Dukungan Taktis", list:["Pelaksanaan operasi taktis","Keselamatan petugas","Perencanaan kontinjensi","Respons segera terhadap perlawanan"]},
+      {h:"Kepala Dukungan Operasional", list:["Logistik & medis","Komunikasi","Transportasi","Akuntabilitas peralatan"]},
+      {h:"Kepala Penyidikan", list:["Penyelidikan pasca-operasi","Bukti & rantai penyimpanan","Pengembangan kasus pidana","Koordinasi yudisial"]},
+      {h:"Petugas Hukum & Kepatuhan", list:["Tinjauan hukum atas rencana","Kepatuhan ROE","Interpretasi perjanjian","Penasihat wewenang yang sah"]},
+      {h:"Kepala Divisi Operasi", list:["Perencanaan & penjadwalan","Sinkronisasi antardivisi","Pelaporan status ke Komandan"]}
+    ],
+    commsTitle:"Komunikasi",
+    commsLede:"Komunikasi yang aman, tepat waktu, dan andal sangat penting bagi keberhasilan misi. Keamanan operasi diutamakan di atas kenyamanan.",
+    commsPriorities:["Prioritas 1: Lalu lintas darurat","Prioritas 2: Keselamatan petugas","Prioritas 3: Intelijen operasional","Prioritas 4: Koordinasi misi","Prioritas 5: Komunikasi administratif"],
+    callsignTitle:"Struktur Kode Panggilan (Contoh)",
+    callsigns:[["Komando","IRON ACTUAL"],["Wakil","IRON 6"],["Intelijen","IRON INTEL"],["Taktis","IRON 1"],["Penyidikan","IRON 2"],["Dukungan","IRON 3"],["Medis","IRON MED"],["Cadangan","IRON RESERVE"]],
+    infosecTitle:"Keamanan Informasi",
+    infosecList:["Penyimpanan dokumen operasi yang aman","Penyebaran terbatas & akses berbasis kebutuhan","Pelaporan segera atas dugaan kebocoran informasi"],
+    decisionTitle:"Wewenang Keputusan",
+    decisionLede:"Keputusan berikut memerlukan persetujuan Komandan:",
+    decisionList:["Dimulainya Tindakan Langsung","Perubahan Prioritas Operasional","Pengerahan aset cadangan","Perluasan cakupan operasi","Eskalasi taktis di luar rencana yang disetujui","Penundaan atau penghentian misi"],
+    contingencyTitle:"Prosedur Komando Kontinjensi",
+    contingencyLede:"Jika komunikasi dengan Markas JSOTF terputus:",
+    contingencyList:["Komandan bawahan melanjutkan pelaksanaan perintah sah terakhir yang dikonfirmasi","Penyesuaian taktis yang diperlukan untuk menyelamatkan nyawa dapat dilakukan segera","Penyimpangan signifikan dilaporkan segera setelah komunikasi pulih","Jika kondisi berubah secara mendasar, beralih ke prosedur kontinjensi sesuai Lampiran I"],
+    ccirTitle:"Kebutuhan Informasi Kritis Komandan (CCIR)",
+    ccirLede:"Komandan harus segera diberitahu atas setiap kejadian yang melibatkan:",
+    ccirList:["Identifikasi positif Alexander Petrovich","Konfirmasi lokasi/status Frost selama masa pelepasan terkendali, dan indikasi apapun terkait terbongkarnya operasi","Identifikasi rekan senior tambahan","Petugas cedera berat atau tewas","Korban sipil","Situasi penyanderaan","Penemuan gudang senjata atau materi intelijen besar","Lolosnya Target Prioritas Operasional mana pun","Hilangnya kerahasiaan operasi","Kegagalan komunikasi utama","Permintaan eskalasi taktis","Perubahan signifikan pada kemampuan musuh"],
+    philosophyTitle:"Filosofi Komando",
+    philosophy:"JSOTF beroperasi berdasarkan prinsip komando misi (mission command). Pimpinan bawahan diharapkan menjalankan inisiatif yang disiplin dalam koridor Niat Komandan setiap kali kondisi yang berubah memerlukan tindakan segera. Inisiatif tidak boleh menggantikan koordinasi, dan tindakan independen harus selalu mendukung sasaran strategis Operasi Iron Tide."
+  },
+  intel:{
+    eyebrow:"Bagian VI", title:"Intelijen & Prosedur Operasi Khusus",
+    lede:"Intelijen adalah keunggulan yang menentukan dalam Operasi Iron Tide. Setiap aktivitas operasional didasarkan pada intelijen yang tepat waktu, terverifikasi, dan dapat ditindaklanjuti guna memaksimalkan efektivitas sekaligus meminimalkan risiko yang tidak perlu.",
+    cycleTitle:"Siklus Intelijen",
+    cycle:["Perencanaan","Pengumpulan","Pengolahan","Analisis","Penyebaran","Tindakan Operasional","Eksploitasi","Penilaian Ulang"],
+    pirTitle:"Kebutuhan Intelijen Prioritas",
+    pir:[
+      "Menentukan lokasi Alexander Petrovich saat ini.",
+      "Menentukan rutinitas keamanan dan pola pergerakan harian Petrovich.",
+      "Mengidentifikasi seluruh anggota Organisasi Petrovich yang tersisa.",
+      "Mengidentifikasi suksesi komando apabila Petrovich tidak lagi tersedia.",
+      "Menemukan fasilitas penyimpanan senjata dan infrastruktur logistik.",
+      "Mengidentifikasi jalur laut untuk pergerakan personel, pasokan ulang, dan pelarian.",
+      "Mengidentifikasi jaringan dan fasilitator pendukung finansial.",
+      "Mengidentifikasi organisasi eksternal yang memberikan bantuan atau perlindungan."
+    ],
+    eeiTitle:"Elemen Informasi Esensial (EEI)",
+    eeiList:["Lokasi pertemuan","Rumah persembunyian","Penggunaan kendaraan","Perangkat komunikasi","Transaksi keuangan","Metode perekrutan","Pemasok senjata","Pertemuan pimpinan","Jadwal pelayaran","Metode kontra-pengawasan","Rencana pelarian","Dokumen operasional"],
+    naiTitle:"Area Kepentingan Bernama (NAI)",
+    naiLede:"Unsur Intelijen menetapkan dan terus memperbarui NAI, yang dapat mencakup:",
+    naiList:["Titik akses laut","Jembatan & jalur transportasi","Lokasi pertemuan yang diketahui","Rumah persembunyian yang dicurigai","Lokasi relay komunikasi","Fasilitas penyimpanan","Titik pertukaran keuangan","Lokasi pengamatan","Kemungkinan jalur ekstraksi"],
+    hvtTitle:"Pengembangan Target Bernilai Tinggi",
+    hvtLede:"Target strategis menjalani pengembangan intelijen berkelanjutan sebelum tindakan langsung:",
+    hvtList:["Verifikasi identitas","Analisis pola kehidupan","Penilaian komunikasi","Pemetaan hubungan jaringan","Analisis keuangan","Prediksi pergerakan","Penilaian ancaman & peluang"],
+    hvtNote:"Tidak ada target strategis yang boleh dilibatkan hanya berdasarkan laporan yang belum terverifikasi selagi verifikasi tambahan masih memungkinkan dilakukan.",
+    surveillanceTitle:"Operasi Pengawasan",
+    surveillanceList:["Pengawasan statis","Pengawasan bergerak","Pengamatan laut","Pengawasan teknis","Pengamatan udara (jika tersedia)","Pelaporan intelijen manusia","Pengamatan penyamaran"],
+    sourceTitle:"Operasi Sumber Terkendali",
+    sourceLede:"Individu yang memberikan informasi dapat, dengan persetujuan Komandan, ditetapkan sebagai Sumber Terkendali (informan rahasia, saksi/tahanan kooperatif, aset penyamaran). Pemanfaatannya memerlukan penilaian risiko menyeluruh dan persetujuan Komandan; identitas dan status sumber dilindungi semaksimal mungkin sesuai kebutuhan misi.",
+    exploitTitle:"Eksploitasi Intelijen",
+    exploitLede:"Seluruh intelijen menjalani eksploitasi sistematis, dengan prioritas pada materi yang dapat menghasilkan operasi lanjutan:",
+    exploitList:["Perangkat elektronik","Dokumen & media digital","Catatan komunikasi & keuangan","Peta & dokumentasi senjata","Laporan wawancara"],
+    ciTitle:"Kontra-Intelijen",
+    ciList:["Pemeriksaan latar belakang personel peserta","Pemantauan kebocoran informasi tidak sah","Verifikasi laporan rahasia","Deteksi tipu daya","Perlindungan terhadap pengawasan","Kompartementalisasi operasional","Investigasi segera atas dugaan terbongkarnya operasi"],
+    specialTitle:"Prosedur Operasi Khusus",
+    specialList:["Pertemuan terkendali","Operasi penangkapan berbasis intelijen","Operasi pengawasan terkoordinasi","Eksekusi surat perintah secara simultan","Pencegatan laut","Langkah isolasi strategis","Pengelabuan taktis, bila sah secara hukum","Jeda operasional terkendali untuk memanfaatkan intelijen baru"]
+  },
+  branch:{
+    eyebrow:"Bagian VII", title:"Rencana Cabang",
+    lede:"Kontinjensi yang telah disiapkan sebelumnya, memungkinkan Satuan Tugas merespons perkembangan yang dapat diperkirakan tanpa mengorbankan sasaran strategis. Aktivasi memerlukan persetujuan Komandan kecuali tindakan segera diperlukan untuk menyelamatkan nyawa. Klik untuk membuka.",
+    plans:[
+      {tag:"ALPHA", title:"Penangkapan Terkendali Berhasil", situation:"Target Prioritas Operasional berhasil ditangkap tanpa perlawanan berarti.", actions:["Mengamankan tahanan","Membentuk keamanan perimeter segera","Melakukan penilaian medis","Melestarikan seluruh bukti","Memindahkan ke fasilitas penahanan aman","Memulai eksploitasi intelijen"], outcome:"Menghasilkan intelijen yang dapat ditindaklanjuti untuk mendukung operasi lanjutan terhadap Petrovich."},
+      {tag:"BRAVO", title:"Tahanan Tidak Kooperatif", situation:"Target Prioritas Operasional menolak bekerja sama.", actions:["Melanjutkan penahanan yang sah","Memperluas eksploitasi digital","Melakukan verifikasi intelijen independen","Meningkatkan operasi pengawasan","Melanjutkan penyelidikan melalui sumber alternatif"], outcome:"Mencegah kegagalan intelijen sambil mempertahankan momentum operasional."},
+      {tag:"CHARLIE", title:"Perpindahan Target Strategis", situation:"Alexander Petrovich berpindah lokasi sebelum pelaksanaan Tindakan Langsung.", actions:["Menunda serangan segera","Membangun kembali pengawasan","Memastikan lokasi baru","Memperbarui gambaran operasional","Menugaskan ulang aset pengintaian","Melanjutkan perencanaan setelah konfirmasi"], outcome:"Mempertahankan kejutan operasional sambil menghindari eksposur yang tidak perlu."},
+      {tag:"DELTA", title:"Terbongkarnya Operasi", situation:"Bukti menunjukkan personel musuh telah menyadari aktivitas operasional Pemerintah (peningkatan pergerakan musuh, keheningan komunikasi, lokasi yang ditinggalkan, persiapan pertahanan tak terduga, kebocoran yang terkonfirmasi).", actions:["Segera menilai ulang misi","Menentukan sumber kebocoran","Mengamankan materi rahasia","Menunda operasi yang terekspos","Memulai langkah kontra-intelijen","Mengaktifkan garis waktu operasional alternatif bila sesuai"], outcome:"Melestarikan kemampuan operasional dan mencegah kegagalan misi secara total."},
+      {tag:"ECHO", title:"Insiden Penyanderaan", situation:"Personel Pemerintah atau warga sipil disandera oleh pasukan musuh.", actions:["Membentuk Komando Krisis","Memastikan status sandera","Mengamankan perimeter","Memulai negosiasi bila sesuai","Menyiapkan Unsur Penyelamat Taktis","Menjaga pengumpulan intelijen berkelanjutan"], outcome:"Perlindungan nyawa sandera tetap menjadi prioritas taktis tertinggi."},
+      {tag:"FOXTROT", title:"Penghancuran / Penutupan Jalur Akses", situation:"Akses berkelanjutan antara San Andreas dan Cayo Perico menimbulkan risiko operasional yang tidak dapat diterima.", actions:["Penutupan sementara akses jembatan","Zona eksklusi laut","Pos pemeriksaan kendaraan","Penghancuran terkendali infrastruktur kritis, bila diotorisasi secara khusus","Metode penutupan akses alternatif yang sesuai dengan persyaratan operasional dan hukum"], outcome:"Mobilitas musuh berkurang signifikan sementara pasukan Pemerintah tetap dapat melakukan operasi terkendali. Memerlukan otorisasi Ketua Dewan Negara; mempertimbangkan keselamatan sipil, dampak lingkungan, dan pemulihan lanjutan."},
+      {tag:"GOLF", title:"Lolosnya Target Strategis", situation:"Alexander Petrovich berhasil menghindari penangkapan segera.", actions:["Memulai pengejaran hanya jika secara operasional dibenarkan","Melestarikan peluang intelijen","Mengeksploitasi materi yang berhasil didapat","Memperluas pengawasan","Menyusun paket target yang direvisi","Menyiapkan operasi lanjutan"], outcome:"Kelanjutan misi memprioritaskan pembubaran organisasi musuh jangka panjang di atas pengejaran berisiko tinggi yang segera."},
+      {tag:"HOTEL", title:"Munculnya Pimpinan Pengganti", situation:"Intelijen mengonfirmasi individu lain telah mengambil alih kepemimpinan operasional organisasi musuh.", actions:["Melakukan penilaian ulang ancaman segera","Menyusun profil target baru","Memperbarui Kebutuhan Intelijen Prioritas","Menyesuaikan Prioritas Operasional","Melanjutkan pembubaran sisa kemampuan organisasi"], outcome:"Sasaran strategis Operasi Iron Tide tetap tidak berubah terlepas dari perubahan pimpinan musuh."}
+    ]
+  },
+  termination:{
+    eyebrow:"Bab XLVI", title:"Kriteria Penghentian Misi",
+    lede:"Operasi Iron Tide dapat diakhiri atas penilaian Komandan, dengan persetujuan Dewan Negara bila diperlukan, bahwa satu atau lebih kondisi berikut telah terpenuhi:",
+    conclude:["Sasaran strategis telah tercapai","Organisasi musuh telah menjadi tidak efektif secara operasional","Otoritas Pemerintah telah dipulihkan di Wilayah Operasi","Ancaman yang tersisa dapat dikelola oleh lembaga Pemerintah konvensional","Kelanjutan pengerahan JSOTF tidak lagi memberikan manfaat operasional yang sepadan"],
+    suspendTitle:"Sebaliknya, operasi dapat ditunda atau dihentikan apabila:",
+    suspend:["Dasar hukum operasi dicabut","Risiko operasional menjadi tidak sebanding dengan manfaat strategis yang diharapkan","Kemampuan operasional esensial tidak lagi tersedia","Arahan pengganti diterbitkan oleh otoritas Pemerintah yang berwenang"]
+  },
+  annex:{
+    eyebrow:"Bagian VIII", title:"Lampiran",
+    lede:"Setiap Lampiran memberikan panduan operasional rinci yang mendukung pelaksanaan Perintah Operasi ini dan harus dibaca bersamaan dengan bab terkait. Lampiran dapat diperbarui secara independen tanpa perlu menerbitkan ulang dokumen utama, selama revisi tidak mengubah sasaran strategis yang telah disahkan. Klik untuk membuka.",
+    list:[
+      {l:"A", h:"Wilayah Operasi (AO)", items:["Peta Wilayah Operasi","Batas Operasi San Andreas","Batas Operasi Cayo Perico","Wilayah Operasi Laut","Jalur Akses Utama & Sekunder","Akses Jembatan","Area Persiapan","Zona Pendaratan (LZ)","Titik Pengamatan","Pos Pemeriksaan","Jalur Ekstraksi Darurat"], attach:"Direkomendasikan: citra satelit, peta taktis, skema jembatan, peta laut."},
+      {l:"B", h:"Struktur Organisasi", items:["Bagan Organisasi JSOTF","Rantai Komando","Lembaga Peserta","Hubungan Komando","Struktur Kendali Operasional","Penugasan Kendali Taktis","Unsur Cadangan","Organisasi Sel Intelijen"], attach:"Direkomendasikan: bagan alur organisasi."},
+      {l:"C", h:"Matriks Sinkronisasi Pelaksanaan", items:["Matriks Fase Operasional lintas unsur Komando, Intelijen, Taktis, Penyidikan, dan Dukungan untuk setiap fase dari Pengembangan Intelijen hingga Stabilisasi."], attach:"Berfungsi sebagai referensi sinkronisasi utama selama pelaksanaan misi."},
+      {l:"D", h:"Paket Intelijen Target", items:["Profil terpisah untuk setiap individu: Nama, Alias, Foto, Rekan yang Diketahui, Penilaian Ancaman, Nilai Intelijen, Aktivitas Kriminal, Lokasi Terakhir Diketahui, Kendaraan, Senjata, Pola Kehidupan, Komunikasi, Rekomendasi Operasional"], attach:"Target saat ini: Alexander Petrovich · Frost (Pelepasan Terkendali / Umpan — menunggu penangkapan kembali) · Leiman · subjek tambahan sesuai identifikasi."},
+      {l:"E", h:"Rencana Komunikasi", items:["Saluran Radio","Kode Panggilan","Prosedur Autentikasi","Sinyal Darurat","Hierarki Komunikasi","Metode Komunikasi Alternatif","Prosedur Kehilangan Komunikasi","Prosedur Enkripsi"], attach:""},
+      {l:"F", h:"Rencana Dukungan Medis", items:["Prosedur CASEVAC","Titik Pengumpulan Korban","Jalur Ambulans","Fasilitas & Peralatan Medis","Prioritas Trauma","Prosedur Cedera Petugas","Prosedur Medis Tahanan"], attach:""},
+      {l:"G", h:"Referensi Cepat Aturan Pelibatan", items:["Penggunaan Kekuatan","Kekuatan Mematikan","Prosedur Penangkapan","Perlindungan Sipil","Penarikan Taktis","Bela Diri Petugas","Situasi Penyanderaan","Prosedur Penyerahan Diri"], attach:"Dirancang sebagai referensi operasional satu halaman."},
+      {l:"H", h:"Rencana Pengumpulan Intelijen", items:["Kebutuhan Intelijen Prioritas (PIR)","Elemen Informasi Esensial (EEI)","Area Kepentingan Bernama (NAI)","Matriks Pengumpulan Informasi","Tanggung Jawab Pengumpulan Intelijen","Prosedur Pelaporan"], attach:""},
+      {l:"I", h:"Matriks Penilaian Risiko", items:["Risiko Personel, Taktis, Intelijen, Operasional, Politik, Keselamatan Publik, dan Logistik — masing-masing dinilai untuk Probabilitas, Dampak, Mitigasi, dan Risiko Residual"], attach:""},
+      {l:"J", h:"Garis Waktu Operasional", items:["Garis Waktu Misi","Titik Keputusan","Matriks Keputusan Komandan","Titik Aktivasi Rencana Cabang","Pemicu Operasional","Kriteria Penyelesaian Misi"], attach:""},
+      {l:"K", h:"Laporan Pasca-Aksi (AAR)", items:["Ringkasan Misi","Sasaran Tercapai","Personel Terlibat","Kejadian Signifikan","Intelijen yang Diperoleh","Bukti yang Dikumpulkan","Pelajaran yang Dipetik","Rekomendasi","Komentar Komandan"], attach:""},
+      {l:"L", h:"Manajemen Bukti", items:["Inventaris Bukti","Bukti Digital, Senjata, Dokumen, Catatan Keuangan, Perangkat Elektronik","Rantai Penyimpanan","Prosedur Transfer Bukti","Prosedur Penyimpanan"], attach:""},
+      {l:"M", h:"Pelajaran Operasional yang Dipetik", items:["Tetap kosong hingga misi selesai. Mendokumentasikan keberhasilan/kegagalan operasional dan intelijen, catatan taktis dan kepemimpinan, serta rekomendasi untuk operasi gabungan di masa depan."], attach:"Berfungsi sebagai catatan institusional resmi yang mendukung operasi Pemerintah di masa depan."}
+    ]
+  },
+  cert:{
+    eyebrow:"Pengesahan Akhir", title:"Arahan Penutup Komandan",
+    lede:"Operasi Iron Tide dibangun atas prinsip bahwa tindakan tegas paling efektif ketika dipandu oleh intelijen yang disiplin, wewenang yang sah, dan komando yang terpadu. Setiap anggota Satuan Tugas dipercayakan tanggung jawab yang melampaui penugasan individu. Keberhasilan misi diukur bukan hanya dari penangkapan, tetapi dari terganggunya secara berkelanjutan kemampuan jaringan musuh untuk mengancam Negara Bagian San Andreas. Komandan mengharapkan setiap anggota untuk menjalankan penilaian yang baik, menjaga standar profesionalisme tertinggi, dan tetap teguh dalam pelaksanaan misi ini.",
+    certText:"Dengan ini saya menyatakan bahwa Perintah Operasi ini telah disusun sesuai dengan wewenang yang didelegasikan oleh Ketua Dewan Negara dan mencerminkan niat operasional Satuan Tugas Gabungan Operasi Khusus terkait Operasi IRON TIDE. Seluruh personel yang ditugaskan pada operasi ini diarahkan untuk memahami isi Perintah Operasi ini beserta Lampirannya sebelum penugasan operasional. Pelaksanaan Operasi IRON TIDE hanya akan dimulai setelah diotorisasi secara resmi oleh otoritas Pemerintah yang berwenang.",
+    sigs:[
+      ["Andrew Gunner","Komisaris Polisi — Diterbitkan Oleh"],
+      ["[ Nama Akan Ditentukan ]","Komandan JSOTF — Disetujui untuk Pelaksanaan"],
+      ["Vania Uzmur La Petite","Ketua Dewan Negara — Diotorisasi Oleh"]
+    ],
+    sigLine:"TANDA TANGAN · TANGGAL ________",
+    quote:"\"Dulce et decorum est pro patria mori.\"",
+    quoteEn:"\"Manis dan pantas gugur demi negeri.\" — semboyan ini berfungsi sebagai pengingat, bukan perayaan, atas pengabdian kepada Negara Bagian San Andreas."
+  },
+  footer:"SC/JSOTF-2026-001 // SANGAT RAHASIA // DISTRIBUSI TERBATAS — HANYA DEWAN NEGARA & UNSUR KOMANDO JSOTF"
+}
+};
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+let currentLang = 'en';
+let typewriterStarted = false;
+
+function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstChild; }
+
+function renderNav(c){
+  const n = c.nav;
+  document.getElementById('mainNav').innerHTML = `
+    <a href="#docControlSection">${n.docControl}</a>
+    <a href="#situationSection">${n.situation}</a>
+    <a href="#missionSection">${n.mission}</a>
+    <a href="#executionSection">${n.execution}</a>
+    <a href="#adminSection">${n.admin}</a>
+    <a href="#commandSection">${n.command}</a>
+    <a href="#intelSection">${n.intel}</a>
+    <a href="#branchSection">${n.branch}</a>
+    <a href="#annexSection">${n.annex}</a>
+    <a href="#certSection">${n.cert}</a>
+  `;
+}
+
+function renderHero(c){
+  const h = c.hero;
+  document.getElementById('heroSection').innerHTML = `
+    <div class="hero-content">
+      <div class="doc-number">${h.docNumber}</div>
+      <div class="stamp">${h.stamp}</div>
+      <h1>${h.title1}<br><span>${h.title2}</span></h1>
+      <div class="subtitle">${h.subtitle}</div>
+      <div class="meta-grid">
+        ${h.meta.map(([k,v])=>`<div class="meta-cell"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderDocControl(c){
+  const d = c.docControl;
+  document.getElementById('docControlSection').innerHTML = `
+    <div class="eyebrow">${d.eyebrow}</div>
+    <h2 class="title">${d.title}</h2>
+    <p class="lede">${d.lede}</p>
+    <table class="doc-table">${d.controlTable.map(([k,v])=>`<tr><td class="k">${k}</td><td class="v">${v}</td></tr>`).join('')}</table>
+    <h3 class="subtitle2">${d.revisionTitle}</h3>
+    <table class="doc-table" style="margin-top:16px;">
+      ${d.revisions.map(([v,desc])=>`<tr><td class="k" style="width:70px;">${v}</td><td class="v">${desc}</td></tr>`).join('')}
+    </table>
+    <h3 class="subtitle2">${d.distTitle}</h3>
+    <p class="lede" style="margin-top:10px;">${d.distLede}</p>
+    <ul class="tac-list">${d.distribution.map(x=>`<li>${x}</li>`).join('')}</ul>
+  `;
+}
+
+function renderSituation(c){
+  const s = c.situation;
+  const redactHtml = s.redactSegments.map(seg=>{
+    if(seg.t==='plain') return seg.v;
+    const bars = '█'.repeat(Math.max(6, Math.round(seg.v.length/1.6)));
+    return `<span class="bar" data-text="${seg.v.replace(/"/g,'&quot;')}">${bars}</span>`;
+  }).join('');
+  document.getElementById('situationSection').innerHTML = `
+    <div class="eyebrow">${s.eyebrow}</div>
+    <h2 class="title">${s.title}</h2>
+    <p class="lede">${s.lede}</p>
+    <h3 class="subtitle2">${s.backgroundTitle}</h3>
+    <p>${s.background}</p>
+    <div class="two-col" style="margin-top:30px;">
+      <div class="card">
+        <h3>${s.enemyTitle}</h3>
+        <p style="margin-bottom:12px;">${s.enemyLede}</p>
+        <ul class="tac-list compact">${s.enemyList.map(x=>`<li>${x}</li>`).join('')}</ul>
+        <p style="margin-top:12px; color:var(--muted); font-size:12px;">${s.enemyNote}</p>
+      </div>
+      <div class="card">
+        <h3>${s.assumeTitle}</h3>
+        <ul class="tac-list compact">${s.assumeList.map(x=>`<li>${x}</li>`).join('')}</ul>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:24px;">
+      <div class="card">
+        <h3>${s.constraintsTitle}</h3>
+        <ul class="tac-list compact">${s.constraintsList.map(x=>`<li>${x}</li>`).join('')}</ul>
+      </div>
+      <div class="card">
+        <h3>${s.opportunitiesTitle}</h3>
+        <ul class="tac-list compact">${s.opportunitiesList.map(x=>`<li>${x}</li>`).join('')}</ul>
+      </div>
+    </div>
+    <div class="redact">
+      <div class="rlabel">${s.redactLabel}</div>
+      <p style="margin:0;">${redactHtml}</p>
+      <div class="hint">${s.redactHint}</div>
+    </div>
+  `;
+  attachRedactionHandlers();
+}
+
+function renderMission(c){
+  const m = c.mission;
+  document.getElementById('missionSection').innerHTML = `
+    <div class="eyebrow">${m.eyebrow}</div>
+    <h2 class="title">${m.title}</h2>
+    <div class="mission-box">
+      <span class="prompt">${m.prompt}</span>
+      <span id="typewriter"></span>
+    </div>
+    <h3 class="subtitle2">${m.strategicMissionTitle}</h3>
+    <p>${m.strategicMission}</p>
+    <h3 class="subtitle2">${m.objTitle}</h3>
+    <div class="obj-grid">
+      ${m.objectives.map(([code,txt])=>`<div class="obj-card"><div class="code">${code==='ALPHA'?'OBJECTIVE ALPHA':'OBJECTIVE '+code}</div><p>${txt}</p></div>`).join('')}
+    </div>
+    <h3 class="subtitle2">${m.immediateTitle}</h3>
+    <p class="lede" style="margin-top:10px;">${m.immediateLede}</p>
+    <div class="pir-list">
+      ${m.immediateList.map(([label,txt],i)=>`<div class="pir-row"><div class="id">${label.split(' ').pop()==='One'?'I':label.split(' ').pop()==='Two'?'II':label.split(' ').pop()==='Three'?'III':label.split(' ').pop()==='Four'?'IV':'V'}</div><div class="txt"><b style="color:#fff;">${label}</b> — ${txt}</div></div>`).join('')}
+    </div>
+    <h3 class="subtitle2">${m.intentTitle}</h3>
+    <div class="three-col" style="margin-top:20px;">
+      <div class="card"><h3>${m.purposeTitle}</h3><p style="font-size:13px;">${m.purpose}</p></div>
+      <div class="card"><h3>${m.methodTitle}</h3><ul class="tac-list compact">${m.methodList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="card"><h3>${m.endStateTitle}</h3><ul class="tac-list compact">${m.endStateList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <h3 class="subtitle2">${m.prioritizationTitle}</h3>
+    <p>${m.prioritization}</p>
+    <h3 class="subtitle2">${m.principlesTitle}</h3>
+    <ul class="tac-list">${m.principlesList.map(x=>`<li>${x}</li>`).join('')}</ul>
+  `;
+  typewriterStarted = false;
+  setupTypewriter(m.text);
+}
+
+function renderExecution(c){
+  const e = c.execution;
+  document.getElementById('executionSection').innerHTML = `
+    <div class="eyebrow">${e.eyebrow}</div>
+    <h2 class="title">${e.title}</h2>
+    <p class="lede">${e.lede}</p>
+    <div class="phase-track">
+      ${e.phases.map(ph=>`
+        <div class="phase">
+          <div class="pnum">${ph.n}</div>
+          <h4>${ph.t}</h4>
+          <p>${ph.p}</p>
+          <ul class="tac-list">${ph.list.map(x=>`<li>${x}</li>`).join('')}</ul>
+        </div>
+      `).join('')}
+    </div>
+    <h3 class="subtitle2">${e.directivesTitle}</h3>
+    <p class="lede" style="margin-top:10px;">${e.directivesLede}</p>
+    <ul class="tac-list">${e.directivesList.map(x=>`<li>${x}</li>`).join('')}</ul>
+  `;
+}
+
+function renderAdmin(c){
+  const a = c.admin;
+  document.getElementById('adminSection').innerHTML = `
+    <div class="eyebrow">${a.eyebrow}</div>
+    <h2 class="title">${a.title}</h2>
+    <p class="lede">${a.lede}</p>
+    <div class="obj-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));">
+      ${a.cards.map(card=>`<div class="card"><h3>${card.h}</h3><ul class="tac-list compact">${card.list.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}
+    </div>
+    <h3 class="subtitle2">${a.reportingTitle}</h3>
+    <p class="lede" style="margin-top:10px;">${a.reportingLede}</p>
+    <ul class="tac-list">${a.reportingList.map(x=>`<li>${x}</li>`).join('')}</ul>
+  `;
+}
+
+function renderCommand(c){
+  const cm = c.command;
+  document.getElementById('commandSection').innerHTML = `
+    <div class="eyebrow">${cm.eyebrow}</div>
+    <h2 class="title">${cm.title}</h2>
+    <p class="lede">${cm.lede}</p>
+    <h3 class="subtitle2">${cm.relTitle}</h3>
+    <ul class="tac-list">${cm.relList.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <h3 class="subtitle2">${cm.rolesTitle}</h3>
+    <div class="role-grid">
+      ${cm.roles.map(r=>`<div class="role-card"><h3>${r.h}</h3><ul>${r.list.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}
+    </div>
+    <h3 class="subtitle2">${cm.commsTitle}</h3>
+    <p class="lede" style="margin-top:10px;">${cm.commsLede}</p>
+    <ul class="tac-list compact">${cm.commsPriorities.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <h4 style="color:var(--amber); font-size:13px; letter-spacing:.08em; margin-top:24px;">${cm.callsignTitle}</h4>
+    <div class="callsign-grid">${cm.callsigns.map(([role,sign])=>`<div class="callsign-cell"><div class="role">${role}</div><div class="sign">${sign}</div></div>`).join('')}</div>
+    <div class="two-col" style="margin-top:30px;">
+      <div class="card"><h3>${cm.infosecTitle}</h3><ul class="tac-list compact">${cm.infosecList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="card"><h3>${cm.decisionTitle}</h3><p style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">${cm.decisionLede}</p><ul class="tac-list compact">${cm.decisionList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <h3 class="subtitle2">${cm.contingencyTitle}</h3>
+    <p class="lede" style="margin-top:10px;">${cm.contingencyLede}</p>
+    <ul class="tac-list">${cm.contingencyList.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <div class="redact" style="border-color:var(--line); background:var(--panel);">
+      <div class="rlabel" style="color:var(--amber);">${cm.ccirTitle}</div>
+      <p style="margin-bottom:10px; color:var(--muted); font-size:13px;">${cm.ccirLede}</p>
+      <ul class="tac-list compact">${cm.ccirList.map(x=>`<li>${x}</li>`).join('')}</ul>
+    </div>
+    <h3 class="subtitle2">${cm.philosophyTitle}</h3>
+    <p>${cm.philosophy}</p>
+  `;
+}
+
+function renderIntel(c){
+  const i = c.intel;
+  document.getElementById('intelSection').innerHTML = `
+    <div class="eyebrow">${i.eyebrow}</div>
+    <h2 class="title">${i.title}</h2>
+    <p class="lede">${i.lede}</p>
+    <h3 class="subtitle2">${i.cycleTitle}</h3>
+    <div class="obj-grid">${i.cycle.map((x,idx)=>`<div class="obj-card"><div class="code">${String(idx+1).padStart(2,'0')}</div><p>${x}</p></div>`).join('')}</div>
+    <h3 class="subtitle2">${i.pirTitle}</h3>
+    <div class="pir-list">${i.pir.map((x,idx)=>`<div class="pir-row"><div class="id">PIR-${idx+1}</div><div class="txt">${x}</div></div>`).join('')}</div>
+    <div class="two-col" style="margin-top:30px;">
+      <div class="card"><h3>${i.eeiTitle}</h3><ul class="tac-list compact">${i.eeiList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="card"><h3>${i.naiTitle}</h3><p style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">${i.naiLede}</p><ul class="tac-list compact">${i.naiList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <h3 class="subtitle2">${i.hvtTitle}</h3>
+    <p class="lede" style="margin-top:10px;">${i.hvtLede}</p>
+    <ul class="tac-list compact">${i.hvtList.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <p style="margin-top:12px; color:var(--muted); font-size:12.5px; font-style:italic;">${i.hvtNote}</p>
+    <div class="two-col" style="margin-top:30px;">
+      <div class="card"><h3>${i.surveillanceTitle}</h3><ul class="tac-list compact">${i.surveillanceList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="card"><h3>${i.sourceTitle}</h3><p style="font-size:12.5px;">${i.sourceLede}</p></div>
+    </div>
+    <div class="two-col" style="margin-top:24px;">
+      <div class="card"><h3>${i.exploitTitle}</h3><p style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">${i.exploitLede}</p><ul class="tac-list compact">${i.exploitList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="card"><h3>${i.ciTitle}</h3><ul class="tac-list compact">${i.ciList.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <h3 class="subtitle2">${i.specialTitle}</h3>
+    <ul class="tac-list">${i.specialList.map(x=>`<li>${x}</li>`).join('')}</ul>
+  `;
+}
+
+function renderBranch(c){
+  const b = c.branch;
+  document.getElementById('branchSection').innerHTML = `
+    <div class="eyebrow">${b.eyebrow}</div>
+    <h2 class="title">${b.title}</h2>
+    <p class="lede">${b.lede}</p>
+    <div class="accordion" id="branchAccordion"></div>
+  `;
+  const acc = document.getElementById('branchAccordion');
+  b.plans.forEach(p=>{
+    const item = el(`
+      <div class="acc-item">
+        <div class="acc-head"><span><span class="tag">BRANCH ${p.tag}</span>${p.title}</span><span class="chev">✛</span></div>
+        <div class="acc-body"><div class="acc-body-inner">
+          <p style="margin:0 0 10px; color:var(--text); font-size:13px;"><b>Situation:</b> ${p.situation}</p>
+          <ul>${p.actions.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <p style="margin-top:10px; color:var(--amber); font-size:12.5px;"><b style="color:var(--amber);">→</b> ${p.outcome}</p>
+        </div></div>
+      </div>
+    `);
+    item.querySelector('.acc-head').addEventListener('click', ()=>item.classList.toggle('open'));
+    acc.appendChild(item);
+  });
+}
+
+function renderTermination(c){
+  const t = c.termination;
+  document.getElementById('terminationSection').innerHTML = `
+    <div class="eyebrow">${t.eyebrow}</div>
+    <h2 class="title">${t.title}</h2>
+    <p class="lede">${t.lede}</p>
+    <ul class="tac-list">${t.conclude.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <h3 class="subtitle2">${t.suspendTitle}</h3>
+    <ul class="tac-list">${t.suspend.map(x=>`<li>${x}</li>`).join('')}</ul>
+  `;
+}
+
+function renderAnnex(c){
+  const a = c.annex;
+  document.getElementById('annexSection').innerHTML = `
+    <div class="eyebrow">${a.eyebrow}</div>
+    <h2 class="title">${a.title}</h2>
+    <p class="lede">${a.lede}</p>
+    <div class="accordion annex-accordion" id="annexAccordion"></div>
+  `;
+  const acc = document.getElementById('annexAccordion');
+  a.list.forEach(an=>{
+    const item = el(`
+      <div class="acc-item">
+        <div class="acc-head"><span><span class="tag">ANNEX ${an.l}</span>${an.h}</span><span class="chev">✛</span></div>
+        <div class="acc-body"><div class="acc-body-inner">
+          <ul>${an.items.map(x=>`<li>${x}</li>`).join('')}</ul>
+          ${an.attach ? `<p style="margin-top:10px; color:var(--muted); font-size:12px; font-style:italic;">${an.attach}</p>` : ''}
+        </div></div>
+      </div>
+    `);
+    item.querySelector('.acc-head').addEventListener('click', ()=>item.classList.toggle('open'));
+    acc.appendChild(item);
+  });
+}
+
+function renderCert(c){
+  const ce = c.cert;
+  document.getElementById('certSection').innerHTML = `
+    <div class="eyebrow">${ce.eyebrow}</div>
+    <h2 class="title">${ce.title}</h2>
+    <p class="lede">${ce.lede}</p>
+    <div class="card" style="margin-top:20px;"><p style="font-size:13px; margin:0;">${ce.certText}</p></div>
+    <div class="sig-grid">
+      ${ce.sigs.map(([name,title])=>`<div class="sig"><div class="name">${name}</div><div class="title">${title}</div><div class="line">${ce.sigLine}</div></div>`).join('')}
+    </div>
+    <div class="quote-block">
+      ${ce.quote}
+      <div class="en">${ce.quoteEn}</div>
+    </div>
+  `;
+}
+
+function attachRedactionHandlers(){
+  document.querySelectorAll('.bar').forEach(bar=>{
+    bar.addEventListener('click', ()=>{
+      if(!bar.classList.contains('revealed')){
+        bar.textContent = bar.dataset.text;
+        bar.classList.add('revealed');
+      } else {
+        bar.classList.remove('revealed');
+        bar.textContent = '█'.repeat(Math.max(6, Math.round(bar.dataset.text.length/1.6)));
+      }
+    });
+  });
+}
+
+function setupTypewriter(text){
+  const twEl = document.getElementById('typewriter');
+  let twIndex = 0;
+  function typeStep(){
+    if(twIndex <= text.length){
+      twEl.textContent = text.slice(0, twIndex);
+      twIndex++;
+      requestAnimationFrame(()=>setTimeout(typeStep, 12));
+    }
+  }
+  const box = document.querySelector('.mission-box');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting && !typewriterStarted){
+        typewriterStarted = true;
+        typeStep();
+        obs.disconnect();
+      }
+    });
+  }, {threshold:0.4});
+  obs.observe(box);
+}
+
+function attachRevealObserver(){
+  const blocks = document.querySelectorAll('section.block, section.certification');
+  const revealObs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); } });
+  }, {threshold:0.06});
+  blocks.forEach(b=>{ b.classList.remove('in'); revealObs.observe(b); });
+}
+
+function render(lang){
+  currentLang = lang;
+  const c = CONTENT[lang];
+  document.getElementById('htmlRoot').lang = lang;
+  document.getElementById('classbar').textContent = c.classbar;
+  renderNav(c);
+  renderHero(c);
+  renderDocControl(c);
+  renderSituation(c);
+  renderMission(c);
+  renderExecution(c);
+  renderAdmin(c);
+  renderCommand(c);
+  renderIntel(c);
+  renderBranch(c);
+  renderTermination(c);
+  renderAnnex(c);
+  renderCert(c);
+  document.getElementById('footerSection').textContent = c.footer;
+  document.getElementById('btnEN').classList.toggle('active', lang==='en');
+  document.getElementById('btnID').classList.toggle('active', lang==='id');
+  attachRevealObserver();
+}
+
+document.getElementById('btnEN').addEventListener('click', ()=>render('en'));
+document.getElementById('btnID').addEventListener('click', ()=>render('id'));
+
+render('en');
+</script>
+
+</body>
+</html>
