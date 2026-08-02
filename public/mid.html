@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Medicolegal Investigation Division: Proposal to City Council</title>
+<link rel="icon" type="image/png" href="MID-seal.png">
+<link rel="shortcut icon" type="image/png" href="MID-seal.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -107,8 +109,11 @@
     transform:translate(-50%, -50%);
     pointer-events:none;
   }
-  .hero-sound-toggle{
+  .hero-video-controls{
     position:absolute; z-index:3; bottom:22px; right:22px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .hero-sound-toggle{
     display:flex; align-items:center; gap:8px;
     font-family:var(--mono); font-size:11px; letter-spacing:0.1em;
     text-transform:uppercase; color:var(--ink-100);
@@ -203,7 +208,7 @@
 
   p{ color:var(--ink-300); }
   .lede{ font-size:19px; color:var(--ink-100); max-width:820px; }
-  .lead-p{ max-width:800px; }
+  .lead-p{ max-width:1000px; }
 
   .summary-grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; }
   @media (max-width:760px){ .summary-grid{ grid-template-columns:1fr; } }
@@ -397,23 +402,20 @@
       referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </div>
   <div class="hero-bg-overlay"></div>
-  <button type="button" class="hero-sound-toggle" id="heroSoundToggle" aria-label="Toggle video sound">Sound: On</button>
+  <div class="hero-video-controls">
+    <button type="button" class="hero-sound-toggle" id="heroPlayToggle" aria-label="Play or pause video">Pause</button>
+    <button type="button" class="hero-sound-toggle" id="heroSoundToggle" aria-label="Toggle video sound">Sound: Off</button>
+  </div>
   <div class="wrap hero-inner">
     <div class="seal-slot">
       <img src="MID-seal.png" alt="MID Seal" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
       <div class="placeholder-mark" style="display:none;">MID SEAL<br>PLACE LOGO HERE</div>
     </div>
     <div class="eyebrow">Central Investigation Bureau &nbsp;/&nbsp; San Andreas Health Department</div>
-    <h1 class="title">Medicolegal Investigation<br><span class="thin">Division</span></h1>
+    <h1 class="title">Medicolegal Investigation Division</h1>
     <div class="rule-gold"></div>
     <div class="tagline">Collaborate &middot; Investigate &middot; Clarify &middot; Serve Justice</div>
     <p class="hero-sub">A proposal to formally establish MID as the third division of the Central Investigation Bureau: a standing forensic-medical partnership between CIB and the San Andreas Health Department, deployed at the request of investigators and commanded by its own medical leadership.</p>
-    <div class="hero-meta">
-      <div><strong>Sponsoring Bureau</strong>Central Investigation Bureau</div>
-      <div><strong>Partner Agency</strong>San Andreas Health Dept.</div>
-      <div><strong>Divisions Affected</strong>CID &middot; GRD &middot; MID</div>
-      <div><strong>Action Requested</strong>Charter &amp; Budget Approval</div>
-    </div>
   </div>
 </header>
 
@@ -421,7 +423,7 @@
 
 <section id="summary">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 01</div>
+    <div class="sec-num">SECTION 01</div>
     <div>
       <div class="sec-eyebrow">Proposal Overview</div>
       <h2 class="sec-title">Executive Summary</h2>
@@ -429,7 +431,7 @@
   </div>
   <div class="summary-grid reveal">
     <div>
-      <p class="lede">The Central Investigation Bureau requests Council approval to charter the Medicolegal Investigation Division as a third operating division, alongside the Criminal Investigation Division and the Gang Reconnaissance Division.</p>
+      <p class="lede">The Central Investigation Bureau requests Council approval to charter the Medicolegal Investigation Division as a third operating division, alongside the Criminal Investigation Division and the Gang Recon Division.</p>
       <p class="lead-p">Unlike CID and GRD, MID is not staffed by sworn law enforcement officers. It is a partnership. Forensic physicians remain employees of the San Andreas Health Department, selected and supervised by SAHD, and are attached to CIB investigations only when a case specifically calls for medical expertise. This structure gives investigators direct access to forensic medicine in the field, at the scene rather than only at the morgue, while keeping medical judgment independent of the chain of command that runs the investigation itself.</p>
       <p class="lead-p">MID does not replace the Medical Examiner's office. It exists to place forensic expertise where it currently cannot go: alongside detectives, at the moment evidence is fresh, under a protocol CIB and SAHD both control.</p>
     </div>
@@ -444,7 +446,7 @@
 
 <section id="structure">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 02</div>
+    <div class="sec-num">SECTION 02</div>
     <div>
       <div class="sec-eyebrow">Where MID Sits</div>
       <h2 class="sec-title">Organizational Structure</h2>
@@ -479,8 +481,8 @@
       </g>
       <path d="M450,205 C450,240 450,240 450,265" stroke="var(--gold-500)" stroke-width="1.4" stroke-dasharray="4 4" fill="none"/>
       <g class="org-node">
-        <rect x="330" y="265" width="240" height="30" rx="2" style="stroke:var(--gold-500)"/>
-        <text x="450" y="284" text-anchor="middle" class="org-sub" style="fill:var(--gold-400); font-size:10.5px;">Staffed &amp; supervised by SAHD (partner agency)</text>
+        <rect x="300" y="265" width="300" height="30" rx="2" style="stroke:var(--gold-500)"/>
+        <text x="450" y="284" text-anchor="middle" class="org-sub" style="fill:var(--gold-400); font-size:10.5px;">Staffed &amp; supervised by SAHD (partner department)</text>
       </g>
     </svg>
   </div>
@@ -488,7 +490,7 @@
 
 <section id="partnership">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 03</div>
+    <div class="sec-num">SECTION 03</div>
     <div>
       <div class="sec-eyebrow">Chain of Command</div>
       <h2 class="sec-title">The Partnership Model</h2>
@@ -520,7 +522,7 @@
 
 <section id="protocol">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 04</div>
+    <div class="sec-num">SECTION 04</div>
     <div>
       <div class="sec-eyebrow">When MID Deploys</div>
       <h2 class="sec-title">Deployment Protocol</h2>
@@ -542,7 +544,7 @@
 
 <section id="authority">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 05</div>
+    <div class="sec-num">SECTION 05</div>
     <div>
       <div class="sec-eyebrow">Field Conditions</div>
       <h2 class="sec-title">Authority &amp; Protective Equipment</h2>
@@ -586,7 +588,7 @@
 
 <section id="personnel">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 06</div>
+    <div class="sec-num">SECTION 06</div>
     <div>
       <div class="sec-eyebrow">Who Staffs MID</div>
       <h2 class="sec-title">Command &amp; Personnel</h2>
@@ -648,7 +650,7 @@
 
 <section id="impact">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 07</div>
+    <div class="sec-num">SECTION 07</div>
     <div>
       <div class="sec-eyebrow">Why This Matters</div>
       <h2 class="sec-title">Cases MID Was Built to Solve</h2>
@@ -711,7 +713,7 @@
 
 <section id="oversight">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 08</div>
+    <div class="sec-num">SECTION 08</div>
     <div>
       <div class="sec-eyebrow">Built for Approval</div>
       <h2 class="sec-title">Oversight &amp; Accountability</h2>
@@ -724,7 +726,7 @@
     </div>
     <div class="ov-card">
       <h4>Dual Reporting</h4>
-      <p>MID Command reports case-deployment metrics to CIB leadership and personnel and conduct matters to SAHD. No single agency holds unchecked authority over the division.</p>
+      <p>MID Command reports case-deployment metrics to CIB leadership and personnel and conduct matters to SAHD. No single department holds unchecked authority over the division.</p>
     </div>
     <div class="ov-card">
       <h4>Records &amp; Evidence Handling</h4>
@@ -747,7 +749,7 @@
 
 <section id="faq">
   <div class="sec-head reveal">
-    <div class="sec-num">SEC. 09</div>
+    <div class="sec-num">SECTION 09</div>
     <div>
       <div class="sec-eyebrow">Anticipated Questions</div>
       <h2 class="sec-title">Council Q&amp;A</h2>
@@ -919,10 +921,12 @@
      manual toggle button stays in sync and lets them mute again. */
   (function(){
     const iframe = document.getElementById('heroVideo');
-    const toggle = document.getElementById('heroSoundToggle');
-    if(!iframe || !toggle) return;
+    const soundToggle = document.getElementById('heroSoundToggle');
+    const playToggle = document.getElementById('heroPlayToggle');
+    if(!iframe || !soundToggle || !playToggle) return;
 
-    let muted = true;
+    let muted = true;   // matches mute=1 in the iframe src - honest from the start
+    let playing = true; // matches autoplay=1 in the iframe src
     let autoUnmuteDone = false;
 
     function post(func, args){
@@ -932,8 +936,11 @@
       );
     }
 
-    function setLabel(){
-      toggle.textContent = 'Sound: ' + (muted ? 'Off' : 'On');
+    function setSoundLabel(){
+      soundToggle.textContent = 'Sound: ' + (muted ? 'Off' : 'On');
+    }
+    function setPlayLabel(){
+      playToggle.textContent = playing ? 'Pause' : 'Play';
     }
 
     function unmuteNow(){
@@ -941,8 +948,8 @@
       autoUnmuteDone = true;
       muted = false;
       post('unMute');
-      post('playVideo');
-      setLabel();
+      if(playing) post('playVideo');
+      setSoundLabel();
       removeGestureListeners();
     }
 
@@ -952,17 +959,26 @@
     }
     // Listen on the very first interaction anywhere on the page.
     // Capture phase + passive so this never blocks normal clicks/taps,
-    // including the visitor tapping the toggle button itself.
+    // including the visitor tapping either button below.
     gestureEvents.forEach(evt => window.addEventListener(evt, unmuteNow, { capture:true, passive:true, once:false }));
 
-    toggle.addEventListener('click', function(){
+    soundToggle.addEventListener('click', function(){
       muted = !muted;
       post(muted ? 'mute' : 'unMute');
-      if(!muted) post('playVideo');
-      setLabel();
+      if(!muted && playing) post('playVideo');
+      setSoundLabel();
     });
 
-    setLabel();
+    // Play/pause never touches the autoplay-on-load behavior above -
+    // it only lets the visitor stop/resume playback afterward.
+    playToggle.addEventListener('click', function(){
+      playing = !playing;
+      post(playing ? 'playVideo' : 'pauseVideo');
+      setPlayLabel();
+    });
+
+    setSoundLabel();
+    setPlayLabel();
   })();
 </script>
 
