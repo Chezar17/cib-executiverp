@@ -45,7 +45,34 @@
     font-size:17px;
     line-height:1.65;
     -webkit-font-smoothing:antialiased;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
   }
+  img{ -webkit-user-drag:none; user-drag:none; pointer-events:none; }
+
+  .mobile-block{
+    display:none; position:fixed; inset:0; z-index:99999; background:var(--navy-950);
+    align-items:center; justify-content:center; text-align:center; padding:40px;
+  }
+  .mobile-block .box{ max-width:420px; }
+  .mobile-block .seal{ font-family:var(--mono); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-400); margin-bottom:18px; }
+  .mobile-block h2{ font-family:var(--display); text-transform:uppercase; font-size:22px; letter-spacing:0.02em; color:var(--ink-100); margin:0 0 14px; }
+  .mobile-block p{ font-size:14.5px; color:var(--ink-500); margin:0; }
+  html.mobile-locked .mobile-block{ display:flex; }
+  html.mobile-locked body > *:not(.mobile-block){ display:none !important; }
+
+  .devtools-block{
+    display:none; position:fixed; inset:0; z-index:100000; background:var(--navy-950);
+    align-items:center; justify-content:center; text-align:center; padding:40px;
+  }
+  .devtools-block.active{ display:flex; }
+  .devtools-block .box{ max-width:420px; }
+  .devtools-block .seal{ font-family:var(--mono); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--red-500); margin-bottom:18px; }
+  .devtools-block h2{ font-family:var(--display); text-transform:uppercase; font-size:22px; letter-spacing:0.02em; color:var(--ink-100); margin:0 0 14px; }
+  .devtools-block p{ font-size:14.5px; color:var(--ink-500); margin:0; }
 
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
@@ -369,14 +396,24 @@
     margin-top:26px; border:1px solid var(--line); border-radius:2px; padding:20px 24px;
     background:var(--navy-800); font-size:14.5px;
   }
-  .budget-note{
-    margin-top:26px; border:1px solid var(--line); border-left:3px solid var(--gold-500); border-radius:2px; padding:20px 24px;
-    background:var(--navy-800); font-size:14.5px;
+  .term-entry{
+    border:1px solid var(--line); background:var(--navy-800); border-radius:2px;
+    padding:32px 34px; margin-bottom:28px;
   }
-  .budget-note strong{ color:var(--gold-400); font-family:var(--display); text-transform:uppercase; font-size:12.5px; letter-spacing:0.06em; }
-  .budget-note ul{ margin:12px 0 0; padding-left:20px; }
-  .budget-note li{ margin-bottom:8px; }
-  .budget-note li:last-child{ margin-bottom:0; }
+  .term-word{ font-family:var(--display); text-transform:uppercase; font-size:26px; letter-spacing:0.02em; color:var(--gold-400); display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .term-word .term-pos{ font-family:var(--mono); text-transform:none; font-size:12.5px; color:var(--silver-500); letter-spacing:0.04em; }
+  .term-pron{ font-family:var(--mono); font-size:13px; color:var(--ink-500); margin-top:4px; }
+  .term-def{ margin-top:16px; font-size:16px; color:var(--ink-100); max-width:820px; }
+  .term-etym{
+    margin-top:14px; padding-top:14px; border-top:1px solid var(--line);
+    font-size:13.5px; color:var(--ink-500); max-width:820px;
+  }
+  .term-etym strong{ color:var(--silver-400); font-style:normal; }
+  .precedent-note{
+    margin-top:22px; border:1px solid var(--line); border-left:3px solid var(--silver-500); border-radius:2px;
+    padding:20px 24px; background:var(--navy-800); font-size:14.5px;
+  }
+  .precedent-note strong{ color:var(--gold-400); font-family:var(--display); text-transform:uppercase; font-size:12.5px; letter-spacing:0.06em; }
   .legal-note strong{ color:var(--gold-400); font-family:var(--display); text-transform:uppercase; font-size:12.5px; letter-spacing:0.06em; }
 
   .oversight-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
@@ -431,6 +468,22 @@
 </head>
 <body>
 
+<div class="mobile-block" id="mobileBlock">
+  <div class="box">
+    <div class="seal">City of San Andreas &middot; Council Agenda Item</div>
+    <h2>Desktop Access Only</h2>
+    <p>This document is a draft proposal for Council review and is only available on desktop devices. Please reopen this page on a desktop or laptop computer.</p>
+  </div>
+</div>
+
+<div class="devtools-block" id="devtoolsBlock">
+  <div class="box">
+    <div class="seal">Restricted Document</div>
+    <h2>Access Restricted</h2>
+    <p>Developer tools are disabled for this document. Please close developer tools to continue viewing.</p>
+  </div>
+</div>
+
 <div class="grid-bg"></div>
 
 <div class="classbar">
@@ -441,6 +494,7 @@
 </div>
 
 <nav class="navdots" id="navdots">
+  <a href="#definitions" data-label="Definitions"></a>
   <a href="#summary" data-label="Summary"></a>
   <a href="#structure" data-label="Structure"></a>
   <a href="#partnership" data-label="Partnership"></a>
@@ -482,6 +536,48 @@
 </header>
 
 <main class="wrap">
+
+<section id="definitions">
+  <div class="sec-head reveal">
+    <div class="sec-num">PRELIMINARY</div>
+    <div>
+      <div class="sec-eyebrow">Before We Begin</div>
+      <h2 class="sec-title">Definitions &amp; Precedent</h2>
+    </div>
+  </div>
+  <p class="reveal lead-p">Two questions tend to come up before Council can evaluate the charter itself: what the word in the division's name actually means, and whether a division like this already exists somewhere else. Both are addressed below before the proposal moves into its numbered sections.</p>
+
+  <div class="reveal term-entry">
+    <div class="term-word">Medicolegal <span class="term-pos">adjective</span></div>
+    <div class="term-pron">/ˌmɛd.ɪ.koʊˈliː.gəl/</div>
+    <p class="term-def">Relating to both medicine and law; used to describe an investigation, finding, or practice that exists specifically to answer a legal or judicial question using medical evidence. Most commonly, this means determining the cause and manner of a death, injury, or assault for use in a criminal or civil proceeding.</p>
+    <div class="term-etym"><strong>Origin:</strong> from the Latin <em>medicus</em> ("physician") plus <em>legalis</em> ("of the law"). In practice, "medicolegal" is the term the forensic and public-health fields use for work that sits at the intersection of the two: a medical examiner's autopsy, a coroner's inquest, and a forensic physician's scene assessment are all medicolegal functions, because their purpose is legal even though the method is medical.</div>
+  </div>
+
+  <p class="reveal lead-p"><strong>Does a "Medicolegal Investigation Division" already exist elsewhere?</strong> In substance, yes. No other department carries this exact name, but every component MID is built from is already established, tested, and currently operating in law enforcement or public-health systems elsewhere in the country. State police bureaus already run dedicated medicolegal investigation units. Physician-staffed scene response is already the working model behind the nation's medical examiner system. MID does not introduce an untested concept to San Andreas; it combines proven, working practices under a single charter purpose-built for this city.</p>
+
+  <div class="reveal legal-grid">
+    <div class="legal-card">
+      <div class="tag">Proven Component</div>
+      <h4>Medicolegal Units in State Police</h4>
+      <p>Several state police agencies, including the New York State Police, already operate a dedicated "Medicolegal Investigation Unit" inside their Bureau of Criminal Investigation, providing forensic support on homicides and suspicious deaths as a standing part of the investigative bureau.</p>
+    </div>
+    <div class="legal-card">
+      <div class="tag">Proven Component</div>
+      <h4>Physician-Led Scene Response</h4>
+      <p>Physician-led death investigation is the backbone of the medical examiner system used across large parts of the country. Investigators dispatched to scenes to work directly alongside law enforcement are standard practice, not a new idea.</p>
+    </div>
+    <div class="legal-card">
+      <div class="tag">Proven Component</div>
+      <h4>A Nationally Established Profession</h4>
+      <p>Medicolegal death investigation is a recognized profession in every U.S. state, with its own national certification body and standardized training. MID draws its personnel standards directly from this established field.</p>
+    </div>
+  </div>
+
+  <div class="precedent-note reveal">
+    <strong>Why This Matters for the Council</strong> Because MID's individual components are already validated elsewhere, Council is not being asked to approve an untested concept. It is being asked to combine established, working practices into a single division, chartered and structured specifically for San Andreas.
+  </div>
+</section>
 
 <section id="summary">
   <div class="sec-head reveal">
@@ -875,7 +971,7 @@
     <div class="legal-card">
       <div class="tag">Evidentiary Weight</div>
       <h4>Fact Witness &amp; Expert Witness</h4>
-      <p>A MID physician can testify both to direct scene observations, as any witness could, and, once qualified by the court, to expert medical opinion &mdash; a distinction the charter keeps explicit in every report.</p>
+      <p>A MID physician can testify both to direct scene observations, as any witness could, and, once qualified by the court, to expert medical opinion. The charter keeps this distinction explicit in every report.</p>
     </div>
     <div class="legal-card">
       <div class="tag">Evidentiary Weight</div>
@@ -945,7 +1041,7 @@
     <strong>Budget Note</strong>
     <ul>
       <li>MID does not carry a requested budget during the pilot period. The trial is resourced from within CIB and SAHD's existing operating capacity, so this proposal asks Council to authorize the charter and pilot, not a new appropriation.</li>
-      <li>Ongoing funding is deliberately left open at this stage. Once the pilot report is delivered, where MID's permanent budget sits &mdash; folded into CIB's monthly funding or into SAHD's monthly funding &mdash; becomes a point of discussion for Council, informed by pilot deployment volume and cost data.</li>
+      <li>Ongoing funding is deliberately left open at this stage. Once the pilot report is delivered, where MID's permanent budget sits, whether folded into CIB's monthly funding or into SAHD's monthly funding, becomes a point of discussion for Council, informed by pilot deployment volume and cost data.</li>
     </ul>
   </div>
 </section>
@@ -981,7 +1077,7 @@
     </div>
     <div class="faq-item">
       <button class="faq-q"><span>What is the cost, and how will Council measure whether it's working?</span><span class="plus">+</span></button>
-      <div class="faq-a"><p>No budget is requested for the 1-month pilot; MID operates within CIB and SAHD's existing resources during the trial. If the pilot report supports making the charter permanent, ongoing funding &mdash; whether folded into CIB's monthly budget or SAHD's monthly budget &mdash; is brought back to Council as a separate discussion, alongside deployments made, case outcomes, and projected cost.</p></div>
+      <div class="faq-a"><p>No budget is requested for the 1-month pilot; MID operates within CIB and SAHD's existing resources during the trial. If the pilot report supports making the charter permanent, ongoing funding, whether folded into CIB's monthly budget or SAHD's monthly budget, is brought back to Council as a separate discussion, alongside deployments made, case outcomes, and projected cost.</p></div>
     </div>
   </div>
 </section>
@@ -994,8 +1090,8 @@
   <div class="sign-grid reveal">
     <div class="sign-block">
       <div class="sign-line"></div>
-      <div class="sign-name">Diraj Lakota</div>
-      <div class="sign-role">Commander of CIB</div>
+      <div class="sign-name">Vania Uzmur La Petite</div>
+      <div class="sign-role">Head of State Council</div>
     </div>
     <div class="sign-block">
       <div class="sign-line"></div>
@@ -1121,7 +1217,7 @@
     });
   });
 
-  const sections = ['summary','structure','partnership','protocol','authority','personnel','impact','legal','oversight','faq','approval'];
+  const sections = ['definitions','summary','structure','partnership','protocol','authority','personnel','impact','legal','oversight','faq','approval'];
   const dots = document.querySelectorAll('#navdots a');
   const secIO = new IntersectionObserver((entries)=>{
     entries.forEach(e=>{
@@ -1137,6 +1233,14 @@
     if(el) secIO.observe(el);
   });
 
+  /* Hero background video sound control.
+     Every major browser blocks unmuted autoplay outright, so the
+     video always starts muted (mute=1 in the src) to guarantee it
+     actually plays. As soon as the visitor does ANYTHING on the
+     page - click, tap, scroll, key press - we treat that as the
+     required "user gesture" and unmute automatically. That's the
+     closest thing to automatic sound that browsers permit. The
+     manual toggle button stays in sync and lets them mute again. */
   (function(){
     const iframe = document.getElementById('heroVideo');
     const soundToggle = document.getElementById('heroSoundToggle');
@@ -1197,6 +1301,41 @@
 
     setSoundLabel();
     setPlayLabel();
+  })();
+
+  /* --- Content protection --- */
+  (function(){
+    // Mobile / non-desktop lockout, checked by user agent rather than
+    // window width so a narrow desktop window isn't mistaken for a phone.
+    var mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i;
+    if(mobileUA.test(navigator.userAgent)){
+      document.documentElement.classList.add('mobile-locked');
+    }
+
+    // Disable copy, cut, right-click context menu, text selection, and drag.
+    ['copy','cut','contextmenu','selectstart','dragstart'].forEach(function(evt){
+      document.addEventListener(evt, function(e){ e.preventDefault(); return false; });
+    });
+
+    // Block common shortcuts used to open developer tools or view source.
+    document.addEventListener('keydown', function(e){
+      var k = e.key ? e.key.toUpperCase() : '';
+      if(k === 'F12'){ e.preventDefault(); return false; }
+      if(e.ctrlKey && e.shiftKey && (k === 'I' || k === 'J' || k === 'C')){ e.preventDefault(); return false; }
+      if(e.ctrlKey && (k === 'U' || k === 'S' || k === 'P')){ e.preventDefault(); return false; }
+      if(e.metaKey && e.altKey && (k === 'I' || k === 'J' || k === 'C')){ e.preventDefault(); return false; }
+    });
+
+    // Heuristic devtools detection: an open devtools panel changes the
+    // gap between outer and inner window dimensions. Checked continuously.
+    var devtoolsBlock = document.getElementById('devtoolsBlock');
+    var threshold = 160;
+    setInterval(function(){
+      var widthGap = window.outerWidth - window.innerWidth;
+      var heightGap = window.outerHeight - window.innerHeight;
+      var open = widthGap > threshold || heightGap > threshold;
+      devtoolsBlock.classList.toggle('active', open);
+    }, 500);
   })();
 </script>
 
