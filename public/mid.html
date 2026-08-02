@@ -302,13 +302,35 @@
   .roster-note strong{ color:var(--gold-400); font-family:var(--display); text-transform:uppercase; font-size:12.5px; letter-spacing:0.06em; }
 
   .case-card{
-    border:1px solid var(--line); border-radius:2px; margin-bottom:20px; overflow:hidden;
-    background:var(--navy-800);
+    border:1px solid var(--line); border-radius:2px; margin-bottom:14px; overflow:hidden;
+    background:var(--navy-800); transition:border-color .3s ease;
   }
-  .case-head{ padding:20px 26px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--line); }
+  .case-card.open{ border-color:rgba(201,162,39,0.45); }
+  .case-head{
+    width:100%; background:none; border:none; color:inherit; font:inherit; text-align:left;
+    padding:20px 26px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+    cursor:pointer; transition:background .25s ease;
+  }
+  .case-head:hover{ background:rgba(201,162,39,0.05); }
   .case-head .file-id{ font-family:var(--mono); font-size:11px; color:var(--gold-500); letter-spacing:0.08em; }
   .case-head h4{ font-family:var(--display); text-transform:uppercase; font-size:17px; margin:2px 0 0; color:var(--ink-100); letter-spacing:0.01em;}
-  .case-body{ display:grid; grid-template-columns:1fr 1fr; }
+  .case-toggle{
+    display:flex; align-items:center; gap:9px; flex-shrink:0;
+    font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.09em;
+    color:var(--gold-400); border:1px solid rgba(201,162,39,0.45); border-radius:20px; padding:7px 13px 7px 14px;
+    animation:caseTogglePulse 2.4s ease-in-out infinite;
+  }
+  .case-card.open .case-toggle{
+    background:var(--gold-500); color:var(--navy-950); border-color:var(--gold-500); animation:none;
+  }
+  .case-toggle .chevron{ display:inline-block; transition:transform .3s ease; font-size:11px; line-height:1; }
+  .case-card.open .case-toggle .chevron{ transform:rotate(180deg); }
+  @keyframes caseTogglePulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(201,162,39,0.0); }
+    50%{ box-shadow:0 0 0 5px rgba(201,162,39,0.14); }
+  }
+  .case-body-wrap{ max-height:0; overflow:hidden; transition:max-height .45s ease; }
+  .case-body{ display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line); }
   @media (max-width:700px){ .case-body{ grid-template-columns:1fr; } }
   .case-col{ padding:22px 26px; }
   .case-col + .case-col{ border-left:1px solid var(--line); }
@@ -317,6 +339,45 @@
   .case-col.without .lbl{ color:var(--red-500); }
   .case-col.with .lbl{ color:var(--gold-400); }
   .case-col p{ font-size:14.5px; margin:0; }
+
+  .legal-flow{ display:flex; gap:0; align-items:stretch; flex-wrap:wrap; margin-bottom:36px; }
+  .legal-stage{
+    flex:1 1 180px; position:relative; border:1px solid var(--line); background:var(--navy-800);
+    padding:20px 20px 22px; margin-right:-1px;
+  }
+  .legal-stage .n{ font-family:var(--mono); font-size:11px; color:var(--gold-500); letter-spacing:0.08em; }
+  .legal-stage h4{ font-family:var(--display); text-transform:uppercase; font-size:14px; letter-spacing:0.02em; color:var(--ink-100); margin:8px 0 8px; }
+  .legal-stage p{ font-size:13px; color:var(--ink-500); margin:0; }
+  .legal-stage:not(:last-child)::after{
+    content:"\203A"; position:absolute; right:-11px; top:50%; transform:translateY(-50%);
+    font-family:var(--display); font-size:20px; color:var(--gold-500); background:var(--navy-950);
+    width:22px; height:22px; text-align:center; line-height:22px; z-index:2;
+  }
+  @media (max-width:900px){
+    .legal-flow{ flex-direction:column; }
+    .legal-stage{ margin-right:0; margin-bottom:-1px; }
+    .legal-stage:not(:last-child)::after{ content:"\2304"; right:auto; left:20px; top:auto; bottom:-11px; transform:none; }
+  }
+  .legal-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  @media (max-width:760px){ .legal-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .legal-grid{ grid-template-columns:1fr; } }
+  .legal-card{ border:1px solid var(--line); background:var(--navy-800); padding:20px; border-radius:2px; }
+  .legal-card .tag{ font-family:var(--mono); font-size:10px; color:var(--gold-500); letter-spacing:0.1em; text-transform:uppercase; }
+  .legal-card h4{ font-family:var(--display); text-transform:uppercase; font-size:15px; margin:8px 0 6px; color:var(--ink-100); letter-spacing:0.02em;}
+  .legal-card p{ font-size:13.5px; margin:0; color:var(--ink-500); }
+  .legal-note{
+    margin-top:26px; border:1px solid var(--line); border-radius:2px; padding:20px 24px;
+    background:var(--navy-800); font-size:14.5px;
+  }
+  .budget-note{
+    margin-top:26px; border:1px solid var(--line); border-left:3px solid var(--gold-500); border-radius:2px; padding:20px 24px;
+    background:var(--navy-800); font-size:14.5px;
+  }
+  .budget-note strong{ color:var(--gold-400); font-family:var(--display); text-transform:uppercase; font-size:12.5px; letter-spacing:0.06em; }
+  .budget-note ul{ margin:12px 0 0; padding-left:20px; }
+  .budget-note li{ margin-bottom:8px; }
+  .budget-note li:last-child{ margin-bottom:0; }
+  .legal-note strong{ color:var(--gold-400); font-family:var(--display); text-transform:uppercase; font-size:12.5px; letter-spacing:0.06em; }
 
   .oversight-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
   @media (max-width:760px){ .oversight-grid{ grid-template-columns:1fr; } }
@@ -387,6 +448,7 @@
   <a href="#authority" data-label="Authority"></a>
   <a href="#personnel" data-label="Personnel"></a>
   <a href="#impact" data-label="Impact"></a>
+  <a href="#legal" data-label="Legal Role"></a>
   <a href="#oversight" data-label="Oversight"></a>
   <a href="#faq" data-label="FAQ"></a>
   <a href="#approval" data-label="Approval"></a>
@@ -644,7 +706,7 @@
   </div>
 
   <div class="roster-note reveal">
-    <strong>Scaling Note:</strong> MID opens the pilot at a two-physician roster plus MID Command, sized to the request volume estimated by CID and GRD. Roster growth is reviewed alongside the pilot report described in Section 08, so Council authorizes headcount expansion the same way it authorizes the charter itself, rather than leaving it open-ended.
+    <strong>Scaling Note:</strong> MID opens the pilot at a two-physician roster plus MID Command, sized to the request volume estimated by CID and GRD. Roster growth is reviewed alongside the pilot report described in Section 09, so Council authorizes headcount expansion the same way it authorizes the charter itself, rather than leaving it open-ended.
   </div>
 </section>
 
@@ -656,64 +718,197 @@
       <h2 class="sec-title">Cases MID Was Built to Solve</h2>
     </div>
   </div>
-  <p class="reveal lead-p">The scenarios below are representative of recurring gaps CID and GRD have identified: cases where the absence of on-scene forensic-medical expertise cost time, evidentiary quality, or certainty.</p>
+  <p class="reveal lead-p">The scenarios below are representative of recurring gaps CID and GRD have identified: cases where the absence of on-scene forensic-medical expertise cost time, evidentiary quality, or certainty. <strong>Select a file to open the scenario.</strong></p>
 
-  <div class="reveal">
+  <div class="reveal" id="caselist">
     <div class="case-card">
-      <div class="case-head">
+      <button class="case-head" aria-expanded="false">
         <div><div class="file-id">FILE 01 / CID</div><h4>Contested Time-of-Death Window</h4></div>
-      </div>
-      <div class="case-body">
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
         <div class="case-col without"><div class="lbl">Without MID</div><p>Time of death is estimated hours later by the Medical Examiner, off-site, after the scene has already been altered by recovery and transport, weakening the alibi timeline CID needs.</p></div>
         <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician assesses lividity, rigor, and scene temperature on-site within the first hour, giving CID a defensible window while evidence is still fresh.</p></div>
-      </div>
+      </div></div>
     </div>
 
     <div class="case-card">
-      <div class="case-head">
+      <button class="case-head" aria-expanded="false">
         <div><div class="file-id">FILE 02 / GRD</div><h4>Injury-Pattern Analysis in Gang Violence</h4></div>
-      </div>
-      <div class="case-body">
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
         <div class="case-col without"><div class="lbl">Without MID</div><p>GRD relies on secondhand hospital reports to distinguish retaliatory assault patterns from unrelated violence, delaying links between incidents.</p></div>
         <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician reviews wound patterns directly, helping GRD connect an incident to an ongoing feud in near real time.</p></div>
-      </div>
+      </div></div>
     </div>
 
     <div class="case-card">
-      <div class="case-head">
+      <button class="case-head" aria-expanded="false">
         <div><div class="file-id">FILE 03 / CID</div><h4>In-Custody or Officer-Involved Death</h4></div>
-      </div>
-      <div class="case-body">
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
         <div class="case-col without"><div class="lbl">Without MID</div><p>Because the only medical review comes after transport, the scene account depends entirely on officer and witness statements, inviting doubt about independence.</p></div>
         <div class="case-col with"><div class="lbl">With MID</div><p>An SAHD-employed physician, outside CIB's chain of command, documents the scene directly, giving both CID and the public a medically independent record.</p></div>
-      </div>
+      </div></div>
     </div>
 
     <div class="case-card">
-      <div class="case-head">
+      <button class="case-head" aria-expanded="false">
         <div><div class="file-id">FILE 04 / GRD</div><h4>Suspected Overdose vs. Homicide at Scene</h4></div>
-      </div>
-      <div class="case-body">
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
         <div class="case-col without"><div class="lbl">Without MID</div><p>Detectives must decide within minutes whether a death scene is treated as a homicide or a routine overdose, without any medical opinion present, risking a scene that is released and lost before toxicology results return days later.</p></div>
         <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician examines injection sites, injury markers, and scene indicators on-site, giving GRD a preliminary medical read that determines whether the scene is held and processed as a homicide.</p></div>
-      </div>
+      </div></div>
     </div>
 
     <div class="case-card">
-      <div class="case-head">
+      <button class="case-head" aria-expanded="false">
         <div><div class="file-id">FILE 05 / CID</div><h4>Injury Consistency in Domestic Violence Cases</h4></div>
-      </div>
-      <div class="case-body">
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
         <div class="case-col without"><div class="lbl">Without MID</div><p>CID must weigh a suspect's account of an injury against a victim's statement with no medical opinion available until a hospital report arrives, often after the suspect has already been released.</p></div>
         <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician assesses whether the injury pattern is consistent with the account given, in the field, in time to inform an on-scene charging decision.</p></div>
-      </div>
+      </div></div>
+    </div>
+
+    <div class="case-card">
+      <button class="case-head" aria-expanded="false">
+        <div><div class="file-id">FILE 06 / CID</div><h4>Staged Scene: Suicide vs. Homicide</h4></div>
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
+        <div class="case-col without"><div class="lbl">Without MID</div><p>A scene staged to resemble suicide is treated at face value by first responders, and by the time inconsistencies surface in the autopsy days later, the scene itself is gone.</p></div>
+        <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician cross-checks wound angle, blood spatter, and body position against the apparent cause of death on-site, flagging inconsistencies before the scene is released.</p></div>
+      </div></div>
+    </div>
+
+    <div class="case-card">
+      <button class="case-head" aria-expanded="false">
+        <div><div class="file-id">FILE 07 / CID</div><h4>Sexual Assault Evidence Window</h4></div>
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
+        <div class="case-col without"><div class="lbl">Without MID</div><p>Time-sensitive forensic evidence degrades while the victim waits for transport and scheduling at an outside exam facility, and CID gets a fragmented account of what the scene looked like on arrival.</p></div>
+        <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician documents injuries and preserves time-sensitive evidence at the earliest possible point, coordinating directly with CID so the medical and investigative timelines match.</p></div>
+      </div></div>
+    </div>
+
+    <div class="case-card">
+      <button class="case-head" aria-expanded="false">
+        <div><div class="file-id">FILE 08 / CID</div><h4>Dating Injuries in Suspected Child Abuse</h4></div>
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
+        <div class="case-col without"><div class="lbl">Without MID</div><p>Bruising and fracture age is estimated only after a hospital workup, so CID cannot yet tell whether an injury matches the caregiver's timeline or a separate, older pattern of abuse.</p></div>
+        <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician assesses injury age and pattern on-scene, giving CID an early read on whether the account given is medically consistent with what's in front of them.</p></div>
+      </div></div>
+    </div>
+
+    <div class="case-card">
+      <button class="case-head" aria-expanded="false">
+        <div><div class="file-id">FILE 09 / GRD</div><h4>Decomposed Remains, Unknown Postmortem Interval</h4></div>
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
+        <div class="case-col without"><div class="lbl">Without MID</div><p>Remains discovered days or weeks after death give GRD almost nothing to narrow a suspect timeline against, and the estimate that eventually comes back from the ME's office is broad.</p></div>
+        <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician reads scene-specific decomposition, insect activity, and environmental factors on-site, giving GRD a tighter working interval while the scene is still intact.</p></div>
+      </div></div>
+    </div>
+
+    <div class="case-card">
+      <button class="case-head" aria-expanded="false">
+        <div><div class="file-id">FILE 10 / GRD</div><h4>Multi-Victim Scene Triage</h4></div>
+        <span class="case-toggle"><span>View Scenario</span><span class="chevron">&#9662;</span></span>
+      </button>
+      <div class="case-body-wrap"><div class="case-body">
+        <div class="case-col without"><div class="lbl">Without MID</div><p>At a scene with multiple victims of mixed severity, GRD makes transport and processing-order decisions without a medical read on who needs care first or which injuries are evidentially time-critical.</p></div>
+        <div class="case-col with"><div class="lbl">With MID</div><p>A forensic physician triages injuries on arrival, helping GRD sequence transport and scene processing so no victim's care or evidence is deprioritized by guesswork.</p></div>
+      </div></div>
     </div>
   </div>
 </section>
 
-<section id="oversight">
+<section id="legal">
   <div class="sec-head reveal">
     <div class="sec-num">SECTION 08</div>
+    <div>
+      <div class="sec-eyebrow">Beyond the Scene</div>
+      <h2 class="sec-title">MID's Role in Legal Proceedings</h2>
+    </div>
+  </div>
+  <p class="reveal lead-p">MID's work does not end when the scene clears. Because a MID physician's on-scene findings frequently become part of the evidentiary record, MID is built from the ground up to produce documentation and testimony that hold up through discovery, deposition, and trial. Not just field notes that are useful in the moment.</p>
+
+  <div class="reveal legal-flow">
+    <div class="legal-stage">
+      <div class="n">01</div>
+      <h4>Scene Documentation</h4>
+      <p>Findings are logged in a standardized field report at the time of observation, time-stamped and separate from the CID/GRD case narrative.</p>
+    </div>
+    <div class="legal-stage">
+      <div class="n">02</div>
+      <h4>Report &amp; Custody Log</h4>
+      <p>The report and any physical evidence MID handles are entered into chain-of-custody with SAHD as the custodial agency of record.</p>
+    </div>
+    <div class="legal-stage">
+      <div class="n">03</div>
+      <h4>Discovery</h4>
+      <p>MID's report is disclosed to both the District Attorney and defense counsel like any other evidentiary document, on the same schedule.</p>
+    </div>
+    <div class="legal-stage">
+      <div class="n">04</div>
+      <h4>Deposition</h4>
+      <p>The MID physician is made available for pretrial deposition to explain findings and methodology outside the courtroom.</p>
+    </div>
+    <div class="legal-stage">
+      <div class="n">05</div>
+      <h4>Trial Testimony</h4>
+      <p>The physician testifies to what was directly observed at the scene, and, where qualified, offers expert opinion on its medical significance.</p>
+    </div>
+  </div>
+
+  <div class="reveal legal-grid">
+    <div class="legal-card">
+      <div class="tag">Evidentiary Weight</div>
+      <h4>Fact Witness &amp; Expert Witness</h4>
+      <p>A MID physician can testify both to direct scene observations, as any witness could, and, once qualified by the court, to expert medical opinion &mdash; a distinction the charter keeps explicit in every report.</p>
+    </div>
+    <div class="legal-card">
+      <div class="tag">Evidentiary Weight</div>
+      <h4>Independence from CIB</h4>
+      <p>Because MID physicians are SAHD employees outside CID/GRD's chain of command, their findings carry the credibility of an independent medical witness rather than a member of the investigating agency.</p>
+    </div>
+    <div class="legal-card">
+      <div class="tag">Evidentiary Weight</div>
+      <h4>Standardized Reporting</h4>
+      <p>A single report format across every deployment means findings are easier for prosecutors, defense counsel, and the court to compare across cases and to challenge or corroborate on consistent terms.</p>
+    </div>
+    <div class="legal-card">
+      <div class="tag">Process</div>
+      <h4>Chain-of-Custody Discipline</h4>
+      <p>Any evidence a MID physician collects or observes is logged under SAHD's custody protocol from the moment of collection, closing a gap that has historically weakened contested cases.</p>
+    </div>
+    <div class="legal-card">
+      <div class="tag">Process</div>
+      <h4>Discoverable by Design</h4>
+      <p>Field reports are written knowing they will be turned over in discovery, avoiding informal notes or verbal-only findings that create disputes later about what was actually observed.</p>
+    </div>
+    <div class="legal-card">
+      <div class="tag">Process</div>
+      <h4>Cross-Examination Readiness</h4>
+      <p>MID Command reviews reports for clarity and completeness before they leave the office, reducing the chance a finding is challenged on documentation grounds rather than its medical merits.</p>
+    </div>
+  </div>
+
+</section>
+
+<section id="oversight">
+  <div class="sec-head reveal">
+    <div class="sec-num">SECTION 09</div>
     <div>
       <div class="sec-eyebrow">Built for Approval</div>
       <h2 class="sec-title">Oversight &amp; Accountability</h2>
@@ -722,7 +917,7 @@
   <div class="oversight-grid reveal">
     <div class="ov-card">
       <h4>Budget Line</h4>
-      <p>MID draws a dedicated line item, separate from CID/GRD operating funds, so Council can track its cost independently of Bureau-wide policing budgets.</p>
+      <p>No new budget is requested for the pilot period. MID's 1-month trial runs within CIB and SAHD's existing resources, so Council is asked to approve the charter and the pilot itself, not a funding line, at this stage.</p>
     </div>
     <div class="ov-card">
       <h4>Dual Reporting</h4>
@@ -745,11 +940,19 @@
       <p>We propose a 1-month pilot period with a mandatory report back to Council before the charter is made permanent.</p>
     </div>
   </div>
+
+  <div class="budget-note reveal">
+    <strong>Budget Note</strong>
+    <ul>
+      <li>MID does not carry a requested budget during the pilot period. The trial is resourced from within CIB and SAHD's existing operating capacity, so this proposal asks Council to authorize the charter and pilot, not a new appropriation.</li>
+      <li>Ongoing funding is deliberately left open at this stage. Once the pilot report is delivered, where MID's permanent budget sits &mdash; folded into CIB's monthly funding or into SAHD's monthly funding &mdash; becomes a point of discussion for Council, informed by pilot deployment volume and cost data.</li>
+    </ul>
+  </div>
 </section>
 
 <section id="faq">
   <div class="sec-head reveal">
-    <div class="sec-num">SECTION 09</div>
+    <div class="sec-num">SECTION 10</div>
     <div>
       <div class="sec-eyebrow">Anticipated Questions</div>
       <h2 class="sec-title">Council Q&amp;A</h2>
@@ -778,7 +981,7 @@
     </div>
     <div class="faq-item">
       <button class="faq-q"><span>What is the cost, and how will Council measure whether it's working?</span><span class="plus">+</span></button>
-      <div class="faq-a"><p>MID carries its own budget line, distinct from CID/GRD funding, covering physician stipends, field equipment, and joint training. We propose a 1-month pilot with a mandatory report back to Council, covering deployments made, case outcomes, and cost, before any permanent charter is granted.</p></div>
+      <div class="faq-a"><p>No budget is requested for the 1-month pilot; MID operates within CIB and SAHD's existing resources during the trial. If the pilot report supports making the charter permanent, ongoing funding &mdash; whether folded into CIB's monthly budget or SAHD's monthly budget &mdash; is brought back to Council as a separate discussion, alongside deployments made, case outcomes, and projected cost.</p></div>
     </div>
   </div>
 </section>
@@ -879,6 +1082,29 @@
   });
   renderStep(0);
 
+  document.querySelectorAll('.case-card').forEach(card=>{
+    const head = card.querySelector('.case-head');
+    const wrap = card.querySelector('.case-body-wrap');
+    head.addEventListener('click', ()=>{
+      const isOpen = card.classList.contains('open');
+      if(isOpen){
+        card.classList.remove('open');
+        head.setAttribute('aria-expanded','false');
+        wrap.style.maxHeight = null;
+      } else {
+        card.classList.add('open');
+        head.setAttribute('aria-expanded','true');
+        wrap.style.maxHeight = wrap.scrollHeight + 'px';
+      }
+    });
+  });
+  window.addEventListener('resize', ()=>{
+    document.querySelectorAll('.case-card.open').forEach(card=>{
+      const wrap = card.querySelector('.case-body-wrap');
+      wrap.style.maxHeight = wrap.scrollHeight + 'px';
+    });
+  });
+
   document.querySelectorAll('.faq-item').forEach(item=>{
     const q = item.querySelector('.faq-q');
     const a = item.querySelector('.faq-a');
@@ -895,7 +1121,7 @@
     });
   });
 
-  const sections = ['summary','structure','partnership','protocol','authority','personnel','impact','oversight','faq','approval'];
+  const sections = ['summary','structure','partnership','protocol','authority','personnel','impact','legal','oversight','faq','approval'];
   const dots = document.querySelectorAll('#navdots a');
   const secIO = new IntersectionObserver((entries)=>{
     entries.forEach(e=>{
