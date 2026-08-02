@@ -390,7 +390,7 @@
 <header class="hero">
   <div class="hero-video-bg">
     <iframe id="heroVideo"
-      src="https://www.youtube.com/embed/nFDS2NiqlAI?autoplay=1&mute=0&loop=1&playlist=nFDS2NiqlAI&controls=0&showinfo=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1"
+      src="https://www.youtube.com/embed/nFDS2NiqlAI?autoplay=1&mute=1&loop=1&playlist=nFDS2NiqlAI&controls=0&showinfo=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1"
       title="Background video"
       frameborder="0"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -910,16 +910,20 @@
   });
 
   /* Hero background video sound control.
-     Most browsers block autoplay-with-sound, so the video starts
-     muted-by-policy even though we request mute=0. This lets the
-     visitor turn sound on/off with one click, and keeps the button
-     label honest about the current state. */
+     Every major browser blocks unmuted autoplay outright, so the
+     video always starts muted (mute=1 in the src) to guarantee it
+     actually plays. As soon as the visitor does ANYTHING on the
+     page - click, tap, scroll, key press - we treat that as the
+     required "user gesture" and unmute automatically. That's the
+     closest thing to automatic sound that browsers permit. The
+     manual toggle button stays in sync and lets them mute again. */
   (function(){
     const iframe = document.getElementById('heroVideo');
     const toggle = document.getElementById('heroSoundToggle');
     if(!iframe || !toggle) return;
 
-    let muted = false; // optimistic; corrected below if autoplay-with-sound was blocked
+    let muted = true;
+    let autoUnmuteDone = false;
 
     function post(func, args){
       iframe.contentWindow && iframe.contentWindow.postMessage(
@@ -932,20 +936,24 @@
       toggle.textContent = 'Sound: ' + (muted ? 'Off' : 'On');
     }
 
-    // If the browser silently blocked unmuted autoplay, the player
-    // will actually be muted. We can't reliably query that without
-    // the full IFrame API, so as a safety net we explicitly mute on
-    // load after a short delay if playback with sound never engaged,
-    // then let the visitor opt in with a click (a user gesture, which
-    // browsers always allow to unmute).
-    iframe.addEventListener('load', function(){
-      post('addEventListener', ['onStateChange']);
-    });
+    function unmuteNow(){
+      if(autoUnmuteDone) return;
+      autoUnmuteDone = true;
+      muted = false;
+      post('unMute');
+      post('playVideo');
+      setLabel();
+      removeGestureListeners();
+    }
 
-    window.addEventListener('message', function(e){
-      if(e.origin !== 'https://www.youtube.com') return;
-      // no-op listener kept for future state handling
-    });
+    const gestureEvents = ['click','touchstart','keydown','scroll','wheel'];
+    function removeGestureListeners(){
+      gestureEvents.forEach(evt => window.removeEventListener(evt, unmuteNow, true));
+    }
+    // Listen on the very first interaction anywhere on the page.
+    // Capture phase + passive so this never blocks normal clicks/taps,
+    // including the visitor tapping the toggle button itself.
+    gestureEvents.forEach(evt => window.addEventListener(evt, unmuteNow, { capture:true, passive:true, once:false }));
 
     toggle.addEventListener('click', function(){
       muted = !muted;
