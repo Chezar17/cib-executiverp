@@ -812,7 +812,7 @@
       removeGestureListeners();
     }
 
-    const gestureEvents = ['click','touchstart','keydown','scroll','wheel'];
+    const gestureEvents = ['click','touchstart','keydown'];
     function removeGestureListeners(){
       gestureEvents.forEach(evt => window.removeEventListener(evt, unmuteNow, true));
     }
