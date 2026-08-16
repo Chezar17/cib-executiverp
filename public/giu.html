@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIU // CLASSIFIED ROSTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#08090a;
+    --bg-1:#101214;
+    --bg-2:#17191c;
+    --line:#2a2d31;
+    --steel:#aab0b8;
+    --steel-dim:#6c7178;
+    --red:#c8202c;
+    --red-dim:#7a1319;
+    --blue:#2255c8;
+    --amber:#d4a017;
+    --white:#eceeef;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:var(--bg-0);
+    color:var(--white);
+    font-family:'JetBrains Mono', monospace;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    overflow-x:hidden;
+  }
+
+  ::selection{ background:transparent; }
+
+  img{ -webkit-user-drag:none; user-drag:none; pointer-events:none; }
+
+  h1,h2,h3,h4{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    margin:0;
+    letter-spacing:0.04em;
+  }
+
+  /* ---------- ambient scanline / noise texture ---------- */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:999;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.018) 0px,
+        rgba(255,255,255,0.018) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    mix-blend-mode:overlay;
+  }
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:998;
+    background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.65) 100%);
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 32px;
+    position:relative;
+    z-index:1;
+  }
+
+  /* ---------- top classification bar ---------- */
+  .classbar{
+    background:var(--red);
+    color:#0a0a0a;
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    letter-spacing:0.25em;
+    font-size:12px;
+    text-align:center;
+    padding:6px 0;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 0 24px rgba(200,32,44,0.4);
+  }
+  .classbar span{ opacity:0.55; margin:0 10px; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    padding:90px 0 70px;
+    text-align:center;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 700px 400px at 50% 0%, rgba(200,32,44,0.10), transparent 60%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+    border-bottom:1px solid var(--line);
+  }
+
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(200,32,44,0.06) 0 2px, transparent 2px 26px),
+      repeating-linear-gradient(-45deg, rgba(200,32,44,0.06) 0 2px, transparent 2px 26px);
+    -webkit-mask-image:linear-gradient(180deg, black, transparent 60%);
+    mask-image:linear-gradient(180deg, black, transparent 60%);
+    pointer-events:none;
+  }
+
+  .stamp{
+    position:absolute;
+    top:36px;
+    left:36px;
+    transform:rotate(-7deg);
+    border:3px solid var(--red);
+    color:var(--red);
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.2em;
+    padding:6px 22px;
+    opacity:0.85;
+    text-align:center;
+    background:rgba(200,32,44,0.05);
+  }
+  .stamp small{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:8px;
+    letter-spacing:0.15em;
+    font-weight:400;
+    opacity:0.85;
+    margin-top:2px;
+  }
+
+  .badge-frame{
+    width:220px;
+    height:260px;
+    margin:0 auto 30px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .badge-frame::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    box-shadow:0 0 70px rgba(200,32,44,0.16);
+  }
+  .badge-frame .corner{
+    position:absolute;
+    width:22px;
+    height:22px;
+    border:1px solid var(--red-dim);
+    opacity:0.8;
+  }
+  .badge-frame .corner.tl{ top:-10px; left:-10px; border-right:none; border-bottom:none; }
+  .badge-frame .corner.tr{ top:-10px; right:-10px; border-left:none; border-bottom:none; }
+  .badge-frame .corner.bl{ bottom:-10px; left:-10px; border-right:none; border-top:none; }
+  .badge-frame .corner.br{ bottom:-10px; right:-10px; border-left:none; border-top:none; }
+  .badge-frame img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    filter:drop-shadow(0 10px 30px rgba(0,0,0,0.6));
+  }
+
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:0.4em;
+    color:var(--steel-dim);
+    margin-bottom:14px;
+  }
+  .eyebrow em{
+    color:var(--red);
+    font-style:normal;
+  }
+
+  .hero h1{
+    font-size:clamp(38px, 6vw, 68px);
+    color:var(--white);
+    line-height:1.02;
+  }
+  .hero h1 .accent{ color:var(--red); }
+
+  .hero .designation{
+    margin-top:16px;
+    font-size:13px;
+    letter-spacing:0.3em;
+    color:var(--steel);
+  }
+
+  .hero .sub{
+    max-width:560px;
+    margin:26px auto 0;
+    color:var(--steel-dim);
+    font-size:13px;
+    line-height:1.75;
+  }
+
+  .doc-meta{
+    display:flex;
+    justify-content:center;
+    gap:36px;
+    margin-top:34px;
+    flex-wrap:wrap;
+    font-size:11px;
+    letter-spacing:0.12em;
+    color:var(--steel-dim);
+  }
+  .doc-meta b{ color:var(--steel); font-weight:500; }
+
+  /* ---------- section shell ---------- */
+  section{
+    padding:70px 0;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:8px;
+  }
+  .sec-num{
+    font-size:12px;
+    color:var(--red);
+    letter-spacing:0.1em;
+  }
+  .sec-head h2{
+    font-size:26px;
+    color:var(--white);
+  }
+  .sec-rule{
+    height:1px;
+    background:linear-gradient(90deg, var(--red) 0, var(--line) 120px, transparent 100%);
+    margin:18px 0 40px;
+  }
+  .sec-desc{
+    color:var(--steel-dim);
+    font-size:13px;
+    line-height:1.85;
+    max-width:720px;
+  }
+  .sec-desc + .sec-desc{ margin-top:14px; }
+
+  /* ---------- structure section chips ---------- */
+  .org-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+    margin-top:36px;
+  }
+  .org-card{
+    border:1px solid var(--line);
+    background:var(--bg-1);
+    padding:20px 22px;
+  }
+  .org-card h4{
+    font-size:14px;
+    color:var(--white);
+    letter-spacing:0.08em;
+  }
+  .org-card p{
+    color:var(--steel-dim);
+    font-size:12px;
+    line-height:1.7;
+    margin:8px 0 0;
+  }
+  .org-card .tag{
+    display:inline-block;
+    font-size:10px;
+    letter-spacing:0.15em;
+    color:var(--red);
+    border:1px solid var(--red-dim);
+    padding:2px 8px;
+    margin-bottom:10px;
+  }
+
+  /* ---------- ROSTER — highlighted ---------- */
+  .roster-section{
+    background:
+      radial-gradient(ellipse 900px 300px at 50% 0%, rgba(200,32,44,0.09), transparent 65%),
+      var(--bg-1);
+    border-top:1px solid var(--red-dim);
+    border-bottom:1px solid var(--red-dim);
+    padding:80px 0 90px;
+  }
+  .roster-section .sec-num{ color:var(--red); }
+  .roster-flag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:10px;
+    letter-spacing:0.25em;
+    color:var(--red);
+    border:1px solid var(--red-dim);
+    padding:5px 12px;
+    margin-bottom:18px;
+  }
+  .roster-flag::before{
+    content:"";
+    width:6px;height:6px;
+    background:var(--red);
+    border-radius:50%;
+    box-shadow:0 0 8px var(--red);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+  .command-card{
+    border:1px solid var(--red-dim);
+    background:linear-gradient(180deg, rgba(200,32,44,0.08), transparent 70%), var(--bg-2);
+    padding:28px 30px;
+    margin:34px 0 46px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .command-card .who h3{
+    font-size:24px;
+    color:var(--white);
+  }
+  .command-card .who .role{
+    color:var(--red);
+    font-size:12px;
+    letter-spacing:0.2em;
+    margin-top:6px;
+  }
+  .command-card .code{
+    text-align:right;
+    font-size:11px;
+    color:var(--steel-dim);
+    line-height:1.8;
+  }
+  .command-card .code b{ color:var(--white); letter-spacing:0.1em; }
+
+  .roster-group{ margin-bottom:40px; }
+  .roster-group-label{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:12px;
+    letter-spacing:0.25em;
+    color:var(--steel);
+    margin-bottom:16px;
+  }
+  .roster-group-label::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+  .roster-group-desc{
+    font-size:12px;
+    color:var(--steel-dim);
+    line-height:1.8;
+    max-width:760px;
+    margin:0 0 16px;
+  }
+
+  .roster-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+  }
+  .op-card{
+    border:1px solid var(--line);
+    background:var(--bg-2);
+    padding:16px 18px;
+    position:relative;
+    transition:border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .op-card:hover{
+    border-color:var(--red-dim);
+    background:#1c1518;
+    transform:translateY(-2px);
+  }
+  .op-card .id{
+    font-size:10px;
+    letter-spacing:0.18em;
+    color:var(--red);
+    margin-bottom:8px;
+  }
+  .op-card .name{
+    font-family:'Oswald',sans-serif;
+    font-size:17px;
+    color:var(--white);
+    letter-spacing:0.02em;
+  }
+  .op-card .note{
+    margin-top:6px;
+    font-size:11px;
+    color:var(--steel-dim);
+  }
+  .op-card .bar{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:3px;
+    background:var(--red-dim);
+  }
+  .op-card:hover .bar{ background:var(--red); }
+
+  .recon .bar{ background:var(--blue); opacity:0.7; }
+  .recon .id{ color:var(--blue); }
+
+  /* ---------- additional personnel ---------- */
+  .note-block{
+    border-left:2px solid var(--amber);
+    padding:16px 22px;
+    background:rgba(212,160,23,0.05);
+    margin-top:30px;
+    font-size:12px;
+    color:var(--steel);
+    line-height:1.9;
+  }
+  .note-block b{ color:var(--amber); letter-spacing:0.05em; }
+
+  .req-list{
+    columns:2;
+    gap:34px;
+    margin-top:24px;
+    list-style:none;
+    padding:0;
+  }
+  .req-list li{
+    font-size:12px;
+    color:var(--steel-dim);
+    padding:8px 0;
+    border-bottom:1px dashed var(--line);
+    break-inside:avoid;
+  }
+  .req-list li::before{
+    content:"// ";
+    color:var(--red);
+  }
+
+  .principle{
+    margin-top:40px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .principle .box{
+    border:1px solid var(--line);
+    padding:20px 22px;
+  }
+  .principle .box.main{ border-color:var(--red-dim); background:rgba(200,32,44,0.05); }
+  .principle .box h4{ font-size:12px; letter-spacing:0.15em; color:var(--steel); margin-bottom:8px; }
+  .principle .box p{ font-size:12px; color:var(--steel-dim); line-height:1.7; margin:0; }
+
+  blockquote{
+    margin:44px 0 0;
+    padding:26px 30px;
+    border:1px solid var(--line);
+    border-left:3px solid var(--red);
+    font-family:'Oswald', sans-serif;
+    font-style:normal;
+    font-size:15px;
+    line-height:1.7;
+    color:var(--steel);
+    letter-spacing:0.01em;
+    background:var(--bg-1);
+  }
+  blockquote cite{
+    display:block;
+    margin-top:12px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.2em;
+    color:var(--steel-dim);
+    font-style:normal;
+  }
+
+  footer{
+    padding:34px 0 60px;
+    text-align:center;
+  }
+  footer .foot-class{
+    font-family:'Oswald',sans-serif;
+    letter-spacing:0.3em;
+    font-size:12px;
+    color:var(--red);
+  }
+  footer .foot-sub{
+    margin-top:8px;
+    font-size:10px;
+    color:var(--steel-dim);
+    letter-spacing:0.1em;
+  }
+
+  @media (max-width: 860px){
+    .org-grid{ grid-template-columns:1fr; }
+    .roster-grid{ grid-template-columns:repeat(2,1fr); }
+    .req-list{ columns:1; }
+    .principle{ grid-template-columns:1fr; }
+    .stamp{ display:none; }
+  }
+  @media (max-width: 560px){
+    .roster-grid{ grid-template-columns:1fr; }
+    .command-card{ flex-direction:column; align-items:flex-start; }
+    .command-card .code{ text-align:left; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .roster-flag::before{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="classbar">TOP SECRET <span>//</span> GIU EYES ONLY <span>//</span> NO DISSEMINATION OUTSIDE COMMAND</div>
+
+<header class="hero">
+  <div class="stamp">CLASSIFIED<small>REL. TO GIU CMD ONLY</small></div>
+  <div class="wrap">
+    <div class="eyebrow">LOS SANTOS POLICE DEPARTMENT <em>//</em> INTERNAL DOSSIER</div>
+    <div class="badge-frame">
+      <span class="corner tl"></span>
+      <span class="corner tr"></span>
+      <span class="corner bl"></span>
+      <span class="corner br"></span>
+      <img src="giu.png" alt="GIU unit patch">
+    </div>
+    <h1>GANG <span class="accent">INTELLIGENCE</span> UNIT</h1>
+    <div class="designation">JOINT TASK ELEMENT — SOD / CIB</div>
+    <p class="sub">A selection-based, operationally driven unit tasked with surveillance, apprehension, and intelligence operations against organized criminal networks within Los Santos.</p>
+    <div class="doc-meta">
+      <span>DOC ID: <b>GIU-2026-ROSTER</b></span>
+      <span>AUTHORITY: <b>GHOST ACTUAL</b></span>
+      <span>STATUS: <b>ACTIVE</b></span>
+    </div>
+  </div>
+</header>
+
+<section id="structure">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Unit Structure</h2></div>
+    <div class="sec-rule"></div>
+    <p class="sec-desc">GIU operates as a joint specialized unit composed of selected personnel from the Special Operations Division (SOD) and Central Intelligence Bureau (CIB).</p>
+    <p class="sec-desc">Assignment to CIB or SOD does not automatically grant placement within the GIU Main Roster. Personnel are selected based on operational suitability, discipline, field capability, intelligence value, and current mission requirements.</p>
+
+    <div class="org-grid">
+      <div class="org-card">
+        <span class="tag">SOD</span>
+        <h4>Special Operations Division</h4>
+        <p>Source pool for field-capable personnel selected into Ghost elements based on tactical proficiency and discipline.</p>
+      </div>
+      <div class="org-card">
+        <span class="tag">CIB</span>
+        <h4>Central Intelligence Bureau</h4>
+        <p>Source pool for intelligence-driven personnel, including Recon assignments and case-specific analytical support.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="roster-section" id="roster">
+  <div class="wrap">
+    <span class="roster-flag">LIVE ROSTER — RESTRICTED ACCESS</span>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Main Roster</h2></div>
+    <div class="sec-rule"></div>
+    <p class="sec-desc">Main Roster designates the permanent operational core of GIU. Every callsign below is confirmed, current, and cleared for active deployment.</p>
+
+    <div class="command-card">
+      <div class="who">
+        <h3>Diraj Lakota</h3>
+        <div class="role">GHOST ACTUAL — GIU COMMAND</div>
+      </div>
+      <div class="code">
+        PRIMARY OPERATIONAL AUTHORITY<br>
+        <b>CLEARANCE: UNIT COMMAND</b>
+      </div>
+    </div>
+
+    <div class="roster-group">
+      <div class="roster-group-label">GHOST LEADERS — FIELD LEADERSHIP</div>
+      <p class="roster-group-desc">Ghost Leaders serve as GIU's primary field leadership and may assume operational command, coordinate Ghost elements, and lead deployments under the direction of Ghost Actual.</p>
+      <div class="roster-grid">
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 1</div><div class="name">Elias Makya</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 2</div><div class="name">Gazazel Malakh</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 3</div><div class="name">Sal Alves</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 4</div><div class="name">Aiden Parker</div></div>
+      </div>
+    </div>
+
+    <div class="roster-group">
+      <div class="roster-group-label">GHOST OPERATIVES — PRIMARY OPERATIONAL ELEMENT</div>
+      <p class="roster-group-desc">Ghost Operatives form the primary operational element of GIU and may be deployed for surveillance, apprehension, intelligence operations, covert assignments, and other mission-specific objectives.</p>
+      <div class="roster-grid">
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 5</div><div class="name">Jadda Quetzalli</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 6</div><div class="name">Tutti Frutty</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 7</div><div class="name">Bob Shinki</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 8</div><div class="name">Sonny Leonardo</div><div class="note">Combat Medic</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 9</div><div class="name">Amar Giovanni</div></div>
+        <div class="op-card"><div class="bar"></div><div class="id">GHOST 10</div><div class="name">Logan Herrold</div></div>
+      </div>
+    </div>
+
+    <div class="roster-group">
+      <div class="roster-group-label">RECON ELEMENT — SURVEILLANCE &amp; INTEL RELAY</div>
+      <p class="roster-group-desc">Recon personnel primarily support GIU through reconnaissance, surveillance, intelligence collection, target observation, and operational information relay.</p>
+      <div class="roster-grid">
+        <div class="op-card recon"><div class="bar"></div><div class="id">RECON 1</div><div class="name">Tarsha Kim</div></div>
+        <div class="op-card recon"><div class="bar"></div><div class="id">RECON 2</div><div class="name">Lamar Campbell</div></div>
+        <div class="op-card recon"><div class="bar"></div><div class="id">RECON 3</div><div class="name">Logan Herrold</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="additional">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Additional Personnel</h2></div>
+    <div class="sec-rule"></div>
+    <p class="sec-desc">CIB personnel not assigned to the GIU Main Roster remain eligible for deployment when their involvement supports a specific investigation or operational narrative. Department-wide, all Troopers and Chiefs are authorized to provide operational support to GIU when required, under the supervision and authority of the Commissioner's Office.</p>
+
+    <div class="note-block"><b>NOTE —</b> Temporary attachment does not constitute permanent GIU membership and does not grant a GHOST or RECON designation.</div>
+
+    <ul class="req-list">
+      <li>Case ownership or prior involvement</li>
+      <li>Investigative expertise</li>
+      <li>Existing relationship with a target or organization</li>
+      <li>Intelligence or information possessed by the officer</li>
+      <li>Surveillance and analytical requirements</li>
+      <li>Interrogation or case-development requirements</li>
+      <li>Specialized operational capability</li>
+      <li>Narrative relevance to an ongoing investigation</li>
+    </ul>
+
+    <div class="principle">
+      <div class="box main">
+        <h4>MAIN ROSTER</h4>
+        <p>Permanent operational core. Confirmed callsigns, standing clearance, direct chain of command to Ghost Actual.</p>
+      </div>
+      <div class="box">
+        <h4>ADDITIONAL PERSONNEL</h4>
+        <p>Mission and narrative-based attachment. Deployed as investigations require, without permanent designation.</p>
+      </div>
+    </div>
+
+    <p class="sec-desc" style="margin-top:28px;">GIU will therefore remain a small, specialized operational unit while continuing to utilize the broader capabilities of CIB and SOD whenever an investigation requires additional personnel, expertise, or narrative involvement.</p>
+
+    <blockquote>
+      Being outside the Main Roster does not mean being outside GIU operations. It means deployment will be based on relevance, capability, and operational necessity.
+      <cite>— GIU COMMAND DIRECTIVE</cite>
+    </blockquote>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-class">TOP SECRET // GIU EYES ONLY</div>
+  <div class="foot-sub">LOS SANTOS POLICE DEPARTMENT · GANG INTELLIGENCE UNIT · UNAUTHORIZED DISCLOSURE PROHIBITED</div>
+</footer>
+
+<script>
+  // Reinforce no-copy behavior
+  ['copy','cut','contextmenu','selectstart','dragstart'].forEach(evt=>{
+    document.addEventListener(evt, e => e.preventDefault());
+  });
+  document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && ['c','x','a','p','s','u'].includes(k)) {
+      e.preventDefault();
+    }
+  });
+</script>
+
+</body>
+</html>
