@@ -238,12 +238,45 @@
   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
   .members-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:start;}
 
-  /* Division head gets its own full row, centred */
-  .member-card.is-head{grid-column:1/-1;display:grid;grid-template-columns:320px 1fr;max-width:900px;margin:0 auto 8px;}
-  .member-card.is-head .mcard-portrait-wrap{aspect-ratio:1/1;}
-  .member-card.is-head .mcard-body{padding:32px 36px;}
-  .member-card.is-head .mcard-name{font-size:26px;}
-  .member-card.is-head .mcard-portrait-initials{font-size:64px;}
+  /* Leadership row â€” Head + Vice, each an enlarged, self-contained vertical
+     card (same natural top-photo/bottom-dossier flow as a standard member
+     card, just bigger) sitting side by side, full-bleed across the grid.
+     Because each card keeps its own natural height, there's no shared box
+     that can desync and leave dead space under the photo. */
+  .leadership-row{
+    grid-column:1/-1;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    width:100%;
+    margin:0 0 8px;
+  }
+  .leadership-row .member-card{
+    margin:0;
+    max-width:none;
+    background:var(--navy-card);
+  }
+  .cid .leadership-row .member-card{background:linear-gradient(160deg,rgba(74,144,217,0.055),var(--navy-card) 40%);}
+  .grd .leadership-row .member-card{background:linear-gradient(160deg,rgba(201,168,76,0.055),var(--navy-card) 40%);}
+  .leadership-row .member-card.is-head:hover{border-color:rgba(201,168,76,0.5);}
+  .leadership-row .member-card.is-vice:hover{border-color:rgba(63,169,160,0.5);}
+
+  /* bigger square photo than a standard member card */
+  .leadership-row .member-card .mcard-portrait-wrap{aspect-ratio:1/1;}
+  .leadership-row .member-card .mcard-portrait-initials{font-size:64px;}
+
+  .leadership-row .member-card .mcard-body{padding:32px 36px 30px;}
+  .leadership-row .member-card .mcard-top{margin-bottom:18px;}
+  .leadership-row .member-card .position-badge{font-size:10px;letter-spacing:2px;padding:6px 13px;}
+  .leadership-row .member-card .mcard-name{font-size:25px;letter-spacing:2px;margin-bottom:6px;}
+  .leadership-row .member-card .mcard-rank{font-size:10.5px;margin-bottom:18px;}
+  .leadership-row .member-card .mcard-divider{margin-bottom:18px;}
+  .leadership-row .member-card .mcard-rows{gap:10px;margin-bottom:18px;}
+  .leadership-row .member-card .mcard-row-label{width:82px;font-size:8px;}
+  .leadership-row .member-card .mcard-row-value{font-size:13px;}
+  .leadership-row .member-card .mcard-bio{font-size:12px;line-height:1.85;padding-top:16px;}
+  .leadership-row .member-card .mcard-tasks{margin-top:14px;gap:7px;}
+  .leadership-row .member-card .mcard-task-tag{font-size:8.5px;padding:5px 10px;}
 
   /* Standard card: fully vertical */
   .member-card{background:var(--navy-card);border:1px solid var(--navy-border);overflow:hidden;position:relative;display:flex;flex-direction:column;transition:transform 0.2s,border-color 0.2s;}
@@ -256,7 +289,13 @@
   .cid .member-card::before{background:var(--cid-accent);}
   .grd .member-card::before{background:var(--gold);}
   .member-card.is-head::before,.cid .member-card.is-head::before,.grd .member-card.is-head::before{background:var(--gold);}
+  .member-card.is-vice::before,.cid .member-card.is-vice::before,.grd .member-card.is-vice::before{background:#3FA9A0;}
   .member-card.is-sec::before{background:#9B59B6;}
+
+  /* Inactive personnel â€” dimmed presentation */
+  .member-card.is-inactive{opacity:0.62;filter:grayscale(0.55);}
+  .member-card.is-inactive:hover{opacity:0.85;filter:grayscale(0.25);}
+  .member-card.is-inactive .mcard-portrait{filter:grayscale(0.3);}
 
   /* â”€â”€ PORTRAIT ZONE (1:1 square, full card width) â”€â”€ */
   .mcard-portrait-wrap{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#080D1C;flex-shrink:0;}
@@ -308,6 +347,7 @@
   .cid .mcard-portrait-initials{color:rgba(74,144,217,0.25);}
   .grd .mcard-portrait-initials{color:rgba(201,168,76,0.22);}
   .member-card.is-head .mcard-portrait-initials{color:rgba(201,168,76,0.3);}
+  .member-card.is-vice .mcard-portrait-initials{color:rgba(63,169,160,0.3);}
 
   /* Shown when image is missing â€” small label at centre bottom */
   .mcard-no-photo-label{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);opacity:0.4;text-transform:uppercase;white-space:nowrap;z-index:4;}
@@ -317,6 +357,10 @@
   .mcard-status-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
   .mcard-status-dot{animation:pulse 2.5s infinite;}
+
+  /* Not-active status variant */
+  .mcard-status-badge.is-inactive{color:#E4685D;border-color:rgba(228,104,93,0.4);}
+  .mcard-status-badge.is-inactive .mcard-status-dot{background:#E4685D;animation:none;}
 
   /* â”€â”€ CARD BODY (below the photo) â”€â”€ */
   .mcard-body{padding:20px 20px 18px;display:flex;flex-direction:column;flex:1;}
@@ -329,6 +373,7 @@
   .position-badge{display:inline-block;font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border:1px solid;}
   .badge-head{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08);}
   .badge-sec{border-color:#9B59B6;color:#9B59B6;background:rgba(155,89,182,0.08);}
+  .badge-vice{border-color:#3FA9A0;color:#4FC4BA;background:rgba(63,169,160,0.08);}
   .badge-det3{border-color:var(--cid-accent);color:var(--cid-accent);background:rgba(74,144,217,0.08);}
   .badge-det2{border-color:var(--muted);color:var(--muted);background:rgba(138,149,170,0.06);}
   .badge-det1{border-color:rgba(138,149,170,0.35);color:rgba(138,149,170,0.6);background:transparent;}
@@ -336,6 +381,7 @@
   /* Name */
   .mcard-name{font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white);line-height:1.15;margin-bottom:3px;}
   .member-card.is-head .mcard-name{color:var(--gold-light);}
+  .member-card.is-vice .mcard-name{color:#7FDCD1;}
 
   /* Rank */
   .mcard-rank{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;}
@@ -457,17 +503,19 @@
   /* â”€â”€ RESPONSIVE â”€â”€ */
   @media(max-width:1100px){
     .members-grid{grid-template-columns:repeat(2,1fr);}
-    .member-card.is-head{grid-template-columns:260px 1fr;}
   }
   @media(max-width:960px){
     .div-header-inner{grid-template-columns:1fr;}
     .div-logo-space{flex-direction:row;justify-content:flex-start;}
   nav{padding:0 20px;}
-    .member-card.is-head{grid-template-columns:1fr;max-width:480px;}
+  }
+  @media(max-width:860px){
+    .leadership-row{grid-template-columns:1fr;gap:20px;max-width:520px;margin-left:auto;margin-right:auto;}
   }
   @media(max-width:600px){
   .members-grid{grid-template-columns:1fr;}
-    .member-card.is-head{grid-template-columns:1fr;max-width:100%;}
+    .leadership-row{max-width:100%;gap:16px;}
+    .leadership-row .member-card .mcard-body{padding:24px 22px;}
     .page-hero,.div-header,.div-body{padding-left:20px;padding-right:20px;}
     .nav-links{display:none;}
     .div-tabs{padding:0 20px;}
