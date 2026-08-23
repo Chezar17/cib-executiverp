@@ -10,10 +10,11 @@
 //  NOTE ON SCHEMA: the on-page form (gang.html) collects these
 //  fields — make sure the "gangs" table in Supabase has matching
 //  columns (create them if they don't exist yet):
-//    id (pk), org_seq (int), name (text), location (text), og (text),
-//    threat (text), sector (text), bio (text), crimes (jsonb array),
+//    id (pk), org_seq (int), name (text), location (text),
+//    threat (text), sector (text), bio (text), accent_color (text),
 //    known_og (jsonb array), known_members (jsonb array),
-//    logo_url (text), pin_x (float8), pin_y (float8),
+//    logo_url (text — either an uploaded data: URI or a plain image URL),
+//    pin_x (float8), pin_y (float8),
 //    created_at, created_by, updated_at, updated_by
 // ══════════════════════════════════════════════════════════════
 
@@ -249,9 +250,8 @@ function buildGangCard(g) {
   card.dataset.threat = threat;
   card.dataset.sector = (g.sector || '').toLowerCase();
   card.dataset.gangId = g.id;
+  if (g.accent_color) card.style.setProperty('--card-accent', g.accent_color);
 
-  const crimes = toLines((g.crimes || []).join('\n')).map(c =>
-    `<div class="gang-crime-item"><div class="gang-crime-dot"></div>${esc(c)}</div>`).join('');
   const knownOg = (g.known_og || []).map(n =>
     `<div class="gang-people-item"><div class="gang-crime-dot"></div>${esc(n)}</div>`).join('');
   const knownMembers = (g.known_members || []).map(n =>
@@ -274,15 +274,14 @@ function buildGangCard(g) {
         <div class="gang-logo-label">GRD-ORG-${String(g.org_seq || 0).padStart(3, '0')}</div>
       </div>
       <div class="gang-identity">
-        <div class="gang-doc-ref">GRD-ORG-${String(g.org_seq || 0).padStart(3, '0')} · Last Updated: ${g.updated_at ? new Date(g.updated_at).toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '.') : '—'}</div>
+        <div class="gang-doc-ref"><span class="gang-accent-chip"></span>GRD-ORG-${String(g.org_seq || 0).padStart(3, '0')} · Last Updated: ${g.updated_at ? new Date(g.updated_at).toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '.') : '—'}</div>
         <div class="gang-name">${esc(g.name)}</div>
         <div class="gang-alias">${esc(g.location || '')}</div>
         <div class="gang-meta-row">
           <div class="gang-meta-item"><span class="gang-meta-lbl">Location</span><span class="gang-meta-val">${esc(g.location || '—')}</span></div>
-          <div class="gang-meta-item"><span class="gang-meta-lbl">OG</span><span class="gang-meta-val">${esc(g.og || '—')}</span></div>
           <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">${esc(g.sector || '—')}</span></div>
-          <div class="gang-meta-item"><span class="gang-meta-lbl">Known OGs</span><span class="gang-meta-val">${(g.known_og || []).length}</span></div>
-          <div class="gang-meta-item"><span class="gang-meta-lbl">Known Members</span><span class="gang-meta-val">${(g.known_members || []).length}</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">OG(s)</span><span class="gang-meta-val">${(g.known_og || []).length}</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">Members</span><span class="gang-meta-val">${(g.known_members || []).length}</span></div>
         </div>
       </div>
       <div class="gang-threat-panel">
@@ -306,16 +305,12 @@ function buildGangCard(g) {
           <div class="gang-section-title">Organization Bio</div>
           <div class="gang-bio-text">${esc(g.bio || 'No intelligence summary on file.')}</div>
         </div>
-        <div class="gang-crimes-section">
-          <div class="gang-section-title">Criminal Activities</div>
-          <div class="gang-crime-list">${crimes || '<div class="gang-crime-item"><div class="gang-crime-dot"></div>No data on file.</div>'}</div>
-        </div>
         <div class="gang-og-section">
-          <div class="gang-section-title">Known OG(s)</div>
+          <div class="gang-section-title">List of OG(s)</div>
           <div class="gang-people-list">${knownOg || '<div class="gang-people-item"><div class="gang-crime-dot"></div>None on file.</div>'}</div>
         </div>
         <div class="gang-members-section">
-          <div class="gang-section-title">Known Members</div>
+          <div class="gang-section-title">List of Members</div>
           <div class="gang-people-list">${knownMembers || '<div class="gang-people-item"><div class="gang-crime-dot"></div>None on file.</div>'}</div>
         </div>
       </div>
@@ -365,6 +360,24 @@ async function loadGangs() {
 const gfImgInput = document.getElementById('gf-img-input');
 const gfImgPreview = document.getElementById('gf-img-preview');
 const gfImgPlaceholder = document.getElementById('gf-img-placeholder');
+const gfImgZone = document.getElementById('gf-img-zone');
+const gfImgUrlInput = document.getElementById('gf-img-url');
+const gfLogoTabUpload = document.getElementById('gf-logo-tab-upload');
+const gfLogoTabUrl = document.getElementById('gf-logo-tab-url');
+const gfColorInput = document.getElementById('gf-color');
+const gfColorHex = document.getElementById('gf-color-hex');
+
+let _logoMode = 'upload'; // 'upload' | 'url'
+
+function setLogoMode(mode) {
+  _logoMode = mode;
+  gfLogoTabUpload.classList.toggle('active', mode === 'upload');
+  gfLogoTabUrl.classList.toggle('active', mode === 'url');
+  gfImgZone.style.display = mode === 'upload' ? '' : 'none';
+  gfImgUrlInput.style.display = mode === 'url' ? '' : 'none';
+}
+gfLogoTabUpload.addEventListener('click', () => setLogoMode('upload'));
+gfLogoTabUrl.addEventListener('click', () => setLogoMode('url'));
 
 gfImgInput.addEventListener('change', () => {
   const file = gfImgInput.files[0];
@@ -379,6 +392,14 @@ gfImgInput.addEventListener('change', () => {
   reader.readAsDataURL(file);
 });
 
+// keep the colour swatch and hex text field in sync
+gfColorInput.addEventListener('input', () => { gfColorHex.value = gfColorInput.value; });
+gfColorHex.addEventListener('input', () => {
+  let v = gfColorHex.value.trim();
+  if (v && !v.startsWith('#')) v = '#' + v;
+  if (/^#[0-9A-Fa-f]{6}$/.test(v)) gfColorInput.value = v;
+});
+
 function openGangModal(editId) {
   if (!CAN_CRUD) { toast('Insufficient clearance to add entries', 'error'); return; }
 
@@ -386,6 +407,8 @@ function openGangModal(editId) {
   gfImgPreview.style.display = 'none';
   gfImgPlaceholder.style.display = '';
   gfImgInput.value = '';
+  gfImgUrlInput.value = '';
+  setLogoMode('upload');
 
   if (editId) {
     const g = GANGS.find(x => x.id == editId);
@@ -398,17 +421,26 @@ function openGangModal(editId) {
     document.getElementById('gf-threat').value = g.threat || '';
     document.getElementById('gf-name').value = g.name || '';
     document.getElementById('gf-location').value = g.location || '';
-    document.getElementById('gf-og').value = g.og || '';
     document.getElementById('gf-sector').value = g.sector || '';
     document.getElementById('gf-bio').value = g.bio || '';
-    document.getElementById('gf-crimes').value = (g.crimes || []).join('\n');
     document.getElementById('gf-known-og').value = (g.known_og || []).join('\n');
     document.getElementById('gf-known-members').value = (g.known_members || []).join('\n');
+
+    const accent = g.accent_color || '#C9A84C';
+    gfColorInput.value = accent;
+    gfColorHex.value = accent;
+
     if (g.logo_url) {
       _imgBase64 = g.logo_url;
-      gfImgPreview.src = g.logo_url;
-      gfImgPreview.style.display = 'block';
-      gfImgPlaceholder.style.display = 'none';
+      if (g.logo_url.startsWith('data:')) {
+        setLogoMode('upload');
+        gfImgPreview.src = g.logo_url;
+        gfImgPreview.style.display = 'block';
+        gfImgPlaceholder.style.display = 'none';
+      } else {
+        setLogoMode('url');
+        gfImgUrlInput.value = g.logo_url;
+      }
     }
   } else {
     document.getElementById('gang-modal-title').textContent = 'Add Gang';
@@ -417,12 +449,12 @@ function openGangModal(editId) {
     document.getElementById('gf-threat').selectedIndex = 0;
     document.getElementById('gf-name').value = '';
     document.getElementById('gf-location').value = '';
-    document.getElementById('gf-og').value = '';
     document.getElementById('gf-sector').selectedIndex = 0;
     document.getElementById('gf-bio').value = '';
-    document.getElementById('gf-crimes').value = '';
     document.getElementById('gf-known-og').value = '';
     document.getElementById('gf-known-members').value = '';
+    gfColorInput.value = '#C9A84C';
+    gfColorHex.value = '#C9A84C';
 
     // if this modal was opened from a map click, stage those coords
     if (_pinCoords) {
@@ -444,15 +476,12 @@ function closeGangModal() {
 // ── Save (Create / Update) ───────────────────────────────────
 async function saveGang() {
   const name = document.getElementById('gf-name').value.trim();
-  const threat = document.getElementById('gf-threat').value;
+  const threat = document.getElementById('gf-threat').value || 'medium';
   const location = document.getElementById('gf-location').value.trim();
-  const og = document.getElementById('gf-og').value.trim();
   const sector = document.getElementById('gf-sector').value;
 
   if (!name) { toast('Gang name is required', 'error'); return; }
-  if (!threat) { toast('Threat level is required', 'error'); return; }
   if (!location) { toast('Gang location name is required', 'error'); return; }
-  if (!og) { toast('OG is required', 'error'); return; }
   if (!sector) { toast('Sector is required', 'error'); return; }
 
   const saveBtn = document.querySelector('.gf-save');
@@ -467,17 +496,21 @@ async function saveGang() {
   const pinXVal = document.getElementById('gf-pin-x').value;
   const pinYVal = document.getElementById('gf-pin-y').value;
 
+  const urlLogo = document.getElementById('gf-img-url').value.trim();
+  const logoUrl = _logoMode === 'url'
+    ? (urlLogo || null)
+    : (_imgBase64 || (isEdit ? GANGS.find(g => g.id == editId)?.logo_url : null));
+
   const payload = {
     name,
     threat,
     location,
-    og,
     sector,
     bio:            document.getElementById('gf-bio').value.trim(),
-    crimes:         toLines(document.getElementById('gf-crimes').value),
+    accent_color:   gfColorHex.value.trim() || '#C9A84C',
     known_og:       toLines(document.getElementById('gf-known-og').value),
     known_members:  toLines(document.getElementById('gf-known-members').value),
-    logo_url:       _imgBase64 || (isEdit ? GANGS.find(g => g.id == editId)?.logo_url : null),
+    logo_url:       logoUrl,
     pin_x:          pinXVal !== '' ? parseFloat(pinXVal) : null,
     pin_y:          pinYVal !== '' ? parseFloat(pinYVal) : null,
     updated_at:     new Date().toISOString(),

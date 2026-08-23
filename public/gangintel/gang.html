@@ -185,6 +185,10 @@
       <div style="display:flex;align-items:flex-start;gap:20px;margin-bottom:18px;">
         <div>
           <div class="gf-label" style="margin-bottom:6px;">Gang Logo <span style="color:var(--muted);font-size:8px;">(1:1 ratio)</span></div>
+          <div class="gf-logo-tabs">
+            <button type="button" class="gf-logo-tab active" id="gf-logo-tab-upload" data-mode="upload">Upload</button>
+            <button type="button" class="gf-logo-tab" id="gf-logo-tab-url" data-mode="url">By URL</button>
+          </div>
           <div class="gf-img-upload" id="gf-img-zone">
             <input type="file" id="gf-img-input" accept="image/*"/>
             <img id="gf-img-preview" src="" alt="" style="display:none;"/>
@@ -193,6 +197,7 @@
               <div class="gf-img-upload-text">Click to upload<br/>gang logo</div>
             </div>
           </div>
+          <input class="gf-input gf-img-url-input" id="gf-img-url" placeholder="https://example.com/logo.png" style="display:none;"/>
           <div class="gf-img-hint">Square image recommended</div>
         </div>
         <div style="flex:1;">
@@ -202,8 +207,8 @@
               <input class="gf-input" id="gf-org-id" readonly/>
             </div>
             <div class="gf-group">
-              <label class="gf-label">Threat Level <span>*</span></label>
-              <select class="gf-select" id="gf-threat" required>
+              <label class="gf-label">Threat Level</label>
+              <select class="gf-select" id="gf-threat">
                 <option value="" disabled selected>Select level</option>
                 <option value="critical">Critical</option>
                 <option value="high">High</option>
@@ -215,19 +220,22 @@
               <label class="gf-label">Gang Name <span>*</span></label>
               <input class="gf-input" id="gf-name" placeholder="e.g. Ballas Republic" required/>
             </div>
-            <div class="gf-group gf-full">
+            <div class="gf-group">
               <label class="gf-label">Gang Location Name <span>*</span></label>
               <input class="gf-input" id="gf-location" placeholder="e.g. Grove Street Block" required/>
+            </div>
+            <div class="gf-group">
+              <label class="gf-label">Colour Accent</label>
+              <div class="gf-color-row">
+                <input type="color" class="gf-color-input" id="gf-color" value="#C9A84C"/>
+                <input class="gf-input gf-color-hex" id="gf-color-hex" value="#C9A84C" maxlength="7"/>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div class="gf-grid">
-        <div class="gf-group">
-          <label class="gf-label">OG <span>*</span></label>
-          <input class="gf-input" id="gf-og" placeholder="e.g. Marcus 'Trigger' Diaz" required/>
-        </div>
         <div class="gf-group">
           <label class="gf-label">Sector <span>*</span></label>
           <select class="gf-select" id="gf-sector" required>
@@ -243,15 +251,11 @@
           <textarea class="gf-textarea" id="gf-bio" placeholder="History, structure, and background of the organization…"></textarea>
         </div>
         <div class="gf-group gf-full">
-          <label class="gf-label">Criminal Activities <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(one per line)</span></label>
-          <textarea class="gf-textarea" id="gf-crimes" placeholder="Narcotics Trafficking&#10;Extortion&#10;Grand Theft Auto"></textarea>
-        </div>
-        <div class="gf-group gf-full">
-          <label class="gf-label">Known OG(s) <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(one per line)</span></label>
+          <label class="gf-label">List of OG(s) <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(one per line)</span></label>
           <textarea class="gf-textarea" id="gf-known-og" placeholder="One name per line"></textarea>
         </div>
         <div class="gf-group gf-full">
-          <label class="gf-label">Known Members <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(one per line)</span></label>
+          <label class="gf-label">List of Members <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(one per line)</span></label>
           <textarea class="gf-textarea" id="gf-known-members" placeholder="One name per line"></textarea>
         </div>
       </div>
@@ -281,7 +285,7 @@
 <!-- These are the same shared engines the rest of the Nexus site already
      loads (auth session/clock/idle-timeout + page transitions). Update the
      paths below to match wherever they live in your project. -->
-<script src="/shared/scripts/portal-auth.js"></script>
+<script src="auth.js"></script>
 <script src="site-ui.js"></script>
 <script src="gang.js"></script>
 </body>
