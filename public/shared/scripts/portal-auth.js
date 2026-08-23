@@ -219,7 +219,19 @@
   var PortalAuth = {
     init: function (cfg) {
       cfg = cfg || {}
-      window.addEventListener('DOMContentLoaded', function () { verifyAndInit(cfg) })
+      // Normally init() is called once, synchronously, while the document is
+      // still parsing — so waiting for DOMContentLoaded is correct. But a
+      // page may legitimately need to call init() a second time later on
+      // (e.g. right after an in-page login gate obtains a fresh token,
+      // well after the page has finished loading). DOMContentLoaded only
+      // ever fires once, so a listener added after that point would never
+      // run — check readyState and, if the document is already loaded,
+      // verify immediately instead of waiting on an event that already happened.
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', function () { verifyAndInit(cfg) })
+      } else {
+        verifyAndInit(cfg)
+      }
     },
     logout: logout,
     showToast: showToast,
