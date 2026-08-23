@@ -50,20 +50,29 @@ function toLines(text) {
 }
 
 // ── Reusable name-chip / tag input (used for OG list & Member list) ──
+// Backspace on an empty field no longer nukes an already-added name outright:
+// the first press just "arms" (highlights) the last chip, and only a second
+// press (or a fresh Backspace after re-arming) actually removes it. Typing
+// anything else, or moving focus, disarms it — so a mis-timed Backspace
+// while the field happens to be empty can't silently delete a saved name.
 function createTagInput(chipsEl, inputEl) {
   let values = [];
+  let armedForRemoval = false; // true once the last chip is "selected" and ready to delete
+
+  function disarm() { armedForRemoval = false; }
 
   function render() {
     chipsEl.innerHTML = '';
     values.forEach((v, i) => {
       const chip = document.createElement('span');
       chip.className = 'gf-tag-chip';
+      if (armedForRemoval && i === values.length - 1) chip.classList.add('gf-tag-chip-armed');
       chip.innerHTML = `<span>${esc(v)}</span>`;
       const rm = document.createElement('button');
       rm.type = 'button';
       rm.setAttribute('aria-label', 'Remove ' + v);
       rm.textContent = '×';
-      rm.addEventListener('click', () => { values.splice(i, 1); render(); });
+      rm.addEventListener('click', () => { values.splice(i, 1); disarm(); render(); });
       chip.appendChild(rm);
       chipsEl.appendChild(chip);
     });
@@ -79,6 +88,7 @@ function createTagInput(chipsEl, inputEl) {
     if (!raw.trim()) { inputEl.value = ''; return; }
     raw.split(',').forEach(addValue);
     inputEl.value = '';
+    disarm();
     render();
   }
 
@@ -87,24 +97,34 @@ function createTagInput(chipsEl, inputEl) {
       e.preventDefault();
       commitInput();
     } else if (e.key === 'Backspace' && inputEl.value === '' && values.length) {
-      values.pop();
+      e.preventDefault();
+      if (armedForRemoval) {
+        values.pop();
+        armedForRemoval = false;
+      } else {
+        armedForRemoval = true; // first press just highlights the last chip
+      }
       render();
+    } else if (e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt' && e.key !== 'Meta') {
+      disarm();
     }
   });
-  inputEl.addEventListener('blur', commitInput);
+  inputEl.addEventListener('input', () => { if (inputEl.value !== '') disarm(); });
+  inputEl.addEventListener('blur', () => { disarm(); commitInput(); });
   inputEl.addEventListener('paste', (e) => {
     const text = (e.clipboardData || window.clipboardData).getData('text');
     if (text && /[\n,]/.test(text)) {
       e.preventDefault();
       text.split(/[\n,]/).forEach(addValue);
+      disarm();
       render();
     }
   });
 
   return {
     get: () => values.slice(),
-    set: (arr) => { values = (arr || []).map(v => String(v).trim()).filter(Boolean); render(); },
-    clear: () => { values = []; render(); },
+    set: (arr) => { values = (arr || []).map(v => String(v).trim()).filter(Boolean); disarm(); render(); },
+    clear: () => { values = []; disarm(); render(); },
   };
 }
 
@@ -230,7 +250,12 @@ function setPinMode(on) {
 
 btnPinMode.addEventListener('click', () => {
   if (!CAN_CRUD) { toast('Insufficient clearance to add entries', 'error'); return; }
-  setPinMode(!pinMode);
+  const turningOn = !pinMode;
+  // This button is always for a fresh, not-yet-placed pin — reset the view
+  // to a neutral default so the user isn't left staring at wherever the map
+  // happened to be panned/zoomed to before.
+  if (turningOn) { scale = 1; panX = 0; panY = 0; applyTransform(); }
+  setPinMode(turningOn);
 });
 
 mapCanvas.addEventListener('click', (e) => {
@@ -309,6 +334,7 @@ function renderPins() {
     pin.className = `map-pin threat-${threat}`;
     pin.style.left = g.pin_x + 'px';
     pin.style.top = g.pin_y + 'px';
+    pin.dataset.gangId = g.id;
     pin.innerHTML = `
       <div class="pin-dot"><span>●</span></div>
       <div class="map-pin-label">${esc(g.name || 'UNNAMED')}</div>
@@ -320,6 +346,44 @@ function renderPins() {
     mapCanvas.appendChild(pin);
   });
   updatePinScale();
+}
+
+// Centre the map viewport on a given (unscaled) canvas coordinate, optionally
+// zooming in to targetScale. Used both for "View Location" on a gang card
+// and for auto-panning to an existing pin when the user goes to edit it.
+function panToCanvasPoint(x, y, targetScale) {
+  if (typeof x !== 'number' || typeof y !== 'number' || Number.isNaN(x) || Number.isNaN(y)) return;
+  if (targetScale != null) scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, targetScale));
+  const vpRect = mapViewport.getBoundingClientRect();
+  panX = vpRect.width / 2 - x * scale;
+  panY = vpRect.height / 2 - y * scale;
+  clampPan();
+  applyTransform();
+}
+
+// Briefly pulse a pin on the map so it's easy to spot after panning to it
+function flashPinForGang(gangId) {
+  const pin = mapCanvas.querySelector(`.map-pin[data-gang-id="${gangId}"]`);
+  if (!pin) return;
+  pin.classList.remove('pin-flash');
+  void pin.offsetWidth; // restart animation if it's already flashing
+  pin.classList.add('pin-flash');
+  setTimeout(() => pin.classList.remove('pin-flash'), 1600);
+}
+
+// "View Location" button on a gang card — jump to the map and zoom into
+// that gang's pin.
+function viewGangLocation(gangId) {
+  const g = GANGS.find(x => x.id == gangId);
+  if (!g || g.pin_x === undefined || g.pin_x === null || g.pin_y === undefined || g.pin_y === null) {
+    toast('No location pinned for this gang yet', 'error');
+    return;
+  }
+  document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => {
+    panToCanvasPoint(g.pin_x, g.pin_y, 3.2);
+    flashPinForGang(gangId);
+  }, 350); // let the scroll settle so viewport dimensions are stable
 }
 
 // Scroll to + expand a gang's card in the registry below the map
@@ -360,6 +424,11 @@ function buildGangCard(g) {
     ? `<img src="${esc(g.logo_url)}" alt="${esc(g.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/><div class="gang-logo-initials" style="display:none;">${esc((g.name || '??').slice(0, 3).toUpperCase())}</div>`
     : `<div class="gang-logo-initials">${esc((g.name || '??').slice(0, 3).toUpperCase())}</div>`;
 
+  const hasPin = g.pin_x !== undefined && g.pin_x !== null && g.pin_y !== undefined && g.pin_y !== null;
+  const viewLocBtn = hasPin
+    ? `<button class="gang-view-loc-btn" onclick="viewGangLocation('${g.id}')">📍 View Location</button>`
+    : `<span class="gang-view-loc-btn gang-view-loc-btn-disabled">📍 No Location Pinned</span>`;
+
   const crudBar = CAN_CRUD ? `
     <div class="gang-crud-bar">
       <button class="gang-edit-btn" onclick="openGangModal('${g.id}')">✎ Edit</button>
@@ -392,6 +461,7 @@ function buildGangCard(g) {
           <div class="gang-threat-bar-wrap"><div class="gang-threat-bar"></div></div>
         </div>
         <span class="gang-sector-pill">${esc(g.sector || '—')}</span>
+        ${viewLocBtn}
       </div>
     </div>
     ${crudBar}
@@ -560,10 +630,27 @@ gfPinBtn.addEventListener('click', () => {
   if (!CAN_CRUD) { toast('Insufficient clearance to place pins', 'error'); return; }
   const editId = document.getElementById('gf-edit-id').value || null;
   _pendingPinEdit = { editId, draft: collectDraftFromForm() };
+
+  // Grab the pin's current coordinates (staged in the form) before the modal closes.
+  const curXRaw = gfPinX.value, curYRaw = gfPinY.value;
+  const hasCurrentPin = curXRaw !== '' && curYRaw !== '';
+
   closeGangModal();
   document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  setPinMode(true);
-  toast('Click a location on the map to place the pin', 'success');
+
+  setTimeout(() => {
+    if (hasCurrentPin) {
+      // A pin is already placed (or staged) — auto-pan/zoom the map to it so
+      // the user can see exactly where it is before repositioning it.
+      panToCanvasPoint(parseFloat(curXRaw), parseFloat(curYRaw), Math.max(scale, 2.4));
+    } else {
+      // Nothing placed yet — start from a neutral default view.
+      scale = 1; panX = 0; panY = 0; applyTransform();
+    }
+    setPinMode(true);
+  }, 350); // let the scroll-into-view settle so viewport dimensions are stable
+
+  toast(hasCurrentPin ? 'Click a new location on the map to move the pin' : 'Click a location on the map to place the pin', 'success');
 });
 
 gfPinClear.addEventListener('click', () => {
@@ -796,6 +883,8 @@ document.getElementById('gang-del-modal').addEventListener('click', e => { if (e
 document.getElementById('add-gang-btn').addEventListener('click', () => {
   if (!CAN_CRUD) { toast('Insufficient clearance to add entries', 'error'); return; }
   document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // No pin exists yet for a brand-new gang — start from a neutral default view.
+  scale = 1; panX = 0; panY = 0; applyTransform();
   setPinMode(true);
 });
 

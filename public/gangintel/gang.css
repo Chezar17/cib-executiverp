@@ -329,14 +329,22 @@ a{ color:inherit; text-decoration:none; }
 .filter-btn:hover{ color:var(--white); }
 .filter-btn.active{ color:var(--orange); border-bottom-color:var(--orange); }
 .search-wrap{
-  display:flex; align-items:center; gap:8px; border:1px solid var(--navy-border);
-  padding:6px 14px; background:rgba(0,0,0,0.2); margin:0 0 10px;
+  display:flex; align-items:center; gap:10px; border:1px solid rgba(201,168,76,0.45);
+  padding:12px 18px; background:rgba(201,168,76,0.06); margin:4px 0 14px;
+  width:100%; max-width:620px; border-radius:2px; transition:border-color 0.15s,box-shadow 0.15s,background 0.15s;
+}
+.search-wrap:focus-within{
+  border-color:var(--gold); background:rgba(201,168,76,0.1);
+  box-shadow:0 0 0 3px rgba(201,168,76,0.12);
 }
 .search-wrap input{
   background:none; border:none; outline:none; font-family:'Roboto Mono',monospace;
-  font-size:10px; letter-spacing:1px; color:var(--white); width:260px;
+  font-size:12px; letter-spacing:0.5px; color:var(--white); width:100%;
 }
-.search-wrap input::placeholder{ color:var(--muted); opacity:0.5; }
+.search-wrap input::placeholder{ color:var(--muted); opacity:0.65; }
+@media(max-width:600px){
+  .search-wrap{ max-width:100%; }
+}
 
 /* ══ MAIN WRAP ══ */
 .gang-wrap{ max-width:1200px; margin:0 auto; padding:36px 40px 60px; }
@@ -402,6 +410,16 @@ a{ color:inherit; text-decoration:none; }
   font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase;
   padding:3px 10px; border:1px solid rgba(91,143,201,0.4); color:#5B8FC9; background:rgba(91,143,201,0.06);
 }
+.gang-view-loc-btn{
+  font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:1.5px; text-transform:uppercase;
+  padding:4px 10px; border:1px solid rgba(201,168,76,0.4); color:var(--gold-light);
+  background:rgba(201,168,76,0.06); cursor:pointer; transition:all 0.15s; white-space:nowrap;
+}
+.gang-view-loc-btn:hover{ background:rgba(201,168,76,0.16); border-color:var(--gold); }
+.gang-view-loc-btn-disabled{
+  color:var(--muted); opacity:0.5; border-color:var(--navy-border); background:none; cursor:default;
+}
+.gang-view-loc-btn-disabled:hover{ background:none; border-color:var(--navy-border); }
 
 /* crud bar */
 .gang-crud-bar{
@@ -587,6 +605,11 @@ a{ color:inherit; text-decoration:none; }
   font-size:13px; line-height:1; padding:2px 4px; transition:color 0.15s;
 }
 .gf-tag-chip button:hover{ color:var(--red-alert); }
+.gf-tag-chip-armed{
+  background:rgba(192,57,43,0.16); border-color:rgba(192,57,43,0.6); color:#F0B8B0;
+  box-shadow:0 0 0 1px rgba(192,57,43,0.3);
+}
+.gf-tag-chip-armed button{ color:var(--red-alert); }
 .gf-tag-text{
   background:transparent; border:none; outline:none; color:var(--white);
   font-family:'Roboto',sans-serif; font-size:12px; padding:2px; width:100%;
@@ -652,4 +675,13 @@ a{ color:inherit; text-decoration:none; }
 @keyframes gangCardFlash{
   0%{ box-shadow:0 0 0 2px var(--gold); }
   100%{ box-shadow:0 0 0 0 rgba(201,168,76,0); }
+}
+
+/* ══ CARD → PIN FOCUS FLASH ("View Location") ══ */
+.pin-flash{ z-index:20; }
+.pin-flash .pin-dot{ animation: pinFlashPulse 1.6s ease; }
+@keyframes pinFlashPulse{
+  0%{ box-shadow:0 0 0 0 rgba(201,168,76,0.8), 0 2px 8px rgba(0,0,0,0.6); }
+  40%{ box-shadow:0 0 0 14px rgba(201,168,76,0), 0 2px 8px rgba(0,0,0,0.6); }
+  100%{ box-shadow:0 0 0 0 rgba(201,168,76,0), 0 2px 8px rgba(0,0,0,0.6); }
 }
