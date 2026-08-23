@@ -546,6 +546,56 @@ a{ color:inherit; text-decoration:none; }
 .gf-color-input::-webkit-color-swatch{ border:none; }
 .gf-color-hex{ flex:1; font-family:'Roboto Mono',monospace; letter-spacing:1.5px; text-transform:uppercase; }
 
+.gf-pin-row{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  background:#04080F; border:1px solid var(--navy-border); padding:10px 12px;
+}
+.gf-pin-status{
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--muted);
+}
+.gf-pin-row.gf-pin-set .gf-pin-status{ color:var(--gold-light); }
+.gf-pin-actions{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.gf-pin-btn{
+  font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); border:1px solid rgba(201,168,76,0.4); background:rgba(201,168,76,0.08);
+  padding:7px 14px; cursor:pointer; transition:all 0.15s; white-space:nowrap;
+}
+.gf-pin-btn:hover{ background:var(--gold); color:var(--navy); }
+.gf-pin-clear{
+  font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--muted); background:none; border:none; cursor:pointer; padding:2px; display:none;
+  transition:color 0.15s;
+}
+.gf-pin-clear:hover{ color:var(--red-alert); }
+.gf-pin-row.gf-pin-set .gf-pin-clear{ display:inline-block; }
+
+.gf-tag-input{
+  background:#04080F; border:1px solid var(--navy-border); padding:8px 10px;
+  display:flex; flex-direction:column; gap:8px; transition:border-color 0.15s;
+}
+.gf-tag-input:focus-within{ border-color:var(--gold); }
+.gf-tag-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.gf-tag-chip{
+  display:inline-flex; align-items:center; gap:4px;
+  background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.3); color:var(--gold-light);
+  font-family:'Roboto Mono',monospace; font-size:10px; letter-spacing:1px;
+  padding:4px 4px 4px 10px; border-radius:2px;
+}
+.gf-tag-chip button{
+  background:none; border:none; color:var(--muted); cursor:pointer;
+  font-size:13px; line-height:1; padding:2px 4px; transition:color 0.15s;
+}
+.gf-tag-chip button:hover{ color:var(--red-alert); }
+.gf-tag-text{
+  background:transparent; border:none; outline:none; color:var(--white);
+  font-family:'Roboto',sans-serif; font-size:12px; padding:2px; width:100%;
+}
+.gf-tag-hint{
+  font-family:'Roboto Mono',monospace; font-size:8px; letter-spacing:1px; color:var(--muted);
+  opacity:0.5; margin-top:5px;
+}
+
 .gang-modal-footer{ padding:16px 20px; border-top:1px solid var(--navy-border); display:flex; gap:10px; justify-content:flex-end; background:var(--navy-mid); }
 .gf-cancel{
   font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase;

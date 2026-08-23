@@ -231,6 +231,16 @@
                 <input class="gf-input gf-color-hex" id="gf-color-hex" value="#C9A84C" maxlength="7"/>
               </div>
             </div>
+            <div class="gf-group gf-full">
+              <label class="gf-label">Territory Pin</label>
+              <div class="gf-pin-row">
+                <span class="gf-pin-status" id="gf-pin-status">Not yet placed on the map</span>
+                <div class="gf-pin-actions">
+                  <button type="button" class="gf-pin-clear" id="gf-pin-clear">✕ Clear Pin</button>
+                  <button type="button" class="gf-pin-btn" id="gf-pin-btn">📍 Set Pin on Map</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -251,12 +261,20 @@
           <textarea class="gf-textarea" id="gf-bio" placeholder="History, structure, and background of the organization…"></textarea>
         </div>
         <div class="gf-group gf-full">
-          <label class="gf-label">List of OG(s) <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(one per line)</span></label>
-          <textarea class="gf-textarea" id="gf-known-og" placeholder="One name per line"></textarea>
+          <label class="gf-label">List of OG(s)</label>
+          <div class="gf-tag-input" id="gf-og-tags">
+            <div class="gf-tag-chips" id="gf-og-chips"></div>
+            <input type="text" class="gf-tag-text" id="gf-og-text" placeholder="Type a name, press Enter or , to add"/>
+          </div>
+          <div class="gf-tag-hint">Enter / comma to add a name · Backspace to remove the last</div>
         </div>
         <div class="gf-group gf-full">
-          <label class="gf-label">List of Members <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:8px;">(one per line)</span></label>
-          <textarea class="gf-textarea" id="gf-known-members" placeholder="One name per line"></textarea>
+          <label class="gf-label">List of Members</label>
+          <div class="gf-tag-input" id="gf-members-tags">
+            <div class="gf-tag-chips" id="gf-members-chips"></div>
+            <input type="text" class="gf-tag-text" id="gf-members-text" placeholder="Type a name, press Enter or , to add"/>
+          </div>
+          <div class="gf-tag-hint">Enter / comma to add a name · Backspace to remove the last</div>
         </div>
       </div>
     </form>

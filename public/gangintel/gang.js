@@ -28,7 +28,8 @@ let USER_CLASS    = '';   // 'top_secret','secret','confidential','unclassified'
 let CAN_CRUD      = false;
 let _pendingDelId = null;
 let _imgBase64    = null; // current logo upload in the modal
-let _pinCoords    = null; // {x,y} staged from a map click, consumed on next modal open
+let _pinCoords    = null; // {x,y} staged from a map click, consumed on next modal open (fresh "Add Gang" flow)
+let _pendingPinEdit = null; // {editId, draft} staged when "Set/Change Pin on Map" is used from inside the form
 
 // ── Helpers ─────────────────────────────────────────────────
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -46,6 +47,65 @@ function toast(msg, type = 'success') {
 
 function toLines(text) {
   return (text || '').split('\n').map(s => s.trim()).filter(Boolean);
+}
+
+// ── Reusable name-chip / tag input (used for OG list & Member list) ──
+function createTagInput(chipsEl, inputEl) {
+  let values = [];
+
+  function render() {
+    chipsEl.innerHTML = '';
+    values.forEach((v, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'gf-tag-chip';
+      chip.innerHTML = `<span>${esc(v)}</span>`;
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.setAttribute('aria-label', 'Remove ' + v);
+      rm.textContent = '×';
+      rm.addEventListener('click', () => { values.splice(i, 1); render(); });
+      chip.appendChild(rm);
+      chipsEl.appendChild(chip);
+    });
+  }
+
+  function addValue(v) {
+    v = v.trim();
+    if (v && !values.includes(v)) values.push(v);
+  }
+
+  function commitInput() {
+    const raw = inputEl.value;
+    if (!raw.trim()) { inputEl.value = ''; return; }
+    raw.split(',').forEach(addValue);
+    inputEl.value = '';
+    render();
+  }
+
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      commitInput();
+    } else if (e.key === 'Backspace' && inputEl.value === '' && values.length) {
+      values.pop();
+      render();
+    }
+  });
+  inputEl.addEventListener('blur', commitInput);
+  inputEl.addEventListener('paste', (e) => {
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    if (text && /[\n,]/.test(text)) {
+      e.preventDefault();
+      text.split(/[\n,]/).forEach(addValue);
+      render();
+    }
+  });
+
+  return {
+    get: () => values.slice(),
+    set: (arr) => { values = (arr || []).map(v => String(v).trim()).filter(Boolean); render(); },
+    clear: () => { values = []; render(); },
+  };
 }
 
 // ── Supabase REST calls ──────────────────────────────────────
@@ -180,8 +240,23 @@ mapCanvas.addEventListener('click', (e) => {
   const y = (e.clientY - rect.top) / scale;
 
   setPinMode(false);
-  _pinCoords = { x, y };
-  openGangModal(null);
+
+  if (_pendingPinEdit) {
+    // came from "Set/Change Pin on Map" inside the Edit/Add form —
+    // reopen that same record with the new coordinates + any unsaved edits intact
+    const { editId, draft } = _pendingPinEdit;
+    _pendingPinEdit = null;
+    openGangModal(editId);
+    restoreDraftToForm(draft);
+    gfPinX.value = x;
+    gfPinY.value = y;
+    updatePinStatusUI();
+    toast(editId ? 'Pin updated — save to confirm' : 'Pin placed — save to confirm', 'success');
+  } else {
+    // fresh pin from the top "Place Pin" / bottom "Add Gang" button
+    _pinCoords = { x, y };
+    openGangModal(null);
+  }
 });
 
 // ── Map image upload (stored client-side) ────────────────────
@@ -390,6 +465,15 @@ const gfLogoTabUpload = document.getElementById('gf-logo-tab-upload');
 const gfLogoTabUrl = document.getElementById('gf-logo-tab-url');
 const gfColorInput = document.getElementById('gf-color');
 const gfColorHex = document.getElementById('gf-color-hex');
+const gfPinX = document.getElementById('gf-pin-x');
+const gfPinY = document.getElementById('gf-pin-y');
+const gfPinRow = document.getElementById('gf-pin-status').closest('.gf-pin-row');
+const gfPinStatus = document.getElementById('gf-pin-status');
+const gfPinBtn = document.getElementById('gf-pin-btn');
+const gfPinClear = document.getElementById('gf-pin-clear');
+
+const ogTagInput = createTagInput(document.getElementById('gf-og-chips'), document.getElementById('gf-og-text'));
+const memberTagInput = createTagInput(document.getElementById('gf-members-chips'), document.getElementById('gf-members-text'));
 
 let _logoMode = 'upload'; // 'upload' | 'url'
 
@@ -424,6 +508,71 @@ gfColorHex.addEventListener('input', () => {
   if (/^#[0-9A-Fa-f]{6}$/.test(v)) gfColorInput.value = v;
 });
 
+// ── Territory pin status (works for both a brand-new gang and an
+//    existing gang that has, or doesn't yet have, a pin on the map) ──
+function updatePinStatusUI() {
+  const has = gfPinX.value !== '' && gfPinY.value !== '';
+  gfPinRow.classList.toggle('gf-pin-set', has);
+  gfPinStatus.textContent = has ? 'Pinned on the territory map' : 'Not yet placed on the map';
+  gfPinBtn.textContent = has ? '📍 Change Pin on Map' : '📍 Set Pin on Map';
+}
+
+function collectDraftFromForm() {
+  return {
+    threat: document.getElementById('gf-threat').value,
+    name: document.getElementById('gf-name').value,
+    location: document.getElementById('gf-location').value,
+    sector: document.getElementById('gf-sector').value,
+    bio: document.getElementById('gf-bio').value,
+    knownOg: ogTagInput.get(),
+    knownMembers: memberTagInput.get(),
+    accentColor: gfColorHex.value,
+    logoMode: _logoMode,
+    imgUrl: gfImgUrlInput.value,
+    imgBase64: _imgBase64,
+  };
+}
+
+function restoreDraftToForm(draft) {
+  if (!draft) return;
+  document.getElementById('gf-threat').value = draft.threat || '';
+  document.getElementById('gf-name').value = draft.name || '';
+  document.getElementById('gf-location').value = draft.location || '';
+  document.getElementById('gf-sector').value = draft.sector || '';
+  document.getElementById('gf-bio').value = draft.bio || '';
+  ogTagInput.set(draft.knownOg);
+  memberTagInput.set(draft.knownMembers);
+  const accent = draft.accentColor || '#C9A84C';
+  gfColorInput.value = accent;
+  gfColorHex.value = accent;
+  setLogoMode(draft.logoMode || 'upload');
+  if (draft.logoMode === 'url') {
+    gfImgUrlInput.value = draft.imgUrl || '';
+  } else if (draft.imgBase64) {
+    _imgBase64 = draft.imgBase64;
+    gfImgPreview.src = draft.imgBase64;
+    gfImgPreview.style.display = 'block';
+    gfImgPlaceholder.style.display = 'none';
+  }
+}
+
+gfPinBtn.addEventListener('click', () => {
+  if (!CAN_CRUD) { toast('Insufficient clearance to place pins', 'error'); return; }
+  const editId = document.getElementById('gf-edit-id').value || null;
+  _pendingPinEdit = { editId, draft: collectDraftFromForm() };
+  closeGangModal();
+  document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setPinMode(true);
+  toast('Click a location on the map to place the pin', 'success');
+});
+
+gfPinClear.addEventListener('click', () => {
+  gfPinX.value = '';
+  gfPinY.value = '';
+  updatePinStatusUI();
+  toast('Pin cleared — save the record to remove it from the map', 'edit');
+});
+
 function openGangModal(editId) {
   if (!CAN_CRUD) { toast('Insufficient clearance to add entries', 'error'); return; }
 
@@ -439,16 +588,16 @@ function openGangModal(editId) {
     if (!g) return;
     document.getElementById('gang-modal-title').textContent = 'Edit Gang';
     document.getElementById('gf-edit-id').value = g.id;
-    document.getElementById('gf-pin-x').value = g.pin_x ?? '';
-    document.getElementById('gf-pin-y').value = g.pin_y ?? '';
+    gfPinX.value = g.pin_x ?? '';
+    gfPinY.value = g.pin_y ?? '';
     document.getElementById('gf-org-id').value = 'GRD-ORG-' + String(g.org_seq || 0).padStart(3, '0');
     document.getElementById('gf-threat').value = g.threat || '';
     document.getElementById('gf-name').value = g.name || '';
     document.getElementById('gf-location').value = g.location || '';
     document.getElementById('gf-sector').value = g.sector || '';
     document.getElementById('gf-bio').value = g.bio || '';
-    document.getElementById('gf-known-og').value = (g.known_og || []).join('\n');
-    document.getElementById('gf-known-members').value = (g.known_members || []).join('\n');
+    ogTagInput.set(g.known_og);
+    memberTagInput.set(g.known_members);
 
     const accent = g.accent_color || '#C9A84C';
     gfColorInput.value = accent;
@@ -475,26 +624,50 @@ function openGangModal(editId) {
     document.getElementById('gf-location').value = '';
     document.getElementById('gf-sector').selectedIndex = 0;
     document.getElementById('gf-bio').value = '';
-    document.getElementById('gf-known-og').value = '';
-    document.getElementById('gf-known-members').value = '';
+    ogTagInput.clear();
+    memberTagInput.clear();
     gfColorInput.value = '#C9A84C';
     gfColorHex.value = '#C9A84C';
 
     // if this modal was opened from a map click, stage those coords
     if (_pinCoords) {
-      document.getElementById('gf-pin-x').value = _pinCoords.x;
-      document.getElementById('gf-pin-y').value = _pinCoords.y;
+      gfPinX.value = _pinCoords.x;
+      gfPinY.value = _pinCoords.y;
       _pinCoords = null;
     } else {
-      document.getElementById('gf-pin-x').value = '';
-      document.getElementById('gf-pin-y').value = '';
+      gfPinX.value = '';
+      gfPinY.value = '';
     }
   }
+  updatePinStatusUI();
   document.getElementById('gang-modal').classList.add('open');
 }
 
 function closeGangModal() {
   document.getElementById('gang-modal').classList.remove('open');
+}
+
+// Some Supabase tables may be missing newer columns (e.g. accent_color) if
+// the schema hasn't been migrated yet. Rather than hard-failing, strip the
+// offending column and retry once so the rest of the record still saves.
+async function sbFetchResilient(table, opts) {
+  let body = opts.body;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      return await sbFetch(table, { ...opts, body });
+    } catch (e) {
+      const m = /could not find the '(\w+)' column/i.exec(e.message || '');
+      if (m && body && Object.prototype.hasOwnProperty.call(body, m[1])) {
+        console.warn(`Column "${m[1]}" missing on "${table}" — add it in Supabase. Retrying without it.`);
+        toast(`"${m[1]}" column missing in database — saved without it`, 'error');
+        const { [m[1]]: _omit, ...rest } = body;
+        body = rest;
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error('Save failed after removing unrecognized columns');
 }
 
 // ── Save (Create / Update) ───────────────────────────────────
@@ -532,8 +705,8 @@ async function saveGang() {
     sector,
     bio:            document.getElementById('gf-bio').value.trim(),
     accent_color:   gfColorHex.value.trim() || '#C9A84C',
-    known_og:       toLines(document.getElementById('gf-known-og').value),
-    known_members:  toLines(document.getElementById('gf-known-members').value),
+    known_og:       ogTagInput.get(),
+    known_members:  memberTagInput.get(),
     logo_url:       logoUrl,
     pin_x:          pinXVal !== '' ? parseFloat(pinXVal) : null,
     pin_y:          pinYVal !== '' ? parseFloat(pinYVal) : null,
@@ -543,7 +716,7 @@ async function saveGang() {
 
   try {
     if (isEdit) {
-      const updated = await sbFetch('gangs', { method: 'PATCH', body: payload, filter: `id=eq.${editId}` });
+      const updated = await sbFetchResilient('gangs', { method: 'PATCH', body: payload, filter: `id=eq.${editId}` });
       const idx = GANGS.findIndex(g => g.id == editId);
       if (idx > -1) GANGS[idx] = Array.isArray(updated) ? updated[0] : { ...GANGS[idx], ...payload };
       await auditLog('EDIT', name, 'GRD-ORG-' + String(orgSeq).padStart(3, '0'));
@@ -552,7 +725,7 @@ async function saveGang() {
       payload.org_seq    = orgSeq;
       payload.created_at = new Date().toISOString();
       payload.created_by = badge;
-      const created = await sbFetch('gangs', { method: 'POST', body: payload });
+      const created = await sbFetchResilient('gangs', { method: 'POST', body: payload });
       const newGang = Array.isArray(created) ? created[0] : { ...payload, id: Date.now() };
       GANGS.push(newGang);
       await auditLog('CREATE', name, 'GRD-ORG-' + String(orgSeq).padStart(3, '0'));
