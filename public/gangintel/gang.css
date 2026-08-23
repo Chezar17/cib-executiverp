@@ -3,6 +3,54 @@
    Design tokens
    ========================================================= */
 
+/* ══ IN-PAGE ACCESS GATE ══ */
+.gate-overlay{
+  position:fixed; inset:0; z-index:20000; display:none;
+  align-items:center; justify-content:center; padding:20px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(201,168,76,0.06), transparent 60%),
+    #05070E;
+}
+.gate-overlay.open{ display:flex; }
+.gate-box{
+  width:100%; max-width:380px; text-align:center;
+  background:var(--navy-card); border:1px solid var(--navy-border); border-top:3px solid var(--gold);
+  padding:38px 32px 32px; position:relative;
+}
+.gate-logo{
+  width:44px; height:44px; margin:0 auto 14px; border-radius:50%;
+  border:1px solid rgba(201,168,76,0.4); color:var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.gate-brand{ font-family:'Oswald',sans-serif; font-size:15px; font-weight:700; letter-spacing:6px; color:var(--white); }
+.gate-title{ font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:4px; }
+.gate-classline{
+  font-family:'Roboto Mono',monospace; font-size:7.5px; letter-spacing:2px; color:var(--red-alert);
+  text-transform:uppercase; opacity:0.85; margin:14px 0 6px; padding-top:14px;
+  border-top:1px solid var(--navy-border);
+}
+.gate-desc{ font-family:'Roboto Mono',monospace; font-size:9.5px; letter-spacing:0.5px; color:var(--muted); margin-bottom:20px; line-height:1.5; }
+.gate-form{ display:flex; flex-direction:column; gap:10px; }
+.gate-input{
+  background:#04080F; border:1px solid var(--navy-border); color:var(--white);
+  font-family:'Roboto Mono',monospace; font-size:13px; letter-spacing:2px; text-align:center;
+  padding:12px 14px; outline:none; transition:border-color 0.15s;
+}
+.gate-input:focus{ border-color:var(--gold); }
+.gate-input::placeholder{ color:var(--muted); opacity:0.55; letter-spacing:1px; }
+.gate-submit{
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--navy); background:var(--gold); border:none; padding:12px; cursor:pointer;
+  transition:background 0.15s; position:relative;
+}
+.gate-submit:hover{ background:var(--gold-light); }
+.gate-submit:disabled{ opacity:0.7; cursor:default; }
+.gate-error{
+  min-height:14px; margin-top:14px; font-family:'Roboto Mono',monospace; font-size:9.5px;
+  letter-spacing:1px; color:var(--red-alert);
+}
+body.gate-locked{ overflow:hidden; }
+
 :root{
   --navy:        #0A0E1C;
   --navy-mid:    #0D1326;

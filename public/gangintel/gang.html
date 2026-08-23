@@ -9,6 +9,27 @@
 </head>
 <body>
 
+<!-- ══ IN-PAGE ACCESS GATE ══
+     Shown only when this URL is opened without an active session (e.g. a
+     shared/direct link) — instead of bouncing out to the site login page,
+     the person can unlock the page right here with the access password.
+     If a valid session already exists, this never appears and nothing
+     about the normal Nexus → Gang Intel navigation flow changes. -->
+<div class="gate-overlay" id="gate-overlay">
+  <div class="gate-box">
+    <div class="gate-logo">◎</div>
+    <div class="gate-brand">NEXUS</div>
+    <div class="gate-title">Gang Intelligence Database</div>
+    <div class="gate-classline">TOP SECRET // GRD INTELLIGENCE DATABASE</div>
+    <div class="gate-desc">This link requires the access password to continue.</div>
+    <form class="gate-form" id="gate-form">
+      <input type="password" class="gate-input" id="gate-password" placeholder="Access Password" autocomplete="current-password" required/>
+      <button type="submit" class="gate-submit" id="gate-submit-btn">Unlock</button>
+    </form>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
 <!-- ══ TOP BAR ══ -->
 <div class="topbar">
   <div class="topbar-left">

@@ -955,29 +955,133 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
   if (window.PortalAuth) PortalAuth.logout();
 });
 
-if (window.PortalAuth) {
-  PortalAuth.init({
-    badgeEls: ['badgeDisplay'],
-    clockEl:  'liveClock',
-    onReady: function () {
-      USER_CLASS = (sessionStorage.getItem('cib_classification') || '').toLowerCase().trim();
+// Shared "page is authenticated, go" logic — runs after a normal
+// already-logged-in load AND after a successful in-page password unlock.
+function initGangPage() {
+  USER_CLASS = (sessionStorage.getItem('cib_classification') || '').toLowerCase().trim();
 
-      if (USER_CLASS === 'unclassified' || USER_CLASS === '') {
-        toast('Access denied — insufficient clearance', 'error');
-        setTimeout(() => window.location.href = 'Page_Nexus.html', 1200);
-        return;
+  if (USER_CLASS === 'unclassified' || USER_CLASS === '') {
+    toast('Access denied — insufficient clearance', 'error');
+    setTimeout(() => window.location.href = 'Page_Nexus.html', 1200);
+    return;
+  }
+
+  CAN_CRUD = (USER_CLASS === 'top_secret' || USER_CLASS === 'secret');
+  if (CAN_CRUD) document.body.classList.add('can-crud');
+
+  const dispName = sessionStorage.getItem('cib_name') || sessionStorage.getItem('cib_badge') || '—';
+  const badgeEl = document.getElementById('badgeDisplay');
+  if (badgeEl) badgeEl.textContent = dispName;
+
+  loadGangs();
+}
+
+const PORTAL_AUTH_CFG = {
+  badgeEls: ['badgeDisplay'],
+  clockEl:  'liveClock',
+  onReady:  initGangPage
+};
+
+// A locally-readable check (mirrors PortalAuth's own expiry logic) so we
+// can decide, before ever calling PortalAuth, whether to run the normal
+// flow or show the in-page gate instead.
+function hasLocalSessionToken() {
+  const token = sessionStorage.getItem('cib_token');
+  if (!token) return false;
+  const exRaw = sessionStorage.getItem('cib_expires');
+  if (exRaw) {
+    const ex = parseInt(exRaw, 10);
+    if (!isNaN(ex) && Date.now() > ex) return false;
+  }
+  return true;
+}
+
+// ── In-page access gate ──────────────────────────────────────
+// Shown instead of redirecting to the site-wide login page whenever this
+// URL is opened with no active session (e.g. someone opens the shared
+// gang-intel link directly). Enter the access password, unlock right here.
+const gateOverlay  = document.getElementById('gate-overlay');
+const gateForm     = document.getElementById('gate-form');
+const gatePassword = document.getElementById('gate-password');
+const gateError    = document.getElementById('gate-error');
+const gateSubmitBtn = document.getElementById('gate-submit-btn');
+
+function showPasswordGate() {
+  if (!gateOverlay) return;
+  gateOverlay.classList.add('open');
+  document.body.classList.add('gate-locked');
+  setTimeout(() => gatePassword?.focus(), 50);
+}
+
+function hidePasswordGate() {
+  if (!gateOverlay) return;
+  gateOverlay.classList.remove('open');
+  document.body.classList.remove('gate-locked');
+}
+
+if (gateForm) {
+  gateForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = gatePassword.value;
+    if (!password) return;
+
+    gateError.textContent = '';
+    gateSubmitBtn.classList.add('loading');
+    gateSubmitBtn.disabled = true;
+
+    try {
+      // NOTE: assumes /api/login accepts a password-only payload for this
+      // shared-link flow and returns the same fields the site login page
+      // stores in sessionStorage (see portal-auth.js: cib_token, cib_badge,
+      // cib_name, cib_rank, cib_division, cib_classification, cib_expires).
+      // If your /api/login contract needs different field names or extra
+      // parameters, this is the one spot to adjust.
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || 'Incorrect password');
       }
 
-      CAN_CRUD = (USER_CLASS === 'top_secret' || USER_CLASS === 'secret');
-      if (CAN_CRUD) document.body.classList.add('can-crud');
+      const data = await res.json();
 
-      const dispName = sessionStorage.getItem('cib_name') || sessionStorage.getItem('cib_badge') || '—';
-      const badgeEl = document.getElementById('badgeDisplay');
-      if (badgeEl) badgeEl.textContent = dispName;
+      sessionStorage.setItem('cib_auth', 'true');
+      sessionStorage.setItem('cib_token', data.token || '');
+      sessionStorage.setItem('cib_badge', data.badge || '');
+      sessionStorage.setItem('cib_name', data.name || '');
+      sessionStorage.setItem('cib_rank', data.rank || '');
+      sessionStorage.setItem('cib_division', data.division || '');
+      sessionStorage.setItem('cib_classification', data.classification || '');
+      if (data.expires) sessionStorage.setItem('cib_expires', String(data.expires));
 
-      loadGangs();
+      hidePasswordGate();
+      // Runs the exact same verify + onReady flow as a normal load.
+      PortalAuth.init(PORTAL_AUTH_CFG);
+    } catch (err) {
+      gateError.textContent = err.message || 'Incorrect password. Please try again.';
+      gatePassword.value = '';
+      gatePassword.focus();
+    } finally {
+      gateSubmitBtn.classList.remove('loading');
+      gateSubmitBtn.disabled = false;
     }
   });
+}
+
+if (window.PortalAuth) {
+  if (hasLocalSessionToken()) {
+    // Already authenticated (e.g. arrived here from Page_Nexus with a live
+    // session) — identical to the previous behavior, no gate is shown.
+    PortalAuth.init(PORTAL_AUTH_CFG);
+  } else {
+    // No active session on this direct/shared link — ask for the access
+    // password right here instead of bouncing out to the site login page.
+    showPasswordGate();
+  }
 } else {
   // PortalAuth wasn't loaded — fail closed rather than exposing the page.
   console.error('PortalAuth is not loaded. Include the shared auth script before gang.js.');
