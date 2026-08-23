@@ -184,6 +184,11 @@ const BASE_CANVAS_W = 1800; // canvas width in unscaled px; height derives from 
 let scale = 1, panX = 0, panY = 0;
 let isDragging = false, dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
 let pinMode = false;
+// True once a mousedown→mousemove has moved past DRAG_THRESHOLD px. Lets us
+// tell a genuine "place the pin here" click apart from the mouseup that ends
+// a pan drag — both fire a native 'click' event on the same element.
+let dragMoved = false;
+const DRAG_THRESHOLD = 6;
 
 function applyTransform() {
   mapCanvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
@@ -232,10 +237,15 @@ function resetMapView() {
 // Scroll-to-zoom disabled — the mouse wheel now behaves like it does on the
 // rest of the page (normal page scroll) instead of zooming the map.
 
+// Panning now works the same whether pin mode is on or off — this lets a
+// user drag/scroll around and zoom to line up the exact spot before dropping
+// a pin, instead of being frozen in place the moment they enter pin mode.
+// A "click" that didn't move the mouse (see DRAG_THRESHOLD below) still
+// places the pin, so single-clicking to drop a pin works exactly as before.
 mapViewport.addEventListener('mousedown', (e) => {
-  if (pinMode) return; // clicking places a pin instead of dragging
   e.preventDefault(); // stop the browser from starting a text/image selection drag
   isDragging = true;
+  dragMoved = false;
   mapViewport.classList.add('grabbing');
   dragStartX = e.clientX; dragStartY = e.clientY;
   panStartX = panX; panStartY = panY;
@@ -243,8 +253,13 @@ mapViewport.addEventListener('mousedown', (e) => {
 
 window.addEventListener('mousemove', (e) => {
   if (!isDragging) return;
-  panX = panStartX + (e.clientX - dragStartX);
-  panY = panStartY + (e.clientY - dragStartY);
+  const dx = e.clientX - dragStartX;
+  const dy = e.clientY - dragStartY;
+  if (!dragMoved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+    dragMoved = true; // past this point, mouseup's click should pan, not place a pin
+  }
+  panX = panStartX + dx;
+  panY = panStartY + dy;
   applyTransform();
 });
 
@@ -260,7 +275,7 @@ function setPinMode(on) {
   btnPinMode.classList.toggle('active', pinMode);
   btnPinMode.textContent = pinMode ? '✕ Cancel Pin Placement' : '📍 Place Pin';
   mapHint.textContent = pinMode
-    ? 'Click a location on the map to file a new entry'
+    ? 'Drag to pan or use +/− to zoom, then click a location to place the pin'
     : 'Click anywhere on the map to drop a pin';
 }
 
@@ -276,6 +291,7 @@ btnPinMode.addEventListener('click', () => {
 
 mapCanvas.addEventListener('click', (e) => {
   if (!pinMode) return;
+  if (dragMoved) { dragMoved = false; return; } // this click just ended a pan drag — don't place a pin
   const rect = mapCanvas.getBoundingClientRect();
   const x = (e.clientX - rect.left) / scale;
   const y = (e.clientY - rect.top) / scale;
@@ -670,7 +686,7 @@ gfPinBtn.addEventListener('click', () => {
   }
   setPinMode(true);
 
-  toast(hasCurrentPin ? 'Click a new location on the map to move the pin' : 'Click a location on the map to place the pin', 'success');
+  toast(hasCurrentPin ? 'Pan/zoom as needed, then click a new location to move the pin' : 'Pan/zoom as needed, then click a location to place the pin', 'success');
 });
 
 gfPinClear.addEventListener('click', () => {
