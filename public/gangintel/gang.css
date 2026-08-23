@@ -174,6 +174,7 @@ a{ color:inherit; text-decoration:none; }
 .map-section{
   background:#080C18;
   border-bottom:1px solid var(--navy-border);
+  user-select:none; -webkit-user-select:none; -moz-user-select:none;
 }
 .map-header{
   padding:14px 40px;
@@ -212,7 +213,7 @@ a{ color:inherit; text-decoration:none; }
 .map-tool-btn-gold.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
 
 .map-frame-wrap{
-  position:relative; width:100%; height:60vh; min-height:440px; max-height:680px;
+  position:relative; width:100%; height:82vh; min-height:600px; max-height:980px;
   overflow:hidden;
 }
 .map-controls{
@@ -238,6 +239,7 @@ a{ color:inherit; text-decoration:none; }
 .map-viewport{
   width:100%; height:100%; overflow:hidden; position:relative;
   cursor:grab;
+  user-select:none; -webkit-user-select:none; -moz-user-select:none;
   background:
     linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),
     linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);
@@ -249,12 +251,13 @@ a{ color:inherit; text-decoration:none; }
 
 .map-canvas{
   position:absolute; top:0; left:0;
-  width:1600px; height:1200px;
+  width:1800px; height:1350px;
   transform-origin:0 0;
   /* Hardcode a default territory map image here if desired: */
   /* background-image:url('your-map.png'); */
-  background-size:cover; background-position:center;
+  background-size:cover; background-position:center; background-repeat:no-repeat;
   transition:transform .05s linear;
+  user-select:none; -webkit-user-select:none; -moz-user-select:none;
 }
 
 .map-empty{
@@ -272,6 +275,7 @@ a{ color:inherit; text-decoration:none; }
 
 .map-pin{
   position:absolute; transform:translate(-50%,-100%);
+  transform-origin:50% 100%;
   width:28px; height:28px; cursor:pointer; z-index:10;
 }
 .map-pin .pin-dot{
@@ -590,7 +594,7 @@ a{ color:inherit; text-decoration:none; }
 }
 @media(max-width:600px){
   .gang-logo-zone{ display:none; }
-  .map-frame-wrap{ height:50vh; min-height:340px; }
+  .map-frame-wrap{ height:60vh; min-height:380px; }
 }
 
 /* ══ PIN → CARD FOCUS FLASH ══ */

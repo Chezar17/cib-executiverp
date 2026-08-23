@@ -97,6 +97,9 @@ const zoomOutBtn  = document.getElementById('zoomOut');
 const zoomResetBtn = document.getElementById('zoomReset');
 
 const MAP_IMAGE_KEY = 'nexus_gangintel_map_image_v1';
+const MIN_SCALE = 0.4;
+const MAX_SCALE = 10;       // pushed way up so users can zoom in tight on a block
+const BASE_CANVAS_W = 1800; // canvas width in unscaled px; height derives from the image's own aspect ratio
 
 let scale = 1, panX = 0, panY = 0;
 let isDragging = false, dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
@@ -104,30 +107,38 @@ let pinMode = false;
 
 function applyTransform() {
   mapCanvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  updatePinScale();
+}
+
+// Pins live inside the scaled canvas, so counter-scale them individually —
+// otherwise they'd balloon in size (and cover half the map) at high zoom.
+function updatePinScale() {
+  const inv = Math.max(0.35, Math.min(1, 1 / scale));
+  mapCanvas.querySelectorAll('.map-pin').forEach(p => {
+    p.style.transform = `translate(-50%, -100%) scale(${inv})`;
+  });
 }
 
 function clampPan() {
   const vpRect = mapViewport.getBoundingClientRect();
+  const cw = mapCanvas.offsetWidth  || BASE_CANVAS_W;
+  const ch = mapCanvas.offsetHeight || BASE_CANVAS_W * 0.75;
   const maxX = vpRect.width * 0.9;
   const maxY = vpRect.height * 0.9;
-  panX = Math.max(-1600 * scale + 60, Math.min(maxX, panX));
-  panY = Math.max(-1200 * scale + 60, Math.min(maxY, panY));
+  panX = Math.max(-cw * scale + 60, Math.min(maxX, panX));
+  panY = Math.max(-ch * scale + 60, Math.min(maxY, panY));
 }
 
-zoomInBtn.addEventListener('click', () => { scale = Math.min(3, +(scale + 0.2).toFixed(2)); clampPan(); applyTransform(); });
-zoomOutBtn.addEventListener('click', () => { scale = Math.max(0.4, +(scale - 0.2).toFixed(2)); clampPan(); applyTransform(); });
+zoomInBtn.addEventListener('click', () => { scale = Math.min(MAX_SCALE, +(scale + 0.4).toFixed(2)); clampPan(); applyTransform(); });
+zoomOutBtn.addEventListener('click', () => { scale = Math.max(MIN_SCALE, +(scale - 0.4).toFixed(2)); clampPan(); applyTransform(); });
 zoomResetBtn.addEventListener('click', () => { scale = 1; panX = 0; panY = 0; applyTransform(); });
 
-mapViewport.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const delta = e.deltaY > 0 ? -0.1 : 0.1;
-  scale = Math.max(0.4, Math.min(3, +(scale + delta).toFixed(2)));
-  clampPan();
-  applyTransform();
-}, { passive: false });
+// Scroll-to-zoom disabled — the mouse wheel now behaves like it does on the
+// rest of the page (normal page scroll) instead of zooming the map.
 
 mapViewport.addEventListener('mousedown', (e) => {
   if (pinMode) return; // clicking places a pin instead of dragging
+  e.preventDefault(); // stop the browser from starting a text/image selection drag
   isDragging = true;
   mapViewport.classList.add('grabbing');
   dragStartX = e.clientX; dragStartY = e.clientY;
@@ -176,8 +187,20 @@ mapCanvas.addEventListener('click', (e) => {
 // ── Map image upload (stored client-side) ────────────────────
 function setMapImage(dataUrl) {
   if (dataUrl) {
-    mapCanvas.style.backgroundImage = `url('${dataUrl}')`;
-    mapEmpty.style.display = 'none';
+    // Size the canvas to match the image's own aspect ratio so a tall/
+    // portrait territory map is never cropped by a fixed 4:3 box.
+    const img = new Image();
+    img.onload = () => {
+      const ratio = img.naturalHeight / img.naturalWidth || 0.75;
+      mapCanvas.style.width  = BASE_CANVAS_W + 'px';
+      mapCanvas.style.height = Math.round(BASE_CANVAS_W * ratio) + 'px';
+      mapCanvas.style.backgroundSize = '100% 100%'; // canvas ratio now matches the image, so no crop/stretch
+      mapCanvas.style.backgroundImage = `url('${dataUrl}')`;
+      mapEmpty.style.display = 'none';
+      clampPan();
+      applyTransform();
+    };
+    img.src = dataUrl;
   } else {
     mapCanvas.style.backgroundImage = 'none';
     mapEmpty.style.display = 'flex';
@@ -221,6 +244,7 @@ function renderPins() {
     });
     mapCanvas.appendChild(pin);
   });
+  updatePinScale();
 }
 
 // Scroll to + expand a gang's card in the registry below the map
@@ -596,7 +620,11 @@ document.getElementById('delCancelBtn').addEventListener('click', closeDelModal)
 document.getElementById('delConfirmBtn').addEventListener('click', confirmGangDelete);
 document.getElementById('gang-del-modal').addEventListener('click', e => { if (e.target === document.getElementById('gang-del-modal')) closeDelModal(); });
 
-document.getElementById('add-gang-btn').addEventListener('click', () => openGangModal(null));
+document.getElementById('add-gang-btn').addEventListener('click', () => {
+  if (!CAN_CRUD) { toast('Insufficient clearance to add entries', 'error'); return; }
+  document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setPinMode(true);
+});
 
 // ── EXPAND / COLLAPSE ────────────────────────────────────────
 function toggleGang(btn) {
