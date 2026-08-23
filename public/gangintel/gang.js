@@ -211,7 +211,23 @@ function clampPan() {
 
 zoomInBtn.addEventListener('click', () => { scale = Math.min(MAX_SCALE, +(scale + 0.4).toFixed(2)); clampPan(); applyTransform(); });
 zoomOutBtn.addEventListener('click', () => { scale = Math.max(MIN_SCALE, +(scale - 0.4).toFixed(2)); clampPan(); applyTransform(); });
-zoomResetBtn.addEventListener('click', () => { scale = 1; panX = 0; panY = 0; applyTransform(); });
+zoomResetBtn.addEventListener('click', () => { resetMapView(); });
+
+// Fit the whole map centered in the viewport — used as the "neutral" starting
+// point whenever we're about to place a pin that doesn't exist yet, instead
+// of hard-jumping to the raw (0,0) top-left corner (which is what caused the
+// map to appear to violently "jump upward" from wherever it was previously).
+function resetMapView() {
+  const vpRect = mapViewport.getBoundingClientRect();
+  const cw = mapCanvas.offsetWidth  || BASE_CANVAS_W;
+  const ch = mapCanvas.offsetHeight || BASE_CANVAS_W * 0.75;
+  const fitScale = Math.min(vpRect.width / cw, vpRect.height / ch, 1) || 1;
+  scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, fitScale));
+  panX = (vpRect.width  - cw * scale) / 2;
+  panY = (vpRect.height - ch * scale) / 2;
+  clampPan();
+  applyTransform();
+}
 
 // Scroll-to-zoom disabled — the mouse wheel now behaves like it does on the
 // rest of the page (normal page scroll) instead of zooming the map.
@@ -251,10 +267,10 @@ function setPinMode(on) {
 btnPinMode.addEventListener('click', () => {
   if (!CAN_CRUD) { toast('Insufficient clearance to add entries', 'error'); return; }
   const turningOn = !pinMode;
-  // This button is always for a fresh, not-yet-placed pin — reset the view
-  // to a neutral default so the user isn't left staring at wherever the map
-  // happened to be panned/zoomed to before.
-  if (turningOn) { scale = 1; panX = 0; panY = 0; applyTransform(); }
+  // This button is always for a fresh, not-yet-placed pin — show the whole
+  // map centered so the user isn't left staring at wherever it happened to
+  // be panned/zoomed to before.
+  if (turningOn) resetMapView();
   setPinMode(turningOn);
 });
 
@@ -372,7 +388,11 @@ function flashPinForGang(gangId) {
 }
 
 // "View Location" button on a gang card — jump to the map and zoom into
-// that gang's pin.
+// that gang's pin. Panning only depends on the viewport's width/height
+// (not its scroll position), so this runs immediately rather than waiting
+// on the smooth-scroll to finish — waiting on a timer was the source of a
+// bug where the pan would fire against a stale/mid-scroll layout and the
+// map would appear to jump to the wrong spot.
 function viewGangLocation(gangId) {
   const g = GANGS.find(x => x.id == gangId);
   if (!g || g.pin_x === undefined || g.pin_x === null || g.pin_y === undefined || g.pin_y === null) {
@@ -380,10 +400,8 @@ function viewGangLocation(gangId) {
     return;
   }
   document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  setTimeout(() => {
-    panToCanvasPoint(g.pin_x, g.pin_y, 3.2);
-    flashPinForGang(gangId);
-  }, 350); // let the scroll settle so viewport dimensions are stable
+  panToCanvasPoint(g.pin_x, g.pin_y, 2.6);
+  flashPinForGang(gangId);
 }
 
 // Scroll to + expand a gang's card in the registry below the map
@@ -638,17 +656,19 @@ gfPinBtn.addEventListener('click', () => {
   closeGangModal();
   document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  setTimeout(() => {
-    if (hasCurrentPin) {
-      // A pin is already placed (or staged) — auto-pan/zoom the map to it so
-      // the user can see exactly where it is before repositioning it.
-      panToCanvasPoint(parseFloat(curXRaw), parseFloat(curYRaw), Math.max(scale, 2.4));
-    } else {
-      // Nothing placed yet — start from a neutral default view.
-      scale = 1; panX = 0; panY = 0; applyTransform();
-    }
-    setPinMode(true);
-  }, 350); // let the scroll-into-view settle so viewport dimensions are stable
+  // Panning only depends on the viewport's width/height, not its scroll
+  // position, so do it right away instead of waiting on a timer — waiting
+  // was racing against the smooth-scroll and could pan against a stale
+  // layout, making the map appear to jump to the wrong spot and get "stuck".
+  if (hasCurrentPin) {
+    // A pin is already placed (or staged) — auto-pan/zoom the map to it so
+    // the user can see exactly where it is before repositioning it.
+    panToCanvasPoint(parseFloat(curXRaw), parseFloat(curYRaw), 2.4);
+  } else {
+    // Nothing placed yet — show the whole map centered instead of jumping.
+    resetMapView();
+  }
+  setPinMode(true);
 
   toast(hasCurrentPin ? 'Click a new location on the map to move the pin' : 'Click a location on the map to place the pin', 'success');
 });
@@ -883,8 +903,8 @@ document.getElementById('gang-del-modal').addEventListener('click', e => { if (e
 document.getElementById('add-gang-btn').addEventListener('click', () => {
   if (!CAN_CRUD) { toast('Insufficient clearance to add entries', 'error'); return; }
   document.querySelector('.map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  // No pin exists yet for a brand-new gang — start from a neutral default view.
-  scale = 1; panX = 0; panY = 0; applyTransform();
+  // No pin exists yet for a brand-new gang — show the whole map centered.
+  resetMapView();
   setPinMode(true);
 });
 
