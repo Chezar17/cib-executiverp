@@ -994,7 +994,7 @@ function initGangPage() {
 
   if (USER_CLASS === 'unclassified' || USER_CLASS === '') {
     toast('Access denied — insufficient clearance', 'error');
-    setTimeout(() => window.location.href = 'Page_Nexus.html', 1200);
+    setTimeout(() => window.location.href = 'https://centralinvestigationbureau.vercel.app/nexus', 1200);
     return;
   }
 
@@ -1161,7 +1161,7 @@ if (window.PortalAuth) {
   // PortalAuth wasn't loaded — fail closed rather than exposing the page.
   console.error('PortalAuth is not loaded. Include the shared auth script before gang.js.');
   toast('Authentication engine unavailable', 'error');
-  setTimeout(() => window.location.href = 'Page_Nexus.html', 1200);
+  setTimeout(() => window.location.href = 'https://centralinvestigationbureau.vercel.app/nexus', 1200);
 }
 
 if (window.SiteUi) {
