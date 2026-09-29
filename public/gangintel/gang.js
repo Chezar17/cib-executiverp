@@ -1053,56 +1053,93 @@ function hidePasswordGate() {
   document.body.classList.remove('gate-locked');
 }
 
+// Same rules as the site login page (scripts/login.js): the password is
+// SHA-256 hashed in the browser, and 5 wrong attempts locks login for 5 min.
+const GATE_MAX_ATTEMPTS = 5;
+const GATE_LOCKOUT_MS   = 5 * 60 * 1000;
+let gateFailedAttempts  = 0;
+
+async function gateSha256(message) {
+  const buf  = new TextEncoder().encode(message);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+const GATE_SESSION_KEYS = ['cib_auth', 'cib_token', 'cib_badge', 'cib_name', 'cib_rank', 'cib_division', 'cib_classification', 'cib_expires'];
+
 if (gateForm) {
   gateForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const badge = gateBadge.value.trim();
-    const password = gatePassword.value;
-    if (!badge || !password) return;
-
     gateError.textContent = '';
+
+    const lockUntil = parseInt(sessionStorage.getItem('secretLockUntil') || '0', 10);
+    if (Date.now() < lockUntil) {
+      const mins = Math.ceil((lockUntil - Date.now()) / 60000);
+      gateError.textContent = `Account locked. Try again in ${mins} minute(s).`;
+      return;
+    }
+
+    const badge    = gateBadge.value.trim();   // the login "Name" (sent as `badge`, like the login page)
+    const password = gatePassword.value;
+    if (!badge || !password) { gateError.textContent = 'All fields are required.'; return; }
+
     gateSubmitBtn.classList.add('loading');
     gateSubmitBtn.disabled = true;
 
     try {
-      // NOTE: assumes /api/login accepts { badge, password } and returns the
-      // same fields the site login page
-      // stores in sessionStorage (see portal-auth.js: cib_token, cib_badge,
-      // cib_name, cib_rank, cib_division, cib_classification, cib_expires).
-      // If your /api/login contract needs different field names or extra
-      // parameters, this is the one spot to adjust.
+      const passwordHash = await gateSha256(password);
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ badge, password })
+        body: JSON.stringify({ badge, password: passwordHash })
       });
+      const result = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.message || 'Incorrect badge number or password');
+      if (res.ok && result.success) {
+        gateFailedAttempts = 0;
+        sessionStorage.removeItem('secretLockUntil');
+
+        // Accounts flagged "must change password" can't get in from here —
+        // the change-password step lives on the main login page.
+        if (result.user && result.user.mustChangePassword) {
+          try {
+            await fetch('/api/logout', { method: 'POST', headers: { 'x-session-token': result.token } });
+          } catch (_) {}
+          GATE_SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
+          gateError.innerHTML = 'Your password must be changed before you can continue. Please use the <a href="/Page_Login.html" style="color:var(--gold);">main login page</a>.';
+          gatePassword.value = '';
+          return;
+        }
+
+        sessionStorage.setItem('cib_auth',           'true');
+        sessionStorage.setItem('cib_token',          result.token);
+        sessionStorage.setItem('cib_badge',          result.user.badge);
+        sessionStorage.setItem('cib_name',           result.user.name);
+        sessionStorage.setItem('cib_rank',           result.user.rank);
+        sessionStorage.setItem('cib_division',       result.user.division);
+        sessionStorage.setItem('cib_classification', result.user.classification || '');
+        sessionStorage.setItem('cib_expires',        result.expiresAt);
+
+        gateBadge.value = '';
+        gatePassword.value = '';
+        hidePasswordGate();
+        // gateDelay: 0 → no splash wait, content appears immediately after login.
+        PortalAuth.init({ ...PORTAL_AUTH_CFG, gateDelay: 0 });
+      } else {
+        gateFailedAttempts++;
+        gatePassword.value = '';
+        if (gateFailedAttempts >= GATE_MAX_ATTEMPTS) {
+          sessionStorage.setItem('secretLockUntil', String(Date.now() + GATE_LOCKOUT_MS));
+          gateError.textContent = 'Too many failed attempts. Try again in 5 minutes.';
+        } else {
+          const remaining = GATE_MAX_ATTEMPTS - gateFailedAttempts;
+          gateError.textContent = `${result.error || 'Invalid credentials'}. ${remaining} attempt(s) remaining.`;
+          gatePassword.focus();
+        }
       }
-
-      const data = await res.json();
-
-      sessionStorage.setItem('cib_auth', 'true');
-      sessionStorage.setItem('cib_token', data.token || '');
-      sessionStorage.setItem('cib_badge', data.badge || '');
-      sessionStorage.setItem('cib_name', data.name || '');
-      sessionStorage.setItem('cib_rank', data.rank || '');
-      sessionStorage.setItem('cib_division', data.division || '');
-      sessionStorage.setItem('cib_classification', data.classification || '');
-      if (data.expires) sessionStorage.setItem('cib_expires', String(data.expires));
-
-      gateBadge.value = '';
-      gatePassword.value = '';
-      hidePasswordGate();
-      // Runs the exact same verify + onReady flow as a normal load.
-      // gateDelay: 0 → no splash wait, content appears immediately after login.
-      PortalAuth.init({ ...PORTAL_AUTH_CFG, gateDelay: 0 });
     } catch (err) {
-      gateError.textContent = err.message || 'Incorrect badge number or password. Please try again.';
-      gatePassword.value = '';
-      gatePassword.focus();
+      console.error('Gate login error:', err);
+      gateError.textContent = 'Connection error. Check your network and try again.';
     } finally {
       gateSubmitBtn.classList.remove('loading');
       gateSubmitBtn.disabled = false;
