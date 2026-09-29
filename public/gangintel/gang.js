@@ -212,8 +212,25 @@ function clampPan() {
   panY = Math.max(-ch * scale + 60, Math.min(maxY, panY));
 }
 
-zoomInBtn.addEventListener('click', () => { scale = Math.min(MAX_SCALE, +(scale + 0.4).toFixed(2)); clampPan(); applyTransform(); });
-zoomOutBtn.addEventListener('click', () => { scale = Math.max(MIN_SCALE, +(scale - 0.4).toFixed(2)); clampPan(); applyTransform(); });
+// Zoom while keeping the point at the centre of the viewport fixed, so the
+// part of the map the user is looking at stays in place (instead of the
+// canvas scaling from its top-left corner).
+function zoomToScale(newScale) {
+  newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+  if (newScale === scale) return;
+  const vpRect = mapViewport.getBoundingClientRect();
+  const cx = vpRect.width  / 2;
+  const cy = vpRect.height / 2;
+  const ratio = newScale / scale;
+  panX = cx - (cx - panX) * ratio;
+  panY = cy - (cy - panY) * ratio;
+  scale = newScale;
+  clampPan();
+  applyTransform();
+}
+
+zoomInBtn.addEventListener('click', () => zoomToScale(+(scale + 0.4).toFixed(2)));
+zoomOutBtn.addEventListener('click', () => zoomToScale(+(scale - 0.4).toFixed(2)));
 zoomResetBtn.addEventListener('click', () => { resetMapView(); });
 
 // Fit the whole map centered in the viewport — used as the "neutral" starting
