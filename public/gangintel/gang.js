@@ -10,7 +10,7 @@
 //  NOTE ON SCHEMA: the on-page form (gang.html) collects these
 //  fields — make sure the "gangs" table in Supabase has matching
 //  columns (create them if they don't exist yet):
-//    id (pk), org_seq (int), name (text), location (text),
+//    id (pk), org_seq (int), name (text), location (text — now used as the "Gang A.K.A." / map pin label),
 //    threat (text), sector (text), bio (text), accent_color (text),
 //    known_og (jsonb array), known_members (jsonb array),
 //    logo_url (text — either an uploaded data: URI or a plain image URL),
@@ -374,7 +374,7 @@ function renderPins() {
     pin.dataset.gangId = g.id;
     pin.innerHTML = `
       <div class="pin-dot"><span>●</span></div>
-      <div class="map-pin-label">${esc(g.name || 'UNNAMED')}</div>
+      <div class="map-pin-label">${esc(g.location || g.name || 'UNNAMED')}</div>
     `;
     pin.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -485,7 +485,7 @@ function buildGangCard(g) {
         <div class="gang-name">${esc(g.name)}</div>
         <div class="gang-alias">${esc(g.location || '')}</div>
         <div class="gang-meta-row">
-          <div class="gang-meta-item"><span class="gang-meta-lbl">Location</span><span class="gang-meta-val">${esc(g.location || '—')}</span></div>
+          <div class="gang-meta-item"><span class="gang-meta-lbl">A.K.A.</span><span class="gang-meta-val">${esc(g.location || '—')}</span></div>
           <div class="gang-meta-item"><span class="gang-meta-lbl">Sector</span><span class="gang-meta-val">${esc(g.sector || '—')}</span></div>
           <div class="gang-meta-item"><span class="gang-meta-lbl">OG(s)</span><span class="gang-meta-val">${(g.known_og || []).length}</span></div>
           <div class="gang-meta-item"><span class="gang-meta-lbl">Members</span><span class="gang-meta-val">${(g.known_members || []).length}</span></div>
@@ -806,7 +806,7 @@ async function saveGang() {
   const sector = document.getElementById('gf-sector').value;
 
   if (!name) { toast('Gang name is required', 'error'); return; }
-  if (!location) { toast('Gang location name is required', 'error'); return; }
+  if (!location) { toast('Gang A.K.A. is required', 'error'); return; }
   if (!sector) { toast('Sector is required', 'error'); return; }
 
   const saveBtn = document.querySelector('.gf-save');
