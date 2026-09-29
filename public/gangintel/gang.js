@@ -166,7 +166,6 @@ function getNextOrgSeq() {
 //  MAP: PAN + ZOOM + PIN PLACEMENT
 // ══════════════════════════════════════════════════════════════
 
-const mapUpload   = document.getElementById('mapUpload');
 const mapCanvas   = document.getElementById('mapCanvas');
 const mapViewport = document.getElementById('mapViewport');
 const mapEmpty    = document.getElementById('mapEmpty');
@@ -176,7 +175,6 @@ const zoomInBtn   = document.getElementById('zoomIn');
 const zoomOutBtn  = document.getElementById('zoomOut');
 const zoomResetBtn = document.getElementById('zoomReset');
 
-const MAP_IMAGE_KEY = 'nexus_gangintel_map_image_v1';
 const MIN_SCALE = 0.4;
 const MAX_SCALE = 10;       // pushed way up so users can zoom in tight on a block
 const BASE_CANVAS_W = 1800; // canvas width in unscaled px; height derives from the image's own aspect ratio
@@ -316,7 +314,7 @@ mapCanvas.addEventListener('click', (e) => {
   }
 });
 
-// ── Map image upload (stored client-side) ────────────────────
+// ── Map image (hardcoded) ────────────────────
 function setMapImage(dataUrl) {
   if (dataUrl) {
     // Size the canvas to match the image's own aspect ratio so a tall/
@@ -339,20 +337,10 @@ function setMapImage(dataUrl) {
   }
 }
 
-mapUpload.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    localStorage.setItem(MAP_IMAGE_KEY, reader.result);
-    setMapImage(reader.result);
-  };
-  reader.readAsDataURL(file);
-});
-
+// Hardcoded map — users can no longer upload a different image.
+const HARDCODED_MAP_IMAGE = '/images/warmap.png';
 (function initMapImage() {
-  const saved = localStorage.getItem(MAP_IMAGE_KEY);
-  if (saved) setMapImage(saved);
+  setMapImage(HARDCODED_MAP_IMAGE);
 })();
 
 // ── Render map pins ───────────────────────────────────────────

@@ -106,8 +106,6 @@
       <div class="map-badge">Interactive Map · Classified</div>
     </div>
     <div class="map-header-right">
-      <label class="map-tool-btn" for="mapUpload">⬒ Set Map Image</label>
-      <input type="file" id="mapUpload" accept="image/png, image/jpeg" hidden/>
       <button class="map-tool-btn map-tool-btn-gold" id="btnPinMode">📍 Place Pin</button>
     </div>
   </div>
@@ -121,14 +119,11 @@
     <div class="map-hint" id="mapHint">Click anywhere on the map to drop a pin</div>
     <div class="map-viewport" id="mapViewport">
       <div class="map-canvas" id="mapCanvas">
-        <!-- Replace this background with your own PNG territory map.
-             Easiest: use "Set Map Image" above (stored client-side),
-             or hardcode a default via #mapCanvas{ background-image:url('your-map.png'); } in gangintel.css,
-             or drop an <img class="map-image" src="your-map.png"> tag right here. -->
+        <!-- Map image is hardcoded in gang.js (HARDCODED_MAP_IMAGE = /images/warmap.png) -->
         <div class="map-empty" id="mapEmpty">
           <svg viewBox="0 0 24 24" width="34" height="34"><path fill="#8A95AA" opacity="0.3" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           <div>No Map Image Loaded</div>
-          <span>Upload a .png / .jpg territory map using "Set Map Image"</span>
+          <span>Unable to load /images/warmap.png</span>
         </div>
         <!-- Pins injected here by script -->
       </div>
