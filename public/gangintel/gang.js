@@ -978,8 +978,13 @@ function applyFilters() {
 //  rest of the Nexus site; must be loaded before this script)
 // ══════════════════════════════════════════════════════════════
 
+// Where PortalAuth sends people when the session ends (logout, idle timeout,
+// expired/invalid token). Instead of the site login page, come straight back
+// to THIS page — with the session cleared it shows the in-page login form.
+const SELF_HREF = window.location.pathname + window.location.search;
+
 document.getElementById('logoutBtn').addEventListener('click', () => {
-  if (window.PortalAuth) PortalAuth.logout();
+  if (window.PortalAuth) PortalAuth.logout(SELF_HREF);
 });
 
 // Shared "page is authenticated, go" logic — runs after a normal
@@ -1004,6 +1009,7 @@ function initGangPage() {
 }
 
 const PORTAL_AUTH_CFG = {
+  loginHref: SELF_HREF, // failed verify / idle timeout → reload this page → in-page login form
   badgeEls: ['badgeDisplay'],
   clockEl:  'liveClock',
   onReady:  initGangPage
@@ -1026,9 +1032,10 @@ function hasLocalSessionToken() {
 // ── In-page access gate ──────────────────────────────────────
 // Shown instead of redirecting to the site-wide login page whenever this
 // URL is opened with no active session (e.g. someone opens the shared
-// gang-intel link directly). Enter the access password, unlock right here.
+// gang-intel link directly). Log in with badge + password, right here.
 const gateOverlay  = document.getElementById('gate-overlay');
 const gateForm     = document.getElementById('gate-form');
+const gateBadge    = document.getElementById('gate-badge');
 const gatePassword = document.getElementById('gate-password');
 const gateError    = document.getElementById('gate-error');
 const gateSubmitBtn = document.getElementById('gate-submit-btn');
@@ -1037,7 +1044,7 @@ function showPasswordGate() {
   if (!gateOverlay) return;
   gateOverlay.classList.add('open');
   document.body.classList.add('gate-locked');
-  setTimeout(() => gatePassword?.focus(), 50);
+  setTimeout(() => gateBadge?.focus(), 50);
 }
 
 function hidePasswordGate() {
@@ -1049,16 +1056,17 @@ function hidePasswordGate() {
 if (gateForm) {
   gateForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const badge = gateBadge.value.trim();
     const password = gatePassword.value;
-    if (!password) return;
+    if (!badge || !password) return;
 
     gateError.textContent = '';
     gateSubmitBtn.classList.add('loading');
     gateSubmitBtn.disabled = true;
 
     try {
-      // NOTE: assumes /api/login accepts a password-only payload for this
-      // shared-link flow and returns the same fields the site login page
+      // NOTE: assumes /api/login accepts { badge, password } and returns the
+      // same fields the site login page
       // stores in sessionStorage (see portal-auth.js: cib_token, cib_badge,
       // cib_name, cib_rank, cib_division, cib_classification, cib_expires).
       // If your /api/login contract needs different field names or extra
@@ -1066,12 +1074,12 @@ if (gateForm) {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ badge, password })
       });
 
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.message || 'Incorrect password');
+        throw new Error(errBody.message || 'Incorrect badge number or password');
       }
 
       const data = await res.json();
@@ -1085,11 +1093,14 @@ if (gateForm) {
       sessionStorage.setItem('cib_classification', data.classification || '');
       if (data.expires) sessionStorage.setItem('cib_expires', String(data.expires));
 
+      gateBadge.value = '';
+      gatePassword.value = '';
       hidePasswordGate();
       // Runs the exact same verify + onReady flow as a normal load.
-      PortalAuth.init(PORTAL_AUTH_CFG);
+      // gateDelay: 0 → no splash wait, content appears immediately after login.
+      PortalAuth.init({ ...PORTAL_AUTH_CFG, gateDelay: 0 });
     } catch (err) {
-      gateError.textContent = err.message || 'Incorrect password. Please try again.';
+      gateError.textContent = err.message || 'Incorrect badge number or password. Please try again.';
       gatePassword.value = '';
       gatePassword.focus();
     } finally {
@@ -1105,8 +1116,8 @@ if (window.PortalAuth) {
     // session) — identical to the previous behavior, no gate is shown.
     PortalAuth.init(PORTAL_AUTH_CFG);
   } else {
-    // No active session on this direct/shared link — ask for the access
-    // password right here instead of bouncing out to the site login page.
+    // No active session on this direct/shared link — ask for credentials
+    // right here instead of bouncing out to the site login page.
     showPasswordGate();
   }
 } else {
