@@ -957,12 +957,18 @@ document.getElementById('gang-search').addEventListener('input', applyFilters);
 function applyFilters() {
   const q = document.getElementById('gang-search').value.toLowerCase().trim();
   let visible = 0;
+  const visibleIds = new Set();
   document.querySelectorAll('.gang-card').forEach(card => {
     const filterOk = currentFilter === 'all' || card.dataset.threat === currentFilter || card.dataset.sector === currentFilter;
     const textOk = q === '' || card.innerText.toLowerCase().includes(q);
     const show = filterOk && textOk;
     card.style.display = show ? '' : 'none';
-    if (show) visible++;
+    if (show) { visible++; visibleIds.add(String(card.dataset.gangId)); }
+  });
+  // Keep the map in sync: a pin is shown only if its gang card passes the
+  // same filter + search, so the map always matches the list below.
+  mapCanvas.querySelectorAll('.map-pin').forEach(pin => {
+    pin.style.display = visibleIds.has(String(pin.dataset.gangId)) ? '' : 'none';
   });
   document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
 }
