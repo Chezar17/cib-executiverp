@@ -1119,6 +1119,7 @@ if (gateForm) {
         sessionStorage.setItem('cib_division',       result.user.division);
         sessionStorage.setItem('cib_classification', result.user.classification || '');
         sessionStorage.setItem('cib_expires',        result.expiresAt);
+        if (window.CIBSession) CIBSession.persist();
 
         gateBadge.value = '';
         gatePassword.value = '';
