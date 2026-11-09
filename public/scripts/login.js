@@ -12,6 +12,16 @@ async function sha256(message) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+/* ── Keep the login across tabs (see portal-auth.js) ── */
+function persistSessionLocally() {
+  try {
+    const keys = ['cib_auth', 'cib_token', 'cib_badge', 'cib_name', 'cib_rank', 'cib_division', 'cib_classification', 'cib_expires'];
+    const data = {};
+    keys.forEach(k => { const v = sessionStorage.getItem(k); if (v !== null) data[k] = v; });
+    localStorage.setItem('cib_persist', JSON.stringify(data));
+  } catch (e) {}
+}
+
 /* ── Login form UI ─────────────────────────────────────── */
 function showLoginError(msg) {
   const box = $('main-login-error');
@@ -112,6 +122,7 @@ async function handleMainLogin() {
         return;
       }
 
+      persistSessionLocally();
       showLoginSuccess();
     } else {
       failedAttempts++;
