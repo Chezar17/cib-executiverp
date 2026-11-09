@@ -26,6 +26,39 @@
   const IDLE_MS      = 60 * 60 * 1000  // align with server session (1 h); override via init({ idleMs })
   const GATE_DELAY   = 900
 
+  // ── Keep the login when a new tab is opened ──────────────────
+  // sessionStorage is per tab, so the session is also mirrored to localStorage
+  // and copied back into a tab that has no session yet.
+  const PERSIST_KEY  = 'cib_persist'
+  const SESSION_KEYS = ['cib_auth', 'cib_token', 'cib_badge', 'cib_name', 'cib_rank', 'cib_division', 'cib_classification', 'cib_expires']
+
+  function persistSessionLocally () {
+    try {
+      const data = {}
+      SESSION_KEYS.forEach(function (k) { const v = sessionStorage.getItem(k); if (v !== null) data[k] = v })
+      localStorage.setItem(PERSIST_KEY, JSON.stringify(data))
+    } catch (e) {}
+  }
+
+  function clearPersistedSession () {
+    try { localStorage.removeItem(PERSIST_KEY) } catch (e) {}
+  }
+
+  function restorePersistedSession () {
+    try {
+      if (sessionStorage.getItem('cib_token')) return
+      const raw = localStorage.getItem(PERSIST_KEY)
+      if (!raw) return
+      const data = JSON.parse(raw)
+      const expires = parseInt(data.cib_expires, 10)
+      if (!data.cib_token || isNaN(expires) || Date.now() > expires) { clearPersistedSession(); return }
+      SESSION_KEYS.forEach(function (k) { if (data[k] !== undefined) sessionStorage.setItem(k, data[k]) })
+    } catch (e) {}
+  }
+
+  restorePersistedSession()
+  global.CIBSession = { persist: persistSessionLocally, clear: clearPersistedSession }
+
   // ── Session keys ─────────────────────────────────────────────
 
   function getToken () {
@@ -88,6 +121,7 @@
 
   function redirectToLogin (href) {
     sessionStorage.clear()
+    clearPersistedSession()
     var dest = href && String(href).length ? href : LOGIN_HREF
     window.location.assign(dest)
   }
