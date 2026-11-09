@@ -27,6 +27,7 @@
 
     <!-- LEFT: monitoring warning -->
     <aside class="login-side login-side-warn">
+      <button type="button" class="login-side-tab" aria-expanded="false" onclick="toggleSide(this)">&#9888; Monitoring Warning</button>
       <div class="login-side-eyebrow">&#9888; Warning</div>
       <div class="login-side-title">You Are Being Monitored</div>
       <p class="login-side-lead">All activity on this portal is logged and traceable. By continuing, you acknowledge this.</p>
@@ -108,12 +109,13 @@
 
     <!-- RIGHT: what this connection reveals -->
     <aside class="login-side login-side-info">
+      <button type="button" class="login-side-tab" aria-expanded="false" onclick="toggleSide(this)">Visitor Data &middot; Live</button>
       <div class="login-side-eyebrow">Visitor Data · Live</div>
       <div class="login-side-title">What This Connection Shows</div>
 
       <div class="login-side-group">Network</div>
       <div class="login-side-row"><span>IP Address</span><strong id="surv-ip">Fetching...</strong></div>
-      <div class="login-side-row"><span>Location</span><strong id="surv-location">Fetching...</strong></div>
+      <div class="login-side-row"><span>Location</span><strong id="surv-location">State of San Andreas</strong></div>
       <div class="login-side-row"><span>Region</span><strong id="surv-region">Fetching...</strong></div>
       <div class="login-side-row"><span>ISP / Org</span><strong id="surv-isp">Fetching...</strong></div>
       <div class="login-side-row"><span>Connection</span><strong id="info-conn">—</strong></div>
