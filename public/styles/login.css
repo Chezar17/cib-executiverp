@@ -377,3 +377,33 @@
     transform:translate(-50%,-50%);
   }
   #s-loginBtn { position:relative; overflow:hidden; }
+
+/* ── Login layout: warning panel | login box | visitor data panel ── */
+.login-layout{position:relative;z-index:2;width:100%;max-width:1280px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px) minmax(0,1fr);gap:28px;align-items:center;}
+.login-layout .login-card{max-width:460px;width:100%;margin:0 auto;}
+.login-side{background:var(--navy-card);border:1px solid var(--navy-border);padding:26px 24px;position:relative;}
+.login-side::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.login-side-warn::before{background:var(--red-alert);}
+.login-side-info::before{background:var(--gold);}
+.login-side-eyebrow{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
+.login-side-warn .login-side-eyebrow{color:var(--red-alert);}
+.login-side-info .login-side-eyebrow{color:var(--gold);}
+.login-side-title{font-family:'Oswald',sans-serif;font-size:19px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:14px;line-height:1.25;}
+.login-side-lead{font-size:13px;line-height:1.7;color:var(--white);opacity:0.9;margin-bottom:14px;}
+.login-side-list{list-style:none;padding:0;margin:0 0 14px;}
+.login-side-list li{font-size:12px;line-height:1.6;color:var(--muted);padding:8px 0 8px 14px;border-bottom:1px solid var(--navy-border);position:relative;}
+.login-side-list li::before{content:'';position:absolute;left:0;top:15px;width:5px;height:5px;background:var(--red-alert);}
+.login-side-note{font-size:11px;line-height:1.7;color:var(--muted);border-left:2px solid var(--navy-border);padding-left:10px;margin-top:6px;}
+.login-side-group{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:16px 0 4px;opacity:0.85;}
+.login-side-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:7px 0;border-bottom:1px dashed var(--navy-border);}
+.login-side-row span{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.login-side-row strong{font-family:'Roboto Mono',monospace;font-weight:500;font-size:11px;color:var(--white);text-align:right;word-break:break-word;}
+@media(max-width:1100px){
+  .login-layout{grid-template-columns:minmax(0,1fr);max-width:460px;gap:22px;}
+  .login-layout .login-card{order:0;}
+  .login-side-warn{order:1;}
+  .login-side-info{order:2;}
+}
+@media(max-width:480px){
+  .login-side{padding:22px 18px;}
+}
