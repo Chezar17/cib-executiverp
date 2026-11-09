@@ -319,6 +319,7 @@ async function handleChangePassword() {
     const redirectBar = document.getElementById('chpw-redirect-bar')
     successEl.classList.add('show')
     sessionStorage.clear()
+    try { localStorage.removeItem('cib_persist') } catch (e) {}
 
     setTimeout(() => { redirectBar.style.width = '100%' }, 50)
     setTimeout(() => {
