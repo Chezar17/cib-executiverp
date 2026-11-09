@@ -142,6 +142,39 @@ const CAT_CLASS = {
 }
 
 
+
+/* ── Picture fallbacks: a broken picture is replaced with the "No Image" block ── */
+const PR_PLACEHOLDER = `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
+
+function pressImgFail(img) {
+  const wrap = img.closest('.pr-img-wrap')
+  if (wrap) wrap.innerHTML = PR_PLACEHOLDER
+  else img.remove()
+}
+
+function checkPressImage(url) {
+  return new Promise(resolve => {
+    if (!url) return resolve(false)
+    const im = new Image()
+    let done = false
+    const finish = ok => { if (!done) { done = true; clearTimeout(timer); resolve(ok) } }
+    const timer = setTimeout(() => finish(false), 6000)
+    im.onload  = () => finish(true)
+    im.onerror = () => finish(false)
+    im.src = url
+  })
+}
+
+async function removeBrokenPhotos(list) {
+  await Promise.all((list || []).map(async r => {
+    if (r.photo_url && !(await checkPressImage(r.photo_url))) {
+      r.photo_url = null
+      r.photo_caption = null
+    }
+  }))
+  return list
+}
+
 function buildShareUrl(prNumber) {
   return `${location.origin}${location.pathname}?release=${encodeURIComponent(prNumber)}`
 }
@@ -159,7 +192,7 @@ function copyPressLink(url) {
 function buildMainCard(r) {
   const shareUrl = buildShareUrl(r.pr_number)
   const img = r.photo_url
-    ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
+    ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" onerror="pressImgFail(this)"/>`
     : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
   const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
@@ -169,7 +202,7 @@ function buildMainCard(r) {
 function buildSubCard(r) {
   const shareUrl = buildShareUrl(r.pr_number)
   const img = r.photo_url
-    ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}"/>`
+    ? `<img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" onerror="pressImgFail(this)"/>`
     : `<div class="pr-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>No Image</span></div>`
   const cap = r.photo_url && r.photo_caption ? `<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>` : ''
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
@@ -180,7 +213,7 @@ function renderSingleRelease(r) {
   const wrap = document.querySelector('.press-wrap')
   if (!wrap) return
   const cc  = CAT_CLASS[r.news_type]||'cat-official'
-  const img = r.photo_url ? `<div class="pr-img-wrap" style="min-height:0;"><img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" style="width:100%;max-height:480px;object-fit:contain;background:#080D1A;display:block;"/>${r.photo_caption?`<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>`:''}</div>` : ''
+  const img = r.photo_url ? `<div class="pr-img-wrap" style="min-height:0;"><img src="${escHtml(r.photo_url)}" alt="${escHtml(r.title)}" onerror="pressImgFail(this)" style="width:100%;max-height:480px;object-fit:contain;background:#080D1A;display:block;"/>${r.photo_caption?`<div class="pr-img-label"><div class="pr-img-caption">${escHtml(r.photo_caption)}</div></div>`:''}</div>` : ''
   wrap.innerHTML = `
     <div style="max-width:860px;margin:0 auto;">
       <div style="margin-bottom:20px;">
@@ -531,6 +564,7 @@ async function initPressPage() {
       if (json.success && json.data) {
         const record = json.data.find(r => r.pr_number === prNumber)
         if (record) {
+          await removeBrokenPhotos([record])
           document.title = record.title + ' — CIB Press Room'
           renderSingleRelease(record)
         } else {
@@ -540,7 +574,7 @@ async function initPressPage() {
     } else {
       const res  = await fetch(PA_API)
       const json = await res.json()
-      if (json.success) renderAllReleases(json.data||[])
+      if (json.success) renderAllReleases(await removeBrokenPhotos(json.data||[]))
     }
   } catch(e) { console.error('Press page load error:', e) }
 }
