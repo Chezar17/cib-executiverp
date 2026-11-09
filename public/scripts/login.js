@@ -221,10 +221,6 @@ function fetchGeoData() {
 
   function render(d) {
     setText('surv-ip', d.ip || 'Unavailable');
-    const place = [d.city, d.country].filter(Boolean).join(', ') || 'Unavailable';
-    const coords = (d.lat != null && d.lon != null)
-      ? ` (${parseFloat(d.lat).toFixed(3)}, ${parseFloat(d.lon).toFixed(3)})` : '';
-    setText('surv-location', place + coords);
     setText('surv-region', d.region || 'Unavailable');
     setText('surv-isp', d.isp || 'Unavailable');
   }
@@ -232,7 +228,7 @@ function fetchGeoData() {
   let i = 0;
   function next() {
     if (i >= apis.length) {
-      ['surv-ip', 'surv-location', 'surv-region', 'surv-isp'].forEach(id => setText(id, 'Unavailable'));
+      ['surv-ip', 'surv-region', 'surv-isp'].forEach(id => setText(id, 'Unavailable'));
       return;
     }
     const api = apis[i++];
@@ -246,6 +242,23 @@ function fetchGeoData() {
   }
   next();
 }
+
+/* ── Side panels: collapsed tabs that open on click ───── */
+function toggleSide(btn) {
+  const side = btn.closest('.login-side');
+  const open = side.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function closeSides() {
+  document.querySelectorAll('.login-side.open').forEach(side => {
+    side.classList.remove('open');
+    const tab = side.querySelector('.login-side-tab');
+    if (tab) tab.setAttribute('aria-expanded', 'false');
+  });
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSides(); });
 
 /* ── Init ──────────────────────────────────────────────── */
 window.addEventListener('DOMContentLoaded', () => {
