@@ -67,6 +67,17 @@ function updateAttemptsDisplay() {
   }
 }
 
+/* ── Where to go after login: ?next=/some/page (own site only), else NEXUS ── */
+function safeNextUrl() {
+  try {
+    const n = new URLSearchParams(window.location.search).get('next');
+    if (!n) return null;
+    if (!/^\/[A-Za-z0-9\-_\/.]*(\?[A-Za-z0-9=&\-_.%]*)?$/.test(n)) return null; // same-site path only
+    if (n.startsWith('//') || /Page_Login/i.test(n)) return null;
+    return n;
+  } catch (e) { return null; }
+}
+
 function showLoginSuccess() {
   const btn = $('loginBtnMain');
   if (btn) {
@@ -74,7 +85,7 @@ function showLoginSuccess() {
     btn.style.background = '#27AE60';
     btn.style.color = '#fff';
   }
-  setTimeout(() => { window.location.href = 'nexus.html'; }, 1200);
+  setTimeout(() => { window.location.href = safeNextUrl() || 'nexus.html'; }, 1200);
 }
 
 /* ── Login ─────────────────────────────────────────────── */

@@ -23,7 +23,8 @@
 
   /** Default redirect target — root-relative so it works from /portal/… and subfolders. */
   const LOGIN_HREF   = '/Page_Login.html'
-  const IDLE_MS      = 60 * 60 * 1000  // align with server session (1 h); override via init({ idleMs })
+  const IDLE_MS      = 2 * 60 * 60 * 1000  // 2 h of no activity → logout (server session also slides to 2 h)
+  const PING_MS      = 5 * 60 * 1000       // while active, refresh the server session at most every 5 min
   const GATE_DELAY   = 900
 
   // ── Keep the login when a new tab is opened ──────────────────
@@ -119,11 +120,41 @@
     return formatClassificationTitle(raw).toUpperCase()
   }
 
-  function redirectToLogin (href) {
+  /** Current page (path + query) so login can send the user straight back. */
+  function currentPlace () {
+    var p = window.location.pathname + window.location.search
+    if (!p || p === '/' || /Page_Login/i.test(p)) return ''
+    return p
+  }
+
+  function redirectToLogin (href, keepPlace) {
     sessionStorage.clear()
     clearPersistedSession()
     var dest = href && String(href).length ? href : LOGIN_HREF
+    var place = keepPlace ? currentPlace() : ''
+    if (place) dest += (dest.indexOf('?') === -1 ? '?' : '&') + 'next=' + encodeURIComponent(place)
     window.location.assign(dest)
+  }
+
+  /** Save a new expiry time that the server sent back. */
+  function storeExpiry (ms) {
+    var n = parseInt(ms, 10)
+    if (!n || isNaN(n)) return
+    sessionStorage.setItem('cib_expires', String(n))
+    persistSessionLocally()
+  }
+
+  // ── Keep the server session alive while the user is active ──
+  let _lastPing = Date.now()
+  function keepAlive () {
+    if (Date.now() - _lastPing < PING_MS) return
+    _lastPing = Date.now()
+    const token = getToken()
+    if (!token) return
+    fetch('/api/verify-token', { method: 'GET', headers: { 'x-session-token': token } })
+      .then(function (r) { return r.ok ? r.json() : null })
+      .then(function (j) { if (j && j.expiresAt) storeExpiry(j.expiresAt) })
+      .catch(function () {})
   }
 
   function setTextById (id, value) {
@@ -174,7 +205,8 @@
     const ms = idleMs || IDLE_MS
     function reset () {
       clearTimeout(_idleTimer)
-      _idleTimer = setTimeout(function () { PortalAuth.logout(loginHref) }, ms)
+      _idleTimer = setTimeout(function () { PortalAuth.logout(loginHref, true) }, ms)
+      keepAlive()
     }
     ;['mousemove', 'keydown', 'click', 'scroll'].forEach(function (ev) {
       document.addEventListener(ev, reset, { passive: true })
@@ -190,8 +222,8 @@
     const delay    = (cfg.gateDelay !== undefined) ? cfg.gateDelay : GATE_DELAY
 
     const token = getToken()
-    if (!token) { redirectToLogin(href); return }
-    if (isSessionExpired()) { redirectToLogin(href); return }
+    if (!token) { redirectToLogin(href, true); return }
+    if (isSessionExpired()) { redirectToLogin(href, true); return }
 
     await new Promise(function (r) { setTimeout(r, delay) })
 
@@ -201,7 +233,9 @@
         headers: { 'x-session-token': token }
       })
 
-      if (!res.ok) { redirectToLogin(href); return }
+      if (!res.ok) { redirectToLogin(href, true); return }
+      try { const vj = await res.clone().json(); if (vj && vj.expiresAt) storeExpiry(vj.expiresAt) } catch (_) {}
+      _lastPing = Date.now()
 
       const gate = document.getElementById('access-gate')
       if (gate) gate.classList.add('hidden')
@@ -216,7 +250,7 @@
       const s = readSessionFromStorage()
       if (typeof cfg.onReady === 'function') cfg.onReady(s.badge, s)
     } catch (_) {
-      redirectToLogin(href)
+      redirectToLogin(href, true)
     }
   }
 
@@ -237,7 +271,8 @@
 
   // ── Logout ──────────────────────────────────────────────────
 
-  async function logout (loginHref) {
+  /** keepPlace = true → after logging in again, come back to this page (used by the idle timeout). */
+  async function logout (loginHref, keepPlace) {
     const token = getToken()
     try {
       await fetch('/api/logout', {
@@ -245,7 +280,7 @@
         headers: { 'x-session-token': token }
       })
     } catch (_) { }
-    redirectToLogin(loginHref)
+    redirectToLogin(loginHref, keepPlace === true)
   }
 
   // ── Public API ─────────────────────────────────────────────

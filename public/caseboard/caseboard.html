@@ -30,6 +30,19 @@
   </div>
   <div class="topbar-right">
     <a class="back-btn" href="/nexus">&lsaquo; Back to Nexus</a>
+    <div class="cb-bell-wrap">
+      <button class="cb-bell" id="cbBell" title="Notifications" aria-label="Notifications" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <span class="cb-bell-count" id="cbBellCount" hidden>0</span>
+      </button>
+      <div class="cb-np" id="cbNotifPanel" hidden>
+        <div class="cb-np-head">
+          <span>Notifications</span>
+          <button type="button" id="cbMarkAll">Mark all as read</button>
+        </div>
+        <div class="cb-np-list" id="cbNotifList"><div class="cb-np-empty">Loading…</div></div>
+      </div>
+    </div>
     <span class="topbar-badge-display">Logged in as: <span id="badgeDisplay">&ndash;</span></span>
     <span class="topbar-clock" id="liveClock">&ndash;</span>
     <button class="logout-btn" onclick="PortalAuth.logout()">Logout</button>
@@ -136,7 +149,8 @@
 
         <div class="cb-section">
           <div class="cb-section-h">Case Notes</div>
-          <textarea id="mDesc" class="cb-desc" maxlength="20000" placeholder="Summary, leads, suspects, what needs to happen next..."></textarea>
+          <div id="mDescView" class="cb-desc-view" tabindex="0" title="Click to edit"></div>
+          <textarea id="mDesc" class="cb-desc" maxlength="20000" hidden placeholder="Summary, leads, suspects, what needs to happen next... Type @ to mention a detective."></textarea>
         </div>
 
         <div class="cb-section">
@@ -144,7 +158,7 @@
           <div class="cb-progress"><div id="mCheckBar"></div></div>
           <ul class="cb-checklist" id="mChecklist"></ul>
           <form class="cb-check-add" id="mCheckForm">
-            <input id="mCheckInput" class="cb-input" maxlength="300" placeholder="Add a step, e.g. Interview the witness"/>
+            <input id="mCheckInput" class="cb-input" maxlength="300" placeholder="Add a step, e.g. Interview the witness (type @ to mention)"/>
             <button class="cb-btn cb-btn-ghost" type="submit">Add</button>
           </form>
         </div>
@@ -161,7 +175,7 @@
         <div class="cb-side-h">Comments &amp; Activity</div>
         <div class="cb-feed" id="mFeed"></div>
         <form class="cb-comment" id="mCommentForm">
-          <textarea id="mComment" maxlength="5000" placeholder="Write a comment... (Ctrl+Enter to send)"></textarea>
+          <textarea id="mComment" maxlength="5000" placeholder="Write a comment... Type @ to mention someone. (Ctrl+Enter to send)"></textarea>
           <button class="cb-btn cb-btn-gold" type="submit">Send</button>
         </form>
       </aside>

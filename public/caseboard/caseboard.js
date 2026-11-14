@@ -48,6 +48,7 @@
       buildStaticUi()
       bindUi()
       loadAll().then(openFromUrl)
+      Notif.init()
       setInterval(autoRefresh, REFRESH_MS)
     },
   })
@@ -165,7 +166,7 @@
       if (mine && !(c.assignees || []).includes(me.badge) && c.created_by !== me.badge) return false
       if (q) {
         const hay = [
-          code(c), c.title, c.description, (c.tags || []).join(' '), c.linked_report_number,
+          code(c), c.title, toEdit(c.description), (c.tags || []).join(' '), c.linked_report_number,
           (c.assignees || []).map(nameOf).join(' '),
         ].join(' ').toLowerCase()
         if (!hay.includes(q)) return false
@@ -321,6 +322,7 @@
     $('caseModal').addEventListener('mousedown', (e) => { if (e.target === $('caseModal')) closeModal() })
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return
+      if (!$('cbNotifPanel').hidden) { Notif.close(); return }
       if (document.querySelector('.cb-picker')) { closePicker(); return }
       if (!$('confirmModal').hidden) { $('confirmModal').hidden = true; return }
       if (!$('caseModal').hidden) closeModal()
@@ -337,9 +339,25 @@
       if (v !== current.title) change({ title: v })
     })
 
+    // Case notes: shown with highlighted @mentions; click to edit, leaves edit mode on blur (saves)
     const d = $('mDesc')
-    d.addEventListener('input', () => { if (mode === 'create') current.description = d.value })
-    d.addEventListener('blur', () => { if (mode === 'edit' && d.value !== (current.description || '')) change({ description: d.value }) })
+    const view = $('mDescView')
+    view.addEventListener('click', (e) => { if (!e.target.closest('a')) startDescEdit() })
+    view.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); startDescEdit() } })
+    d.addEventListener('input', () => autoGrow(d, 180))
+    d.addEventListener('blur', () => {
+      if (!current) return
+      const val = toStore(d.value).trim()
+      d.hidden = true
+      view.hidden = false
+      if (mode === 'create') { current.description = val; renderDescView() }
+      else if (mode === 'edit' && val !== (current.description || '')) change({ description: val })
+      else renderDescView()
+    })
+
+    attachMentions($('mComment'))
+    attachMentions(d)
+    attachMentions($('mCheckInput'))
 
     $('mStatus').addEventListener('change', (e) => { paintStatus(e.target.value); change({ status: e.target.value }) })
     $('mPriority').addEventListener('change', (e) => change({ priority: e.target.value }))
@@ -353,7 +371,7 @@
       const v = $('mCheckInput').value.trim()
       if (!v) return
       $('mCheckInput').value = ''
-      const list = (current.checklist || []).concat([{ id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: v, done: false }])
+      const list = (current.checklist || []).concat([{ id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: toStore(v), done: false }])
       change({ checklist: list })
     })
     $('mChecklist').addEventListener('change', (e) => {
@@ -419,6 +437,7 @@
       activity = json.activity || []
       showModal()
       history.replaceState(null, '', '?case=' + encodeURIComponent(id))
+      Notif.markCaseRead(id)
     } catch (e) {
       toast('Could not open case: ' + e.message, 'error')
       if (!local) closeModal()
@@ -437,7 +456,7 @@
     $('mDivision').value = c.division
     $('mStart').value = c.start_date || ''
     $('mDue').value = c.due_date || ''
-    if (document.activeElement !== $('mDesc')) $('mDesc').value = c.description || ''
+    if ($('mDesc').hidden) renderDescView()
     setReportField(c)
     renderAssignees()
     renderTags()
@@ -453,6 +472,9 @@
   function closeModal() {
     if (document.activeElement && $('caseModal').contains(document.activeElement)) document.activeElement.blur()
     closePicker()
+    closeMentionBox()
+    $('mDesc').hidden = true
+    $('mDescView').hidden = false
     $('caseModal').hidden = true
     document.body.style.overflow = ''
     mode = null
@@ -515,7 +537,7 @@
 
   async function createCase() {
     current.title = $('mTitle').value.trim()
-    current.description = $('mDesc').value
+    if (!$('mDesc').hidden) current.description = toStore($('mDesc').value).trim()
     if (!current.title) { toast('Give the case a title first', 'error'); $('mTitle').focus(); return }
     const btn = $('mCreate')
     btn.disabled = true
@@ -628,7 +650,7 @@
     $('mChecklist').innerHTML = list.map((it) => `
       <li class="${it.done ? 'done' : ''}" data-id="${esc(it.id)}">
         <input type="checkbox" ${it.done ? 'checked' : ''} aria-label="Done"/>
-        <span>${esc(it.text)}</span>
+        <span>${rich(it.text)}</span>
         <button type="button" class="cb-x" title="Remove">&times;</button>
       </li>`).join('')
   }
@@ -662,7 +684,7 @@
             <div class="cb-cm-h">${avatar(a.actor_badge)}<b>${esc(a.actor_name || a.actor_badge)}</b><time>${esc(fmtTime(a.created_at))}</time>
               ${a.actor_badge === me.badge ? `<button class="cb-x" data-del-comment="${esc(a.id)}" title="Delete comment">Delete</button>` : ''}
             </div>
-            <div class="cb-cm-b">${esc(a.body)}</div>
+            <div class="cb-cm-b">${rich(a.body)}</div>
           </div>`
       }
       return sep + `<div class="cb-ev"><span><b>${esc(a.actor_name || a.actor_badge)}</b> ${esc(a.body)}</span><time>${esc(fmtTime(a.created_at))}</time></div>`
@@ -673,7 +695,7 @@
   async function sendComment() {
     if (mode !== 'edit') return
     const box = $('mComment')
-    const text = box.value.trim()
+    const text = toStore(box.value).trim()
     if (!text) return
     const id = current.id
     box.disabled = true
@@ -698,6 +720,186 @@
       renderFeed()
       renderBoard()
     } catch (e) { toast('Could not delete comment: ' + e.message, 'error') }
+  }
+
+  // ── Case notes view / edit ───────────────────────────────
+  function renderDescView() {
+    const v = $('mDescView')
+    const txt = current && current.description
+    v.classList.toggle('empty', !txt)
+    v.innerHTML = txt ? rich(txt) : 'Click to add case notes… Type @ to mention a detective.'
+  }
+  function startDescEdit() {
+    if (!current) return
+    const d = $('mDesc')
+    d.value = toEdit(current.description)
+    $('mDescView').hidden = true
+    d.hidden = false
+    autoGrow(d, 180)
+    d.focus()
+    d.setSelectionRange(d.value.length, d.value.length)
+  }
+
+  // ── @mentions ────────────────────────────────────────────
+  //  Stored as @[Display Name](BADGE); typed/edited as @Display Name
+  const MENTION_RE = /@\[([^\]\n]{1,80})\]\(([A-Za-z0-9._-]{1,40})\)/g
+  function toEdit(t) { return String(t || '').replace(MENTION_RE, '@$1') }
+  function toStore(t) {
+    let s = String(t || '')
+    const list = people.filter((p) => p.name).slice().sort((a, b) => b.name.length - a.name.length)
+    for (const p of list) {
+      const re = new RegExp('@' + p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![A-Za-z0-9_])', 'gi')
+      s = s.replace(re, () => '@[' + p.name.replace(/[\]\n]/g, '') + '](' + p.badge + ')')
+    }
+    return s
+  }
+  /** Escaped text with mentions turned into gold name chips */
+  function rich(t) {
+    return esc(t).replace(MENTION_RE, (m, n, b) => peopleByBadge[b]
+      ? `<span class="cb-mention${b === me.badge ? ' me' : ''}" title="${esc(b)}">@${n}</span>`
+      : '@' + n)
+  }
+
+  let mBox = null
+  function closeMentionBox() { if (mBox) { mBox.el.remove(); mBox = null } }
+  function attachMentions(el) {
+    function update() {
+      const pos = el.selectionStart
+      const before = el.value.slice(0, pos)
+      const m = /(^|[\s(])@([^\s@\[\]]{0,25})$/.exec(before)
+      if (!m) { closeMentionBox(); return }
+      const q = m[2].toLowerCase()
+      const items = people.filter((p) => {
+        const n = (p.name || '').toLowerCase()
+        return !q || n.startsWith(q) || n.split(/\s+/).some((w) => w.startsWith(q)) || String(p.badge).toLowerCase().startsWith(q)
+      }).slice(0, 7)
+      if (!items.length) { closeMentionBox(); return }
+      const start = pos - m[2].length - 1
+      if (!mBox || mBox.input !== el) { closeMentionBox(); mBox = { el: document.createElement('div'), input: el, idx: 0 }; mBox.el.className = 'cb-mention-box'; document.body.appendChild(mBox.el) }
+      mBox.items = items; mBox.start = start; mBox.end = pos
+      if (mBox.idx >= items.length) mBox.idx = 0
+      drawBox()
+    }
+    function drawBox() {
+      const b = mBox
+      b.el.innerHTML = '<div class="cb-mention-hint">MENTION A DETECTIVE</div>' + b.items.map((p, i) => `
+        <div class="cb-picker-row ${i === b.idx ? 'on' : ''}" data-i="${i}">${avatar(p.badge)}<span>${esc(p.name || p.badge)}</span><small>${esc(p.badge)}</small></div>`).join('')
+      const r = el.getBoundingClientRect()
+      const h = Math.min(260, 30 + b.items.length * 36)
+      const below = r.bottom + 4 + h < window.innerHeight
+      b.el.style.left = Math.min(r.left, window.innerWidth - 270) + 'px'
+      b.el.style.top = (below ? r.bottom + 4 : Math.max(8, r.top - 4 - h)) + 'px'
+      b.el.onmousedown = (e) => {
+        e.preventDefault() // keep focus in the text box
+        const row = e.target.closest('[data-i]')
+        if (row) pick(b.items[Number(row.dataset.i)])
+      }
+    }
+    function pick(p) {
+      if (!mBox || !p) return
+      const ins = '@' + (p.name || p.badge) + ' '
+      el.value = el.value.slice(0, mBox.start) + ins + el.value.slice(mBox.end)
+      const caret = mBox.start + ins.length
+      el.setSelectionRange(caret, caret)
+      closeMentionBox()
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    el.addEventListener('input', update)
+    el.addEventListener('click', update)
+    el.addEventListener('blur', () => setTimeout(() => { if (mBox && mBox.input === el) closeMentionBox() }, 150))
+    el.addEventListener('keydown', (e) => {
+      if (!mBox || mBox.input !== el) return
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault(); e.stopImmediatePropagation()
+        mBox.idx = (mBox.idx + (e.key === 'ArrowDown' ? 1 : -1) + mBox.items.length) % mBox.items.length
+        drawBox()
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault(); e.stopImmediatePropagation()
+        pick(mBox.items[mBox.idx])
+      } else if (e.key === 'Escape') {
+        e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation()
+        closeMentionBox()
+      }
+    }, true)
+  }
+
+  // ── Personal notifications (bell) ────────────────────────
+  const Notif = (function () {
+    const POLL_MS = 60 * 1000
+    const ICON = { mention: '@', assigned: '&#9823;', status: '&#9873;', comment: '&#128172;' }
+    let list = []
+    function unreadCount() { return list.filter((n) => !n.is_read).length }
+    async function load() {
+      try {
+        const json = await api('GET', { board: 'notifications' })
+        list = json.notifications || []
+        draw()
+      } catch (_) { /* stay quiet; the board still works */ }
+    }
+    function title(n) {
+      if ((n.count || 1) > 1) return `${n.count} updates on this case`
+      const last = (n.lines || [])[n.lines.length - 1]
+      return last ? last.text : 'Case update'
+    }
+    function draw() {
+      const c = unreadCount()
+      const badge = $('cbBellCount')
+      badge.hidden = !c
+      badge.textContent = c > 9 ? '9+' : String(c)
+      $('cbBell').classList.toggle('has-new', c > 0)
+      const el = $('cbNotifList')
+      if (!list.length) { el.innerHTML = '<div class="cb-np-empty">You\'re all caught up.<br>You\'ll be told when you are assigned, mentioned, or a case you follow gets a comment or moves to In Review, Blocker or Completed.</div>'; return }
+      el.innerHTML = list.map((n) => {
+        const lines = n.lines || []
+        const sub = (n.count || 1) > 1 ? lines.slice(-2).map((l) => l.text).join(' · ') : (n.case_title || '')
+        return `<div class="cb-np-item ${n.is_read ? '' : 'unread'}" data-n="${esc(n.id)}" data-case="${esc(n.case_id)}">
+          <div class="cb-np-ico k-${esc(n.kind)}">${ICON[n.kind] || '&#9679;'}</div>
+          <div class="cb-np-body">
+            <div class="cb-np-code">${esc(code({ case_no: n.case_no }))}${(n.count || 1) > 1 ? '' : ''}</div>
+            <div class="cb-np-title">${esc(title(n))}</div>
+            <div class="cb-np-line">${esc(sub)}</div>
+            <div class="cb-np-time">${esc(timeAgo(n.updated_at))}</div>
+          </div>
+        </div>`
+      }).join('')
+    }
+    function open() { $('cbNotifPanel').hidden = false; $('cbBell').setAttribute('aria-expanded', 'true'); load() }
+    function close() { $('cbNotifPanel').hidden = true; $('cbBell').setAttribute('aria-expanded', 'false') }
+    async function markCaseRead(caseId) {
+      if (!list.some((n) => n.case_id === caseId && !n.is_read)) return
+      list.forEach((n) => { if (n.case_id === caseId) n.is_read = true })
+      draw()
+      try { await api('PUT', { board: 'notifications' }, { case_id: caseId }) } catch (_) {}
+    }
+    async function markAll() {
+      list.forEach((n) => { n.is_read = true })
+      draw()
+      try { await api('PUT', { board: 'notifications' }, { all: true }) } catch (_) {}
+    }
+    function init() {
+      $('cbBell').addEventListener('click', (e) => { e.stopPropagation(); $('cbNotifPanel').hidden ? open() : close() })
+      $('cbNotifPanel').addEventListener('click', (e) => {
+        e.stopPropagation()
+        if (e.target.closest('#cbMarkAll')) { markAll(); return }
+        const it = e.target.closest('[data-case]')
+        if (!it) return
+        close()
+        openCase(it.dataset.case)
+        markCaseRead(it.dataset.case)
+      })
+      document.addEventListener('click', () => { if (!$('cbNotifPanel').hidden) close() })
+      load()
+      setInterval(() => { if (!document.hidden) load() }, POLL_MS)
+    }
+    return { init, load, close, markCaseRead }
+  })()
+
+  function timeAgo(iso) {
+    const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
+    if (s < 60) return 'just now'
+    if (s < 3600) return Math.floor(s / 60) + 'm ago'
+    if (s < 86400) return Math.floor(s / 3600) + 'h ago'
+    return Math.floor(s / 86400) + 'd ago'
   }
 
   // ── Helpers ──────────────────────────────────────────────
@@ -740,7 +942,7 @@
     const d = new Date(iso)
     return isNaN(d) ? '' : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   }
-  function autoGrow(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px' }
+  function autoGrow(t, min) { t.style.height = 'auto'; t.style.height = Math.max(min || 0, t.scrollHeight + 2) + 'px' }
   function cssEsc(s) { return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/"/g, '\\"') }
   function esc(s) {
     if (s === null || s === undefined) return ''

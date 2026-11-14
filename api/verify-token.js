@@ -16,6 +16,7 @@ import {
   rejectForeignOrigin,
 } from './_lib/http.js'
 import { getSupabase } from './_lib/supabase.js'
+import { touchSession } from './_lib/session.js'
 
 export default async function handler(req, res) {
 
@@ -58,6 +59,9 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Session expired' })
     }
 
+    // Still active → keep the login alive for another 2 hours
+    const expiresAt = await touchSession(supabase, token, session.expires_at)
+
     // Fetch GIU fields + classification from users table
     const { data: user } = await supabase
       .from('users')
@@ -72,6 +76,7 @@ export default async function handler(req, res) {
       is_giu:         user?.is_giu         || false,
       callsign:       user?.callsign        || null,
       classification: user?.classification  || null,
+      expiresAt:      expiresAt.getTime(),
     })
 
   } catch (err) {

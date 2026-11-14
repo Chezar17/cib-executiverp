@@ -251,3 +251,61 @@
   .topbar-sub, .topbar-clock, .topbar-badge-display { display: none; }
   .cb-col { max-height: none; }
 }
+
+/* ── Case notes view (mentions highlighted) ─────────────── */
+.cb-desc-view {
+  min-height: 120px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.1); border-radius: 5px; background: rgba(255,255,255,.03);
+  font-size: 13.5px; line-height: 1.6; color: var(--white); white-space: pre-wrap; word-break: break-word; cursor: text;
+}
+.cb-desc-view:hover, .cb-desc-view:focus { border-color: rgba(201,168,76,.5); outline: none; }
+.cb-desc-view.empty { color: var(--muted); font-style: italic; }
+.cb-desc[hidden], .cb-desc-view[hidden] { display: none; }
+.cb-mention { color: var(--gold-light); background: rgba(201,168,76,.14); border-radius: 3px; padding: 0 3px; font-weight: 500; white-space: nowrap; }
+.cb-mention.me { color: #0a0f1e; background: var(--gold); }
+
+/* ── @mention picker ─────────────────────────────────────── */
+.cb-mention-box {
+  position: fixed; z-index: 5000; width: 260px; background: #0e1628; border: 1px solid rgba(201,168,76,.45); border-radius: 6px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.6); padding: 4px; max-height: 260px; overflow-y: auto;
+}
+.cb-mention-box .cb-picker-row small { margin-left: auto; }
+.cb-mention-hint { font-size: 10px; color: var(--muted); padding: 4px 8px 2px; font-family: 'Roboto Mono', monospace; letter-spacing: 1px; }
+
+/* ── Bell + notification panel ───────────────────────────── */
+.cb-bell-wrap { position: relative; }
+.cb-bell {
+  position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid rgba(255,255,255,.15); color: var(--muted); cursor: pointer; border-radius: 4px;
+}
+.cb-bell:hover { color: #fff; border-color: rgba(255,255,255,.3); }
+.cb-bell.has-new { color: #f39c12; border-color: rgba(243,156,18,.45); }
+.cb-bell-count {
+  position: absolute; top: -6px; right: -6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+  background: #e74c3c; color: #fff; font-size: 10px; font-family: 'Roboto Mono', monospace; display: flex; align-items: center; justify-content: center;
+}
+.cb-bell-count[hidden] { display: none; }
+.cb-np {
+  position: absolute; top: calc(100% + 10px); right: 0; width: 360px; max-height: 70vh; display: flex; flex-direction: column;
+  background: #0b1222; border: 1px solid rgba(201,168,76,.35); border-radius: 6px; box-shadow: 0 20px 50px rgba(0,0,0,.6); z-index: 3000;
+}
+.cb-np[hidden] { display: none; }
+.cb-np-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--cb-line);
+  font-family: 'Oswald', sans-serif; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; color: #fff; }
+.cb-np-head button { background: none; border: none; color: var(--gold); font-size: 11px; cursor: pointer; font-family: 'Roboto', sans-serif; text-transform: none; letter-spacing: 0; }
+.cb-np-head button:hover { text-decoration: underline; }
+.cb-np-list { overflow-y: auto; }
+.cb-np-empty { padding: 30px 16px; text-align: center; color: var(--muted); font-size: 12px; }
+.cb-np-item { display: flex; gap: 10px; padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,.05); cursor: pointer; border-left: 3px solid transparent; }
+.cb-np-item:hover { background: rgba(255,255,255,.04); }
+.cb-np-item.unread { border-left-color: var(--gold); background: rgba(201,168,76,.05); }
+.cb-np-ico { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; background: rgba(255,255,255,.06); }
+.cb-np-ico.k-mention { background: rgba(201,168,76,.2); color: var(--gold-light); }
+.cb-np-ico.k-assigned { background: rgba(74,144,217,.2); color: #8fc1f3; }
+.cb-np-ico.k-status { background: rgba(176,124,232,.2); color: #cfa9f5; }
+.cb-np-ico.k-comment { background: rgba(255,255,255,.08); color: #c9cfdc; }
+.cb-np-body { min-width: 0; flex: 1; }
+.cb-np-code { font-family: 'Roboto Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 1px; }
+.cb-np-title { font-size: 12.5px; color: #fff; line-height: 1.4; margin: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb-np-line { font-size: 11.5px; color: var(--muted); line-height: 1.45; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cb-np-time { font-size: 10px; color: var(--muted); opacity: .7; font-family: 'Roboto Mono', monospace; margin-top: 3px; }
+@media (max-width: 900px) { .cb-np { position: fixed; top: 56px; right: 8px; left: 8px; width: auto; } }

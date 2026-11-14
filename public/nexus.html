@@ -74,6 +74,11 @@
         <div class="nx-nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></div>
         <span class="nx-nav-label">Dashboard</span>
       </div>
+      <a class="nx-nav-item nx-nav-casebrd" href="caseboard/caseboard.html" style="text-decoration:none;">
+        <div class="nx-nav-icon"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#C9A84C;"><path d="M3 3h5v18H3V3zm6.5 0h5v12h-5V3zM16 3h5v8h-5V3z"/></svg></div>
+        <span class="nx-nav-label" style="color:#E8C97A;">Case Board</span>
+        <span class="nx-nav-badge" id="cbNavCount" style="display:none;background:#C9A84C;color:#0a0f1e;border:1px solid #C9A84C;">0</span>
+      </a>
     </div>
 
     <div class="nx-nav-group">
@@ -153,11 +158,6 @@
         <span class="nx-nav-label">Investigation Reports</span>
         <span class="nx-nav-badge badge-ts">TS</span>
       </div>
-      <a class="nx-nav-item" href="caseboard/caseboard.html" style="text-decoration:none;">
-        <div class="nx-nav-icon"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#C9A84C;"><path d="M3 3h5v18H3V3zm6.5 0h5v12h-5V3zM16 3h5v8h-5V3z"/></svg></div>
-        <span class="nx-nav-label" style="color:#C9A84C;">Case Board</span>
-        <span class="nx-nav-badge" style="background:rgba(201,168,76,0.1);color:#C9A84C;border:1px solid rgba(201,168,76,0.3);">CIB</span>
-      </a>
     </div>
 
     <div class="nx-sidebar-footer">
@@ -180,11 +180,11 @@
           <span><b>NEXUS v1.0</b> · All activity within this portal is logged and monitored by CIB Command</span>
           <span><b>REMINDER:</b> Do not share portal access credentials with unauthorized personnel</span>
           <span><b>CLASSIFICATION:</b> Contents of this portal are TOP SECRET — unauthorized disclosure is a federal offense</span>
-          <span><b>SYSTEM:</b> Portal session will expire after 30 minutes of inactivity</span>
+          <span><b>SYSTEM:</b> Portal session will expire after 2 hours of inactivity</span>
           <span><b>NEXUS v1.0</b> · All activity within this portal is logged and monitored by CIB Command</span>
           <span><b>REMINDER:</b> Do not share portal access credentials with unauthorized personnel</span>
           <span><b>CLASSIFICATION:</b> Contents of this portal are TOP SECRET — unauthorized disclosure is a federal offense</span>
-          <span><b>SYSTEM:</b> Portal session will expire after 30 minutes of inactivity</span>
+          <span><b>SYSTEM:</b> Portal session will expire after 2 hours of inactivity</span>
         </div>
       </div>
     </div>
@@ -252,7 +252,7 @@
           </div>
           <div class="dash-alert-cell">
             <div class="dash-alert-cell-label">Session Timeout</div>
-            <div class="dash-alert-cell-value white">30 Min Idle</div>
+            <div class="dash-alert-cell-value white">2 Hr Idle</div>
           </div>
           <div class="dash-alert-cell">
             <div class="dash-alert-cell-label">Audit Logging</div>
@@ -263,6 +263,23 @@
 
       <!-- MODULES -->
       <div class="dash-modules">
+
+        <!-- CASE BOARD FEATURE (highlighted entry point) -->
+        <a class="cbf" id="cbFeature" href="caseboard/caseboard.html">
+          <div class="cbf-left">
+            <div class="cbf-eyebrow"><span class="cbf-pulse"></span>Priority Module &middot; Detective Workflow</div>
+            <div class="cbf-title">Detective Case Board</div>
+            <div class="cbf-desc">Your active cases, assignments and team updates &mdash; from first lead to closure.</div>
+          </div>
+          <div class="cbf-stats" aria-label="Your cases">
+            <div class="cbf-stat"><div class="cbf-num" id="cbfMine">&ndash;</div><div class="cbf-lbl">Your open cases</div></div>
+            <div class="cbf-stat"><div class="cbf-num warn" id="cbfOverdue">&ndash;</div><div class="cbf-lbl">Overdue</div></div>
+            <div class="cbf-stat"><div class="cbf-num red" id="cbfBlocked">&ndash;</div><div class="cbf-lbl">Blocked</div></div>
+            <div class="cbf-stat"><div class="cbf-num gold" id="cbfUnread">&ndash;</div><div class="cbf-lbl">New updates</div></div>
+          </div>
+          <div class="cbf-cta">Open Case Board <span>&rsaquo;</span></div>
+        </a>
+
 
         <div class="dash-section-head">
           <span class="dash-section-cat">Available Modules</span>
@@ -2970,7 +2987,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bell  = document.getElementById('nxNotifBell')
     const badge = document.getElementById('nxNotifCount')
     if (!bell || !badge) return
-    const count = _pendingQueue.length
+    const count = _pendingQueue.length + ((window.CBNotif && window.CBNotif.unread()) || 0)
     if (count > 0) {
       bell.classList.add('has-new')
       badge.style.display  = 'flex'
@@ -3081,6 +3098,9 @@ document.addEventListener('DOMContentLoaded', () => {
     else hidePopup()
   }
 
+  // Lets the Case Board notifications (below) refresh the shared bell + tray
+  window.nxRefreshNotifBell = function () { updateBell(); renderTray() }
+
   window.toggleNotifTray = function () {
     _trayOpen ? closeNotifTray() : openNotifTray()
   }
@@ -3103,11 +3123,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTray() {
     const el = document.getElementById('nxNotifTrayScroll')
     if (!el) return
+    const personal = window.CBNotif ? window.CBNotif.trayHtml() : ''
     if (!_allNotifs.length) {
-      el.innerHTML = '<div class="nx-notif-tray-empty">No active notifications.</div>'
+      el.innerHTML = personal || '<div class="nx-notif-tray-empty">No active notifications.</div>'
       return
     }
-    el.innerHTML = _allNotifs.map(n => {
+    el.innerHTML = personal + (personal ? '<div class="cbt-sec">Announcements</div>' : '') + _allNotifs.map(n => {
       const m      = NT_META[n.type] || NT_META.announcement
       const seen   = isDismissed(n)
       const bStyle = `color:${m.accent};background:${m.iconBg};border:1px solid ${m.iconBorder};`
@@ -3206,6 +3227,149 @@ document.addEventListener('DOMContentLoaded', () => {
     hookObSystem()
   }
 
+})()
+</script>
+<!-- ═══════════════════════════════════════════════════════════
+     CASE BOARD — dashboard banner + personal notifications
+     (shares the bell/tray above; never shows pop-ups)
+═══════════════════════════════════════════════════════════ -->
+<style>
+.cbf {
+  position: relative; display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1.6fr) auto; align-items: center; gap: 24px;
+  margin: 0 0 26px; padding: 22px 26px; text-decoration: none; color: inherit; overflow: hidden;
+  background: linear-gradient(120deg, rgba(201,168,76,0.16), rgba(201,168,76,0.04) 45%, rgba(13,21,38,0.6));
+  border: 1px solid rgba(201,168,76,0.45); border-left: 4px solid #C9A84C;
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.08), 0 10px 30px rgba(0,0,0,0.35); transition: transform .15s, box-shadow .15s;
+}
+.cbf:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(201,168,76,0.3), 0 16px 40px rgba(0,0,0,0.45); }
+.cbf-eyebrow { display: flex; align-items: center; gap: 8px; font-family: 'Roboto Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #C9A84C; text-transform: uppercase; }
+.cbf-pulse { width: 8px; height: 8px; border-radius: 50%; background: #C9A84C; box-shadow: 0 0 0 0 rgba(201,168,76,.6); animation: cbfPulse 2s infinite; }
+@keyframes cbfPulse { 0% { box-shadow: 0 0 0 0 rgba(201,168,76,.6) } 70% { box-shadow: 0 0 0 9px rgba(201,168,76,0) } 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0) } }
+.cbf-title { font-family: 'Oswald', sans-serif; font-size: 26px; letter-spacing: 2px; text-transform: uppercase; color: #fff; margin: 6px 0 4px; }
+.cbf-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.cbf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.cbf-stat { background: rgba(8,12,24,0.55); border: 1px solid rgba(255,255,255,0.07); padding: 10px 12px; }
+.cbf-num { font-family: 'Oswald', sans-serif; font-size: 26px; color: #fff; line-height: 1; }
+.cbf-num.warn { color: #f0a654; } .cbf-num.red { color: #ff7b6b; } .cbf-num.gold { color: #E8C97A; }
+.cbf-lbl { font-family: 'Roboto Mono', monospace; font-size: 9px; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; margin-top: 6px; }
+.cbf-cta { font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; background: #C9A84C; color: #0a0f1e; padding: 12px 20px; white-space: nowrap; }
+.cbf-cta span { font-size: 18px; margin-left: 4px; }
+.cbf:hover .cbf-cta { background: #E8C97A; }
+@media (max-width: 1100px) { .cbf { grid-template-columns: 1fr; } .cbf-cta { justify-self: start; } }
+@media (max-width: 600px) { .cbf-stats { grid-template-columns: repeat(2, 1fr); } }
+.nx-nav-casebrd { background: rgba(201,168,76,0.08); border-left-color: #C9A84C !important; }
+
+/* tray: Case Board section */
+.cbt-sec { font-family: 'Roboto Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: 12px 18px 6px; display: flex; justify-content: space-between; align-items: center; }
+.cbt-sec button { background: none; border: none; color: #C9A84C; font-size: 10px; cursor: pointer; letter-spacing: 0; font-family: 'Roboto', sans-serif; text-transform: none; }
+.cbt-item { display: block; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 3px solid transparent; cursor: pointer; text-decoration: none; }
+.cbt-item:hover { background: rgba(255,255,255,0.03); }
+.cbt-item.unread { border-left-color: #C9A84C; background: rgba(201,168,76,0.05); }
+.cbt-code { font-family: 'Roboto Mono', monospace; font-size: 9px; letter-spacing: 1px; color: #C9A84C; }
+.cbt-title { font-size: 12px; color: var(--white); margin: 3px 0; line-height: 1.4; }
+.cbt-line { font-size: 11px; color: var(--muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cbt-meta { font-family: 'Roboto Mono', monospace; font-size: 9px; color: var(--muted); opacity: .6; margin-top: 4px; }
+</style>
+<script>
+;(function () {
+  'use strict'
+  const API = '/api/reports?board='
+  const POLL_MS = 60 * 1000
+  let list = []
+  let started = false
+
+  function token () { return sessionStorage.getItem('cib_token') || '' }
+  function badge () { return sessionStorage.getItem('cib_badge') || '' }
+  function esc (s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;') }
+  function code (no) { return 'CASE-' + String(no || 0).padStart(4, '0') }
+  function ago (iso) {
+    const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
+    if (s < 60) return 'just now'
+    if (s < 3600) return Math.floor(s / 60) + 'm ago'
+    if (s < 86400) return Math.floor(s / 3600) + 'h ago'
+    return Math.floor(s / 86400) + 'd ago'
+  }
+  function today () { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') }
+  function set (id, v) { const el = document.getElementById(id); if (el) el.textContent = v }
+
+  async function get (what) {
+    const r = await fetch(API + what, { headers: { 'x-session-token': token() } })
+    if (!r.ok) throw new Error('HTTP ' + r.status)
+    return r.json()
+  }
+
+  async function loadNotifs () {
+    try {
+      const j = await get('notifications')
+      list = j.notifications || []
+    } catch (_) { list = [] }
+    const unread = list.filter(n => !n.is_read).length
+    set('cbfUnread', unread)
+    const nav = document.getElementById('cbNavCount')
+    if (nav) { nav.style.display = unread ? '' : 'none'; nav.textContent = unread > 9 ? '9+' : String(unread) }
+    if (window.nxRefreshNotifBell) window.nxRefreshNotifBell()
+  }
+
+  async function loadSummary () {
+    try {
+      const j = await get('cases')
+      const me = badge()
+      const mine = (j.cases || []).filter(c => (c.assignees || []).includes(me) && c.status !== 'completed')
+      set('cbfMine', mine.length)
+      set('cbfOverdue', mine.filter(c => c.due_date && c.due_date < today()).length)
+      set('cbfBlocked', mine.filter(c => c.status === 'blocker').length)
+    } catch (_) { /* banner keeps its dashes */ }
+  }
+
+  function title (n) {
+    if ((n.count || 1) > 1) return n.count + ' updates on ' + (n.case_title || 'this case')
+    const lines = n.lines || []
+    return lines.length ? lines[lines.length - 1].text : 'Case update'
+  }
+
+  // Used by the shared tray above
+  window.CBNotif = {
+    unread: function () { return list.filter(n => !n.is_read).length },
+    trayHtml: function () {
+      if (!list.length) return ''
+      const hasUnread = list.some(n => !n.is_read)
+      return '<div class="cbt-sec"><span>For you &middot; Case Board</span>' +
+        (hasUnread ? '<button type="button" onclick="event.stopPropagation();CBNotif.markAll()">Mark all as read</button>' : '') + '</div>' +
+        list.slice(0, 15).map(n => {
+          const lines = n.lines || []
+          const sub = (n.count || 1) > 1 ? lines.slice(-2).map(l => l.text).join(' · ') : (n.case_title || '')
+          return '<a class="cbt-item' + (n.is_read ? '' : ' unread') + '" href="caseboard/caseboard.html?case=' + encodeURIComponent(n.case_id) + '" onclick="CBNotif.open(event,\'' + esc(n.case_id) + '\')">' +
+            '<div class="cbt-code">' + esc(code(n.case_no)) + '</div>' +
+            '<div class="cbt-title">' + esc(title(n)) + '</div>' +
+            '<div class="cbt-line">' + esc(sub) + '</div>' +
+            '<div class="cbt-meta">' + esc(ago(n.updated_at)) + '</div></a>'
+        }).join('')
+    },
+    open: function (e, caseId) {
+      // mark read in the background, then follow the link
+      try {
+        fetch(API + 'notifications', { method: 'PUT', keepalive: true, headers: { 'x-session-token': token(), 'Content-Type': 'application/json' }, body: JSON.stringify({ case_id: caseId }) })
+      } catch (_) {}
+    },
+    markAll: async function () {
+      list.forEach(n => { n.is_read = true })
+      if (window.nxRefreshNotifBell) window.nxRefreshNotifBell()
+      set('cbfUnread', 0)
+      const nav = document.getElementById('cbNavCount'); if (nav) nav.style.display = 'none'
+      try { await fetch(API + 'notifications', { method: 'PUT', headers: { 'x-session-token': token(), 'Content-Type': 'application/json' }, body: JSON.stringify({ all: true }) }) } catch (_) {}
+    }
+  }
+
+  // Start once the login check has passed (PortalAuth adds .page-visible)
+  function start () {
+    if (started) return
+    if (!document.body.classList.contains('page-visible') || !token()) { setTimeout(start, 400); return }
+    started = true
+    loadNotifs()
+    loadSummary()
+    setInterval(function () { if (!document.hidden) { loadNotifs(); loadSummary() } }, POLL_MS)
+  }
+  start()
 })()
 </script>
 </body>
