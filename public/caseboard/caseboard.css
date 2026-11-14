@@ -309,3 +309,23 @@
 .cb-np-line { font-size: 11.5px; color: var(--muted); line-height: 1.45; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .cb-np-time { font-size: 10px; color: var(--muted); opacity: .7; font-family: 'Roboto Mono', monospace; margin-top: 3px; }
 @media (max-width: 900px) { .cb-np { position: fixed; top: 56px; right: 8px; left: 8px; width: auto; } }
+
+/* ── Status explanations ─────────────────────────────────── */
+.cb-col-h { position: relative; }
+.cb-info {
+  width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); color: var(--muted);
+  font-size: 10px; line-height: 14px; text-align: center; cursor: help; font-family: 'Roboto Mono', monospace; flex-shrink: 0;
+}
+.cb-info:hover, .cb-info:focus { color: #0a0f1e; background: var(--col); border-color: var(--col); outline: none; }
+.cb-col-tip {
+  display: none; position: absolute; top: calc(100% + 6px); left: 8px; right: 8px; z-index: 40;
+  background: #0e1628; border: 1px solid var(--col); border-radius: 6px; padding: 10px 12px; box-shadow: 0 12px 30px rgba(0,0,0,.55);
+  font-size: 12px; line-height: 1.5; color: #d5dae5; text-transform: none; letter-spacing: 0; font-family: 'Roboto', sans-serif;
+}
+.cb-col-tip b { display: block; font-family: 'Oswald', sans-serif; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; color: #fff; font-size: 12px; margin-bottom: 3px; }
+.cb-col-h:hover .cb-col-tip, .cb-info:focus ~ .cb-col-tip { display: block; }
+.cb-status-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cb-status-hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+/* ── Busy buttons (waiting for the server) ───────────────── */
+button.is-busy, button:disabled.is-busy { opacity: .6; cursor: wait !important; pointer-events: none; }

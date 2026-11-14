@@ -7,11 +7,16 @@
 
   // ── Constants ────────────────────────────────────────────
   const STATUSES = [
-    { id: 'todo',        label: 'To Do',       color: 'var(--cb-todo)' },
-    { id: 'in_progress', label: 'In Progress', color: 'var(--cb-progress)' },
-    { id: 'in_review',   label: 'In Review',   color: 'var(--cb-review)' },
-    { id: 'blocker',     label: 'Blocker',     color: 'var(--cb-blocker)' },
-    { id: 'completed',   label: 'Completed',   color: 'var(--cb-done)' },
+    { id: 'todo',        label: 'To Do',       color: 'var(--cb-todo)',
+      tip: 'New cases that have not started yet. No detective is assigned, or a detective is assigned but has not begun work.' },
+    { id: 'in_progress', label: 'In Progress', color: 'var(--cb-progress)',
+      tip: 'The assigned detective is actively working on this case.' },
+    { id: 'in_review',   label: 'In Review',   color: 'var(--cb-review)',
+      tip: 'The detective has finished the work and completed every checklist item. Waiting for the Captain of Detectives to review it.' },
+    { id: 'blocker',     label: 'Blocker',     color: 'var(--cb-blocker)',
+      tip: 'Work cannot continue because of a problem that cannot be solved right now. Explain what is blocking it in the comments.' },
+    { id: 'completed',   label: 'Completed',   color: 'var(--cb-done)',
+      tip: 'The Captain of Detectives has reviewed and approved this case.' },
   ]
   const PRIORITIES = [
     { id: 'critical', label: 'Critical' },
@@ -77,6 +82,36 @@
 
   function toast(msg, type) { PortalAuth.showToast(msg, type || 'success', 'toast-container') }
 
+  // ── Double-click protection ──────────────────────────────
+  //  guarded(): one-shot actions (send, delete, create…). While one is running,
+  //  extra clicks / key presses are ignored and the button is locked.
+  const inFlight = new Set()
+  async function guarded(key, btn, busyLabel, fn) {
+    if (inFlight.has(key)) return
+    inFlight.add(key)
+    const original = btn ? btn.innerHTML : null
+    if (btn) { btn.disabled = true; btn.classList.add('is-busy'); if (busyLabel) btn.textContent = busyLabel }
+    try { return await fn() }
+    finally {
+      inFlight.delete(key)
+      if (btn) { btn.disabled = false; btn.classList.remove('is-busy'); if (busyLabel) btn.innerHTML = original }
+    }
+  }
+  //  enqueueSave(): edits (status, checklist, tags, people, dragging…) are saved
+  //  one at a time, in the order they were made, so fast clicks can't clash.
+  let saveQueue = Promise.resolve()
+  let pendingSaves = 0
+  function enqueueSave(job) {
+    pendingSaves++
+    saving(true)
+    const p = saveQueue.then(job).catch(() => {}).finally(() => {
+      pendingSaves--
+      if (!pendingSaves) saving(false)
+    })
+    saveQueue = p
+    return p
+  }
+
   let savingEl = null
   function saving(on) {
     if (!savingEl) { savingEl = document.createElement('div'); savingEl.className = 'cb-saving'; savingEl.textContent = 'SAVING…'; document.body.appendChild(savingEl) }
@@ -131,7 +166,7 @@
 
   // ── Static UI pieces ─────────────────────────────────────
   function buildStaticUi() {
-    $('mStatus').innerHTML = STATUSES.map((s) => `<option value="${s.id}">${s.label}</option>`).join('')
+    $('mStatus').innerHTML = STATUSES.map((s) => `<option value="${s.id}" title="${esc(s.tip)}">${s.label}</option>`).join('')
     $('mPriority').innerHTML = PRIORITIES.map((p) => `<option value="${p.id}">${p.label}</option>`).join('')
   }
 
@@ -184,7 +219,9 @@
           <div class="cb-col-h">
             <span class="cb-col-dot"></span>
             <span class="cb-col-name">${s.label}</span>
+            <span class="cb-info" tabindex="0" role="button" aria-label="What does ${s.label} mean?">?</span>
             <span class="cb-col-count">${items.length}</span>
+            <div class="cb-col-tip" role="tooltip"><b>${s.label}</b>${esc(s.tip)}</div>
           </div>
           <div class="cb-col-list" data-status="${s.id}">
             ${items.length ? items.map(cardHtml).join('') : '<div class="cb-empty">NO CASES</div>'}
@@ -220,7 +257,7 @@
   // ── Board events (click, keyboard, drag & drop) ──────────
   function bindUi() {
     ;['fSearch', 'fDivision', 'fPriority', 'fAssignee', 'fMine'].forEach((id) => $(id).addEventListener('input', renderBoard))
-    $('refreshBtn').addEventListener('click', refreshCases)
+    $('refreshBtn').addEventListener('click', () => guarded('refresh', $('refreshBtn'), 'Refreshing…', refreshCases))
     $('newCaseBtn').addEventListener('click', () => openNew('todo'))
 
     const board = $('board')
@@ -303,16 +340,17 @@
     const before = { status: c.status, sort_order: c.sort_order }
     Object.assign(c, { status, sort_order: sort })
     renderBoard()
-    try {
-      const json = await api('PUT', { board: 'case', id }, { status, sort_order: sort })
-      Object.assign(c, json.case)
-      if (before.status !== status) toast(`${code(c)} moved to ${STATUS_BY_ID[status].label}`)
-      renderBoard()
-    } catch (e) {
-      Object.assign(c, before)
-      renderBoard()
-      toast('Could not move case: ' + e.message, 'error')
-    }
+    return enqueueSave(async () => {
+      try {
+        const json = await api('PUT', { board: 'case', id }, { status, sort_order: sort })
+        Object.assign(c, json.case)
+        if (before.status !== status) toast(`${code(c)} moved to ${STATUS_BY_ID[status].label}`)
+        renderBoard()
+      } catch (e) {
+        toast('Could not move case: ' + e.message, 'error')
+        refreshCases()
+      }
+    })
   }
 
   // ── Modal ────────────────────────────────────────────────
@@ -391,7 +429,7 @@
     $('mComment').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendComment() } })
     $('mFeed').addEventListener('click', (e) => {
       const x = e.target.closest('[data-del-comment]')
-      if (x) deleteComment(x.dataset.delComment)
+      if (x) deleteComment(x.dataset.delComment, x)
     })
 
     $('mCreate').addEventListener('click', createCase)
@@ -425,6 +463,11 @@
   }
 
   async function openCase(id) {
+    if (inFlight.has('open:' + id)) return
+    inFlight.add('open:' + id)
+    try { await openCaseNow(id) } finally { inFlight.delete('open:' + id) }
+  }
+  async function openCaseNow(id) {
     mode = 'edit'
     const local = cases.find((c) => c.id === id)
     current = local ? Object.assign({}, local) : null
@@ -487,6 +530,9 @@
     const el = $('mStatus')
     el.style.background = `color-mix(in srgb, ${st.color} 28%, #0e1525)`
     el.style.borderColor = st.color
+    el.title = st.tip
+    const hint = $('mStatusHint')
+    if (hint) hint.textContent = st.tip
   }
 
   function setReportField(c) {
@@ -513,58 +559,76 @@
       return
     }
     const id = current.id
-    const before = Object.assign({}, current)
     Object.assign(current, fields)
     showModal()
-    saving(true)
-    try {
-      const json = await api('PUT', { board: 'case', id }, fields)
-      const idx = cases.findIndex((c) => c.id === id)
-      if (idx >= 0) cases[idx] = json.case
-      renderBoard()
-      if (current && current.id === id) {
-        current = json.case
-        const fresh = await api('GET', { board: 'case', id })
-        if (current && current.id === id) { current = fresh.case; activity = fresh.activity || []; showModal() }
+    return enqueueSave(async () => {
+      try {
+        const json = await api('PUT', { board: 'case', id }, fields)
+        const idx = cases.findIndex((c) => c.id === id)
+        if (idx >= 0) cases[idx] = json.case
+        renderBoard()
+        // Only re-read the case when no other edit is still waiting to be saved
+        if (pendingSaves === 1 && current && current.id === id) {
+          const fresh = await api('GET', { board: 'case', id })
+          if (pendingSaves === 1 && current && current.id === id) { current = fresh.case; activity = fresh.activity || []; showModal() }
+        }
+      } catch (e) {
+        toast('Not saved: ' + e.message, 'error')
+        reloadCase(id)
       }
-    } catch (e) {
-      if (current && current.id === id) { current = before; showModal() }
-      toast('Not saved: ' + e.message, 'error')
-    } finally {
-      saving(false)
-    }
+    })
+  }
+
+  /** Put the open case back to what the server has (after a failed save) */
+  async function reloadCase(id) {
+    try {
+      const fresh = await api('GET', { board: 'case', id })
+      if (current && current.id === id) { current = fresh.case; activity = fresh.activity || []; showModal() }
+      const idx = cases.findIndex((c) => c.id === id)
+      if (idx >= 0) { cases[idx] = fresh.case; renderBoard() }
+    } catch (_) {}
   }
 
   async function createCase() {
     current.title = $('mTitle').value.trim()
     if (!$('mDesc').hidden) current.description = toStore($('mDesc').value).trim()
     if (!current.title) { toast('Give the case a title first', 'error'); $('mTitle').focus(); return }
-    const btn = $('mCreate')
-    btn.disabled = true
-    try {
-      const json = await api('POST', { board: 'cases' }, current)
-      cases.push(json.case)
-      renderBoard()
-      toast(code(json.case) + ' created')
-      openCase(json.case.id)
-    } catch (e) {
-      toast('Could not create case: ' + e.message, 'error')
-    } finally {
-      btn.disabled = false
-    }
+    return guarded('create', $('mCreate'), 'Creating…', async () => {
+      $('mCancel').disabled = true
+      try {
+        const json = await api('POST', { board: 'cases' }, current)
+        cases.push(json.case)
+        renderBoard()
+        toast(code(json.case) + ' created')
+        openCase(json.case.id)
+      } catch (e) {
+        toast('Could not create case: ' + e.message, 'error')
+      } finally {
+        $('mCancel').disabled = false
+      }
+    })
   }
 
   async function deleteCase() {
     const id = pendingDeleteId
-    $('confirmModal').hidden = true
-    if (!id) return
-    try {
-      await api('DELETE', { board: 'case', id })
-      cases = cases.filter((c) => c.id !== id)
-      closeModal()
-      renderBoard()
-      toast('Case deleted')
-    } catch (e) { toast('Delete failed: ' + e.message, 'error') }
+    if (!id) { $('confirmModal').hidden = true; return }
+    return guarded('delcase', $('cYes'), 'Deleting…', async () => {
+      $('cNo').disabled = true
+      try {
+        await api('DELETE', { board: 'case', id })
+        pendingDeleteId = null
+        $('confirmModal').hidden = true
+        cases = cases.filter((c) => c.id !== id)
+        closeModal()
+        renderBoard()
+        toast('Case deleted')
+      } catch (e) {
+        $('confirmModal').hidden = true
+        toast('Delete failed: ' + e.message, 'error')
+      } finally {
+        $('cNo').disabled = false
+      }
+    })
   }
 
   // ── Assignees ────────────────────────────────────────────
@@ -698,28 +762,33 @@
     const text = toStore(box.value).trim()
     if (!text) return
     const id = current.id
-    box.disabled = true
-    try {
-      const json = await api('POST', { board: 'comment', id }, { body: text })
-      box.value = ''
-      activity.push(json.comment)
-      const c = cases.find((x) => x.id === id)
-      if (c) c.comment_count = (c.comment_count || 0) + 1
-      if (current && current.id === id) renderFeed()
-      renderBoard()
-    } catch (e) { toast('Comment not sent: ' + e.message, 'error') }
-    finally { box.disabled = false; box.focus() }
+    const sendBtn = $('mCommentForm').querySelector('button[type=submit]')
+    return guarded('comment', sendBtn, 'Sending…', async () => {
+      box.disabled = true
+      try {
+        const json = await api('POST', { board: 'comment', id }, { body: text })
+        box.value = ''
+        activity.push(json.comment)
+        const c = cases.find((x) => x.id === id)
+        if (c) c.comment_count = (c.comment_count || 0) + 1
+        if (current && current.id === id) renderFeed()
+        renderBoard()
+      } catch (e) { toast('Comment not sent: ' + e.message, 'error') }
+      finally { box.disabled = false; box.focus() }
+    })
   }
 
-  async function deleteComment(commentId) {
-    try {
-      await api('DELETE', { board: 'comment', id: commentId })
-      activity = activity.filter((a) => a.id !== commentId)
-      const c = cases.find((x) => x.id === current?.id)
-      if (c) c.comment_count = Math.max(0, (c.comment_count || 0) - 1)
-      renderFeed()
-      renderBoard()
-    } catch (e) { toast('Could not delete comment: ' + e.message, 'error') }
+  async function deleteComment(commentId, btn) {
+    return guarded('delcomment:' + commentId, btn, 'Deleting…', async () => {
+      try {
+        await api('DELETE', { board: 'comment', id: commentId })
+        activity = activity.filter((a) => a.id !== commentId)
+        const c = cases.find((x) => x.id === current?.id)
+        if (c) c.comment_count = Math.max(0, (c.comment_count || 0) - 1)
+        renderFeed()
+        renderBoard()
+      } catch (e) { toast('Could not delete comment: ' + e.message, 'error') }
+    })
   }
 
   // ── Case notes view / edit ───────────────────────────────
@@ -742,7 +811,7 @@
 
   // ── @mentions ────────────────────────────────────────────
   //  Stored as @[Display Name](BADGE); typed/edited as @Display Name
-  const MENTION_RE = /@\[([^\]\n]{1,80})\]\(([A-Za-z0-9._-]{1,40})\)/g
+  const MENTION_RE = /@\[([^\]\n]{1,80})\]\(([^()\s\[\]]{1,120})\)/g
   function toEdit(t) { return String(t || '').replace(MENTION_RE, '@$1') }
   function toStore(t) {
     let s = String(t || '')
@@ -880,7 +949,7 @@
       $('cbBell').addEventListener('click', (e) => { e.stopPropagation(); $('cbNotifPanel').hidden ? open() : close() })
       $('cbNotifPanel').addEventListener('click', (e) => {
         e.stopPropagation()
-        if (e.target.closest('#cbMarkAll')) { markAll(); return }
+        if (e.target.closest('#cbMarkAll')) { guarded('markall', $('cbMarkAll'), 'Saving…', markAll); return }
         const it = e.target.closest('[data-case]')
         if (!it) return
         close()

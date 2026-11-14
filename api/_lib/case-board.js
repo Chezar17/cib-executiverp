@@ -50,7 +50,7 @@ const NOTIF_COLUMNS = 'id,case_id,case_no,case_title,kind,count,lines,actor_name
 const LIMITS = { title: 200, description: 20000, tag: 30, tags: 12, checklist: 60, checkText: 300, comment: 5000, assignees: 20 }
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
-const MENTION_RE = /@\[([^\]\n]{1,80})\]\(([A-Za-z0-9._-]{1,40})\)/g
+const MENTION_RE = /@\[([^\]\n]{1,80})\]\(([^()\s\[\]]{1,120})\)/g
 
 // ── Small helpers ─────────────────────────────────────────────
 function cleanText(v, max) {
@@ -132,7 +132,7 @@ async function logEvents(sb, caseId, session, lines) {
 
 /** Keep only badges that belong to real users. Returns { badges, names } */
 async function validUsers(sb, list, max = LIMITS.assignees) {
-  const wanted = [...new Set((Array.isArray(list) ? list : [...(list || [])]).map((b) => cleanText(b, 40)).filter(Boolean))]
+  const wanted = [...new Set((Array.isArray(list) ? list : [...(list || [])]).map((b) => cleanText(b, 120)).filter(Boolean))]
     .slice(0, max)
   if (!wanted.length) return { badges: [], names: {} }
   const { data, error } = await sb.from('users').select('badge,name').in('badge', wanted)
