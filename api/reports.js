@@ -4,6 +4,7 @@
 //  GET  /api/reports?nextCaseNumber=1   → preview next case number
 //  GET  /api/reports?imageProxy=1&url= → fetch allow-listed HTTPS image for Cropper (same-origin blob)
 //  POST /api/reports                     → create new report + all sub-items
+//  *    /api/reports?board=…             → Detective Case Board (api/_lib/case-board.js)
 // ============================================================
 import { allowMethods } from './_lib/http.js'
 import { requireSession } from './_lib/session.js'
@@ -11,6 +12,7 @@ import { getSupabase } from './_lib/supabase.js'
 import { getNextCaseNumber } from './_lib/ir-case-number.js'
 import { jsonApiError } from './_lib/api-error.js'
 import { handleReportImageProxy } from './_lib/image-proxy-handler.js'
+import { handleCaseBoard } from './_lib/case-board.js'
 
 function actorFrom(req, session) {
   return req.headers['x-actor'] || session.badge || null
@@ -30,6 +32,9 @@ function irSubRowAudit(actor) {
 
 export default async function handler(req, res) {
   try {
+    // Detective Case Board (kanban) shares this function — see api/_lib/case-board.js
+    if (req.query?.board) return handleCaseBoard(req, res)
+
     if (!allowMethods(req, res, ['GET', 'POST', 'OPTIONS'])) return
 
     // Preflight for JSON POST + custom headers — no auth on OPTIONS.

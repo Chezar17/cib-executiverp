@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Case Board &ndash; CIB NEXUS</title>
+<link rel="icon" href="/images/cib-logo.png" type="image/png">
+<link rel="stylesheet" href="/shared/styles/tokens.css"/>
+<link rel="stylesheet" href="/shared/styles/base.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/shared/styles/portal-shell.css"/>
+<link rel="stylesheet" href="/caseboard/caseboard.css"/>
+</head>
+<body>
+
+<div id="access-gate">
+  <div class="gate-logo">
+    <img src="/images/cib-logo.png" alt="CIB" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-size:12px;letter-spacing:2px;color:#C9A84C;\'>CIB</span>'"/>
+  </div>
+  <div class="gate-text">Verifying Clearance...</div>
+  <div class="gate-bar"><div class="gate-progress"></div></div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <img class="topbar-logo" src="/images/cib-logo.png" alt="CIB" onerror="this.style.display='none'"/>
+    <span class="topbar-brand">NEXUS</span>
+    <div class="topbar-divider"></div>
+    <span class="topbar-sub">Detective Case Board</span>
+  </div>
+  <div class="topbar-right">
+    <a class="back-btn" href="/nexus">&lsaquo; Back to Nexus</a>
+    <span class="topbar-badge-display">Logged in as: <span id="badgeDisplay">&ndash;</span></span>
+    <span class="topbar-clock" id="liveClock">&ndash;</span>
+    <button class="logout-btn" onclick="PortalAuth.logout()">Logout</button>
+  </div>
+</div>
+
+<div class="class-banner">
+  <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
+  <div class="class-banner-text">SECRET // DETECTIVE CASE BOARD // CIB PERSONNEL ONLY</div>
+  <div class="class-dots"><div class="class-dot"></div><div class="class-dot"></div><div class="class-dot"></div></div>
+</div>
+
+<main class="cb-wrap" id="portalContent" style="display:none">
+  <div class="cb-header">
+    <div>
+      <div class="cb-eyebrow">CIB &middot; Operations Workflow</div>
+      <h1 class="cb-title">Detective Case Board</h1>
+      <div class="cb-sub">Track every active case from first lead to closure.</div>
+    </div>
+    <button class="cb-btn cb-btn-gold" id="newCaseBtn">+ New Case</button>
+  </div>
+
+  <div class="cb-toolbar">
+    <input type="search" id="fSearch" class="cb-input cb-search" placeholder="Search case number, title, tag, detective..."/>
+    <select id="fDivision" class="cb-input">
+      <option value="">All divisions</option>
+      <option value="CID">CID</option>
+      <option value="GRD">GRD</option>
+      <option value="JOINT">Joint</option>
+    </select>
+    <select id="fPriority" class="cb-input">
+      <option value="">All priorities</option>
+      <option value="critical">Critical</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+    <select id="fAssignee" class="cb-input"><option value="">All detectives</option></select>
+    <label class="cb-toggle"><input type="checkbox" id="fMine"/> <span>My cases</span></label>
+    <button class="cb-btn cb-btn-ghost" id="refreshBtn" title="Refresh">&#8635; Refresh</button>
+  </div>
+
+  <div class="cb-board" id="board"></div>
+</main>
+
+<!-- ═══════════════ CASE MODAL (ClickUp-style) ═══════════════ -->
+<div class="cb-overlay" id="caseModal" hidden>
+  <div class="cb-modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="cb-modal-top">
+      <div class="cb-crumbs">NEXUS <span>/</span> Case Board <span>/</span> <b id="mCode">New Case</b></div>
+      <div class="cb-modal-top-actions">
+        <button class="cb-icon-btn danger" id="mDelete" title="Delete case" hidden>&#128465; Delete</button>
+        <button class="cb-icon-btn" id="mClose" title="Close (Esc)">&times;</button>
+      </div>
+    </div>
+
+    <div class="cb-modal-body">
+      <!-- LEFT: details -->
+      <section class="cb-main">
+        <div class="cb-kind">&#9673; Case</div>
+        <textarea id="mTitle" class="cb-title-input" rows="1" maxlength="200" placeholder="Case title, e.g. Homicide at Vespucci Pier"></textarea>
+
+        <div class="cb-props">
+          <div class="cb-prop">
+            <div class="cb-prop-lbl">&#9678; Status</div>
+            <select id="mStatus" class="cb-pill-select"></select>
+          </div>
+          <div class="cb-prop">
+            <div class="cb-prop-lbl">&#9823; Assignees</div>
+            <div class="cb-assignees" id="mAssignees"></div>
+          </div>
+          <div class="cb-prop cb-prop-wide">
+            <div class="cb-prop-lbl">&#128197; Dates</div>
+            <div class="cb-dates">
+              <input type="date" id="mStart" class="cb-input cb-date" title="Start date"/>
+              <span class="cb-arrow">&rarr;</span>
+              <input type="date" id="mDue" class="cb-input cb-date" title="Due date"/>
+            </div>
+          </div>
+          <div class="cb-prop">
+            <div class="cb-prop-lbl">&#9873; Priority</div>
+            <select id="mPriority" class="cb-pill-select"></select>
+          </div>
+          <div class="cb-prop">
+            <div class="cb-prop-lbl">&#9733; Division</div>
+            <select id="mDivision" class="cb-pill-select">
+              <option value="CID">CID &middot; Criminal Investigation</option>
+              <option value="GRD">GRD &middot; Gang Recon</option>
+              <option value="JOINT">Joint &middot; CID + GRD</option>
+            </select>
+          </div>
+          <div class="cb-prop cb-prop-wide">
+            <div class="cb-prop-lbl">&#127991; Tags</div>
+            <div class="cb-tags" id="mTags"></div>
+          </div>
+          <div class="cb-prop cb-prop-wide">
+            <div class="cb-prop-lbl">&#128206; Linked Report</div>
+            <div class="cb-linked">
+              <select id="mReport" class="cb-input"><option value="">&mdash; No linked investigation report &mdash;</option></select>
+              <a id="mReportOpen" class="cb-link" target="_blank" rel="noopener" hidden>Open report &rsaquo;</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="cb-section">
+          <div class="cb-section-h">Case Notes</div>
+          <textarea id="mDesc" class="cb-desc" maxlength="20000" placeholder="Summary, leads, suspects, what needs to happen next..."></textarea>
+        </div>
+
+        <div class="cb-section">
+          <div class="cb-section-h">Checklist <span class="cb-muted" id="mCheckCount"></span></div>
+          <div class="cb-progress"><div id="mCheckBar"></div></div>
+          <ul class="cb-checklist" id="mChecklist"></ul>
+          <form class="cb-check-add" id="mCheckForm">
+            <input id="mCheckInput" class="cb-input" maxlength="300" placeholder="Add a step, e.g. Interview the witness"/>
+            <button class="cb-btn cb-btn-ghost" type="submit">Add</button>
+          </form>
+        </div>
+
+        <div class="cb-meta" id="mMeta"></div>
+        <div class="cb-create-bar" id="mCreateBar" hidden>
+          <button class="cb-btn cb-btn-ghost" id="mCancel">Cancel</button>
+          <button class="cb-btn cb-btn-gold" id="mCreate">Create Case</button>
+        </div>
+      </section>
+
+      <!-- RIGHT: comments & activity -->
+      <aside class="cb-side">
+        <div class="cb-side-h">Comments &amp; Activity</div>
+        <div class="cb-feed" id="mFeed"></div>
+        <form class="cb-comment" id="mCommentForm">
+          <textarea id="mComment" maxlength="5000" placeholder="Write a comment... (Ctrl+Enter to send)"></textarea>
+          <button class="cb-btn cb-btn-gold" type="submit">Send</button>
+        </form>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="cb-overlay" id="confirmModal" hidden>
+  <div class="cb-confirm">
+    <div class="cb-confirm-t">Delete this case?</div>
+    <p>The case will be removed from the board for everyone.</p>
+    <div class="cb-confirm-a">
+      <button class="cb-btn cb-btn-ghost" id="cNo">Cancel</button>
+      <button class="cb-btn cb-btn-red" id="cYes">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="/shared/scripts/portal-auth.js"></script>
+<script src="/caseboard/caseboard.js"></script>
+</body>
+</html>
